@@ -1,0 +1,269 @@
+.heading a
+{
+	text-decoration: none;
+}
+
+.heading
+{
+	background: #ccc;
+}
+
+.clearer
+{
+	clear: both;
+}
+
+#view-page
+{
+	font-family: georgia;
+	margin-top: 0;
+}
+
+.header
+{
+	background: #dddddd;
+	padding: 5px;
+}
+
+#handle
+{
+top: 0px;
+bottom: 0px;
+position: fixed;
+width: 10px;
+background: grey;
+cursor: e-resize;
+background-image: url(image/grippy.png);
+}
+
+#sidebar
+{
+	font-family: verdana, arial;
+	font-size: 10px;
+	margin: 0;
+	top: 0px;
+	left: 0px;
+	height: 100%;
+	position: fixed;
+	overflow: scroll;
+}
+
+#nav
+{
+	font-size: 11px;
+}
+
+#sidebar ul
+{
+	padding-left: 2em;
+}
+
+#sidebar form
+{
+	display: inline;
+}
+
+#sidebar p
+{
+	margin: 5px;
+}
+
+#sidebar table
+{
+	border-collapse: collapse;
+	width: 100%;
+}
+
+#sidebar td
+{
+	font-size: 10px;
+	padding: 2px;
+}
+
+
+.odd-row
+{
+	background: #dddddd;
+}
+
+.unread
+{
+	font-weight: bold;
+	color: red;
+}
+
+
+.unread-item
+{
+	font-weight: bold;
+}
+
+
+#items
+{
+	font-family: georgia;
+}
+
+.highlight-on .highlight
+{
+	background: yellow;
+}
+
+h1
+{
+	font-size: 110%;
+	margin: 0px;
+	margin-bottom: 5px;
+	font-weight: normal;
+}
+
+h2
+{
+	font-size: 100%;
+	margin: 0px;
+	margin-bottom: 5px;
+	font-weight: normal;
+	display: inline;
+}
+
+.meta
+{
+	font-size: 80%;
+	display: inline;
+}
+
+.header
+{
+	background-color: #ddd;
+	padding: 5px;
+}
+
+body
+{
+	margin: 0px;
+	padding: 0px;
+}
+
+.body
+{
+	margin: 0px;
+	padding: 10px 10px 10px 10px;
+}
+
+.item
+{
+	border: 1px solid #ddd;
+	margin: 10px;
+	margin-bottom: 20px;
+	clear: both;
+}
+
+.item.selected
+{
+	border: 1px solid #888;
+	background-color: #eee;
+}
+
+.selected .header
+{
+	background-color: #ccc;
+}
+
+#menu-page
+{
+	margin: 0;
+	padding: 0;
+	font-family: verdana;
+	font-size: 60%;
+	background: #eee;
+}
+
+#menu-page .menu ul
+{
+	padding: 1px;
+	margin: 0;
+}
+
+#menu-page .menu li
+{
+	display: inline;
+	padding: 5px;
+}
+
+#menu-page .menu
+{
+	text-align: center;
+	background: #eee;
+}
+
+#menu-page a:hover
+{
+	background: #fff;
+}
+
+.nowrap
+{
+	white-space: nowrap;
+}
+
+.controls
+{
+	float: right;
+}
+
+.tags
+{
+	font-size: 70%;
+	float: right;
+}
+
+.item.hidden
+{
+	margin-bottom: 10px;
+}
+
+.hidden .body
+{
+	display: none;
+}
+
+.shown .downarrow
+{
+	display: none;
+}
+
+.hidden .uparrow
+{
+	display: none;
+}
+
+.hidden h1
+{
+	font-size: 90%;
+	display: inline;
+}
+
+.hidden h2
+{
+	font-size: 80%;
+}
+
+.hidden .tags
+{
+	display: none;
+}
+
+.hidden .meta
+{
+	display: none;
+}
+
+.hidden .dash
+{
+	display: inline;
+}
+
+.shown .dash
+{
+	display: none;
+}
