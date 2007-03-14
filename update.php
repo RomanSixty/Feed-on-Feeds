@@ -14,6 +14,8 @@
 
 include("header.php");
 
+set_time_limit(60*10);
+
 echo '<br>';
 
 $feed = $_GET['feed'];

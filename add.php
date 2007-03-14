@@ -14,6 +14,8 @@
 
 include("header.php");
 
+set_time_limit(60*10);
+
 $url = $_POST['rss_url'];
 if(!$url) $url = $_GET['rss_url'];
 $opml = $_POST['opml_url'];
