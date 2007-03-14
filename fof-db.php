@@ -531,6 +531,8 @@ function fof_db_mark_feed_unread($user_id, $feed)
 
 function fof_db_mark_read($user_id, $items)
 {
+    if(!$items) return;
+
     foreach($items as $item)
     {
         $sql[] = " item_id = $item ";
@@ -538,9 +540,10 @@ function fof_db_mark_read($user_id, $items)
     
     $values = implode ( " or ", $sql );
     
-	$sql = "delete from " . FOF_ITEM_TAG_TABLE . " where user_id = $user_id and tag_id = 1 and ( $values )";
+    $sql = "delete from " . FOF_ITEM_TAG_TABLE . " where user_id = $user_id and tag_id = 1 
+and ( $values )";
 
-	fof_db_query($sql);
+    fof_db_query($sql);
 }
 
 function fof_db_optimize()
