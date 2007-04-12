@@ -46,12 +46,6 @@ else
       	<? } ?>
       </script>
       
-      <!-- for great justice -->
-      
-      <!--[if lt IE 7]>
-        <script src="ie7/ie7-standard-p.js" type="text/javascript"></script>
-      <![endif]-->
-
 	  <style>
 		#sidebar
 		{
