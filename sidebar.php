@@ -248,9 +248,14 @@ foreach($feeds as $row)
    print "<td>";
    print "<a href=\"$link\" title=\"home page\"><b>$title</b></a></td>";
 
-   print "<td><nobr><a href=\"update.php?feed=$id\" title=\"update\">u</a>";
+   print "<td><nobr>";
+   
+   print "<a href=\"update.php?feed=$id\" title=\"update\">u</a>";
    $stitle = htmlspecialchars(addslashes($title));
-   print " <a href=\"delete.php?feed=$id\" title=\"delete\" onclick=\"return confirm('Unsubscribe [$stitle] --are you SURE?')\">d</a></nobr></td>";
+   print " <a href=\"#\" title=\"mark all read\" onclick=\"if(confirm('Mark all [$stitle] items as read --are you SURE?')) { mark_feed_read($id); return false; }  else { return false; }\">m</a>";
+   print " <a href=\"delete.php?feed=$id\" title=\"delete\" onclick=\"return confirm('Unsubscribe [$stitle] --are you SURE?')\">d</a>";
+   
+   print "</nobr></td>";
 
    print "</tr>";
 }

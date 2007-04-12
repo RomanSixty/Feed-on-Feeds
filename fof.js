@@ -214,6 +214,20 @@ function mark_unread()
 	document.items.submit();
 }
 
+function mark_feed_read(id)
+{
+	throb();
+	
+	var url = "view-action.php";
+	var params = "feed=" + id;
+	var complete = function () { refreshlist(); };
+	var options = { method: 'post', parameters: params, onComplete: complete };
+	
+	new Ajax.Request(url, options);
+	
+	return false;
+}
+
 function add_tag(id, tag)
 {
 	throb();

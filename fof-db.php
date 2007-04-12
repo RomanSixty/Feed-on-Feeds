@@ -508,6 +508,27 @@ function fof_db_mark_unread($user_id, $items)
 	fof_db_query($sql, 1);
 }
 
+function fof_db_mark_feed_read($user_id, $feed_id)
+{
+    $result = fof_db_get_items($user_id, $feed_id, $what="all", NULL, NULL);
+
+   foreach($result as $r)
+   {
+      $items[] = $r['item_id'];
+   }
+
+    foreach($items as $item)
+    {
+        $sql[] = " item_id = $item ";
+    }
+    
+    $values = implode ( " or ", $sql );
+    
+    $sql = "delete from " . FOF_ITEM_TAG_TABLE . " where user_id = $user_id and tag_id = 1 and ( $values )";
+
+    fof_db_query($sql);
+}
+
 function fof_db_mark_feed_unread($user_id, $feed)
 {
     $result = fof_db_get_items($user_id, $feed, $what="all", NULL, NULL, 10);
