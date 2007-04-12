@@ -126,8 +126,6 @@ function completeDrag(e)
 		document.cookie = "fof_sidebar_width="+newWidth
 			+ "; expires="+expire.toGMTString()+"; path=/";
 
-        if(window.IE7) window.location.reload();  // for IE
-
 	    return false;
     }
 
