@@ -14,8 +14,6 @@
 
 include_once("fof-main.php");
 
-header("Content-Type: text/html; charset=utf-8");
-
 ?>
 <img id="throbber" src="image/throbber.gif" align="left" style="position: fixed; left: 0; top: 0; display: none">
 
