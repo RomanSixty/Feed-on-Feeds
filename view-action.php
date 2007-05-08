@@ -27,24 +27,26 @@ while (list ($key, $val) = each ($_POST))
     }    
 }
 
-if($items)
-{
-	if($_POST['action'] == 'read')
-	{
-		fof_db_mark_read(fof_current_user(), $items);
-	}
-	
-	if($_POST['action'] == 'unread')
-	{
-		fof_db_mark_unread(fof_current_user(), $items);
-	}
-	
-	header("Location: " . urldecode($_POST['return']));
-}
-
 if($_POST['feed'])
 {
 	fof_db_mark_feed_read(fof_current_user(), $_POST['feed']);
 }
+else
+{
+	if($items)
+	{
+		if($_POST['action'] == 'read')
+		{
+			fof_db_mark_read(fof_current_user(), $items);
+		}
+		
+		if($_POST['action'] == 'unread')
+		{
+			fof_db_mark_unread(fof_current_user(), $items);
+		}
+	
+	}
+}
 
+header("Location: " . urldecode($_POST['return']));
 ?>
