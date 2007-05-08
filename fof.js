@@ -67,6 +67,8 @@ function keyboard(e)
 
 function startResize(e)
 {
+	if (!e) e = window.event;
+
 	Event.stop(e);
 
 	drag = true;
@@ -80,6 +82,7 @@ function startResize(e)
 
 function dragResize(e)
 {
+	if (!e) e = window.event;
 	//window.status="dragResize";
 	
 	if(drag)
@@ -103,6 +106,7 @@ function dragResize(e)
 
 function completeDrag(e)
 {
+	if (!e) e = window.event;
 	//window.status="completeDrag";
 
 	if(drag)
