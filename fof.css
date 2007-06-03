@@ -156,6 +156,7 @@ body
 	margin: 10px;
 	margin-bottom: 20px;
 	clear: both;
+	overflow: hidden;
 }
 
 .item.selected
