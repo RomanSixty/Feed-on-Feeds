@@ -1,4 +1,4 @@
-/*  Prototype JavaScript framework, version 1.5.2_pre0
+/*  Prototype JavaScript framework, version 1.5.1
  *  (c) 2005-2007 Sam Stephenson
  *
  *  Prototype is freely distributable under the terms of an MIT-style license.
@@ -7,7 +7,7 @@
 /*--------------------------------------------------------------------------*/
 
 var Prototype = {
-  Version: '1.5.2_pre0',
+  Version: '1.5.1',
 
   Browser: {
     IE:     !!(window.attachEvent && !window.opera),
@@ -99,44 +99,19 @@ Object.extend(Object, {
   }
 });
 
-Object.extend(Function.prototype, {
-  bind: function() {
-    var __method = this, args = $A(arguments), object = args.shift();
-    return function() {
-      return __method.apply(object, args.concat($A(arguments)));
-    }
-  },
-
-  bindAsEventListener: function() {
-    var __method = this, args = $A(arguments), object = args.shift();
-    return function(event) {
-      return __method.apply(object, [event || window.event].concat(args));
-    }
-  },
-
-  curry: function() {
-    var __method = this, args = $A(arguments);
-    return function() {
-      return __method.apply(this, args.concat($A(arguments)));
-    }
-  },
-
-  delay: function() {
-    var __method = this, args = $A(arguments), timeout = args.shift() * 1000;
-    return window.setTimeout(function() {
-      return __method.apply(__method, args);
-    }, timeout);
-  },
-
-  wrap: function(wrapper) {
-    var __method = this;
-    return function() {
-      return wrapper.apply(this, [__method.bind(this)].concat($A(arguments)));
-    }
+Function.prototype.bind = function() {
+  var __method = this, args = $A(arguments), object = args.shift();
+  return function() {
+    return __method.apply(object, args.concat($A(arguments)));
   }
-});
+}
 
-Function.prototype.defer = Function.prototype.delay.curry(0.01);
+Function.prototype.bindAsEventListener = function(object) {
+  var __method = this, args = $A(arguments), object = args.shift();
+  return function(event) {
+    return __method.apply(object, [event || window.event].concat(args));
+  }
+}
 
 Object.extend(Number.prototype, {
   toColorPart: function() {
@@ -658,7 +633,7 @@ Object.extend(Enumerable, {
   member:  Enumerable.include,
   entries: Enumerable.toArray
 });
-function $A(iterable) {
+var $A = Array.from = function(iterable) {
   if (!iterable) return [];
   if (iterable.toArray) {
     return iterable.toArray();
@@ -671,7 +646,7 @@ function $A(iterable) {
 }
 
 if (Prototype.Browser.WebKit) {
-  function $A(iterable) {
+  $A = Array.from = function(iterable) {
     if (!iterable) return [];
     if (!(typeof iterable == 'function' && iterable == '[object NodeList]') &&
       iterable.toArray) {
@@ -684,8 +659,6 @@ if (Prototype.Browser.WebKit) {
     }
   }
 }
-
-Array.from = $A;
 
 Object.extend(Array.prototype, Enumerable);
 
@@ -1061,7 +1034,8 @@ Ajax.Request.prototype = Object.extend(new Ajax.Base(), {
       this.transport.open(this.method.toUpperCase(), this.url,
         this.options.asynchronous);
 
-      if (this.options.asynchronous) this.respondToReadyState.bind(this).defer(1);
+      if (this.options.asynchronous)
+        setTimeout(function() { this.respondToReadyState(1) }.bind(this), 10);
 
       this.transport.onreadystatechange = this.onStateChange.bind(this);
       this.setRequestHeaders();
@@ -1220,7 +1194,8 @@ Object.extend(Object.extend(Ajax.Updater.prototype, Ajax.Request.prototype), {
     }
 
     if (this.success()) {
-      if (this.onComplete) this.onComplete.bind(this).defer();
+      if (this.onComplete)
+        setTimeout(this.onComplete.bind(this), 10);
     }
   }
 });
@@ -1259,7 +1234,8 @@ Ajax.PeriodicalUpdater.prototype = Object.extend(new Ajax.Base(), {
 
       this.lastText = request.responseText;
     }
-    this.timer = this.onTimerEvent.bind(this).delay(this.decay * this.frequency);
+    this.timer = setTimeout(this.onTimerEvent.bind(this),
+      this.decay * this.frequency * 1000);
   },
 
   onTimerEvent: function() {
@@ -1373,7 +1349,7 @@ Element.Methods = {
   update: function(element, html) {
     html = typeof html == 'undefined' ? '' : html.toString();
     $(element).innerHTML = html.stripScripts();
-    html.evalScripts.bind(html).defer();
+    setTimeout(function() {html.evalScripts()}, 10);
     return element;
   },
 
@@ -1388,7 +1364,7 @@ Element.Methods = {
       element.parentNode.replaceChild(
         range.createContextualFragment(html.stripScripts()), element);
     }
-    html.evalScripts.bind(html).defer();
+    setTimeout(function() {html.evalScripts()}, 10);
     return element;
   },
 
@@ -1772,7 +1748,7 @@ else if (Prototype.Browser.IE) {
     } else {
       element.innerHTML = html.stripScripts();
     }
-    html.evalScripts.bind(html).defer();
+    setTimeout(function() { html.evalScripts() }, 10);
     return element;
   }
 }
@@ -1966,7 +1942,7 @@ Abstract.Insertion.prototype = {
       this.insertContent([this.range.createContextualFragment(this.content)]);
     }
 
-    content.evalScripts.bind(content).defer();
+    setTimeout(function() {content.evalScripts()}, 10);
   },
 
   contentFromAnonymousTable: function() {
