@@ -47,13 +47,15 @@ if($url) fof_subscribe(fof_current_user(), $url);
 
 if($opml)
 {
-	if(!$content_array = file($opml))
+	$sfile = new SimplePie_File($opml);
+	
+	if(!$sfile->success)
 	{
 		echo "Cannot open $opml<br>";
 		return false;
 	}
 
-	$content = implode("", $content_array);
+	$content = $sfile->body;
 
 	$feeds = fof_opml_to_array($content);
 }
