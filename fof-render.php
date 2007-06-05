@@ -142,7 +142,7 @@ function fof_render_item($item)
     
     <span class='dash'> - </span>
     
-    <h2><a href="<?php echo $feed_link ?>" title="<?php echo $feed_description ?>"><?php echo $feed_title ?></a></h2>
+    <h2><a href="<?php echo $feed_link ?>" title='<?php echo $feed_description ?>'><?php echo $feed_title ?></a></h2>
 
 	<span class="meta">on <?php echo $item_published ?></span>
 
