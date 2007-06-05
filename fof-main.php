@@ -492,18 +492,15 @@ function fof_subscribe($user_id, $url, $autodiscovery=true)
       return true;
    }
 
-    $rss = new SimplePie();
-    $rss->set_cache_duration(30 * 60);
-	$rss->set_feed_url($url);
-	$rss->init();
+   $rss = fof_parse($url);
 
-			if (isset($rss->error)) {
-
+   if (isset($rss->error))
+   {
       print "Error: <B>" . $rss->error . "</b> ";
       print "<a href=\"http://feedvalidator.org/check?url=$url\">try to validate it?</a> ";
       return 0;
    }
-	else
+   else
    {
    
       if(fof_feed_exists($rss->subscribe_url()))
@@ -530,7 +527,7 @@ function fof_subscribe($user_id, $url, $autodiscovery=true)
    //print_r($rss);
    //echo "</pre>";
 
-      $id = fof_add_feed($rss->subscribe_url(), $rss->get_feed_title(), $rss->get_feed_link(), $rss->get_feed_description() );
+      $id = fof_add_feed($rss->subscribe_url(), $rss->get_title(), $rss->get_link(), $rss->get_description() );
 		echo "added with id $id<br>";
 		
       fof_db_add_subscription($user_id, $id);
@@ -580,6 +577,19 @@ function fof_mark_item_unread($feed_id, $id)
    fof_db_mark_item_unread($users, $id);
 }
 
+function fof_parse($url)
+{
+    $pie = new SimplePie();
+    $pie->set_cache_duration(30 * 60);
+    $pie->set_favicon_handler("favicon.php");
+	$pie->set_feed_url($url);
+	$pie->remove_div(false);
+	//$pie->set_stupidly_fast(true);
+	$pie->init();
+	
+	return $pie;
+}
+
 function fof_update_feed($id)
 {
    if(!$id) return 0;
@@ -588,10 +598,7 @@ function fof_update_feed($id)
    $url = $feed['feed_url'];
    fof_log("Updating $url");
 
-    $rss = new SimplePie();
-    $rss->set_cache_duration(30 * 60);
-	$rss->set_feed_url($feed['feed_url']);
-	$rss->init();
+    $rss = fof_parse($feed['feed_url']);
 
 			if (isset($rss->error)) {
 
@@ -605,10 +612,10 @@ function fof_update_feed($id)
    //print_r($rss);
    //echo "</pre>";
 
-	$sub = $rss->subscribe_url();
+   $sub = $rss->subscribe_url();
    fof_log("subscription url is $sub");
    
-   fof_db_feed_update_metadata($id, $rss->subscribe_url(), $rss->get_feed_title(), $rss->get_feed_link(), $rss->get_feed_description(), $rss->get_favicon(true, $rss->get_image_url() ) );
+   fof_db_feed_update_metadata($id, $rss->subscribe_url(), $rss->get_title(), $rss->get_link(), $rss->get_description(), $rss->get_favicon("./image/feed-icon.png") );
 
    $feed_id = $feed['feed_id'];
    
@@ -618,7 +625,7 @@ function fof_update_feed($id)
 	   {
 		  $link = $item->get_permalink();
 		  $title = $item->get_title();
-		  $content = $item->get_description();
+		  $content = $item->get_content();
 		  $date = $item->get_date();
 		  $item_id = $item->get_id();
 	
