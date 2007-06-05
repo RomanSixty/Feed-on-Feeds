@@ -6378,6 +6378,8 @@ class SimplePie_File
 				curl_setopt($fp, CURLOPT_USERAGENT, $useragent);
 				curl_setopt($fp, CURLOPT_HTTPHEADER, $headers2);
 				curl_setopt($fp, CURLOPT_SSL_VERIFYPEER, false);
+				curl_setopt($fp, CURLOPT_HTTPAUTH, CURLAUTH_ANY);
+
 				if (!ini_get('open_basedir') && !ini_get('safe_mode'))
 				{
 					curl_setopt($fp, CURLOPT_FOLLOWLOCATION, 1);
