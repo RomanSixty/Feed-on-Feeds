@@ -34,9 +34,9 @@ header("Content-Type: text/html; charset=utf-8");
 <?php
 if($_GET['password'])
 {
-	$password = mysql_real_escape_string($_GET['password']);
+	$password_hash = mysql_real_escape_string(md5($_GET['password'] . 'admin'));
 	
-	fof_db_query("insert into $FOF_USER_TABLE (user_id, user_name, user_password, user_level) values (1, 'admin', '$password', 'admin')");
+	fof_db_query("insert into $FOF_USER_TABLE (user_id, user_name, user_password_hash, user_level) values (1, 'admin', '$password_hash', 'admin')");
 	
 	echo 'OK!  Setup complete! <a href=".">Login as admin</a>, and start subscribing!';
 }
@@ -108,7 +108,7 @@ $tables[] = <<<EOQ
 CREATE TABLE IF NOT EXISTS `$FOF_USER_TABLE` (
   `user_id` int(11) NOT NULL auto_increment,
   `user_name` varchar(100) NOT NULL default '',
-  `user_password` varchar(32) NOT NULL default '',
+  `user_password_hash` varchar(32) NOT NULL default '',
   `user_level` enum('user','admin') NOT NULL default 'user',
   `user_prefs` text,
   PRIMARY KEY  (`user_id`)
@@ -125,6 +125,21 @@ foreach($tables as $table)
 
 ?>
 Tables exist.<br><br>
+
+<?php
+$result = fof_db_query("show columns from $FOF_USER_TABLE like 'user_password_hash'");
+
+if(mysql_num_rows($result) == 0)
+{
+
+print "Upgrading schema...";
+
+fof_db_query("ALTER TABLE $FOF_USER_TABLE CHANGE `user_password` `user_password_hash` VARCHAR( 32 ) NOT NULL");
+fof_db_query("update $FOF_USER_TABLE set user_password_hash = md5(concat(user_password_hash, user_name))");
+
+print "Done.<BR><BR>";
+}
+?>
 
 Inserting initial data...
 

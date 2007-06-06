@@ -58,7 +58,7 @@ function fof_db_query($sql, $live=0)
       //echo "<pre>";
       //print_r(debug_backtrace());
       //echo "</pre>";
-      die("Cannot query database.  Have you run <a href=\"install.php\"><code>install.php</code></a>? MySQL says: <b>". mysql_error() . "</b>");
+      die("Cannot query database.  Have you run <a href=\"install.php\"><code>install.php</code></a> to create or upgrade your installation? MySQL says: <b>". mysql_error() . "</b>");
       }
       return $result;
    }
@@ -306,7 +306,7 @@ function fof_db_authenticate($user_name, $user_password_hash)
 {
    global $FOF_USER_TABLE, $FOF_ITEM_TABLE, $FOF_ITEM_TAG_TABLE, $fof_connection, $fof_user_id, $fof_user_name, $fof_user_level, $fof_user_prefs;
    
-   $sql = "select * from $FOF_USER_TABLE where user_name = '$user_name' and md5(user_password) = '" . mysql_escape_string($user_password_hash) . "'";
+   $sql = "select * from $FOF_USER_TABLE where user_name = '$user_name' and user_password_hash = '" . mysql_escape_string($user_password_hash) . "'";
    
    $result = fof_db_query($sql);
    

@@ -28,8 +28,9 @@ if(isset($_POST['adduser']) && isset($_POST['username']) && isset($_POST['passwo
 {
 	$username = $_POST['username'];
 	$password = $_POST['password'];
-	
-	fof_db_query("insert into $FOF_USER_TABLE (user_name, user_password) values ('$username', '$password')");
+	$password_hash = md5($password . $username);
+
+	fof_db_query("insert into $FOF_USER_TABLE (user_name, user_password_hash) values ('$username', '$password_hash')");
 	
 	$message = "User '$username' added.";
 }
