@@ -48,7 +48,7 @@ define('SIMPLEPIE_VERSION', 'Razzleberry++');
  * SimplePie Build
  * @todo Hardcode for release (there's no need to have to call SimplePie_Misc::parse_date() only every load of simplepie.inc)
  */
-define('SIMPLEPIE_BUILD', gmdate('YmdHis', SimplePie_Misc::parse_date('$Date: 2007-06-04 10:43:10 -0700 (Mon, 04 Jun 2007) $')));
+define('SIMPLEPIE_BUILD', gmdate('YmdHis', SimplePie_Misc::parse_date('$Date: 2007-06-05 17:06:18 -0700 (Tue, 05 Jun 2007) $')));
 
 /**
  * SimplePie Website URL
@@ -1837,8 +1837,12 @@ function embed_wmedia(width, height, link) {
 												trigger_error("$cache->name is not writeable", E_USER_WARNING);
 											}
 										}
-										return $favicon;
+										else
+										{
+											trigger_error("$cache->name is not writeable", E_USER_WARNING);
+										}
 									}
+									return $m[2][0];
 								}
 							}
 						}
