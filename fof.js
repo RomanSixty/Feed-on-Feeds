@@ -123,7 +123,13 @@ function completeDrag(e)
 		$('sidebar').style.width=newWidth+'px';
 		$('handle').style.left=newWidth+'px';
 		$('items').style.marginLeft=(newWidth+20)+'px';
-		
+		if(isIE)
+		{
+			tables = $$('#sidebar table');
+			for(i=0;i<tables.length;i++){
+				tables[i].style.width=(newWidth-20)+'px';
+			}
+		}		
 		var today = new Date();
 		var expire = new Date();
 		expire.setTime(today.getTime() + 3600000*24*100);

@@ -44,6 +44,8 @@ else
       	<?php if($fof_user_prefs['keyboard']) { ?>
       	document.onkeypress = keyboard;
       	<?php } ?>
+
+	isIE = false;
       </script>
       
 	  <style>
@@ -51,7 +53,7 @@ else
 		{
 			width: <?php echo $width ?>px;
 		}
-		
+
 		#handle
 		{
 			left:<?php echo $width ?>px;
@@ -62,6 +64,18 @@ else
 			margin-left: <?php echo $width+20 ?>px;
 		}
 	  </style>
+
+	<!--[if IE]>
+	  <style>
+		#sidebar table
+		{
+			width: <?php echo $width - 20?>px;
+		}
+	  </style>
+
+	  <script>isIE = true;</script>
+	<![endif]-->
+		
 
    </head>
       
