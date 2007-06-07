@@ -391,7 +391,7 @@ function fof_get_nav_links($feed=NULL, $what="new", $when=NULL, $start=NULL, $li
    {
      if($when == "today")
      {
-      $whendate = date( "Y/m/d", time() - (FOF_TIME_OFFSET * 60 * 60) );
+      $whendate = fof_todays_date();
      }
      else
      {
@@ -399,8 +399,6 @@ function fof_get_nav_links($feed=NULL, $what="new", $when=NULL, $start=NULL, $li
      }
 
      $begin = strtotime($whendate);
-     $begin = $begin + (FOF_TIME_OFFSET * 60 * 60);
-     $end = $begin + (24 * 60 * 60);
 
      $tomorrow = date( "Y/m/d", $begin + (24 * 60 * 60) );
      $yesterday = date( "Y/m/d", $begin - (24 * 60 * 60) );
@@ -730,6 +728,14 @@ function fof_multi_sort($tab,$key,$rev){
 
    usort($tab,$compare) ;
    return $tab ;
+}
+
+function fof_todays_date()
+{
+  $prefs = fof_prefs();
+  $offset = $prefs['tzoffset'];
+
+  return gmdate( "Y/m/d", time() + ($offset * 60 * 60) );
 }
 
 ?>

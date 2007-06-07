@@ -13,11 +13,6 @@
  */
 
 
-// Difference, in hours, between your server and your local time zone.
-
-define('FOF_TIME_OFFSET', 0);
-
-
 // Database connection information.  Host, username, password, database name.
 
 define('FOF_DB_HOST', "host.example.com");

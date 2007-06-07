@@ -414,23 +414,23 @@ function fof_db_get_items($user_id=1, $feed=NULL, $what="unread", $when=NULL, $s
 {
    global $FOF_SUBSCRIPTION_TABLE, $FOF_FEED_TABLE, $FOF_ITEM_TABLE, $FOF_ITEM_TAG_TABLE, $FOF_TAG_TABLE;
 
+   $prefs = fof_prefs();
+   $offset = $prefs['tzoffset'];
+
    if(!is_null($when) && $when != "")
    {
      if($when == "today")
      {
-      $whendate = date( "Y/m/d", time() - (FOF_TIME_OFFSET * 60 * 60) );
+      $whendate = fof_todays_date();
      }
      else
      {
       $whendate = $when;
      }
 
-     $begin = strtotime($whendate);
-     $begin = $begin + (FOF_TIME_OFFSET * 60 * 60);
+     $whendate = explode("/", $whendate);
+     $begin = gmmktime(0, 0, 0, $whendate[1], $whendate[2], $whendate[0]) - ($offset * 60 * 60);
      $end = $begin + (24 * 60 * 60);
-
-     $tomorrow = date( "Y/m/d", $begin + (24 * 60 * 60) );
-     $yesterday = date( "Y/m/d", $begin - (24 * 60 * 60) );
    }
 
    if(is_numeric($start))
@@ -452,7 +452,7 @@ function fof_db_get_items($user_id=1, $feed=NULL, $what="unread", $when=NULL, $s
 
    if(!is_null($when) && $when != "")
    {
-     $query .= " and $FOF_ITEM_TABLE.item_cached > $begin and $FOF_ITEM_TABLE.item_cached < $end";
+     $query .= " and $FOF_ITEM_TABLE.item_published > $begin and $FOF_ITEM_TABLE.item_published < $end";
    }
 
    if($what != "all")

@@ -48,9 +48,13 @@ function fof_render_item($item)
 	$item_title = $item['item_title'];
 	$item_content = $item['item_content'];
 	$item_read = $item['item_read'];
-	$item_published = date("Y-n-d g:ia", $item['item_published']);
-	$item_cached = date("Y-n-d g:ia", $item['item_cached']);
-	$item_updated = date("Y-n-d g:ia", $item['item_updated']);
+
+	$prefs = fof_prefs();
+	$offset = $prefs['tzoffset'];
+
+	$item_published = gmdate("Y-n-d g:ia", $item['item_published'] + $offset*60*60);
+	$item_cached = gmdate("Y-n-d g:ia", $item['item_cached'] + $offset*60*60);
+	$item_updated = gmdate("Y-n-d g:ia", $item['item_updated'] + $offset*60*60);
 
 	if(!$item_title) $item_title = "[no title]";
 	
