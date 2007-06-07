@@ -626,7 +626,7 @@ function fof_update_feed($id)
 		  $link = $item->get_permalink();
 		  $title = $item->get_title();
 		  $content = $item->get_content();
-		  $date = $item->get_date();
+		  $date = $item->get_date('U');
 		  $item_id = $item->get_id();
 	
 		  if(!$item_id)
@@ -640,7 +640,7 @@ function fof_update_feed($id)
 		  if($id == NULL)
 		  {
 			 $n++;
-			 $id = fof_db_add_item($feed_id, $item_id, $link, $title, $content, time(), time(), time());
+			 $id = fof_db_add_item($feed_id, $item_id, $link, $title, $content, time(), $date, $date);
 			 fof_mark_item_unread($feed_id, $id);
 		  }
 	
