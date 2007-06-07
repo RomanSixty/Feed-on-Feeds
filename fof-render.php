@@ -40,6 +40,7 @@ function fof_render_item($item)
 
 	$feed_link = $item['feed_link'];
 	$feed_title = $item['feed_title'];
+	$feed_image = $item['feed_image'];
 	$feed_description = $item['feed_description'];
 
 	$item_link = $item['item_link'];
@@ -142,7 +143,13 @@ function fof_render_item($item)
     
     <span class='dash'> - </span>
     
-    <h2><a href="<?php echo $feed_link ?>" title='<?php echo $feed_description ?>'><?php echo $feed_title ?></a></h2>
+    <h2>
+
+    <?php $prefs = fof_prefs(); if($feed_image && $prefs['favicons']) { ?>
+    <a href="<?php echo $feed_link ?>" title='<?php echo $feed_description ?>'><img src="<?php echo $feed_image ?>" height="16" width="16" border="0" /></a>
+    <?php } ?>
+    <a href="<?php echo $feed_link ?>" title='<?php echo $feed_description ?>'><?php echo $feed_title ?></a>
+    </h2>
 
 	<span class="meta">on <?php echo $item_published ?></span>
 
