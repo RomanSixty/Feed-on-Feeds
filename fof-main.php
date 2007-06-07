@@ -627,6 +627,7 @@ function fof_update_feed($id)
 		  $title = $item->get_title();
 		  $content = $item->get_content();
 		  $date = $item->get_date('U');
+		  if(!$date) $date = time();
 		  $item_id = $item->get_id();
 	
 		  if(!$item_id)
