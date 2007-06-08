@@ -21,10 +21,17 @@ include_once("fof-main.php");
 
 $result = fof_db_get_feeds();
 
-while($row = fof_db_get_row($result))
+while($feed = fof_db_get_row($result))
 {
-	$title = $row['feed_title'];
-	$id = $row['feed_id'];
+    $feeds[] = $feed;
+}
+
+$feeds = fof_multi_sort($feeds, 'feed_cache_attempt_date', false);
+
+foreach($feeds as $feed)
+{
+	$title = $feed['feed_title'];
+	$id = $feed['feed_id'];
 	fof_update_feed($id);
 }
 

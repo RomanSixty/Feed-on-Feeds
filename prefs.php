@@ -19,7 +19,7 @@ if(isset($_POST['prefs']))
 	$fof_user_prefs['favicons'] = isset($_POST['favicons']);
 	$fof_user_prefs['keyboard'] = isset($_POST['keyboard']);
 	$fof_user_prefs['tzoffset'] = intval($_POST['tzoffset']);
-	
+
 	fof_db_save_prefs(fof_current_user(), $fof_user_prefs);
 	
 	$message = 'Saved prefs.';

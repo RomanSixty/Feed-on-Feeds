@@ -596,6 +596,8 @@ function fof_update_feed($id)
    $url = $feed['feed_url'];
    fof_log("Updating $url");
 
+   fof_db_feed_mark_attempted_cache($id);
+
     $rss = fof_parse($feed['feed_url']);
 
 			if (isset($rss->error)) {

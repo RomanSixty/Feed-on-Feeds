@@ -77,6 +77,14 @@ function fof_db_feed_mark_cached($feed_id)
 	$result = fof_db_query($sql);
 }
 
+function fof_db_feed_mark_attempted_cache($feed_id)
+{
+    global $FOF_FEED_TABLE;
+
+	$sql = "update $FOF_FEED_TABLE set feed_cache_attempt_date = " . time() . " where feed_id = '$feed_id'";
+	$result = fof_db_query($sql);
+}
+
 
 function fof_db_feed_update_metadata($feed_id, $url, $title, $link, $description, $image)
 {

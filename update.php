@@ -35,6 +35,8 @@ else
     }
 }
 
+$feeds = fof_multi_sort($feeds, 'feed_cache_attempt_date', false);
+
 foreach($feeds as $feed)
 {
 	$title = $feed['feed_title'];

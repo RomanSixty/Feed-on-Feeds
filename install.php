@@ -56,6 +56,7 @@ CREATE TABLE IF NOT EXISTS `$FOF_FEED_TABLE` (
   `feed_description` text NOT NULL,
   `feed_image` text,
   `feed_cache_date` int(11) default '0',
+  `feed_cache_attempt_date` int(11) default '0',
   `feed_cache` text,
   PRIMARY KEY  (`feed_id`)
 ) ENGINE=MyISAM DEFAULT CHARSET=latin1;
@@ -136,6 +137,21 @@ print "Upgrading schema...";
 
 fof_db_query("ALTER TABLE $FOF_USER_TABLE CHANGE `user_password` `user_password_hash` VARCHAR( 32 ) NOT NULL");
 fof_db_query("update $FOF_USER_TABLE set user_password_hash = md5(concat(user_password_hash, user_name))");
+
+print "Done.<BR><BR>";
+}
+?>
+
+
+<?php
+$result = fof_db_query("show columns from $FOF_FEED_TABLE like 'feed_cache_attempt_date'");
+
+if(mysql_num_rows($result) == 0)
+{
+
+print "Upgrading schema...";
+
+fof_db_query("ALTER TABLE `fof_test_feed` ADD `feed_cache_attempt_date` INT( 11 ) DEFAULT '0' AFTER `feed_cache_date` ;");
 
 print "Done.<BR><BR>";
 }
