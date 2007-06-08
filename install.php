@@ -151,7 +151,7 @@ if(mysql_num_rows($result) == 0)
 
 print "Upgrading schema...";
 
-fof_db_query("ALTER TABLE `fof_test_feed` ADD `feed_cache_attempt_date` INT( 11 ) DEFAULT '0' AFTER `feed_cache_date` ;");
+fof_db_query("ALTER TABLE $FOF_FEED_TABLE ADD `feed_cache_attempt_date` INT( 11 ) DEFAULT '0' AFTER `feed_cache_date` ;");
 
 print "Done.<BR><BR>";
 }
