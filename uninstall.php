@@ -79,9 +79,9 @@ else
 {
 ?>
 <script>
-if(confirm('Do you really want to uninstall Feed on Feeds?'))
+if(confirm('This is your last chance.  Do you really want to uninstall Feed on Feeds?'))
 {
-	document.location = document.location + '?really=really';
+	document.location = './uninstall.php?really=really';
 }
 </script>
 <a href="."><b>phew!</b></a>
