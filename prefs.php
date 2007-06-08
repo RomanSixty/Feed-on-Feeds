@@ -93,7 +93,10 @@ Username: <input type=string name=username> Password: <input type=string name=pa
 No Admin options yet!<br><br>
 <input type=submit name=options value="Save Options">
 </form>
-
+<br>
+<form method="get" action="uninstall.php" style="border: 1px solid black; margin: 10px; padding: 10px;" onsubmit="return confirm('Really?  This will delete all the database tables!')">
+<center><input type=submit name=uninstall value="Uninstall Feed on Feeds" style="background-color: red"></center>
+</form>
 
 <?php } ?>
 
