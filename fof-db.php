@@ -303,6 +303,8 @@ function fof_db_save_prefs($user_id, $prefs)
 {
    global $FOF_USER_TABLE, $fof_connection, $fof_user_id, $fof_user_name, $fof_user_level, $fof_user_prefs;
    
+   $fof_user_prefs = $prefs;
+   
    $prefs = mysql_escape_string(serialize($prefs));
    
    $sql = "update $FOF_USER_TABLE set user_prefs = '$prefs' where user_id = $user_id";
