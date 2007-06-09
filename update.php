@@ -14,10 +14,6 @@
 
 include("header.php");
 
-set_time_limit(60*10);
-
-echo '<br>';
-
 $feed = $_GET['feed'];
 $feeds = array();
 
@@ -37,26 +33,21 @@ else
 
 $feeds = fof_multi_sort($feeds, 'feed_cache_attempt_date', false);
 
+print("<script>\nwindow.onload = ajaxupdate;\nfeedslist = [");
+    
 foreach($feeds as $feed)
 {
 	$title = $feed['feed_title'];
 	$id = $feed['feed_id'];
-	print "Updating <b>$title</b>...";
-	
-	$count = fof_update_feed($id);
-
-	print "done. ";
-	
-	if($count)
-	{
-		print "<b><font color=red>$count new items</font></b>";
-	}
-	print "<br>";
+    
+    $feedjson[] = "{'id': $id, 'title': '$title'}";
 }
 
-fof_db_optimize();
+print(join($feedjson, ", "));
+print("];\n</script>");
+
+print("<br>");
+
+include("footer.php");
 ?>
 
-<br>Update complete.
-
-<?php include("footer.php") ?>

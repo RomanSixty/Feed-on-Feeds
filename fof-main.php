@@ -98,13 +98,13 @@ function fof_is_admin()
 
 function fof_get_tags($user_id)
 {
-   $tags = array();
-   
-   $result = fof_db_get_tags($user_id);
-   
-   while($row = fof_db_get_row($result))
-   {
-      $tags[] = $row;
+    $tags = array();
+    
+    $result = fof_db_get_tags($user_id);
+    
+    while($row = fof_db_get_row($result))
+    {
+        $tags[] = $row;
     }
     
     return $tags;
@@ -465,78 +465,57 @@ function fof_prepare_url($url)
 
 function fof_subscribe($user_id, $url, $autodiscovery=true)
 {
-   if(!$url) return false;
-
-    $url = fof_prepare_url($url);
-
-   print "Attempting to subscribe to <a href=\"$url\">$url</a>...<br>";
-
+    if(!$url) return false;
+    
+    $url = fof_prepare_url($url);    
     $feed = fof_db_get_feed_by_url($url);
-
-   if(fof_is_subscribed($user_id, $url))
-   {
-      print "You are already subscribed to " . fof_render_feed_link($feed) . "<br><br>";
-      return true;
-   }
-
-   if(fof_feed_exists($url))
-   {
-    fof_db_add_subscription($user_id, $feed['feed_id']);
-   fof_update_feed($feed['feed_id']);
-   
-   fof_db_mark_feed_unread($user_id, $feed['feed_id']);
-      echo "<font color=\"green\"><b>Subscribed.</b></font><br>";
-      
-      return true;
-   }
-
-   $rss = fof_parse($url);
-
-   if (isset($rss->error))
-   {
-      print "Error: <B>" . $rss->error . "</b> ";
-      print "<a href=\"http://feedvalidator.org/check?url=$url\">try to validate it?</a> ";
-      return 0;
-   }
-   else
-   {
-   
-      if(fof_feed_exists($rss->subscribe_url()))
-   {
-       $feed = fof_db_get_feed_by_url($rss->subscribe_url());
-
-      if(fof_is_subscribed($user_id, $rss->subscribe_url()))
-   {
-      print "You are already subscribed to " . fof_render_feed_link($feed) . "<br><br>";
-      return true;
-   }
-
-
-    fof_db_add_subscription($user_id, $feed['feed_id']);
-   fof_update_feed($feed['feed_id']);
-   
-   fof_db_mark_feed_unread($user_id, $feed['feed_id']);
-      echo "<font color=\"green\"><b>Subscribed.</b></font><br>";
-      
-      return true;
-   }
-
-   //   echo "<pre>";
-   //print_r($rss);
-   //echo "</pre>";
-
-      $id = fof_add_feed($rss->subscribe_url(), $rss->get_title(), $rss->get_link(), $rss->get_description() );
-		echo "added with id $id<br>";
+    
+    if(fof_is_subscribed($user_id, $url))
+    {
+        return "You are already subscribed to " . fof_render_feed_link($feed) . "<br><br>";
+    }
+    
+    if(fof_feed_exists($url))
+    {
+        fof_db_add_subscription($user_id, $feed['feed_id']);
+        fof_update_feed($feed['feed_id']);
+        
+        fof_db_mark_feed_unread($user_id, $feed['feed_id']);
+        return "<font color=\"green\"><b>Subscribed.</b></font><br>";
+    }
+    
+    $rss = fof_parse($url);
+    
+    if (isset($rss->error))
+    {
+        return "Error: <B>" . $rss->error . "</b> <a href=\"http://feedvalidator.org/check?url=$url\">try to validate it?</a> ";
+    }
+    else
+    {
+        if(fof_feed_exists($rss->subscribe_url()))
+        {
+            $feed = fof_db_get_feed_by_url($rss->subscribe_url());
+            
+            if(fof_is_subscribed($user_id, $rss->subscribe_url()))
+            {
+                return "You are already subscribed to " . fof_render_feed_link($feed) . "<br><br>";
+            }
+            
+            fof_db_add_subscription($user_id, $feed['feed_id']);
+            fof_update_feed($feed['feed_id']);
+            
+            fof_db_mark_feed_unread($user_id, $feed['feed_id']);
+            return "<font color=\"green\"><b>Subscribed.</b></font><br>";
+        }
+        
+        $id = fof_add_feed($rss->subscribe_url(), $rss->get_title(), $rss->get_link(), $rss->get_description() );
 		
-      fof_db_add_subscription($user_id, $id);
-		echo "added subscription<br>";
-   fof_update_feed($id);
-
-      fof_db_mark_feed_unread($user_id, $id);
-      echo "<font color=\"green\"><b>Subscribed.</b></font><br>";
-      
-      return true;
-   }
+        fof_db_add_subscription($user_id, $id);
+        fof_update_feed($id);
+        
+        fof_db_mark_feed_unread($user_id, $id);
+        return "<font color=\"green\"><b>Subscribed.</b></font><br>";
+    }
 }
 
 function fof_add_feed($url, $title, $link, $description)
@@ -582,7 +561,6 @@ function fof_parse($url)
     $pie->set_favicon_handler("favicon.php");
 	$pie->set_feed_url($url);
 	$pie->remove_div(false);
-	//$pie->set_stupidly_fast(true);
 	$pie->init();
 	
 	return $pie;
@@ -590,99 +568,91 @@ function fof_parse($url)
 
 function fof_update_feed($id)
 {
-   if(!$id) return 0;
-   
-   $feed = fof_db_get_feed_by_id($id);
-   $url = $feed['feed_url'];
-   fof_log("Updating $url");
-
-   fof_db_feed_mark_attempted_cache($id);
-
+    if(!$id) return 0;
+    
+    $feed = fof_db_get_feed_by_id($id);
+    $url = $feed['feed_url'];
+    fof_log("Updating $url");
+    
+    fof_db_feed_mark_attempted_cache($id);
+    
     $rss = fof_parse($feed['feed_url']);
+    
+    if ($rss->error())
+    {
+        return array(0, "Error: <B>" . $rss->error() . "</b> <a href=\"http://feedvalidator.org/check?url=$url\">try to validate it?</a>");
+    }
+    
+    $sub = $rss->subscribe_url();
+    fof_log("subscription url is $sub");
+    
+    fof_db_feed_update_metadata($id, $rss->subscribe_url(), $rss->get_title(), $rss->get_link(), $rss->get_description(), $rss->get_favicon("./image/feed-icon.png") );
+    
+    $feed_id = $feed['feed_id'];
+    
+    if($rss->get_items())
+    {
+        foreach($rss->get_items() as $item)
+        {
+            $link = $item->get_permalink();
+            $title = $item->get_title();
+            $content = $item->get_content();
+            $date = $item->get_date('U');
+            if(!$date) $date = time();
+            $item_id = $item->get_id();
+            
+            if(!$item_id)
+            {
+                $item_id = $link;
+            }
+            
+            $id = fof_db_find_item($feed_id, $item_id);
+            
+            if($id == NULL)
+            {
+                $n++;
+                $id = fof_db_add_item($feed_id, $item_id, $link, $title, $content, time(), $date, $date);
+                fof_mark_item_unread($feed_id, $id);
+            }
+            
+            $ids[] = $id;
+        }
+    }
 
-			if (isset($rss->error)) {
-
-      print "Error: <B>" . $rss->error . "</b> ";
-      print "<a href=\"http://feedvalidator.org/check?url=$url\">try to validate it?</a> ";
-      return 0;
-   }
-
-   
-   //echo "<pre>";
-   //print_r($rss);
-   //echo "</pre>";
-
-   $sub = $rss->subscribe_url();
-   fof_log("subscription url is $sub");
-   
-   fof_db_feed_update_metadata($id, $rss->subscribe_url(), $rss->get_title(), $rss->get_link(), $rss->get_description(), $rss->get_favicon("./image/feed-icon.png") );
-
-   $feed_id = $feed['feed_id'];
-   
-   if($rss->get_items())
-   {
-	   foreach($rss->get_items() as $item)
-	   {
-		  $link = $item->get_permalink();
-		  $title = $item->get_title();
-		  $content = $item->get_content();
-		  $date = $item->get_date('U');
-		  if(!$date) $date = time();
-		  $item_id = $item->get_id();
-	
-		  if(!$item_id)
-		  {
-			 $item_id = $link;
-		  }
-	
-	
-		  $id = fof_db_find_item($feed_id, $item_id);
-	
-		  if($id == NULL)
-		  {
-			 $n++;
-			 $id = fof_db_add_item($feed_id, $item_id, $link, $title, $content, time(), $date, $date);
-			 fof_mark_item_unread($feed_id, $id);
-		  }
-	
-		  $ids[] = $id;
-	   }
-   }
-
-   // delete items that are not tagged, over a month old, and not currently in the feed
-   $count = count($ids);
-   if(count($ids) != 0)
-   {
-	  $in = implode ( ", ", $ids );
-	  
-	  global $FOF_ITEM_TABLE;
-   	  $sql = "select item_id, item_cached from $FOF_ITEM_TABLE where feed_id = $feed_id and item_id not in ($in) order by item_cached asc limit $count, 1000000000";
-      $result = fof_db_query($sql);
-
-	   while($row = fof_db_get_row($result))
-	   {
-		  if($row['item_cached'] < time() - 30 * 24 * 60 * 60)
-		  {
-		    if(!fof_item_has_tags($row['item_id']))
-		    {		      
-		      $delete[] = $row['item_id'];
-
-		    }
-		  }
-	   }
-	   
-	   if(count($delete) != 0)
-	   {
-	     $in = implode(", ", $delete); 
-	     fof_db_query( "delete from $FOF_ITEM_TABLE where item_id in ($in)" );
-	   }
-   }
-   
-   $rss = null;
-   
-   fof_db_feed_mark_cached($feed_id);
-   
-   return $n;
+    // delete items that are not tagged, over a month old, and not currently in the feed
+    $count = count($ids);
+    if(count($ids) != 0)
+    {
+        $in = implode ( ", ", $ids );
+        
+        global $FOF_ITEM_TABLE;
+        $sql = "select item_id, item_cached from $FOF_ITEM_TABLE where feed_id = $feed_id and item_id not in ($in) order by item_cached asc limit $count, 1000000000";
+        $result = fof_db_query($sql);
+        
+        while($row = fof_db_get_row($result))
+        {
+            if($row['item_cached'] < time() - 30 * 24 * 60 * 60)
+            {
+                if(!fof_item_has_tags($row['item_id']))
+                {		      
+                    $delete[] = $row['item_id'];
+                    
+                }
+            }
+        }
+        
+        if(count($delete) != 0)
+        {
+            $in = implode(", ", $delete); 
+            fof_db_query( "delete from $FOF_ITEM_TABLE where item_id in ($in)" );
+        }
+    }
+    
+    $rss = null;
+    
+    fof_db_feed_mark_cached($feed_id);
+    
+    return array($n, "");
 }
 
 function fof_item_has_tags($item_id)
@@ -718,26 +688,27 @@ function fof_add_item_filter($function)
     $fof_item_filters[] = $function;
 }
 
-function fof_multi_sort($tab,$key,$rev){
-   if($rev)
-   {
-   $compare = create_function('$a,$b','if (strtolower($a["'.$key.'"]) == strtolower($b["'.$key.'"])) {return 0;}else {return (strtolower($a["'.$key.'"]) > strtolower($b["'.$key.'"])) ? -1 : 1;}');
-   }
-   else
-   {
-   $compare = create_function('$a,$b','if (strtolower($a["'.$key.'"]) == strtolower($b["'.$key.'"])) {return 0;}else {return (strtolower($a["'.$key.'"]) < strtolower($b["'.$key.'"])) ? -1 : 1;}');
-   }
-
-   usort($tab,$compare) ;
-   return $tab ;
+function fof_multi_sort($tab,$key,$rev)
+{
+    if($rev)
+    {
+        $compare = create_function('$a,$b','if (strtolower($a["'.$key.'"]) == strtolower($b["'.$key.'"])) {return 0;}else {return (strtolower($a["'.$key.'"]) > strtolower($b["'.$key.'"])) ? -1 : 1;}');
+    }
+    else
+    {
+        $compare = create_function('$a,$b','if (strtolower($a["'.$key.'"]) == strtolower($b["'.$key.'"])) {return 0;}else {return (strtolower($a["'.$key.'"]) < strtolower($b["'.$key.'"])) ? -1 : 1;}');
+    }
+    
+    usort($tab,$compare) ;
+    return $tab ;
 }
 
 function fof_todays_date()
 {
-  $prefs = fof_prefs();
-  $offset = $prefs['tzoffset'];
-
-  return gmdate( "Y/m/d", time() + ($offset * 60 * 60) );
+    $prefs = fof_prefs();
+    $offset = $prefs['tzoffset'];
+    
+    return gmdate( "Y/m/d", time() + ($offset * 60 * 60) );
 }
 
 ?>

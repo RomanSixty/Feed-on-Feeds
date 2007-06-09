@@ -309,3 +309,36 @@ function throb()
     Element.show('throbber');
 }
 
+function iterate( iterable ) {
+    var i = -1;
+    var getter = function() { return i < 0 ? null : i < iterable.length ? iterable[ i ] : null; };
+    return function() { return ++i < iterable.length ? getter : null };
+}
+
+function continueupdate()
+{
+    if(feed = feedi())
+    {
+        f = feed();
+        new Insertion.Bottom($('items'), 'Updating  ' + f['title'] + "... ");
+        
+        new Ajax.Updater('items', 'update-single.php', {
+            method: 'get',
+            parameters: 'feed=' + f['id'],
+            insertion: Insertion.Bottom,
+            onComplete: continueupdate
+        });
+    }
+    else
+    {
+        new Insertion.Bottom($('items'), '<br>Update complete!');
+        refreshlist();
+    }
+}
+
+function ajaxupdate()
+{
+    throb();
+    feedi = iterate(feedslist);
+    continueupdate();
+}
