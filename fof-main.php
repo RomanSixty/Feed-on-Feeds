@@ -472,7 +472,7 @@ function fof_subscribe($user_id, $url, $autodiscovery=true)
     
     if(fof_is_subscribed($user_id, $url))
     {
-        return "You are already subscribed to " . fof_render_feed_link($feed) . "<br><br>";
+        return "You are already subscribed to " . fof_render_feed_link($feed) . "<br>";
     }
     
     if(fof_feed_exists($url))
@@ -488,7 +488,7 @@ function fof_subscribe($user_id, $url, $autodiscovery=true)
     
     if (isset($rss->error))
     {
-        return "Error: <B>" . $rss->error . "</b> <a href=\"http://feedvalidator.org/check?url=$url\">try to validate it?</a> ";
+        return "Error: <B>" . $rss->error . "</b> <a href=\"http://feedvalidator.org/check?url=$url\">try to validate it?</a><br>";
     }
     else
     {
@@ -498,7 +498,7 @@ function fof_subscribe($user_id, $url, $autodiscovery=true)
             
             if(fof_is_subscribed($user_id, $rss->subscribe_url()))
             {
-                return "You are already subscribed to " . fof_render_feed_link($feed) . "<br><br>";
+                return "You are already subscribed to " . fof_render_feed_link($feed) . "<br>";
             }
             
             fof_db_add_subscription($user_id, $feed['feed_id']);

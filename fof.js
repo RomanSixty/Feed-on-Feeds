@@ -321,7 +321,8 @@ function continueupdate()
     {
         f = feed();
         new Insertion.Bottom($('items'), 'Updating  ' + f['title'] + "... ");
-        
+        $('items').childElements().last().scrollTo();
+
         new Ajax.Updater('items', 'update-single.php', {
             method: 'get',
             parameters: 'feed=' + f['id'],
@@ -336,9 +337,38 @@ function continueupdate()
     }
 }
 
+function continueadd()
+{    
+    if(feed = feedi())
+    {
+        f = feed();
+        new Insertion.Bottom($('items'), 'Adding  ' + f['url'] + "... ");
+        $('items').childElements().last().scrollTo();
+
+        new Ajax.Updater('items', 'add-single.php', {
+            method: 'get',
+            parameters: 'url=' + encodeURIComponent(f['url']),
+            insertion: Insertion.Bottom,
+            onComplete: continueadd
+        });
+    }
+    else
+    {
+        new Insertion.Bottom($('items'), '<br>Done!');
+        refreshlist();
+    }
+}
+
 function ajaxupdate()
 {
     throb();
     feedi = iterate(feedslist);
     continueupdate();
+}
+
+function ajaxadd()
+{
+    throb();
+    feedi = iterate(feedslist);
+    continueadd();
 }
