@@ -40,7 +40,7 @@ foreach($feeds as $feed)
 	$title = $feed['feed_title'];
 	$id = $feed['feed_id'];
     
-    $feedjson[] = "{'id': $id, 'title': '$title'}";
+    $feedjson[] = "{'id': $id, 'title': '" . addslashes($title) . "'}";
 }
 
 print(join($feedjson, ", "));
