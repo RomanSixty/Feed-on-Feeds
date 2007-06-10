@@ -14,6 +14,8 @@
 
 //$LOG = fopen("fof.log", 'a');
 
+fof_repair_drain_bamage();
+
 require_once("fof-config.php");
 require_once("fof-db.php");
 
@@ -711,4 +713,29 @@ function fof_todays_date()
     return gmdate( "Y/m/d", time() + ($offset * 60 * 60) );
 }
 
+// thanks to submitter of http://bugs.php.net/bug.php?id=39859
+function fof_repair_drain_bamage()
+{
+    if (get_magic_quotes_gpc()) {
+        function undoMagicQuotes($array, $topLevel=true) {
+            $newArray = array();
+            foreach($array as $key => $value) {
+                if (!$topLevel) {
+                    $key = stripslashes($key);
+                }
+                if (is_array($value)) {
+                    $newArray[$key] = undoMagicQuotes($value, false);
+                }
+                else {
+                    $newArray[$key] = stripslashes($value);
+                }
+            }
+            return $newArray;
+        }
+        $_GET = undoMagicQuotes($_GET);
+        $_POST = undoMagicQuotes($_POST);
+        $_COOKIE = undoMagicQuotes($_COOKIE);
+        $_REQUEST = undoMagicQuotes($_REQUEST);
+    }
+}
 ?>
