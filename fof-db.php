@@ -487,7 +487,7 @@ function fof_db_mark_unread($user_id, $items)
     
     foreach($items as $item)
     {
-        $sql[] = sprintf("%d, 1, %d)", $user_id, $item);
+        $sql[] = sprintf("(%d, 1, %d)", $user_id, $item);
     }
     
     $values = implode ( ",", $sql );
