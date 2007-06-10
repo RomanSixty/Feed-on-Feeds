@@ -309,6 +309,7 @@ function throb()
     Element.show('throbber');
 }
 
+// this fancy bit of computer science from Aristotle Pagaltzis @ http://plasmasturm.org/log/311/
 function iterate( iterable ) {
     var i = -1;
     var getter = function() { return i < 0 ? null : i < iterable.length ? iterable[ i ] : null; };
