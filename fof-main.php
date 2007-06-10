@@ -713,9 +713,11 @@ function fof_todays_date()
     return gmdate( "Y/m/d", time() + ($offset * 60 * 60) );
 }
 
-// thanks to submitter of http://bugs.php.net/bug.php?id=39859
 function fof_repair_drain_bamage()
 {
+    if (ini_get('register_globals')) foreach($_REQUEST as $k=>$v) { unset(${$k}); }
+    
+    // thanks to submitter of http://bugs.php.net/bug.php?id=39859
     if (get_magic_quotes_gpc()) {
         function undoMagicQuotes($array, $topLevel=true) {
             $newArray = array();
