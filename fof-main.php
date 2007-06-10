@@ -41,6 +41,7 @@ function require_user()
     if(!isset($_COOKIE["user_name"]) || !isset($_COOKIE["user_password_hash"]))
     {
         Header("Location: login.php");
+        exit();
     }
     
     $user_name = $_COOKIE["user_name"];
@@ -49,6 +50,7 @@ function require_user()
     if(!fof_authenticate($user_name, $user_password_hash))
     {
         Header("Location: login.php");
+        exit();
     }
 }
 
