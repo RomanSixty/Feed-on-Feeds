@@ -579,6 +579,15 @@ function fof_db_add_user($username, $password)
 	fof_safe_query("insert into $FOF_USER_TABLE (user_name, user_password_hash) values ('%s', '%s')", $username, $password_hash);
 }
 
+function fof_db_change_password($username, $password)
+{
+    global $FOF_USER_TABLE;
+    
+	$password_hash = md5($password . $username);
+    
+	fof_safe_query("update $FOF_USER_TABLE set user_password_hash = '%s' where user_name = '%s'", $password_hash, $username);
+}
+
 function fof_db_delete_user($username)
 {
     global $FOF_USER_TABLE;
