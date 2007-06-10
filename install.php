@@ -34,9 +34,8 @@ header("Content-Type: text/html; charset=utf-8");
 <?php
 if($_GET['password'])
 {
-	$password_hash = mysql_real_escape_string(md5($_GET['password'] . 'admin'));
-	
-	fof_db_query("insert into $FOF_USER_TABLE (user_id, user_name, user_password_hash, user_level) values (1, 'admin', '$password_hash', 'admin')");
+	$password_hash = md5($_GET['password'] . 'admin');
+	fof_safe_query("insert into $FOF_USER_TABLE (user_id, user_name, user_password_hash, user_level) values (1, 'admin', '%s', 'admin')", $password_hash);
 	
 	echo 'OK!  Setup complete! <a href=".">Login as admin</a>, and start subscribing!';
 }

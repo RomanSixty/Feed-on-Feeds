@@ -27,12 +27,10 @@ if(isset($_POST['prefs']))
 
 if(isset($_POST['adduser']) && isset($_POST['username']) && isset($_POST['password']) )
 {
-	$username = $_POST['username'];
-	$password = $_POST['password'];
-	$password_hash = md5($password . $username);
+    $username = $_POST['username'];
+    $password = $_POST['password'];
 
-	fof_db_query("insert into $FOF_USER_TABLE (user_name, user_password_hash) values ('$username', '$password_hash')");
-	
+	fof_db_add_user($username, $password);
 	$message = "User '$username' added.";
 }
 
@@ -40,8 +38,7 @@ if(isset($_POST['deleteuser']) && isset($_POST['username']))
 {
 	$username = $_POST['username'];
 	
-	fof_db_query("delete from $FOF_USER_TABLE where user_name = '$username'");
-	
+	fof_db_delete_user($username);
 	$message = "User '$username' deleted.";
 }
 
@@ -72,22 +69,30 @@ Time offset in hours: <input size=3 type=string name=tzoffset value="<?php echo 
 Username: <input type=string name=username> Password: <input type=string name=password> <input type=submit name=adduser value="Add user">
 </form>
 
-<br><h1>Delete user</h1>
-<form method="post" action="prefs.php" style="border: 1px solid black; margin: 10px; padding: 10px;" onsubmit="return confirm('Are you sure?')">
-<select name=username>
 <?php
 	$result = fof_db_query("select user_name from $FOF_USER_TABLE where user_id > 1");
 	
 	while($row = fof_db_get_row($result))
 	{
 		$username = $row['user_name'];
-		echo "<option value=$username>$username</option>";
+		$delete_options .= "<option value=$username>$username</option>";
 	}
+
+    if(isset($delete_options))
+    {
 ?>
+
+<br><h1>Delete user</h1>
+<form method="post" action="prefs.php" style="border: 1px solid black; margin: 10px; padding: 10px;" onsubmit="return confirm('Are you sure?')">
+<select name=username>
+
+<?php echo $delete_options ?>
 
 </select> <input type=submit name=deleteuser value="Delete user"><br>
 </form>
 
+<?php } ?>
+    
 <br><h1>Feed on Feeds - Admin Options</h1>
 <form method="post" action="prefs.php" style="border: 1px solid black; margin: 10px; padding: 10px;">
 No Admin options yet!<br><br>
