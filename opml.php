@@ -18,22 +18,25 @@ include_once("fof-main.php");
 echo '<?xml version="1.0"?>';
 ?>
 
-<opml>
+<opml version="1.1">
+  <head>
+    <title>Feed on Feeds Subscriptions</title>  
+  </head>
   <body>
 <?php
 $result = fof_db_get_subscriptions(fof_current_user());
 
 while($row = fof_db_get_row($result))
 {
-	$url = $row['feed_url'];
-	$title = $row['feed_title'];
-	$link = $row['feed_link'];
-	$description = $row['feed_description'];
+	$url = htmlspecialchars($row['feed_url']);
+	$title = htmlspecialchars($row['feed_title']);
+	$link = htmlspecialchars($row['feed_link']);
 
 	echo <<<HEYO
-    <outline description="$description"
-             htmlurl="$link"
+    <outline type="rss"
+             text="$title"
              title="$title"
+             htmlUrl="$link"
              xmlUrl="$url"
     />
 
@@ -42,3 +45,4 @@ HEYO;
 ?>
   </body>
 </opml>
+
