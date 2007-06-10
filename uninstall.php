@@ -12,9 +12,6 @@
  *
  */
 
-$installing = true;
-$fof_no_login = true;
-
 include_once("fof-main.php");
 header("Content-Type: text/html; charset=utf-8");
 
