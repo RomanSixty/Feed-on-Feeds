@@ -54,6 +54,12 @@ if($_FILES['opml_file']['tmp_name'])
 
 <div style="background: #eee; border: 1px solid black; padding: 1.5em; margin: 1.5em;">If your browser is cool, you can <a href='javascript:window.navigator.registerContentHandler("application/vnd.mozilla.maybe.feed", "http://<?php echo $_SERVER["HTTP_HOST"] . dirname($_SERVER["SCRIPT_NAME"]) ?>/add.php?rss_url=%s", "Feed on Feeds")'>register Feed on Feeds as a Feed Reader</a>.  If it is not cool, you can still use the <a href="javascript:void(location.href='http://<?php echo $_SERVER["HTTP_HOST"] . $_SERVER["SCRIPT_NAME"] ?>?rss_url='+escape(location))">FoF subscribe</a> bookmarklet to subscribe to any page with a feed.  Just add it as a bookmark and then click on it when you are at a page you'd like to subscribe to!</div>
 
+<form method="post" action="opml.php">
+<input type="submit" value="Export subscriptions as OPML">
+</form>
+
+<br>
+
 <form method="post" action="add.php" enctype="multipart/form-data">
 <input type="hidden" name="MAX_FILE_SIZE" value="100000">
 
