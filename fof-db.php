@@ -168,7 +168,7 @@ function fof_db_get_subscribed_users($feed_id)
 
 function fof_db_mark_item_unread($users, $id)
 {
-    global $FOF_TAG_TABLE;
+    global $FOF_ITEM_TAG_TABLE;
     
     foreach($users as $user)
     {
@@ -177,7 +177,7 @@ function fof_db_mark_item_unread($users, $id)
     
     $values = implode ( ",", $sql );
     
-	$sql = "insert into $FOF_TAG_TABLE (user_id, tag_id, item_id) values " . $values;
+	$sql = "insert into $FOF_ITEM_TAG_TABLE (user_id, tag_id, item_id) values " . $values;
 	
 	fof_db_query($sql, 1);
 }
