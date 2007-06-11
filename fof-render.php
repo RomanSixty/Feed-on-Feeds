@@ -87,8 +87,8 @@ function fof_render_item($item)
 	
 	<h1 <?php if($unread) echo "class='unread-item'" ?> >
 		<img
-			height="15"
-			width="15"
+			height="16"
+			width="16"
 			src="<?php echo $star_image ?>"
 			id="fav<?php echo $item_id ?>"
 			onclick="return toggle_favorite('<?php echo $item_id ?>')"
