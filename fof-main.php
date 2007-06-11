@@ -742,4 +742,15 @@ function fof_repair_drain_bamage()
         $_REQUEST = undoMagicQuotes($_REQUEST);
     }
 }
+
+// for PHP 4 compatibility
+
+if(!function_exists('str_ireplace'))
+{
+    function str_ireplace($search,$replace,$subject)
+    {
+        $search = preg_quote($search, "/");
+        return preg_replace("/".$search."/i", $replace, $subject);
+    }
+}
 ?>
