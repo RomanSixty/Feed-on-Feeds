@@ -606,7 +606,7 @@ function fof_db_authenticate($user_name, $user_password_hash)
     $fof_user_prefs = unserialize($row['user_prefs']);
     
     if(!is_array($fof_user_prefs)) $fof_user_prefs = array();
-    if(!isset($fof_user_prefs['favicons'])) $fof_user_prefs['favicons'] = false;
+    if(!isset($fof_user_prefs['favicons'])) $fof_user_prefs['favicons'] = true;
     if(!isset($fof_user_prefs['keyboard'])) $fof_user_prefs['keyboard'] = false;
     
     return true;
