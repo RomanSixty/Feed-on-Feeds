@@ -13,11 +13,6 @@
  */
 
 
-// Difference, in hours, between your server and your local time zone.
-
-define('FOF_TIME_OFFSET', 0);
-
-
 // Database connection information.  Host, username, password, database name.
 
 define('FOF_DB_HOST', "host.example.com");
@@ -27,12 +22,6 @@ define('FOF_DB_DBNAME', "database");
 
 
 // The rest you should not need to change
-
-
-// How many posts to show by default in paged mode
-
-define('FOF_HOWMANY', 50);
-
 
 // DB table names
 
