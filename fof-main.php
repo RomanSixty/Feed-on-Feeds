@@ -136,13 +136,13 @@ function fof_tag_item($user_id, $item_id, $tag)
     $tag_id = fof_db_create_tag($user_id, $tag);
    }
 
-   fof_db_tag_item($user_id, $item_id, $tag_id);   
+   fof_db_tag_items($user_id, $tag_id, $item_id);   
 }
 
 function fof_untag_item($user_id, $item_id, $tag)
 {
    $tag_id = fof_db_get_tag_by_name($user_id, $tag);
-   fof_db_untag_item($user_id, $item_id, $tag_id);   
+   fof_db_untag_items($user_id, $tag_id, $item_id);   
 }
 
 function fof_nice_time_stamp($age)

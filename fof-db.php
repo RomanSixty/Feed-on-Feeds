@@ -19,12 +19,23 @@ $FOF_SUBSCRIPTION_TABLE = FOF_SUBSCRIPTION_TABLE;
 $FOF_TAG_TABLE = FOF_TAG_TABLE;
 $FOF_USER_TABLE = FOF_USER_TABLE;
 
+////////////////////////////////////////////////////////////////////////////////
+// Utilities
+////////////////////////////////////////////////////////////////////////////////
+
 function fof_db_connect()
 {
     global $fof_connection;
     
     $fof_connection = mysql_connect(FOF_DB_HOST, FOF_DB_USER, FOF_DB_PASS) or die("<br><br>Cannot connect to database.  Please update configuration in <b>fof-config.php</b>.  Mysql says: <i>" . mysql_error() . "</i>");
     mysql_select_db(FOF_DB_DBNAME, $fof_connection) or die("<br><br>Cannot select database.  Please update configuration in <b>fof-config.php</b>.  Mysql says: <i>" . mysql_error() . "</i>");
+}
+
+function fof_db_optimize()
+{
+	global $FOF_FEED_TABLE, $FOF_ITEM_TABLE, $FOF_ITEM_TAG_TABLE, $FOF_SUBSCRIPTION_TABLE, $FOF_TAG_TABLE, $FOF_USER_TABLE;
+    
+	fof_db_query("optimize table $FOF_FEED_TABLE, $FOF_ITEM_TABLE, $FOF_ITEM_TAG_TABLE, $FOF_SUBSCRIPTION_TABLE, $FOF_TAG_TABLE, $FOF_USER_TABLE");
 }
 
 function fof_safe_query(/* $query, [$args...]*/)
@@ -78,6 +89,11 @@ function fof_db_get_row($result)
     return mysql_fetch_array($result);
 }
 
+
+////////////////////////////////////////////////////////////////////////////////
+// Feed level stuff
+////////////////////////////////////////////////////////////////////////////////
+
 function fof_db_feed_mark_cached($feed_id)
 {
     global $FOF_FEED_TABLE;
@@ -91,7 +107,6 @@ function fof_db_feed_mark_attempted_cache($feed_id)
     
 	$result = fof_safe_query("update $FOF_FEED_TABLE set feed_cache_attempt_date = %d where feed_id = %d", time(), $feed_id);
 }
-
 
 function fof_db_feed_update_metadata($feed_id, $url, $title, $link, $description, $image)
 {
@@ -166,22 +181,6 @@ function fof_db_get_subscribed_users($feed_id)
     return(fof_safe_query("select user_id from $FOF_SUBSCRIPTION_TABLE where $FOF_SUBSCRIPTION_TABLE.feed_id = %d", $feed_id));
 }
 
-function fof_db_mark_item_unread($users, $id)
-{
-    global $FOF_ITEM_TAG_TABLE;
-    
-    foreach($users as $user)
-    {
-        $sql[] = sprintf("(%d, 1, %d)", $user, $id);
-    }
-    
-    $values = implode ( ",", $sql );
-    
-	$sql = "insert into $FOF_ITEM_TAG_TABLE (user_id, tag_id, item_id) values " . $values;
-	
-	fof_db_query($sql, 1);
-}
-
 function fof_db_is_subscribed($user_id, $feed_url)
 {
     global $FOF_FEED_TABLE, $FOF_ITEM_TABLE, $FOF_SUBSCRIPTION_TABLE, $FOF_ITEM_TAG_TABLE;
@@ -223,33 +222,6 @@ function fof_db_get_feed_by_id($feed_id)
     return $row;
 }
 
-function fof_db_find_item($feed_id, $item_guid)
-{
-    global $FOF_FEED_TABLE, $FOF_ITEM_TABLE, $FOF_SUBSCRIPTION_TABLE, $fof_connection;
-    
-    $result = fof_safe_query("select item_id from $FOF_ITEM_TABLE where feed_id=%d and item_guid='%s'", $feed_id, $item_guid);
-    $row = mysql_fetch_array($result);
-    
-    if(mysql_num_rows($result) == 0)
-    {
-        return NULL;
-    }
-    else
-    {
-        return($row['item_id']);
-    }
-}
-
-function fof_db_add_item($feed_id, $guid, $link, $title, $content, $cached, $published, $updated)
-{
-    global $FOF_FEED_TABLE, $FOF_ITEM_TABLE, $FOF_SUBSCRIPTION_TABLE, $fof_connection;
-    
-    fof_safe_query("insert into $FOF_ITEM_TABLE (feed_id, item_link, item_guid, item_title, item_content, item_cached, item_published, item_updated) values (%d, '%s', '%s' ,'%s', '%s', %d, %d, %d)",
-    $feed_id, $link, $guid, $title, $content, $cached, $published, $updated);
-    
-    return(mysql_insert_id($fof_connection));
-}
-
 function fof_db_add_feed($url, $title, $link, $description)
 {
     global $FOF_FEED_TABLE, $FOF_ITEM_TABLE, $FOF_SUBSCRIPTION_TABLE, $fof_connection;
@@ -281,112 +253,36 @@ function fof_db_delete_feed($feed_id)
     fof_safe_query("delete from $FOF_ITEM_TABLE where feed_id = %d", $feed_id);
 }
 
-function fof_db_save_prefs($user_id, $prefs)
-{
-    global $FOF_USER_TABLE, $fof_user_prefs;
-    
-    $prefs = serialize($fof_user_prefs);
-    
-    fof_safe_query("update $FOF_USER_TABLE set user_prefs = '%s' where user_id = %d", $prefs, $user_id);
-}
 
-function fof_db_authenticate($user_name, $user_password_hash)
+////////////////////////////////////////////////////////////////////////////////
+// Item level stuff
+////////////////////////////////////////////////////////////////////////////////
+
+function fof_db_find_item($feed_id, $item_guid)
 {
-    global $FOF_USER_TABLE, $FOF_ITEM_TABLE, $FOF_ITEM_TAG_TABLE, $fof_connection, $fof_user_id, $fof_user_name, $fof_user_level, $fof_user_prefs;
+    global $FOF_FEED_TABLE, $FOF_ITEM_TABLE, $FOF_SUBSCRIPTION_TABLE, $fof_connection;
     
-    $result = fof_safe_query("select * from $FOF_USER_TABLE where user_name = '%s' and user_password_hash = '%s'", $user_name, $user_password_hash);
-    
-    if(mysql_num_rows($result) == 0)
-    {
-        return false;
-    }
-    
+    $result = fof_safe_query("select item_id from $FOF_ITEM_TABLE where feed_id=%d and item_guid='%s'", $feed_id, $item_guid);
     $row = mysql_fetch_array($result);
-    
-    $fof_user_name = $row['user_name'];
-    $fof_user_id = $row['user_id'];
-    $fof_user_level = $row['user_level'];
-    $fof_user_prefs = unserialize($row['user_prefs']);
-    
-    if(!is_array($fof_user_prefs)) $fof_user_prefs = array();
-    if(!isset($fof_user_prefs['favicons'])) $fof_user_prefs['favicons'] = false;
-    if(!isset($fof_user_prefs['keyboard'])) $fof_user_prefs['keyboard'] = false;
-    
-    return true;
-}
-
-function fof_db_get_item_tags($user_id, $item_id)
-{
-    global $FOF_TAG_TABLE, $FOF_ITEM_TABLE, $FOF_ITEM_TAG_TABLE, $fof_connection;
-    
-    $result = fof_safe_query("select $FOF_TAG_TABLE.tag_name from $FOF_TAG_TABLE, $FOF_ITEM_TAG_TABLE where $FOF_TAG_TABLE.tag_id = $FOF_ITEM_TAG_TABLE.tag_id and $FOF_ITEM_TAG_TABLE.item_id = %d and $FOF_ITEM_TAG_TABLE.user_id = %d", $item_id, $user_id);
-    
-    return $result;   
-}
-
-function fof_db_item_has_tags($item_id)
-{
-    global $FOF_TAG_TABLE, $FOF_ITEM_TABLE, $FOF_ITEM_TAG_TABLE, $fof_connection;
-    
-    $result = fof_safe_query("select count(*) as \"count\" from $FOF_ITEM_TAG_TABLE where item_id=%d", $item_id);
-    $row = mysql_fetch_array($result);
-    
-    return $row["count"];
-}
-
-function fof_db_get_tags($user_id)
-{
-    global $FOF_TAG_TABLE, $FOF_ITEM_TABLE, $FOF_ITEM_TAG_TABLE, $fof_connection;
-    
-    $sql = "SELECT $FOF_TAG_TABLE.tag_id, $FOF_TAG_TABLE.tag_name, count( $FOF_ITEM_TAG_TABLE.item_id ) as count
-        FROM $FOF_TAG_TABLE
-        LEFT JOIN $FOF_ITEM_TAG_TABLE ON $FOF_TAG_TABLE.tag_id = $FOF_ITEM_TAG_TABLE.tag_id
-        WHERE $FOF_ITEM_TAG_TABLE.user_id = %d
-        GROUP BY $FOF_TAG_TABLE.tag_id order by $FOF_TAG_TABLE.tag_name";
-    
-    $result = fof_safe_query($sql, $user_id);
-    
-    return $result;   
-}
-
-function fof_db_create_tag($user_id, $tag)
-{
-    global $FOF_TAG_TABLE, $fof_connection;
-    
-    fof_safe_query("insert into $FOF_TAG_TABLE (tag_name) values ('%s')", $tag);
-    
-    return(mysql_insert_id($fof_connection));
-}
-
-function fof_db_tag_item($user_id, $item_id, $tag_id)
-{
-    global $FOF_ITEM_TAG_TABLE;
-    
-    fof_safe_query("insert into $FOF_ITEM_TAG_TABLE (user_id, item_id, tag_id) values (%d, %d, %d)", $user_id, $item_id, $tag_id);
-}
-
-function fof_db_untag_item($user_id, $item_id, $tag_id)
-{
-    global $FOF_ITEM_TAG_TABLE;
-    
-    fof_safe_query("delete from $FOF_ITEM_TAG_TABLE where user_id = %d and item_id = %d and tag_id = %d", $user_id, $item_id, $tag_id);
-}
-
-
-function fof_db_get_tag_by_name($user_id, $tag)
-{
-    global $FOF_TAG_TABLE, $FOF_ITEM_TABLE, $FOF_ITEM_TAG_TABLE, $fof_connection;
-    
-    $result = fof_safe_query("select $FOF_TAG_TABLE.tag_id from $FOF_TAG_TABLE where $FOF_TAG_TABLE.tag_name = '%s'", $tag);
     
     if(mysql_num_rows($result) == 0)
     {
         return NULL;
     }
+    else
+    {
+        return($row['item_id']);
+    }
+}
+
+function fof_db_add_item($feed_id, $guid, $link, $title, $content, $cached, $published, $updated)
+{
+    global $FOF_FEED_TABLE, $FOF_ITEM_TABLE, $FOF_SUBSCRIPTION_TABLE, $fof_connection;
     
-    $row = mysql_fetch_array($result);
+    fof_safe_query("insert into $FOF_ITEM_TABLE (feed_id, item_link, item_guid, item_title, item_content, item_cached, item_published, item_updated) values (%d, '%s', '%s' ,'%s', '%s', %d, %d, %d)",
+    $feed_id, $link, $guid, $title, $content, $cached, $published, $updated);
     
-    return $row['tag_id'];
+    return(mysql_insert_id($fof_connection));
 }
 
 function fof_db_get_items($user_id=1, $feed=NULL, $what="unread", $when=NULL, $start=NULL, $limit=NULL, $order="desc", $search=NULL)
@@ -472,7 +368,7 @@ function fof_db_get_item($user_id, $item_id)
 {
     global $FOF_SUBSCRIPTION_TABLE, $FOF_FEED_TABLE, $FOF_ITEM_TABLE, $FOF_ITEM_TAG_TABLE, $FOF_TAG_TABLE;
     
-    $query = "select distinct $FOF_FEED_TABLE.feed_title as feed_title, $FOF_FEED_TABLE.feed_link as feed_link, $FOF_FEED_TABLE.feed_description as feed_description, $FOF_ITEM_TABLE.item_id as item_id, $FOF_ITEM_TABLE.item_link as item_link, $FOF_ITEM_TABLE.item_title as item_title, $FOF_ITEM_TABLE.item_cached, $FOF_ITEM_TABLE.item_published, $FOF_ITEM_TABLE.item_updated, $FOF_ITEM_TABLE.item_content as item_content from $FOF_FEED_TABLE, $FOF_ITEM_TABLE where $FOF_ITEM_TABLE.feed_id=$FOF_FEED_TABLE.feed_id and $FOF_ITEM_TABLE.item_id = %d";
+    $query = "select distinct $FOF_FEED_TABLE.feed_image as feed_image, $FOF_FEED_TABLE.feed_title as feed_title, $FOF_FEED_TABLE.feed_link as feed_link, $FOF_FEED_TABLE.feed_description as feed_description, $FOF_ITEM_TABLE.item_id as item_id, $FOF_ITEM_TABLE.item_link as item_link, $FOF_ITEM_TABLE.item_title as item_title, $FOF_ITEM_TABLE.item_cached, $FOF_ITEM_TABLE.item_published, $FOF_ITEM_TABLE.item_updated, $FOF_ITEM_TABLE.item_content as item_content from $FOF_FEED_TABLE, $FOF_ITEM_TABLE where $FOF_ITEM_TABLE.feed_id=$FOF_FEED_TABLE.feed_id and $FOF_ITEM_TABLE.item_id = %d";
     
     $result = fof_safe_query($query, $item_id);
     
@@ -481,20 +377,78 @@ function fof_db_get_item($user_id, $item_id)
     return $row;
 }
 
-function fof_db_mark_unread($user_id, $items)
+
+////////////////////////////////////////////////////////////////////////////////
+// Tag stuff
+////////////////////////////////////////////////////////////////////////////////
+
+function fof_db_get_item_tags($user_id, $item_id)
 {
-    global $FOF_ITEM_TAG_TABLE;
+    global $FOF_TAG_TABLE, $FOF_ITEM_TABLE, $FOF_ITEM_TAG_TABLE, $fof_connection;
     
-    foreach($items as $item)
+    $result = fof_safe_query("select $FOF_TAG_TABLE.tag_name from $FOF_TAG_TABLE, $FOF_ITEM_TAG_TABLE where $FOF_TAG_TABLE.tag_id = $FOF_ITEM_TAG_TABLE.tag_id and $FOF_ITEM_TAG_TABLE.item_id = %d and $FOF_ITEM_TAG_TABLE.user_id = %d", $item_id, $user_id);
+    
+    return $result;   
+}
+
+function fof_db_item_has_tags($item_id)
+{
+    global $FOF_TAG_TABLE, $FOF_ITEM_TABLE, $FOF_ITEM_TAG_TABLE, $fof_connection;
+    
+    $result = fof_safe_query("select count(*) as \"count\" from $FOF_ITEM_TAG_TABLE where item_id=%d", $item_id);
+    $row = mysql_fetch_array($result);
+    
+    return $row["count"];
+}
+
+function fof_db_get_tags($user_id)
+{
+    global $FOF_TAG_TABLE, $FOF_ITEM_TABLE, $FOF_ITEM_TAG_TABLE, $fof_connection;
+    
+    $sql = "SELECT $FOF_TAG_TABLE.tag_id, $FOF_TAG_TABLE.tag_name, count( $FOF_ITEM_TAG_TABLE.item_id ) as count
+        FROM $FOF_TAG_TABLE
+        LEFT JOIN $FOF_ITEM_TAG_TABLE ON $FOF_TAG_TABLE.tag_id = $FOF_ITEM_TAG_TABLE.tag_id
+        WHERE $FOF_ITEM_TAG_TABLE.user_id = %d
+        GROUP BY $FOF_TAG_TABLE.tag_id order by $FOF_TAG_TABLE.tag_name";
+    
+    $result = fof_safe_query($sql, $user_id);
+    
+    return $result;   
+}
+
+function fof_db_create_tag($user_id, $tag)
+{
+    global $FOF_TAG_TABLE, $fof_connection;
+    
+    fof_safe_query("insert into $FOF_TAG_TABLE (tag_name) values ('%s')", $tag);
+    
+    return(mysql_insert_id($fof_connection));
+}
+
+function fof_db_get_tag_by_name($user_id, $tag)
+{
+    global $FOF_TAG_TABLE, $FOF_ITEM_TABLE, $FOF_ITEM_TAG_TABLE, $fof_connection;
+    
+    $result = fof_safe_query("select $FOF_TAG_TABLE.tag_id from $FOF_TAG_TABLE where $FOF_TAG_TABLE.tag_name = '%s'", $tag);
+    
+    if(mysql_num_rows($result) == 0)
     {
-        $sql[] = sprintf("(%d, 1, %d)", $user_id, $item);
+        return NULL;
     }
     
-    $values = implode ( ",", $sql );
+    $row = mysql_fetch_array($result);
     
-	$sql = "insert into $FOF_ITEM_TAG_TABLE (user_id, tag_id, item_id) values " . $values;
-	
-	fof_db_query($sql, 1);
+    return $row['tag_id'];
+}
+
+function fof_db_mark_unread($user_id, $items)
+{
+    fof_db_tag_items($user_id, 1, $items);
+}
+
+function fof_db_mark_read($user_id, $items)
+{
+    fof_db_untag_items($user_id, 1, $items);
 }
 
 function fof_db_mark_feed_read($user_id, $feed_id)
@@ -508,18 +462,7 @@ function fof_db_mark_feed_read($user_id, $feed_id)
         $items[] = $r['item_id'];
     }
     
-    foreach($items as $item)
-    {
-        $sql[] = " item_id = %d ";
-        $args[] = $item;
-    }
-    
-    $values = implode ( " or ", $sql );
-    
-    $sql = "delete from $FOF_ITEM_TAG_TABLE where user_id = %d and tag_id = 1 and ( $values )";
-    array_unshift($args, $user_id);
-    
-    fof_safe_query($sql, $args);
+    fof_db_untag_items($user_id, 1, $items);
 }
 
 function fof_db_mark_feed_unread($user_id, $feed)
@@ -533,42 +476,83 @@ function fof_db_mark_feed_unread($user_id, $feed)
         $items[] = $r['item_id'];
     }
     
-    foreach($items as $item)
+    fof_db_tag_items($user_id, 1, $items);
+}
+
+function fof_db_mark_item_unread($users, $id)
+{
+    global $FOF_ITEM_TAG_TABLE;
+    
+    foreach($users as $user)
     {
-        $sql[] = sprintf("(%d, 1, %d)", $user_id, $item);
+        $sql[] = sprintf("(%d, 1, %d)", $user, $id);
     }
     
     $values = implode ( ",", $sql );
     
 	$sql = "insert into $FOF_ITEM_TAG_TABLE (user_id, tag_id, item_id) values " . $values;
 	
-	fof_db_query($sql, 1);
+	$result = fof_db_query($sql, 1);
+
+    if(!$result && (mysql_errno() != 1062))
+    {
+        die("Cannot query database.  Have you run <a href=\"install.php\"><code>install.php</code></a> to create or upgrade your installation? MySQL says: <b>". mysql_error() . "</b>");
+    }
 }
 
-function fof_db_mark_read($user_id, $items)
+function fof_db_tag_items($user_id, $tag_id, $items)
+{
+    global $FOF_ITEM_TAG_TABLE;
+
+    if(!$items) return;
+    
+    if(!is_array($items)) $items = array($items);
+
+    foreach($items as $item)
+    {
+        $sql[] = sprintf("(%d, %d, %d)", $user_id, $tag_id, $item);
+    }
+    
+    $values = implode ( ",", $sql );
+    
+	$sql = "insert into $FOF_ITEM_TAG_TABLE (user_id, tag_id, item_id) values " . $values;
+	
+	$result = fof_db_query($sql, 1);
+    
+    if(!$result && (mysql_errno() != 1062))
+    {
+        die("Cannot query database.  Have you run <a href=\"install.php\"><code>install.php</code></a> to create or upgrade your installation? MySQL says: <b>". mysql_error() . "</b>");
+    }
+}
+
+function fof_db_untag_items($user_id, $tag_id, $items)
 {
     global $FOF_ITEM_TAG_TABLE;
     
     if(!$items) return;
     
+    if(!is_array($items)) $items = array($items);
+    
     foreach($items as $item)
     {
-        $sql[] = sprintf(" item_id = %d ", $item);
+        $sql[] = " item_id = %d ";
+        $args[] = $item;
     }
     
     $values = implode ( " or ", $sql );
     
-    $sql = "delete from $FOF_ITEM_TAG_TABLE where user_id = $user_id and tag_id = 1 and ( $values )";
+    $sql = "delete from $FOF_ITEM_TAG_TABLE where user_id = %d and tag_id = %d and ( $values )";
     
-    fof_db_query($sql);
+    array_unshift($args, $tag_id);
+    array_unshift($args, $user_id);
+
+    fof_safe_query($sql, $args);
 }
 
-function fof_db_optimize()
-{
-	global $FOF_FEED_TABLE, $FOF_ITEM_TABLE, $FOF_ITEM_TAG_TABLE, $FOF_SUBSCRIPTION_TABLE, $FOF_TAG_TABLE, $FOF_USER_TABLE;
-    
-	fof_db_query("optimize table $FOF_FEED_TABLE, $FOF_ITEM_TABLE, $FOF_ITEM_TAG_TABLE, $FOF_SUBSCRIPTION_TABLE, $FOF_TAG_TABLE, $FOF_USER_TABLE");
-}
+
+////////////////////////////////////////////////////////////////////////////////
+// User stuff
+////////////////////////////////////////////////////////////////////////////////
 
 function fof_db_add_user($username, $password)
 {
@@ -592,6 +576,40 @@ function fof_db_delete_user($username)
 {
     global $FOF_USER_TABLE;
     fof_safe_query("delete from $FOF_USER_TABLE where user_name = '%s'", $username);
+}
+
+function fof_db_save_prefs($user_id, $prefs)
+{
+    global $FOF_USER_TABLE, $fof_user_prefs;
+    
+    $prefs = serialize($fof_user_prefs);
+    
+    fof_safe_query("update $FOF_USER_TABLE set user_prefs = '%s' where user_id = %d", $prefs, $user_id);
+}
+
+function fof_db_authenticate($user_name, $user_password_hash)
+{
+    global $FOF_USER_TABLE, $FOF_ITEM_TABLE, $FOF_ITEM_TAG_TABLE, $fof_connection, $fof_user_id, $fof_user_name, $fof_user_level, $fof_user_prefs;
+    
+    $result = fof_safe_query("select * from $FOF_USER_TABLE where user_name = '%s' and user_password_hash = '%s'", $user_name, $user_password_hash);
+    
+    if(mysql_num_rows($result) == 0)
+    {
+        return false;
+    }
+    
+    $row = mysql_fetch_array($result);
+    
+    $fof_user_name = $row['user_name'];
+    $fof_user_id = $row['user_id'];
+    $fof_user_level = $row['user_level'];
+    $fof_user_prefs = unserialize($row['user_prefs']);
+    
+    if(!is_array($fof_user_prefs)) $fof_user_prefs = array();
+    if(!isset($fof_user_prefs['favicons'])) $fof_user_prefs['favicons'] = false;
+    if(!isset($fof_user_prefs['keyboard'])) $fof_user_prefs['keyboard'] = false;
+    
+    return true;
 }
 
 ?>
