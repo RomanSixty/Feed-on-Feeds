@@ -125,8 +125,7 @@ function completeDrag(e)
         var today = new Date();
         var expire = new Date();
         expire.setTime(today.getTime() + 3600000*24*100);
-        document.cookie = "fof_sidebar_width="+newWidth
-        + "; expires="+expire.toGMTString()+"; path=/";
+        document.cookie = "fof_sidebar_width="+newWidth+ "; expires="+expire.toGMTString()+";";
         
         return false;
     }

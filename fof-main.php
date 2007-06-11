@@ -60,16 +60,16 @@ function fof_authenticate($user_name, $user_password_hash)
         
     if(fof_db_authenticate($user_name, $user_password_hash))
     {
-        setcookie ( "user_name", $fof_user_name, time()+60*60*24*365*10, "/" );
-        setcookie ( "user_password_hash",  $user_password_hash, time()+60*60*24*365*10, "/" );
+        setcookie ( "user_name", $fof_user_name, time()+60*60*24*365*10 );
+        setcookie ( "user_password_hash",  $user_password_hash, time()+60*60*24*365*10 );
         return true;
     }
 }
 
 function fof_logout()
 {
-    setcookie ( "user_name", "", time(), "/" );
-    setcookie ( "user_password_hash", "", time(), "/" );
+    setcookie ( "user_name", "", time() );
+    setcookie ( "user_password_hash", "", time() );
 }
 
 function fof_current_user()

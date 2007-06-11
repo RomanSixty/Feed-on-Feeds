@@ -25,7 +25,7 @@ if(isset($_POST['prefs']))
     if($_POST['password'] && ($_POST['password'] == $_POST['password2']))
     {
         fof_db_change_password($fof_user_name, $_POST['password']);
-        setcookie ( "user_password_hash",  md5($_POST['password'] . $fof_user_name), time()+60*60*24*365*10, "/" );
+        setcookie ( "user_password_hash",  md5($_POST['password'] . $fof_user_name), time()+60*60*24*365*10 );
         $message = "Updated password.";
     }
     else if($_POST['password'] || $_POST['password2'])
