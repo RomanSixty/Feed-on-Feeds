@@ -18,7 +18,7 @@ fof_repair_drain_bamage();
 
 if ( !file_exists( dirname(__FILE__) . '/fof-config.php') )
 {
-    echo "You will first need to create a fof-config.php file.  Please copy fof-config-sample.php to fof-config.php and then udpate the values to match your database settings.";
+    echo "You will first need to create a fof-config.php file.  Please copy fof-config-sample.php to fof-config.php and then update the values to match your database settings.";
     die();
 }
 
