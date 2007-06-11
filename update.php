@@ -24,7 +24,14 @@ if($feed)
 }
 else
 {
-    $result = fof_db_get_feeds();
+    if($fof_user_id == 1)
+    {
+        $result = fof_db_get_feeds();
+    }
+    else
+    {
+        $result = fof_db_get_subscriptions(fof_current_user());
+    }
     while($feed = fof_db_get_row($result))
     {
         $feeds[] = $feed;
