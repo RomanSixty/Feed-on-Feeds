@@ -16,6 +16,12 @@
 
 fof_repair_drain_bamage();
 
+if ( !file_exists( dirname(__FILE__) . '/fof-config.php') )
+{
+    echo "You will first need to create a fof-config.php file.  Please copy fof-config-sample.php to fof-config.php and then udpate the values to match your database settings.";
+    die();
+}
+
 require_once("fof-config.php");
 require_once("fof-db.php");
 
@@ -303,37 +309,38 @@ function fof_get_feeds($user_id, $order = 'feed_title', $direction = 'asc')
 
 function fof_view_title($feed=NULL, $what="new", $when=NULL, $start=NULL, $limit=NULL, $search=NULL)
 {
-   $title = "feed on feeds";
-
-   if(!is_null($when) && $when != "")
-   {
-      $title .= ' - ' . $when ;
-   }
-   if(!is_null($feed) && $feed != "")
-   {
-      $r = fof_db_get_feed_by_id($feed);
-      $title .=' - ' . $r['feed_title'];
-   }
-   if(is_numeric($start))
-   {
-      if(!is_numeric($limit)) $limit = FOF_HOWMANY;
-      $title .= " - items $start to " . ($start + $limit);
-   }
-   if($what != "all")
-   {
-      $title .=' - new items';
-   }
-   else
-   {
-      $title .= ' - all items';
-   }
-   
-   if(isset($search))
-   {
-      $title .= " - <a href='javascript:toggle_highlight()'>matching <i class='highlight'>$search</i></a>";
-   }
-
-   return $title;
+    $prefs = fof_prefs();
+    $title = "feed on feeds";
+    
+    if(!is_null($when) && $when != "")
+    {
+        $title .= ' - ' . $when ;
+    }
+    if(!is_null($feed) && $feed != "")
+    {
+        $r = fof_db_get_feed_by_id($feed);
+        $title .=' - ' . $r['feed_title'];
+    }
+    if(is_numeric($start))
+    {
+        if(!is_numeric($limit)) $limit = $prefs["howmany"];
+        $title .= " - items $start to " . ($start + $limit);
+    }
+    if($what != "all")
+    {
+        $title .=' - new items';
+    }
+    else
+    {
+        $title .= ' - all items';
+    }
+    
+    if(isset($search))
+    {
+        $title .= " - <a href='javascript:toggle_highlight()'>matching <i class='highlight'>$search</i></a>";
+    }
+    
+    return $title;
 }
 
 function fof_get_items($user_id, $feed=NULL, $what="unread", $when=NULL, $start=NULL, $limit=NULL, $order="desc", $search=NULL)
@@ -389,42 +396,43 @@ function fof_delete_subscription($user_id, $feed_id)
 
 function fof_get_nav_links($feed=NULL, $what="new", $when=NULL, $start=NULL, $limit=NULL)
 {
-   $string = "";
-
-   if(!is_null($when) && $when != "")
-   {
-     if($when == "today")
-     {
-      $whendate = fof_todays_date();
-     }
-     else
-     {
-      $whendate = $when;
-     }
-
-     $begin = strtotime($whendate);
-
-     $tomorrow = date( "Y/m/d", $begin + (24 * 60 * 60) );
-     $yesterday = date( "Y/m/d", $begin - (24 * 60 * 60) );
-
-      $string .= "<a href=\".?feed=$feed&amp;what=$what&amp;when=$yesterday&amp;how=$how&amp;howmany=$howmany\">[&laquo; $yesterday]</a> ";
-      if($when != "today") $string .= "<a href=\".?feed=$feed&amp;what=$what&amp;when=today&amp;how=$how&amp;howmany=$howmany\">[today]</a> ";
-      if($when != "today") $string .= "<a href=\".?feed=$feed&amp;what=$what&amp;when=$tomorrow&amp;how=$how&amp;howmany=$howmany\">[$tomorrow &raquo;]</a> ";
-   }
-
-   if(is_numeric($start))
-   {
-      if(!is_numeric($limit)) $limit = FOF_HOWMANY;
-
-      $earlier = $start + $limit;
-      $later = $start - $limit;
-
-      $string .= "<a href=\".?feed=$feed&amp;what=$what&amp;when=$when&amp;how=paged&amp;which=$earlier&amp;howmany=$limit\">[&laquo; previous $limit]</a> ";
-      if($later >= 0) $string .= "<a href=\".?feed=$feed&amp;what=$what&amp;when=$when&amp;how=paged&amp;howmany=$limit\">[current items]</a> ";
-      if($later >= 0) $string .= "<a href=\".?feed=$feed&amp;what=$what&amp;when=$when&amp;how=paged&amp;which=$later&amp;howmany=$limit\">[next $limit &raquo;]</a> ";
-   }
-
-   return $string;
+    $prefs = fof_prefs();
+    $string = "";
+    
+    if(!is_null($when) && $when != "")
+    {
+        if($when == "today")
+        {
+            $whendate = fof_todays_date();
+        }
+        else
+        {
+            $whendate = $when;
+        }
+        
+        $begin = strtotime($whendate);
+        
+        $tomorrow = date( "Y/m/d", $begin + (24 * 60 * 60) );
+        $yesterday = date( "Y/m/d", $begin - (24 * 60 * 60) );
+        
+        $string .= "<a href=\".?feed=$feed&amp;what=$what&amp;when=$yesterday&amp;how=$how&amp;howmany=$howmany\">[&laquo; $yesterday]</a> ";
+        if($when != "today") $string .= "<a href=\".?feed=$feed&amp;what=$what&amp;when=today&amp;how=$how&amp;howmany=$howmany\">[today]</a> ";
+        if($when != "today") $string .= "<a href=\".?feed=$feed&amp;what=$what&amp;when=$tomorrow&amp;how=$how&amp;howmany=$howmany\">[$tomorrow &raquo;]</a> ";
+    }
+    
+    if(is_numeric($start))
+    {
+        if(!is_numeric($limit)) $limit = $prefs["howmany"];
+        
+        $earlier = $start + $limit;
+        $later = $start - $limit;
+        
+        $string .= "<a href=\".?feed=$feed&amp;what=$what&amp;when=$when&amp;how=paged&amp;which=$earlier&amp;howmany=$limit\">[&laquo; previous $limit]</a> ";
+        if($later >= 0) $string .= "<a href=\".?feed=$feed&amp;what=$what&amp;when=$when&amp;how=paged&amp;howmany=$limit\">[current items]</a> ";
+        if($later >= 0) $string .= "<a href=\".?feed=$feed&amp;what=$what&amp;when=$when&amp;how=paged&amp;which=$later&amp;howmany=$limit\">[next $limit &raquo;]</a> ";
+    }
+    
+    return $string;
 }
 
 function fof_render_feed_link($row)

@@ -19,6 +19,8 @@ if(isset($_POST['prefs']))
 	$fof_user_prefs['favicons'] = isset($_POST['favicons']);
 	$fof_user_prefs['keyboard'] = isset($_POST['keyboard']);
 	$fof_user_prefs['tzoffset'] = intval($_POST['tzoffset']);
+	$fof_user_prefs['howmany'] = intval($_POST['howmany']);
+	$fof_user_prefs['order'] = $_POST['order'];
 
 	fof_db_save_prefs(fof_current_user(), $fof_user_prefs);
     
@@ -84,6 +86,8 @@ $favicons = $_POST['favicons'];
 
 <br><h1>Feed on Feeds - Preferences</h1>
 <form method="post" action="prefs.php" style="border: 1px solid black; margin: 10px; padding: 10px;">
+Default display order: <select name="order"><option value=desc>new to old</option><option value=asc <?php if($fof_user_prefs['order'] == "asc") echo "selected";?>>old to new</option></select><br><br>
+Number of items in paged displays: <input type="string" name="howmany" value="<?php echo $fof_user_prefs['howmany']?>"><br><br>
 Display custom feed favicons? <input type="checkbox" name="favicons" <?php if($fof_user_prefs['favicons']) echo "checked=true";?> ><br><br>
 Use keyboard shortcuts? <input type="checkbox" name="keyboard" <?php if($fof_user_prefs['keyboard']) echo "checked=true";?> ><br><br>
 Time offset in hours: <input size=3 type=string name=tzoffset value="<?php echo $fof_user_prefs['tzoffset']?>"> (UTC time: <?php echo gmdate("Y-n-d g:ia") ?>, local time: <?php echo gmdate("Y-n-d g:ia", time() + $fof_user_prefs["tzoffset"]*60*60) ?>)<br><br>
