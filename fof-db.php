@@ -352,8 +352,11 @@ function fof_db_get_items($user_id=1, $feed=NULL, $what="unread", $when=NULL, $s
     
     $result = fof_safe_query($query, $args);
     
-    $array = array();
-	
+    if(mysql_num_rows($result) == 0)
+    {
+        return array();
+    }
+    	
     while($row = mysql_fetch_assoc($result))
     {
         $array[] = $row;
@@ -361,6 +364,28 @@ function fof_db_get_items($user_id=1, $feed=NULL, $what="unread", $when=NULL, $s
     
     $array = fof_multi_sort($array, 'item_published', $order != "asc");
     
+    $i = 0;
+    foreach($array as $item)
+    {
+        $ids[] = $item['item_id'];
+        $lookup[$item['item_id']] = $i;
+        $array[$i]['tags'] = array();
+        
+        $i++;
+    }
+    
+    $items = join($ids, ", ");
+    
+    $result = fof_safe_query("select $FOF_TAG_TABLE.tag_name, $FOF_ITEM_TAG_TABLE.item_id from $FOF_TAG_TABLE, $FOF_ITEM_TAG_TABLE where $FOF_TAG_TABLE.tag_id = $FOF_ITEM_TAG_TABLE.tag_id and $FOF_ITEM_TAG_TABLE.item_id in (%s) and $FOF_ITEM_TAG_TABLE.user_id = %d", $items, $user_id);
+    
+    while($row = fof_db_get_row($result))
+    {
+        $item_id = $row['item_id'];
+        $tag = $row['tag_name'];
+        
+        $array[$lookup[$item_id]]['tags'][] = $tag;
+    }
+
     return $array;
 }
 
@@ -372,9 +397,18 @@ function fof_db_get_item($user_id, $item_id)
     
     $result = fof_safe_query($query, $item_id);
     
-    $row = mysql_fetch_assoc($result);
+    $item = mysql_fetch_assoc($result);
     
-    return $row;
+    $result = fof_safe_query("select $FOF_TAG_TABLE.tag_name from $FOF_TAG_TABLE, $FOF_ITEM_TAG_TABLE where $FOF_TAG_TABLE.tag_id = $FOF_ITEM_TAG_TABLE.tag_id and $FOF_ITEM_TAG_TABLE.item_id = %d and $FOF_ITEM_TAG_TABLE.user_id = %d", $item_id, $user_id);
+
+    $item['tags'] = array();
+    
+    while($row = fof_db_get_row($result))
+    {
+        $item['tags'][] = $row['tag_name'];
+    }
+    
+    return $item;
 }
 
 
