@@ -568,8 +568,10 @@ function fof_mark_item_unread($feed_id, $id)
 
 function fof_parse($url)
 {
+    global $fof_admin_prefs;
+    
     $pie = new SimplePie();
-    $pie->set_cache_duration(30 * 60);
+    $pie->set_cache_duration($fof_admin_prefs["manualtimeout"] * 60);
     $pie->set_favicon_handler("favicon.php");
 	$pie->set_feed_url($url);
 	$pie->remove_div(false);
@@ -631,36 +633,45 @@ function fof_update_feed($id)
         }
     }
 
-    // delete items that are not tagged, over a month old, and not currently in the feed
-    $count = count($ids);
-    if(count($ids) != 0)
+    // optionally purge old items -  if 'purge' is set we delete items that are not
+    // unread or starred, not currently in the feed or within sizeof(feed) items
+    // of being in the feed, and are over 'purge' many days old
+    
+    global $fof_admin_prefs;
+    if($fof_admin_prefs['purge'] != "")
     {
-        $in = implode ( ", ", $ids );
-        
-        global $FOF_ITEM_TABLE;
-        $sql = "select item_id, item_cached from $FOF_ITEM_TABLE where feed_id = $feed_id and item_id not in ($in) order by item_cached asc limit $count, 1000000000";
-        $result = fof_db_query($sql);
-        
-        while($row = fof_db_get_row($result))
+        fof_log('purge is ' . $fof_admin_prefs['purge']);
+        $count = count($ids);
+        fof_log('items in feed: ' . $count);
+
+        if(count($ids) != 0)
         {
-            if($row['item_cached'] < time() - 30 * 24 * 60 * 60)
+            $in = implode ( ", ", $ids );
+            
+            global $FOF_ITEM_TABLE;
+            $sql = "select item_id, item_cached from $FOF_ITEM_TABLE where feed_id = $feed_id and item_id not in ($in) order by item_cached asc limit $count, 1000000000";
+            $result = fof_db_query($sql);
+            
+            while($row = fof_db_get_row($result))
             {
-                if(!fof_item_has_tags($row['item_id']))
-                {		      
-                    $delete[] = $row['item_id'];
-                    
+                if($row['item_cached'] < (time() - ($fof_admin_prefs['purge'] * 24 * 60 * 60)))
+                {
+                    if(!fof_item_has_tags($row['item_id']))
+                    {		      
+                        $delete[] = $row['item_id'];
+                    }
                 }
             }
-        }
-        
-        if(count($delete) != 0)
-        {
-            $in = implode(", ", $delete); 
-            fof_db_query( "delete from $FOF_ITEM_TABLE where item_id in ($in)" );
+            
+            if(count($delete) != 0)
+            {
+                $in = implode(", ", $delete); 
+                fof_db_query( "delete from $FOF_ITEM_TABLE where item_id in ($in)" );
+            }
         }
     }
     
-    $rss = null;
+    unset($rss);
     
     fof_db_feed_mark_cached($feed_id);
     

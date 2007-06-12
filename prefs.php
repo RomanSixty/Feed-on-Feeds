@@ -14,6 +14,19 @@
 
 include_once("fof-main.php");
 
+if(isset($_POST['adminprefs']))
+{
+	$fof_user_prefs['purge'] = $_POST['purge'];
+	$fof_user_prefs['manualtimeout'] = $_POST['manualtimeout'];
+	$fof_user_prefs['autotimeout'] = $_POST['autotimeout'];
+
+	fof_db_save_prefs(fof_current_user(), $fof_user_prefs);
+    
+    $fof_admin_prefs = $fof_user_prefs;
+    	
+	$message .= ' Saved admin prefs.';
+}
+
 if(isset($_POST['prefs']))
 {
 	$fof_user_prefs['favicons'] = isset($_POST['favicons']);
@@ -99,6 +112,14 @@ Time offset in hours: <input size=3 type=string name=tzoffset value="<?php echo 
 
 <?php if(fof_is_admin()) { ?>
 
+<br><h1>Feed on Feeds - Admin Options</h1>
+<form method="post" action="prefs.php" style="border: 1px solid black; margin: 10px; padding: 10px;">
+Purge read items after <input size=4 type=string name=purge value="<?php echo $fof_admin_prefs['purge']?>"> days (leave blank to never purge)<br><br>
+Allow automatic feed updates every <input size=4 type=string name=autotimeout value="<?php echo $fof_admin_prefs['autotimeout']?>"> minutes<br><br>
+Allow manual feed updates every <input size=4 type=string name=manualtimeout value="<?php echo $fof_admin_prefs['manualtimeout']?>"> minutes<br><br>
+<input type=submit name=adminprefs value="Save Options">
+</form>
+
 <br><h1>Add User</h1>
 <form method="post" action="prefs.php" style="border: 1px solid black; margin: 10px; padding: 10px;">
 Username: <input type=string name=username> Password: <input type=string name=password> <input type=submit name=adduser value="Add user">
@@ -133,14 +154,6 @@ Username: <input type=string name=username> Password: <input type=string name=pa
 </form>
 
 <?php } ?>
-
-<!--
-<br><h1>Feed on Feeds - Admin Options</h1>
-<form method="post" action="prefs.php" style="border: 1px solid black; margin: 10px; padding: 10px;">
-No Admin options yet!<br><br>
-<input type=submit name=options value="Save Options">
-</form>
--->
 
 <br>
 <form method="get" action="uninstall.php" onsubmit="return confirm('Really?  This will delete all the database tables!')">

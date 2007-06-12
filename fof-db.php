@@ -395,7 +395,7 @@ function fof_db_item_has_tags($item_id)
 {
     global $FOF_TAG_TABLE, $FOF_ITEM_TABLE, $FOF_ITEM_TAG_TABLE, $fof_connection;
     
-    $result = fof_safe_query("select count(*) as \"count\" from $FOF_ITEM_TAG_TABLE where item_id=%d", $item_id);
+    $result = fof_safe_query("select count(*) as \"count\" from $FOF_ITEM_TAG_TABLE where item_id=%d and tag_id <= 2", $item_id);
     $row = mysql_fetch_array($result);
     
     return $row["count"];
@@ -572,10 +572,23 @@ function fof_db_change_password($username, $password)
 	fof_safe_query("update $FOF_USER_TABLE set user_password_hash = '%s' where user_name = '%s'", $password_hash, $username);
 }
 
-function fof_db_delete_user($username)
+function fof_db_get_user_id($username)
 {
     global $FOF_USER_TABLE;
-    fof_safe_query("delete from $FOF_USER_TABLE where user_name = '%s'", $username);
+    $result = fof_safe_query("select user_id from $FOF_USER_TABLE where user_name = '%s'", $username);
+    $row = mysql_fetch_array($result);
+    
+    return $row['user_id'];
+}
+
+function fof_db_delete_user($username)
+{
+    global $FOF_USER_TABLE, $FOF_ITEM_TAG_TABLE, $FOF_SUBSCRIPTION_TABLE;
+    $user_id = fof_db_get_user_id($username);
+    
+    fof_safe_query("delete from $FOF_SUBSCRIPTION_TABLE where user_id = %d", $user_id);
+    fof_safe_query("delete from $FOF_ITEM_TAG_TABLE where user_id = %d", $user_id);
+    fof_safe_query("delete from $FOF_USER_TABLE where user_id = %d", $user_id);
 }
 
 function fof_db_save_prefs($user_id, $prefs)
@@ -589,7 +602,7 @@ function fof_db_save_prefs($user_id, $prefs)
 
 function fof_db_authenticate($user_name, $user_password_hash)
 {
-    global $FOF_USER_TABLE, $FOF_ITEM_TABLE, $FOF_ITEM_TAG_TABLE, $fof_connection, $fof_user_id, $fof_user_name, $fof_user_level, $fof_user_prefs;
+    global $FOF_USER_TABLE, $FOF_ITEM_TABLE, $FOF_ITEM_TAG_TABLE, $fof_connection, $fof_user_id, $fof_user_name, $fof_user_level, $fof_user_prefs, $fof_admin_prefs;
     
     $result = fof_safe_query("select * from $FOF_USER_TABLE where user_name = '%s' and user_password_hash = '%s'", $user_name, $user_password_hash);
     
@@ -609,7 +622,23 @@ function fof_db_authenticate($user_name, $user_password_hash)
     if(!isset($fof_user_prefs['favicons'])) $fof_user_prefs['favicons'] = true;
     if(!isset($fof_user_prefs['keyboard'])) $fof_user_prefs['keyboard'] = false;
     if(!isset($fof_user_prefs['direction'])) $fof_user_prefs['direction'] = "desc";
-    if(!isset($fof_user_prefs['howmany'])) $fof_user_prefs['howmany'] = 50;
+    
+    if($fof_user_id != 1)
+    {
+        $result = fof_safe_query("select user_prefs from $FOF_USER_TABLE where user_id = 1");
+                
+        $row = mysql_fetch_array($result);
+        
+        $fof_admin_prefs = unserialize($row['user_prefs']);
+    }
+    else
+    {
+        $fof_admin_prefs = $fof_user_prefs;
+    }
+    
+    if(!isset($fof_admin_prefs['purge'])) $fof_admin_prefs['purge'] = 30;
+    if(!isset($fof_admin_prefs['autotimeout'])) $fof_admin_prefs['autotimeout'] = 30;
+    if(!isset($fof_admin_prefs['manualtimeout'])) $fof_admin_prefs['manualtimeout'] = 15;
     
     return true;
 }

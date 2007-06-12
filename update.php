@@ -14,6 +14,8 @@
 
 include("header.php");
 
+print("<br>");
+
 $feed = $_GET['feed'];
 $feeds = array();
 
@@ -34,7 +36,17 @@ else
     }
     while($feed = fof_db_get_row($result))
     {
-        $feeds[] = $feed;
+        if((time() - $feed["feed_cache_date"]) < ($fof_admin_prefs["manualtimeout"] * 60))
+        {
+            $title = $feed['feed_title'];
+            list($timestamp, ) = fof_nice_time_stamp($feed['feed_cache_date']);
+            
+            print "$title was just updated $timestamp!<br>";
+        }
+        else
+        {
+            $feeds[] = $feed;
+        }
     }
 }
 
@@ -52,8 +64,6 @@ foreach($feeds as $feed)
 
 print(join($feedjson, ", "));
 print("];\n</script>");
-
-print("<br>");
 
 include("footer.php");
 ?>
