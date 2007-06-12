@@ -736,7 +736,7 @@ function fof_todays_date()
 
 function fof_repair_drain_bamage()
 {
-    if (ini_get('register_globals')) foreach($_REQUEST as $k=>$v) { unset(${$k}); }
+    if (ini_get('register_globals')) foreach($_REQUEST as $k=>$v) { unset($GLOBALS[$k]); }
     
     // thanks to submitter of http://bugs.php.net/bug.php?id=39859
     if (get_magic_quotes_gpc()) {
