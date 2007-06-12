@@ -632,6 +632,7 @@ function fof_db_authenticate($user_name, $user_password_hash)
     if(!isset($fof_user_prefs['favicons'])) $fof_user_prefs['favicons'] = true;
     if(!isset($fof_user_prefs['keyboard'])) $fof_user_prefs['keyboard'] = false;
     if(!isset($fof_user_prefs['direction'])) $fof_user_prefs['direction'] = "desc";
+    if(!isset($fof_user_prefs['howmany'])) $fof_user_prefs['howmany'] = 50;
     
     if($fof_user_id != 1)
     {
