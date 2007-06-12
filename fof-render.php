@@ -63,8 +63,8 @@ function fof_render_item($item)
 		$item_content = do_highlight("<span>$item_content</span>", $_GET['search'], "highlight");
 		$item_title = do_highlight("<span>$item_title</span>", $_GET['search'], "highlight");
 	}
-	
-    $tags = fof_get_item_tags(fof_current_user(), $item_id);
+	    
+    $tags = $item['tags'];
 
 	$star = in_array("star", $tags) ? true : false;
 	$star_image = $star ? "image/star-on.gif" : "image/star-off.gif";
