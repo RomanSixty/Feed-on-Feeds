@@ -106,6 +106,11 @@ function fof_is_admin()
     return $fof_user_level == "admin";
 }
 
+function fof_get_unread_count($user_id)
+{
+    return fof_db_get_unread_count($user_id);
+}
+
 function fof_get_tags($user_id)
 {
     $tags = array();

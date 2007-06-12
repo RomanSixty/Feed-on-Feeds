@@ -75,6 +75,15 @@ foreach($feeds as $row)
     $total += $row['feed_items'];
 }
 
+if($unread)
+{
+    echo "<script>document.title = 'Feed on Feeds ($unread)';</script>";
+}
+else
+{
+    echo "<script>document.title = 'Feed on Feeds';</script>";
+}
+
 ?>
 
 <li <?php if($what == "unread") echo "style='background: #ddd'" ?> ><a href=".?what=unread"><font color=red><b>Unread <?php if($unread) echo "($unread)" ?></b></font></a></li>

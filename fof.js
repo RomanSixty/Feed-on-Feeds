@@ -300,7 +300,7 @@ function refreshlist()
     
     var url = 'sidebar.php';
     var params = "what=" + what + "&when=" + when;
-    new Ajax.Updater($('sidebar'), url, {method: 'get', parameters: params });
+    new Ajax.Updater($('sidebar'), url, {method: 'get', parameters: params, evalScripts: true });
 }
 
 function throb()

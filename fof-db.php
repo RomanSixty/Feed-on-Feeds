@@ -401,6 +401,16 @@ function fof_db_item_has_tags($item_id)
     return $row["count"];
 }
 
+function fof_db_get_unread_count($user_id)
+{
+    global $FOF_ITEM_TAG_TABLE;
+    
+    $result = fof_safe_query("select count(*) as \"count\" from $FOF_ITEM_TAG_TABLE where tag_id = 1 and user_id = %d", $user_id); 
+    $row = mysql_fetch_array($result);
+    
+    return $row["count"];
+}
+
 function fof_db_get_tags($user_id)
 {
     global $FOF_TAG_TABLE, $FOF_ITEM_TABLE, $FOF_ITEM_TAG_TABLE, $fof_connection;
