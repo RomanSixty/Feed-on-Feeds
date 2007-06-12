@@ -12,8 +12,6 @@
  *
  */
 
-//$LOG = fopen("fof.log", 'a');
-
 fof_repair_drain_bamage();
 
 if ( !file_exists( dirname(__FILE__) . '/fof-config.php') )
@@ -39,6 +37,7 @@ require_once('simplepie/simplepie.inc');
 function fof_log($message)
 {
 	global $LOG;
+    //if(!isset($LOG)) $LOG = fopen("fof.log", 'a');
 	//fwrite($LOG, "$message\n");
 }
 
