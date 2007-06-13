@@ -17,17 +17,19 @@ header("Content-Type: text/plain; charset=utf-8");
 
 include_once("fof-main.php");
 
-$tag = $_GET['tag'];
+$tags = $_GET['tag'];
 $item = $_GET['item'];
 $remove = $_GET['remove'];
 
-if($remove == 'true')
+foreach(explode(" ", $tags) as $tag)
 {
-fof_untag_item(fof_current_user(), $item, $tag);
+    if($remove == 'true')
+    {
+    fof_untag_item(fof_current_user(), $item, $tag);
+    }
+    else
+    {
+    fof_tag_item(fof_current_user(), $item, $tag);
+    }
 }
-else
-{
-fof_tag_item(fof_current_user(), $item, $tag);
-}
-
 ?>

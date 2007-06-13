@@ -27,6 +27,32 @@ if(isset($_POST['adminprefs']))
 	$message .= ' Saved admin prefs.';
 }
 
+if(isset($_POST['tagfeed']))
+{
+    $tags = $_POST['tag'];
+    $feed_id = $_POST['feed_id'];
+    $title = $_POST['title'];
+    
+    foreach(explode(" ", $tags) as $tag)
+    {
+        fof_tag_feed(fof_current_user(), $feed_id, $tag);
+        $message .= " Tagged '$title' as $tag.";
+    }
+}
+
+if(isset($_GET['untagfeed']))
+{
+    $feed_id = $_GET['untagfeed'];
+    $tags = $_GET['tag'];
+    $title = $_GET['title'];
+	
+    foreach(explode(" ", $tags) as $tag)
+    {
+        fof_untag_feed(fof_current_user(), $feed_id, $tag);
+        $message .= " Dropped $tag from '$title'.";
+    }
+}
+
 if(isset($_POST['prefs']))
 {
 	$fof_user_prefs['favicons'] = isset($_POST['favicons']);
@@ -109,6 +135,72 @@ Time offset in hours: <input size=3 type=string name=tzoffset value="<?php echo 
 <br>
 <input type=submit name=prefs value="Save Preferences">
 </form>
+
+<br><h1>Feed on Feeds - Feeds and Tags</h1>
+<div style="border: 1px solid black; margin: 10px; padding: 10px; font-size: 12px; font-family: verdana, arial;">
+<table cellpadding=3 cellspacing=0>
+<?php
+foreach($feeds as $row)
+{
+   $id = $row['feed_id'];
+   $url = $row['feed_url'];
+   $title = $row['feed_title'];
+   $link = $row['feed_link'];
+   $description = $row['feed_description'];
+   $age = $row['feed_age'];
+   $unread = $row['feed_unread'];
+   $starred = $row['feed_starred'];
+   $items = $row['feed_items'];
+   $agestr = $row['agestr'];
+   $agestrabbr = $row['agestrabbr'];
+   $lateststr = $row['lateststr'];
+   $lateststrabbr = $row['lateststrabbr'];   
+   $prefs = $row['prefs'];
+   $tags = $row['tags'];
+   
+   if(++$t % 2)
+   {
+      print "<tr class=\"odd-row\">";
+   }
+   else
+   {
+      print "<tr>";
+   }
+
+   if($row['feed_image'] && $fof_user_prefs['favicons'])
+   {
+	   print "<td><a href=\"$url\" title=\"feed\"><img src='" . $row['feed_image'] . "' width='16' height='16' border='0' /></a></td>";
+   }
+   else
+   {
+	   print "<td><a href=\"$url\" title=\"feed\"><img src='image/feed-icon.png' width='16' height='16' border='0' /></a></td>";
+   }
+    
+   print "<td><a href=\"$link\" title=\"home page\">$title</a></td>";
+   
+   print "<td align=right>";
+   
+   if($tags)
+   {
+       foreach($tags as $tag)
+       {
+           $utag = urlencode($tag);
+           $utitle = urlencode($title);
+           print "$tag <a href='prefs.php?untagfeed=$id&tag=$utag&title=$utitle'>[x]</a> ";
+       }
+   }
+   else
+   {
+   }
+   
+   print "</td>";
+   $title = htmlspecialchars($title);
+   print "<td><form method=post action=prefs.php><input type=hidden name=title value=\"$title\"><input type=hidden name=feed_id value=$id><input type=string name=tag> <input type=submit name=tagfeed value='Tag Feed'> <small><i>(separate tags with spaces)</i></small></form></td></tr>";
+}
+?>
+</table>
+</div>
+
 
 <?php if(fof_is_admin()) { ?>
 

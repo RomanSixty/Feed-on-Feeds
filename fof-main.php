@@ -116,8 +116,15 @@ function fof_get_tags($user_id)
     
     $result = fof_db_get_tags($user_id);
     
+    $counts = fof_db_get_tag_unread($user_id);
+    
     while($row = fof_db_get_row($result))
     {
+        if(isset($counts[$row['tag_id']]))
+            $row['unread'] = $counts[$row['tag_id']];
+        else
+            $row['unread'] = 0;
+            
         $tags[] = $row;
     }
     
@@ -138,6 +145,46 @@ function fof_get_item_tags($user_id, $item_id)
 	return $tags;
 }
 
+function fof_tag_feed($user_id, $feed_id, $tag)
+{
+    $tag_id = fof_db_get_tag_by_name($user_id, $tag);
+    if($tag_id == NULL)
+    {
+        $tag_id = fof_db_create_tag($user_id, $tag);
+    }
+    
+    $result = fof_db_get_items($user_id, $feed_id, $what="all", NULL, NULL);
+    
+    foreach($result as $r)
+    {
+        $items[] = $r['item_id'];
+    }
+    
+    fof_db_tag_items($user_id, $tag_id, $items);
+    
+    fof_db_tag_feed($user_id, $feed_id, $tag_id);
+}
+
+function fof_untag_feed($user_id, $feed_id, $tag)
+{
+    $tag_id = fof_db_get_tag_by_name($user_id, $tag);
+    if($tag_id == NULL)
+    {
+        $tag_id = fof_db_create_tag($user_id, $tag);
+    }
+    
+    $result = fof_db_get_items($user_id, $feed_id, $what="all", NULL, NULL);
+    
+    foreach($result as $r)
+    {
+        $items[] = $r['item_id'];
+    }
+    
+    fof_db_untag_items($user_id, $tag_id, $items);
+    
+    fof_db_untag_feed($user_id, $feed_id, $tag_id);
+}
+
 function fof_tag_item($user_id, $item_id, $tag)
 {
    $tag_id = fof_db_get_tag_by_name($user_id, $tag);
@@ -153,6 +200,20 @@ function fof_untag_item($user_id, $item_id, $tag)
 {
    $tag_id = fof_db_get_tag_by_name($user_id, $tag);
    fof_db_untag_items($user_id, $tag_id, $item_id);   
+}
+
+function fof_untag($user_id, $tag)
+{
+    $tag_id = fof_db_get_tag_by_name($user_id, $tag);
+
+    $result = fof_db_get_items($user_id, $feed_id, $tag, NULL, NULL);
+    
+    foreach($result as $r)
+    {
+        $items[] = $r['item_id'];
+    }
+    
+    fof_db_untag_items($user_id, $tag_id, $items);
 }
 
 function fof_nice_time_stamp($age)
@@ -230,6 +291,7 @@ function fof_get_feeds($user_id, $order = 'feed_title', $direction = 'asc')
       $feeds[$i]['feed_link'] = $row['feed_link'];
       $feeds[$i]['feed_description'] = $row['feed_description'];
       $feeds[$i]['feed_image'] = $row['feed_image'];
+      $feeds[$i]['prefs'] = unserialize($row['subscription_prefs']);
       $feeds[$i]['feed_age'] = $age;
 
 	  list($agestr, $agestrabbr) = fof_nice_time_stamp($age);
@@ -238,9 +300,22 @@ function fof_get_feeds($user_id, $order = 'feed_title', $direction = 'asc')
       $feeds[$i]['agestrabbr'] = $agestrabbr;
 
       $i++;
-
    }
-
+   
+   $tags = fof_db_get_tag_id_map();
+   
+   for($i=0; $i<count($feeds); $i++)
+   {
+       $feeds[$i]['tags'] = array();
+       if(is_array($feeds[$i]['prefs']['tags']))
+       {
+           foreach($feeds[$i]['prefs']['tags'] as $tag)
+           {
+               $feeds[$i]['tags'][] = $tags[$tag];
+           }
+       }
+   }
+     
    $result = fof_db_get_item_count($user_id);
 
    while($row = fof_db_get_row($result))
@@ -584,6 +659,27 @@ function fof_parse($url)
 	return $pie;
 }
 
+function fof_apply_tags($feed_id, $item_id)
+{
+    global $fof_subscription_to_tags;
+    
+    if(!isset($fof_subscription_to_tags))
+    {
+        $fof_subscription_to_tags = fof_db_get_subscription_to_tags();
+    }
+    
+    foreach($fof_subscription_to_tags[$feed_id] as $user_id => $tags)
+    {
+        if(is_array($tags))
+        {
+            foreach($tags as $tag)
+            {
+                fof_db_tag_items($user_id, $tag, $item_id);
+            }
+        }
+    }
+}
+
 function fof_update_feed($id)
 {
     if(!$id) return 0;
@@ -631,6 +727,8 @@ function fof_update_feed($id)
                 $n++;
                 $id = fof_db_add_item($feed_id, $item_id, $link, $title, $content, time(), $date, $date);
                 fof_mark_item_unread($feed_id, $id);
+                
+                fof_apply_tags($feed_id, $id);
             }
             
             $ids[] = $id;

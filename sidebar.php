@@ -112,7 +112,7 @@ else
 <table cellspacing="0" cellpadding="1" border="0" id="taglist">
 
 <tr class="heading">
-<td>items</td><td>tag name</td><td></td>
+<td><span class="unread">#</span></td><td>tag name</td><td>untag all items</td>
 </tr>
 
 <?php
@@ -131,6 +131,7 @@ foreach($tags as $tag)
    $tag_name = $tag['tag_name'];
    $tag_id = $tag['tag_id'];
    $count = $tag['count'];
+   $unread = $tag['unread'];
  
    if($tag_id == 1 || $tag_id == 2) continue;
 
@@ -143,9 +144,12 @@ foreach($tags as $tag)
       print "<tr>";
    }
 
-   print "<td>$count</td>";
-   print "<td><a href='.?what=$tag_name'>$tag_name</a></td>";
-   print "<td>[x]</td>";
+   print "<td>";
+   if($unread) print "<a class='unread' href='.?what=$tag_name+unread'>$unread</a>/";
+   print "<a href='.?what=$tag_name'>$count</a></td>";
+   print "<td><b><a href='.?what=$tag_name'>$tag_name</a></b></td>";
+   print "<td><a href=\"#\" title=\"untag all items\" onclick=\"if(confirm('Untag all [$tag_name] items --are you SURE?')) { delete_tag('$tag_name'); return false; }  else { return false; }\">[x]</a></td>";
+
    print "</tr>";
 }
 

@@ -27,7 +27,11 @@ while (list ($key, $val) = each ($_POST))
     }    
 }
 
-if($_POST['feed'])
+if($_REQUEST['deltag'])
+{
+	fof_untag(fof_current_user(), $_REQUEST['deltag']);
+}
+else if($_POST['feed'])
 {
 	fof_db_mark_feed_read(fof_current_user(), $_POST['feed']);
 }

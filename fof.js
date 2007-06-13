@@ -257,6 +257,20 @@ function remove_tag(id, tag)
     return false;
 }
 
+function delete_tag(tag)
+{
+    throb();
+    
+    var url = "view-action.php";
+    var params = "deltag=" + tag;
+    var complete = function () { refreshlist(); };
+    var options = { method: 'get', parameters: params, onComplete: complete };
+    
+    new Ajax.Request(url, options);
+    
+    return false;
+}
+
 function toggle_favorite(id)
 {
     throb();

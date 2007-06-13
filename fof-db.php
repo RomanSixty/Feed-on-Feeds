@@ -318,37 +318,42 @@ function fof_db_get_items($user_id=1, $feed=NULL, $what="unread", $when=NULL, $s
         $limit_clause = " limit $start, $limit ";
     }
     
-    $query = "select distinct $FOF_FEED_TABLE.feed_title as feed_title, $FOF_FEED_TABLE.feed_link as feed_link, $FOF_FEED_TABLE.feed_description as feed_description, $FOF_FEED_TABLE.feed_image as feed_image, $FOF_ITEM_TABLE.item_id as item_id, $FOF_ITEM_TABLE.item_link as item_link, $FOF_ITEM_TABLE.item_title as item_title, $FOF_ITEM_TABLE.item_cached, $FOF_ITEM_TABLE.item_published, $FOF_ITEM_TABLE.item_updated, $FOF_ITEM_TABLE.item_content as item_content from $FOF_TAG_TABLE, $FOF_SUBSCRIPTION_TABLE, $FOF_FEED_TABLE, $FOF_ITEM_TABLE left outer join $FOF_ITEM_TAG_TABLE on $FOF_ITEM_TABLE.item_id = $FOF_ITEM_TAG_TABLE.item_id where $FOF_ITEM_TABLE.feed_id=$FOF_FEED_TABLE.feed_id and $FOF_SUBSCRIPTION_TABLE.user_id = %d and $FOF_FEED_TABLE.feed_id = $FOF_SUBSCRIPTION_TABLE.feed_id";
-    $args[] = $user_id;
-    
+    $args = array();
+    $select = "SELECT i.* , f.* ";
+    $from = "FROM $FOF_FEED_TABLE f, $FOF_ITEM_TABLE i, $FOF_SUBSCRIPTION_TABLE s ";
+    $where = sprintf("WHERE s.user_id = %d AND s.feed_id = f.feed_id AND f.feed_id = i.feed_id ", $user_id);
+ 
     if(!is_null($feed) && $feed != "")
     {
-        $query .= " and $FOF_FEED_TABLE.feed_id = %d";
-        $args[] = $feed;
+        $where .= sprintf("AND f.feed_id = %d ", $feed);
     }
     
     if(!is_null($when) && $when != "")
     {
-        $query .= " and $FOF_ITEM_TABLE.item_published > %d and $FOF_ITEM_TABLE.item_published < %d";
-        $args[] = $begin;
-        $args[] = $end;
+        $where .= sprintf("AND i.item_published > %d and i.item_published < %d ", $begin, $end);
     }
     
     if($what != "all")
     {
-        $query .= " and $FOF_ITEM_TABLE.item_id = $FOF_ITEM_TAG_TABLE.item_id and $FOF_ITEM_TAG_TABLE.tag_id = $FOF_TAG_TABLE.tag_id and $FOF_TAG_TABLE.tag_name = '%s' and $FOF_ITEM_TAG_TABLE.user_id = %d";
-        $args[] = $what;
-        $args[] = $user_id;
+        $tags = split(" ", $what);
+        $in = implode(", ", array_fill(0, count($tags), "'%s'"));
+        $from .= ", $FOF_TAG_TABLE t, $FOF_ITEM_TAG_TABLE it ";
+        $where .= sprintf("AND it.user_id = %d ", $user_id);
+        $where .= "AND it.tag_id = t.tag_id AND ( t.tag_name IN ( $in ) ) AND i.item_id = it.item_id ";
+        $group = sprintf("GROUP BY i.item_id HAVING COUNT( i.item_id ) = %d ", count($tags));
+        $args = array_merge($args, $tags);
     }
     
     if(!is_null($search) && $search != "")
     {
-        $query .= " and ($FOF_ITEM_TABLE.item_title like '%%%s%%'  or $FOF_ITEM_TABLE.item_content like '%%%s%%' )";
+        $where .= "AND (i.item_title like '%%%s%%'  or i.item_content like '%%%s%%' )";
         $args[] = $search;
         $args[] = $search;
     }
     
-    $query .= " order by $FOF_ITEM_TABLE.item_published desc $limit_clause";
+    $order = "order by i.item_published desc $limit_clause ";
+    
+    $query = $select . $from . $where . $group . $order;
     
     $result = fof_safe_query($query, $args);
     
@@ -416,6 +421,51 @@ function fof_db_get_item($user_id, $item_id)
 // Tag stuff
 ////////////////////////////////////////////////////////////////////////////////
 
+function fof_db_get_subscription_to_tags()
+{
+    $r = array();
+    global $FOF_SUBSCRIPTION_TABLE;
+    $result = fof_safe_query("select * from $FOF_SUBSCRIPTION_TABLE");
+    while($row = fof_db_get_row($result))
+    {
+        $prefs = unserialize($row['subscription_prefs']);
+        $tags = $prefs['tags'];
+        if(!is_array($r[$row['feed_id']])) $r[$row['feed_id']] = array();
+        $r[$row['feed_id']][$row['user_id']] = $tags;
+    }
+    
+    return $r;    
+}
+
+function fof_db_tag_feed($user_id, $feed_id, $tag_id)
+{
+    global $FOF_SUBSCRIPTION_TABLE;
+    
+    $result = fof_safe_query("select subscription_prefs from $FOF_SUBSCRIPTION_TABLE where feed_id = %d and user_id = %d", $feed_id, $user_id);
+    $row = fof_db_get_row($result);
+    $prefs = unserialize($row['subscription_prefs']);
+    
+    if(!is_array($prefs['tags']) || !in_array($tag_id, $prefs['tags'])) $prefs['tags'][] = $tag_id;
+    
+    fof_safe_query("update $FOF_SUBSCRIPTION_TABLE set subscription_prefs = '%s' where feed_id = %d and user_id = %d", serialize($prefs), $feed_id, $user_id);
+}
+
+function fof_db_untag_feed($user_id, $feed_id, $tag_id)
+{
+    global $FOF_SUBSCRIPTION_TABLE;
+    
+    $result = fof_safe_query("select subscription_prefs from $FOF_SUBSCRIPTION_TABLE where feed_id = %d and user_id = %d", $feed_id, $user_id);
+    $row = fof_db_get_row($result);
+    $prefs = unserialize($row['subscription_prefs']);
+    
+    if(is_array($prefs['tags']))
+    {
+        $prefs['tags'] = array_diff($prefs['tags'], array($tag_id));
+    }
+    
+    fof_safe_query("update $FOF_SUBSCRIPTION_TABLE set subscription_prefs = '%s' where feed_id = %d and user_id = %d", serialize($prefs), $feed_id, $user_id);
+}
+
 function fof_db_get_item_tags($user_id, $item_id)
 {
     global $FOF_TAG_TABLE, $FOF_ITEM_TABLE, $FOF_ITEM_TAG_TABLE, $fof_connection;
@@ -445,6 +495,21 @@ function fof_db_get_unread_count($user_id)
     return $row["count"];
 }
 
+function fof_db_get_tag_unread($user_id)
+{
+    global $FOF_TAG_TABLE, $FOF_ITEM_TABLE, $FOF_ITEM_TAG_TABLE;
+
+    $result = fof_safe_query("SELECT count(*) as count, it2.tag_id FROM $FOF_ITEM_TABLE i, $FOF_ITEM_TAG_TABLE it , $FOF_ITEM_TAG_TABLE it2 where it.item_id = it2.item_id and it.tag_id = 1 and i.item_id = it.item_id and i.item_id = it2.item_id and it.user_id = %d and it2.user_id = %d group by it2.tag_id", $user_id, $user_id);
+    
+    $counts = array();
+    while($row = fof_db_get_row($result))
+    {
+        $counts[$row['tag_id']] = $row['count'];
+    }
+    
+    return $counts;
+}
+
 function fof_db_get_tags($user_id)
 {
     global $FOF_TAG_TABLE, $FOF_ITEM_TABLE, $FOF_ITEM_TAG_TABLE, $fof_connection;
@@ -458,6 +523,24 @@ function fof_db_get_tags($user_id)
     $result = fof_safe_query($sql, $user_id);
     
     return $result;   
+}
+
+function fof_db_get_tag_id_map()
+{
+    global $FOF_TAG_TABLE;
+    
+    $sql = "select * from $FOF_TAG_TABLE";
+    
+    $result = fof_safe_query($sql);
+    
+    $tags = array();
+    
+    while($row = fof_db_get_row($result))
+    {
+        $tags[$row['tag_id']] = $row['tag_name'];
+    }
+    
+    return $tags;   
 }
 
 function fof_db_create_tag($user_id, $tag)
