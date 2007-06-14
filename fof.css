@@ -25,6 +25,20 @@
     padding: 5px;
 }
 
+.widgets
+{
+    font-family: verdana, arial;
+    background: #f0f0f0;
+    font-size: 12px;
+    padding: 4px;
+    text-align: right;
+}
+
+.widget
+{
+    margin-left: 10px;
+}
+
 #handle
 {
     top: 0px;
@@ -152,7 +166,7 @@ body
 
 .item
 {
-    border: 1px solid #ddd;
+    border: 2px solid #ddd;
     margin: 10px;
     margin-bottom: 20px;
     clear: both;

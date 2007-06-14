@@ -25,7 +25,9 @@ require_once("fof-db.php");
 
 fof_db_connect();
 
+ob_start();
 fof_init_plugins();
+ob_end_clean();
 
 if(!$fof_no_login)
 {
@@ -811,6 +813,39 @@ function fof_add_item_filter($function)
     global $fof_item_filters;
     
     $fof_item_filters[] = $function;
+}
+
+function fof_add_pref($name, $key)
+{
+    global $fof_plugin_prefs;
+    
+    $fof_plugin_prefs[] = array($name, $key);
+}
+
+function fof_add_item_widget($function)
+{
+    global $fof_item_widgets;
+    
+    $fof_item_widgets[] = $function;
+}
+
+function fof_get_widgets($item)
+{
+    global $fof_item_widgets;
+    foreach($fof_item_widgets as $widget)
+    {
+        $w = $widget($item);
+        if($w) $widgets[] = $w;
+    }
+    
+    return $widgets;
+}
+
+function fof_get_plugin_prefs()
+{
+    global $fof_plugin_prefs;
+    
+    return $fof_plugin_prefs;
 }
 
 function fof_multi_sort($tab,$key,$rev)

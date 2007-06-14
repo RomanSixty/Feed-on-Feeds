@@ -61,6 +61,13 @@ if(isset($_POST['prefs']))
 	$fof_user_prefs['howmany'] = intval($_POST['howmany']);
 	$fof_user_prefs['order'] = $_POST['order'];
 
+    foreach(fof_get_plugin_prefs() as $plugin_pref)
+    {
+        $key = $plugin_pref[1];
+        
+        $fof_user_prefs[$key] = $_POST[$key];
+    }
+     
 	fof_db_save_prefs(fof_current_user(), $fof_user_prefs);
     
     if($_POST['password'] && ($_POST['password'] == $_POST['password2']))
@@ -133,6 +140,10 @@ Time offset in hours: <input size=3 type=string name=tzoffset value="<?php echo 
 <table border=0 cellspacing=0 cellpadding=2><tr><td>New password:</td><td><input type=password name=password> (leave blank to not change)</td></tr>
 <tr><td>Repeat new password:</td><td><input type=password name=password2></td></tr></table>
 <br>
+
+<?php foreach(fof_get_plugin_prefs() as $plugin_pref) { $name = $plugin_pref[0]; $key = $plugin_pref[1]; ?>
+<?php echo $name ?>: <input name="<?php echo $key ?>" value="<?php echo $fof_user_prefs[$key]?>"> <i><small>(this preference is from a plugin)</small></i><br><br>
+<?php } ?>
 <input type=submit name=prefs value="Save Preferences">
 </form>
 

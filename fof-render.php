@@ -34,9 +34,7 @@ function do_highlight($full_body, $q, $class){
 
 function fof_render_item($item)
 {
-	$dump = str_replace("\n",'\n', addslashes(str_replace("\"", "&quot;", print_r($item, true))));
-
-	$items = true;
+    $items = true;
 
 	$feed_link = $item['feed_link'];
 	$feed_title = $item['feed_title'];
@@ -159,7 +157,27 @@ function fof_render_item($item)
 
 </div>
 
+
 <div class="body"><?php echo $item_content ?></div>
+
+<?php
+    $widgets = fof_get_widgets($item);
+    
+    if($widgets) {
+?>
+
+<div class="widgets">
+
+<?php
+    foreach($widgets as $widget)
+    {
+        echo "<span class='widget'>$widget</span> ";
+    }
+?>
+
+</div>
+
+<?php } ?>
 
 <div class="clearer"></div>
 
