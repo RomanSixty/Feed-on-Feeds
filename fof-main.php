@@ -38,9 +38,9 @@ require_once('simplepie/simplepie.inc');
 
 function fof_log($message)
 {
-	global $LOG;
+    global $LOG;
     //if(!isset($LOG)) $LOG = fopen("fof.log", 'a');
-	//fwrite($LOG, "$message\n");
+    //fwrite($LOG, "$message\n");
 }
 
 function require_user()
@@ -753,7 +753,7 @@ function fof_update_feed($id)
             $in = implode ( ", ", $ids );
             
             global $FOF_ITEM_TABLE;
-            $sql = "select item_id, item_cached from $FOF_ITEM_TABLE where feed_id = $feed_id and item_id not in ($in) order by item_cached asc limit $count, 1000000000";
+            $sql = "select item_id, item_cached from $FOF_ITEM_TABLE where feed_id = $feed_id and item_id not in ($in) order by item_cached desc limit $count, 1000000000";
             $result = fof_db_query($sql);
             
             while($row = fof_db_get_row($result))
