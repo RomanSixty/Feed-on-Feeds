@@ -621,6 +621,8 @@ function fof_db_mark_item_unread($users, $id)
 {
     global $FOF_ITEM_TAG_TABLE;
     
+    if(count($users) == 0) return;
+    
     foreach($users as $user)
     {
         $sql[] = sprintf("(%d, 1, %d)", $user, $id);
