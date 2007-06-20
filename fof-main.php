@@ -574,22 +574,26 @@ function fof_subscribe($user_id, $url, $autodiscovery=true)
         fof_update_feed($feed['feed_id']);
         
         fof_db_mark_feed_unread($user_id, $feed['feed_id']);
-        return "<font color=\"green\"><b>Subscribed.</b></font><br>";
+        return '<font color="green"><b>Subscribed.</b></font><br>';
     }
     
     $rss = fof_parse($url);
-    
+       
     if (isset($rss->error))
     {
         return "Error: <B>" . $rss->error . "</b> <a href=\"http://feedvalidator.org/check?url=$url\">try to validate it?</a><br>";
     }
     else
     {
-        if(fof_feed_exists($rss->subscribe_url()))
+        $url = $rss->subscribe_url();
+        $self = $rss->get_link(0, 'self');
+        if($self) $url = $self;
+
+        if(fof_feed_exists($url))
         {
-            $feed = fof_db_get_feed_by_url($rss->subscribe_url());
+            $feed = fof_db_get_feed_by_url($url);
             
-            if(fof_is_subscribed($user_id, $rss->subscribe_url()))
+            if(fof_is_subscribed($user_id, $url))
             {
                 return "You are already subscribed to " . fof_render_feed_link($feed) . "<br>";
             }
@@ -598,16 +602,15 @@ function fof_subscribe($user_id, $url, $autodiscovery=true)
             fof_update_feed($feed['feed_id']);
             
             fof_db_mark_feed_unread($user_id, $feed['feed_id']);
-            return "<font color=\"green\"><b>Subscribed.</b></font><br>";
+            return '<font color="green"><b>Subscribed.</b></font><br>';
         }
         
-        $id = fof_add_feed($rss->subscribe_url(), $rss->get_title(), $rss->get_link(), $rss->get_description() );
+        $id = fof_add_feed($url, $rss->get_title(), $rss->get_link(), $rss->get_description() );
 		
         fof_db_add_subscription($user_id, $id);
         fof_update_feed($id);
         
-        fof_db_mark_feed_unread($user_id, $id);
-        return "<font color=\"green\"><b>Subscribed.</b></font><br>";
+        return '<font color="green"><b>Subscribed.</b></font><br>';
     }
 }
 
@@ -696,13 +699,16 @@ function fof_update_feed($id)
     
     if ($rss->error())
     {
-        return array(0, "Error: <B>" . $rss->error() . "</b> <a href=\"http://feedvalidator.org/check?url=$url\">try to validate it?</a>");
+        return array(0, "Error: <b>" . $rss->error() . "</b> <a href=\"http://feedvalidator.org/check?url=$url\">try to validate it?</a>");
     }
     
-    $sub = $rss->subscribe_url();
-    fof_log("subscription url is $sub");
+    $sub = $rss->subscribe_url();    
+    $self_link = $rss->get_link(0, 'self');
+    if($self_link) $sub = $self_link;
     
-    fof_db_feed_update_metadata($id, $rss->subscribe_url(), $rss->get_title(), $rss->get_link(), $rss->get_description(), $rss->get_favicon("./image/feed-icon.png") );
+    fof_log("subscription url is $sub");
+
+    fof_db_feed_update_metadata($id, $sub, $rss->get_title(), $rss->get_link(), $rss->get_description(), $rss->get_favicon("./image/feed-icon.png") );
     
     $feed_id = $feed['feed_id'];
     
@@ -723,14 +729,84 @@ function fof_update_feed($id)
             }
             
             $id = fof_db_find_item($feed_id, $item_id);
-            
+
             if($id == NULL)
             {
+                fof_log("$id ($title) is a new item");
+                
                 $n++;
                 $id = fof_db_add_item($feed_id, $item_id, $link, $title, $content, time(), $date, $date);
-                fof_mark_item_unread($feed_id, $id);
-                
                 fof_apply_tags($feed_id, $id);
+
+                $republished = false;
+                
+                // this was a failed attempt to avoid duplicates when subscribing to
+                // a "planet" type feed when you already have some of the feeds in the
+                // planet subscribed.  in the end there were just too many cases where
+                // dupes still got through (like the 'source' feed url being just slightly
+                // different from the subscribed url).
+                //
+                // maybe a better approach would be simply using the Atom GUID as a
+                // true *GU* ID.
+                
+                /*
+                $source = $item->get_item_tags(SIMPLEPIE_NAMESPACE_ATOM_10, 'source');
+                $links = $source[0]['child'][SIMPLEPIE_NAMESPACE_ATOM_10]['link'];
+                
+                if(is_array($links))
+                {                    
+                    foreach($links as $link)
+                    {
+                        if($link['attribs']['']['rel'] == 'self')
+                        {
+                            $feed_url = $link['attribs']['']['href'];
+                                                        
+                            $feed = fof_db_get_feed_by_url($feed_url);
+                            
+                            if($feed)
+                            {
+                                fof_log("was repub from $feed_url");
+                                
+                                $republished = true;
+                                
+                                $result = fof_get_subscribed_users($feed_id);
+                                
+                                $repub_subscribers = array();
+                                while($row = fof_db_get_row($result))
+                                {
+                                   $repub_subscribers[] = $row['user_id'];
+                                   fof_log("repub_sub: " . $row['user_id']);
+                                }
+                                
+                                $result = fof_get_subscribed_users($feed['feed_id']);
+                                
+                                $original_subscribers = array();
+                                while($row = fof_db_get_row($result))
+                                {
+                                   $original_subscribers[] = $row['user_id'];
+                                   fof_log("orig_sub: " . $row['user_id']);
+                                }
+                                
+                                $new_subscribers = array_diff($repub_subscribers, $original_subscribers);
+                                
+                                fof_db_mark_item_unread($new_subscribers, $id);
+                                
+                                $old_subscribers = array_intersect($original_subscribers, $repub_subscribers);
+
+                                foreach($old_subscribers as $user)
+                                {
+                                    fof_tag_item($user, $id, 'republished');
+                                }
+                            }
+                        }
+                    }
+                }
+                */
+
+                if(!$republished)
+                {
+                    fof_mark_item_unread($feed_id, $id);                
+                }
             }
             
             $ids[] = $id;
