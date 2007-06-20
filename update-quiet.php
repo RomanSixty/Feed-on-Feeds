@@ -25,9 +25,11 @@ $fof_admin_prefs = unserialize($row['user_prefs']);
 
 $result = fof_db_get_feeds();
 
+$feeds = array();
+
 while($feed = fof_db_get_row($result))
 {
-    if((time() - $feed["feed_cache_date"]) > ($fof_admin_prefs["autotimeout"] * 60))
+    if((time() - $feed["feed_cache_date"]) < ($fof_admin_prefs["autotimeout"] * 60))
     {
         $feeds[] = $feed;
     }
