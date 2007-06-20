@@ -45,6 +45,14 @@ function keyboard(e)
             y = itemElement.y ? itemElement.y : itemElement.offsetTop;
             window.scrollTo(0, y);
             
+            // what a hack
+            siblings = $A(itemElement.parentNode.childNodes)
+            n = siblings.length;
+            n -= 7;
+            i = siblings.indexOf(itemElement);
+            i -= 5;
+            document.title = "Feed on Feeds - " + i + " of " + n;
+            
             return false;
         }
         else
@@ -55,6 +63,13 @@ function keyboard(e)
             
             y = itemElement.y ? itemElement.y : itemElement.offsetTop;
             window.scrollTo(0, y);
+            
+            siblings = $A(itemElement.parentNode.childNodes)
+            n = siblings.length;
+            n -= 7;
+            i = siblings.indexOf(itemElement);
+            i -= 5;
+            document.title = "Feed on Feeds - " + i + " of " + n;
             
             return false;
         }
