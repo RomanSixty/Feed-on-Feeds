@@ -22,6 +22,34 @@ function checkbox(event)
     return true;
 }
 
+function select(item)
+{
+    Element.addClassName(itemElement, 'selected');
+    
+    y = itemElement.y ? itemElement.y : itemElement.offsetTop;
+    window.scrollTo(0, y);
+    
+    n = itemElements.length;
+    i = itemElements.indexOf(itemElement);
+    
+    if(i == -1)
+    {
+        // in case page was partially loaded when itemElements was initialized
+        itemElements = $$('.item');
+        i = itemElements.indexOf(itemElement);
+    }
+    
+    i++;
+    
+    document.title = "Feed on Feeds - " + i + " of " + n;
+}
+
+function unselect(item)
+{
+    Element.removeClassName(item, 'selected');
+}
+
+
 function keyboard(e)
 {
     if (!e) e = window.event;
@@ -29,15 +57,92 @@ function keyboard(e)
     if (e.keyCode) keycode=e.keyCode;
     else keycode=e.which;
     
-    if(e.shiftKey || e.ctrlKey || e.altKey || e.metaKey) return true;
+    if(e.ctrlKey || e.altKey || e.metaKey) return true;
     
     key = String.fromCharCode(keycode); 
     
+    if(!itemElements) itemElements = $$('.item');
+    
+    if(key == "H")
+    {
+        itemElements.each(
+            function(i) {
+                Element.toggleClassName(i, "shown");
+                Element.toggleClassName(i, "hidden");
+            }
+            );
+        
+        if(itemElement)
+            select(itemElement);
+        
+        return false;
+    }
+    
+    if(key == "h")
+    {        
+        if(itemElement)
+        {
+            Element.toggleClassName(itemElement, "shown");
+            Element.toggleClassName(itemElement, "hidden");
+            select(itemElement);
+            return false;
+        }
+    }
+    
+    if(key == "s")
+    {
+        if(itemElement)
+        {
+            toggle_favorite(itemElement.id.substring(1));
+            select(itemElement);
+            return false;
+        }
+    }
+    
+    if(key == "f")
+    {
+        if(itemElement)
+        {
+            checkbox = ($('c' + itemElement.id.substring(1)));
+            checkbox.checked = true;
+            return false;
+        }
+    }
+    
+    if(key == "F")
+    {
+        itemElements.each(
+            function(i) {
+                if(itemElement)
+                {
+                    if(itemElements.indexOf(i) > itemElements.indexOf(itemElement))
+                        return;
+                }
+                checkbox = ($('c' + i.id.substring(1)));
+                checkbox.checked = true;
+            }
+            );
+        
+        return false;
+    }
+
+    if(key == "U")
+    {
+        itemElements.each(
+            function(i) {
+                checkbox = ($('c' + i.id.substring(1)));
+                checkbox.checked = false;
+            }
+            );
+        
+        return false;
+    }
+
     if(key == "n")
     {
         if(itemElement)
         {
-            Element.removeClassName(itemElement, 'selected');
+            unselect(itemElement);
             
             next = itemElement.nextSibling;
             
@@ -54,24 +159,7 @@ function keyboard(e)
             item = itemElement.id;
             itemElement = $(item);
             
-            Element.addClassName(itemElement, 'selected');
-            
-            y = itemElement.y ? itemElement.y : itemElement.offsetTop;
-            window.scrollTo(0, y);
-            
-            n = itemElements.length;
-            i = itemElements.indexOf(itemElement);
-            
-            if(i == -1)
-            {
-                // in case page was partially loaded when itemElements was initialized
-                itemElements = $$('.item');
-                i = itemElements.indexOf(itemElement);
-            }
-            
-            i++;
-
-            document.title = "Feed on Feeds - " + i + " of " + n;
+            select(itemElement);
             
             return false;
         }
@@ -81,15 +169,69 @@ function keyboard(e)
             itemElement = $(item);
             itemElements = $$('.item');
             
-            Element.addClassName(itemElement, 'selected');
+            select(itemElement);
             
-            y = itemElement.y ? itemElement.y : itemElement.offsetTop;
-            window.scrollTo(0, y);
+            return false;
+        }
+    }
+    
+    if(key == "N")
+    {
+        if(itemElement) unselect(itemElement);
             
-            n = itemElements.length;
-            i = itemElements.indexOf(itemElement) + 1;
+        item = itemElements.last().id;
+        itemElement = $(item);
+        
+        select(itemElement);
+        
+        return false;
+    }
+    
+    if(key == "P")
+    {
+        if(itemElement) unselect(itemElement);
 
-            document.title = "Feed on Feeds - " + i + " of " + n;
+        item = firstItem;
+        itemElement = $(item);
+        itemElements = $$('.item');
+        
+        select(itemElement);
+        
+        return false;
+    }
+    
+    if(key == "p")
+    {
+        if(itemElement)
+        {
+            unselect(itemElement);
+            
+            next = itemElement.previousSibling;
+            
+            if(next.id)
+            {
+                itemElement = next;
+            }
+            else
+            {
+                item = itemElements.last().id;
+                itemElement = $(item);
+            }
+            
+            item = itemElement.id;
+            itemElement = $(item);
+            
+            select(itemElement);
+            
+            return false;
+        }
+        else
+        {
+            itemElements = $$('.item');
+            item = itemElements.last().id;
+            itemElement = $(item);
+            
+            select(itemElement);
             
             return false;
         }
