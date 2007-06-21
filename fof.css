@@ -242,6 +242,12 @@ body
     display: none;
 }
 
+.hidden .widgets
+{
+    display: none;
+}
+
+
 .shown .downarrow
 {
     display: none;
