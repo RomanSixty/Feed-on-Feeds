@@ -828,7 +828,7 @@ function fof_update_feed($id)
         {
             $in = implode ( ", ", $ids );
             
-            global $FOF_ITEM_TABLE;
+            global $FOF_ITEM_TABLE, $FOF_ITEM_TAG_TABLE;
             $sql = "select item_id, item_cached from $FOF_ITEM_TABLE where feed_id = $feed_id and item_id not in ($in) order by item_cached desc limit $count, 1000000000";
             $result = fof_db_query($sql);
             
@@ -847,6 +847,7 @@ function fof_update_feed($id)
             {
                 $in = implode(", ", $delete); 
                 fof_db_query( "delete from $FOF_ITEM_TABLE where item_id in ($in)" );
+                fof_db_query( "delete from $FOF_ITEM_TAG_TABLE where item_id in ($in)" );
             }
         }
     }
