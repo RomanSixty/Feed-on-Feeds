@@ -7,6 +7,20 @@ var when;
 var firstItem;
 var item;
 var itemElement;
+var itemElements;
+
+function checkbox(event)
+{    
+    if(!event) event = window.event; 
+    target = window.event ? window.event.srcElement : event.target;
+     
+    if(!event.shiftKey)
+        return true;
+    
+    flag_upto(target.id);
+    
+    return true;
+}
 
 function keyboard(e)
 {
@@ -45,12 +59,18 @@ function keyboard(e)
             y = itemElement.y ? itemElement.y : itemElement.offsetTop;
             window.scrollTo(0, y);
             
-            // what a hack
-            siblings = $A(itemElement.parentNode.childNodes)
-            n = siblings.length;
-            n -= 7;
-            i = siblings.indexOf(itemElement);
-            i -= 5;
+            n = itemElements.length;
+            i = itemElements.indexOf(itemElement);
+            
+            if(i == -1)
+            {
+                // in case page was partially loaded when itemElements was initialized
+                itemElements = $$('.item');
+                i = itemElements.indexOf(itemElement);
+            }
+            
+            i++;
+
             document.title = "Feed on Feeds - " + i + " of " + n;
             
             return false;
@@ -59,16 +79,16 @@ function keyboard(e)
         {
             item = firstItem;
             itemElement = $(item);
+            itemElements = $$('.item');
+            
             Element.addClassName(itemElement, 'selected');
             
             y = itemElement.y ? itemElement.y : itemElement.offsetTop;
             window.scrollTo(0, y);
             
-            siblings = $A(itemElement.parentNode.childNodes)
-            n = siblings.length;
-            n -= 7;
-            i = siblings.indexOf(itemElement);
-            i -= 5;
+            n = itemElements.length;
+            i = itemElements.indexOf(itemElement) + 1;
+
             document.title = "Feed on Feeds - " + i + " of " + n;
             
             return false;

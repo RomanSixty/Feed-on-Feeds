@@ -80,6 +80,7 @@ function fof_render_item($item)
 			name="c<?php echo $item_id ?>"
 			value="checked"
 			ondblclick='flag_upto("c<?php echo $item_id?>");'
+            onclick='return checkbox(event);'
 		/>
 	</span>
 	
