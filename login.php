@@ -42,14 +42,23 @@ if(isset($_POST["user_name"]) && isset($_POST["user_password"]))
       <style>
       body
       {
-	font-family: verdana, arial;
-	font-size: 16px;
+          font-family: georgia;
+          font-size: 16px;
+      }
+      
+      div
+      {
+          background: #eee;
+          border: 1px solid black;
+          width: 20em;
+          margin: 5em auto;
+          padding: 1.5em;
       }
       </style>
    </head>
       
   <body>
-<div style="background: #eee; border: 1px solid black; width: 20em; margin: 5em auto; padding: 1.5em;">
+<div>
 	<form action="login.php" method="POST" style="display: inline">
 		<center><a href="http://feedonfeeds.com/" style="font-size: 20px; font-family: georgia;">Feed on Feeds</a></center><br>
 		User name:<br><input type=string name=user_name style='font-size: 16px'><br><br>
