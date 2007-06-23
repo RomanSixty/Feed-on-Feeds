@@ -616,9 +616,11 @@ function continueadd()
         new Insertion.Bottom($('items'), 'Adding  ' + f['url'] + "... ");
         $('items').childElements().last().scrollTo();
 
+        parameters = 'url=' + encodeURIComponent(f['url']) + "&unread=" + document.addform.unread.value;
+
         new Ajax.Updater('items', 'add-single.php', {
             method: 'get',
-            parameters: 'url=' + encodeURIComponent(f['url']),
+            parameters: parameters,
             insertion: Insertion.Bottom,
             onComplete: continueadd
         });

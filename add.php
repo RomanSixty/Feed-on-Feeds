@@ -18,6 +18,8 @@ $url = $_POST['rss_url'];
 if(!$url) $url = $_GET['rss_url'];
 $opml = $_POST['opml_url'];
 $file = $_POST['opml_file'];
+$unread = $_POST['unread'];
+
 $feeds = array();
 
 if($url) $feeds[] = $url;
@@ -55,24 +57,22 @@ if($_FILES['opml_file']['tmp_name'])
 <div style="background: #eee; border: 1px solid black; padding: 1.5em; margin: 1.5em;">If your browser is cool, you can <a href='javascript:window.navigator.registerContentHandler("application/vnd.mozilla.maybe.feed", "http://<?php echo $_SERVER["HTTP_HOST"] . dirname($_SERVER["SCRIPT_NAME"]) ?>/add.php?rss_url=%s", "Feed on Feeds")'>register Feed on Feeds as a Feed Reader</a>.  If it is not cool, you can still use the <a href="javascript:void(location.href='http://<?php echo $_SERVER["HTTP_HOST"] . $_SERVER["SCRIPT_NAME"] ?>?rss_url='+escape(location))">FoF subscribe</a> bookmarklet to subscribe to any page with a feed.  Just add it as a bookmark and then click on it when you are at a page you'd like to subscribe to!</div>
 
 <form method="post" action="opml.php">
-<input type="submit" value="Export subscriptions as OPML">
-</form>
 
+<input type="submit" value="Export subscriptions as OPML">
+
+</form>
 <br>
 
-<form method="post" action="add.php" enctype="multipart/form-data">
-<input type="hidden" name="MAX_FILE_SIZE" value="100000">
+<form method="post" name="addform" action="add.php" enctype="multipart/form-data">
+
+When adding feeds, mark <select name="unread"><option value=today <?php if($unread == "today") echo "selected" ?> >today's</option><option value=all <?php if($unread == "all") echo "selected" ?> >all</option><option value=no <?php if($unread == "no") echo "selected" ?> >no</option></select> items as unread<br><br>
 
 RSS or weblog URL: <input type="text" name="rss_url" size="40" value="<?php echo $url ?>"><input type="Submit" value="Add a feed"><br><br>
-</form>
 
-<form method="post" action="add.php" enctype="multipart/form-data">
 OPML URL: <input type="hidden" name="MAX_FILE_SIZE" value="100000">
 
 <input type="text" name="opml_url" size="40" value="<?php echo $opml ?>"><input type="Submit" value="Add feeds from OPML file on the Internet"><br><br>
-</form>
 
-<form method="post" action="add.php" enctype="multipart/form-data">
 <input type="hidden" name="MAX_FILE_SIZE" value="100000">
 OPML filename: <input type="file" name="opml_file" size="40" value="<?php echo $file ?>"><input type="Submit" value="Upload an OPML file">
 

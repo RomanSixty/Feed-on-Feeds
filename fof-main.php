@@ -556,7 +556,7 @@ function fof_prepare_url($url)
     return $url;
 }
 
-function fof_subscribe($user_id, $url, $autodiscovery=true)
+function fof_subscribe($user_id, $url, $unread="today")
 {
     if(!$url) return false;
     
@@ -573,7 +573,7 @@ function fof_subscribe($user_id, $url, $autodiscovery=true)
         fof_db_add_subscription($user_id, $feed['feed_id']);
         fof_update_feed($feed['feed_id']);
         
-        fof_db_mark_feed_unread($user_id, $feed['feed_id']);
+        if($unread != "no") fof_db_mark_feed_unread($user_id, $feed['feed_id'], $unread);
         return '<font color="green"><b>Subscribed.</b></font><br>';
     }
     
@@ -599,16 +599,16 @@ function fof_subscribe($user_id, $url, $autodiscovery=true)
             }
             
             fof_db_add_subscription($user_id, $feed['feed_id']);
-            fof_update_feed($feed['feed_id']);
-            
-            fof_db_mark_feed_unread($user_id, $feed['feed_id']);
+            if($unread != "no") fof_db_mark_feed_unread($user_id, $feed['feed_id'], $unread);
+
             return '<font color="green"><b>Subscribed.</b></font><br>';
         }
         
         $id = fof_add_feed($url, $rss->get_title(), $rss->get_link(), $rss->get_description() );
 		
-        fof_db_add_subscription($user_id, $id);
         fof_update_feed($id);
+        fof_db_add_subscription($user_id, $id);
+        if($unread != "no") fof_db_mark_feed_unread($user_id, $id, $unread);
         
         return '<font color="green"><b>Subscribed.</b></font><br>';
     }
@@ -673,7 +673,7 @@ function fof_apply_tags($feed_id, $item_id)
         $fof_subscription_to_tags = fof_db_get_subscription_to_tags();
     }
     
-    foreach($fof_subscription_to_tags[$feed_id] as $user_id => $tags)
+    foreach((array)$fof_subscription_to_tags[$feed_id] as $user_id => $tags)
     {
         if(is_array($tags))
         {

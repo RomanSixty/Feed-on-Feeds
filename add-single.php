@@ -14,10 +14,8 @@
 
 include_once("fof-main.php");
 
-set_time_limit(60*10);
+$url = $_REQUEST['url'];
+$unread = $_REQUEST['unread'];
 
-$url = $_POST['url'];
-if(!$url) $url = $_GET['url'];
-
-print(fof_subscribe(fof_current_user(), $url));
+print(fof_subscribe(fof_current_user(), $url, $unread));
 ?>

@@ -593,7 +593,7 @@ function fof_db_mark_feed_read($user_id, $feed_id)
 {
     global $FOF_ITEM_TAG_TABLE;
     
-    $result = fof_db_get_items($user_id, $feed_id, $what="all", NULL, NULL);
+    $result = fof_db_get_items($user_id, $feed_id, $what="all");
     
     foreach($result as $r)
     {
@@ -603,13 +603,22 @@ function fof_db_mark_feed_read($user_id, $feed_id)
     fof_db_untag_items($user_id, 1, $items);
 }
 
-function fof_db_mark_feed_unread($user_id, $feed)
+function fof_db_mark_feed_unread($user_id, $feed, $what)
 {
     global $FOF_ITEM_TAG_TABLE;
     
-    $result = fof_db_get_items($user_id, $feed, $what="all", NULL, NULL, 10);
+    fof_log("fof_db_mark_feed_unread($user_id, $feed, $what)");
     
-    foreach($result as $r)
+    if($what == "all")
+    {
+        $result = fof_db_get_items($user_id, $feed, "all");
+    }
+    if($what == "today")
+    {
+        $result = fof_db_get_items($user_id, $feed, "all", "today");
+    }
+    
+    foreach((array)$result as $r)
     {
         $items[] = $r['item_id'];
     }
