@@ -138,6 +138,86 @@ function keyboard(e)
         return false;
     }
 
+    if(key == "j")
+    {
+        if(itemElement)
+        {
+            // is the next element visible yet?  scroll if not.  
+            
+            if(itemElement.nextSibling.id)
+            {
+                nextElement = itemElement.nextSibling;
+                scrollHeight = document.body.scrollTop ? document.body.scrollTop : pageYOffset;
+                
+                if (nextElement.offsetParent) {
+                    y = nextElement.offsetTop
+                    while (nextElement = nextElement.offsetParent) {
+                        y += nextElement.offsetTop
+                    }
+                }
+                
+                if( typeof( window.innerHeight ) == 'number' ) {
+                    //Non-IE
+                    windowHeight = window.innerHeight;
+                } else if( document.documentElement && document.documentElement.clientHeight ) {
+                    //IE 6+ in 'standards compliant mode'
+                    windowHeight = document.documentElement.clientHeight;
+                } else if( document.body && document.body.clientHeight ) {
+                    //IE 4 compatible
+                    windowHeight = document.body.clientHeight;
+                }
+                                
+                if(y > scrollHeight + windowHeight)
+                {
+                    window.scrollTo(0, scrollHeight + (.8 * windowHeight));
+                    return false;
+                }
+            }
+
+            unselect(itemElement);
+            checkbox = ($('c' + itemElement.id.substring(1)));
+            checkbox.checked = true;
+
+            next = itemElement.nextSibling;
+            
+            if(next.id)
+            {
+                itemElement = next;
+            }
+            else
+            {
+                if(confirm("No more items!  Mark flagged as read?"))
+                {
+                    mark_read();
+                }
+                else
+                {
+                    item = firstItem;
+                    itemElement = $(item);
+                    select(itemElement);                    
+                    return false;
+                }
+            }
+            
+            item = itemElement.id;
+            itemElement = $(item);
+            
+            select(itemElement);
+            
+            return false;
+        }
+        else
+        {
+            item = firstItem;
+            itemElement = $(item);
+            itemElements = $$('.item');
+            
+            select(itemElement);
+            
+            return false;
+        }
+    }
+    
     if(key == "n")
     {
         if(itemElement)
