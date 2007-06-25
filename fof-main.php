@@ -22,6 +22,7 @@ if ( !file_exists( dirname(__FILE__) . '/fof-config.php') )
 
 require_once("fof-config.php");
 require_once("fof-db.php");
+require_once("classes/fof-prefs.php");
 
 fof_db_connect();
 
@@ -32,6 +33,7 @@ ob_end_clean();
 if(!$fof_no_login)
 {
     require_user();
+    $fof_prefs_obj = FoF_Prefs::instance();
 }
 
 require_once('simplepie/simplepie.inc');
@@ -94,10 +96,9 @@ function fof_username()
 }
 
 function fof_prefs()
-{
-    global $fof_user_prefs;
-        
-    return $fof_user_prefs;
+{        
+    $p =& FoF_Prefs::instance();
+    return $p->prefs;
 }
 
 function fof_is_admin()
@@ -652,10 +653,11 @@ function fof_mark_item_unread($feed_id, $id)
 
 function fof_parse($url)
 {
-    global $fof_admin_prefs;
+    $p = FoF_Prefs::instance();
+    $admin_prefs = $p->admin_prefs;
     
     $pie = new SimplePie();
-    $pie->set_cache_duration($fof_admin_prefs["manualtimeout"] * 60);
+    $pie->set_cache_duration($admin_prefs["manualtimeout"] * 60);
     $pie->set_favicon_handler("favicon.php");
 	$pie->set_feed_url($url);
 	$pie->remove_div(false);
@@ -817,10 +819,12 @@ function fof_update_feed($id)
     // unread or starred, not currently in the feed or within sizeof(feed) items
     // of being in the feed, and are over 'purge' many days old
     
-    global $fof_admin_prefs;
-    if($fof_admin_prefs['purge'] != "")
+    $p = FoF_Prefs::instance();
+    $admin_prefs = $p->admin_prefs;
+    
+    if($admin_prefs['purge'] != "")
     {
-        fof_log('purge is ' . $fof_admin_prefs['purge']);
+        fof_log('purge is ' . $admin_prefs['purge']);
         $count = count($ids);
         fof_log('items in feed: ' . $count);
 
@@ -834,7 +838,7 @@ function fof_update_feed($id)
             
             while($row = fof_db_get_row($result))
             {
-                if($row['item_cached'] < (time() - ($fof_admin_prefs['purge'] * 24 * 60 * 60)))
+                if($row['item_cached'] < (time() - ($admin_prefs['purge'] * 24 * 60 * 60)))
                 {
                     if(!fof_item_has_tags($row['item_id']))
                     {		      

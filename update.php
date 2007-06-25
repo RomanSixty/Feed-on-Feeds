@@ -19,6 +19,9 @@ print("<br>");
 $feed = $_GET['feed'];
 $feeds = array();
 
+$p = FoF_Prefs::instance();
+$admin_prefs = $p->admin_prefs;
+
 if($feed)
 {
     $feed = fof_db_get_feed_by_id($feed);
@@ -36,7 +39,7 @@ else
     }
     while($feed = fof_db_get_row($result))
     {
-        if((time() - $feed["feed_cache_date"]) < ($fof_admin_prefs["manualtimeout"] * 60))
+        if((time() - $feed["feed_cache_date"]) < ($admin_prefs["manualtimeout"] * 60))
         {
             $title = $feed['feed_title'];
             list($timestamp, ) = fof_nice_time_stamp($feed['feed_cache_date']);

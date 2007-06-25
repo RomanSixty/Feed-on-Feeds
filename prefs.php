@@ -14,15 +14,15 @@
 
 include_once("fof-main.php");
 
+$prefs =& FoF_Prefs::instance();
+
 if(isset($_POST['adminprefs']))
 {
-	$fof_user_prefs['purge'] = $_POST['purge'];
-	$fof_user_prefs['manualtimeout'] = $_POST['manualtimeout'];
-	$fof_user_prefs['autotimeout'] = $_POST['autotimeout'];
+	$prefs->set('purge', $_POST['purge']);
+	$prefs->set('manualtimeout', $_POST['manualtimeout']);
+	$prefs->set('autotimeout', $_POST['autotimeout']);
 
-	fof_db_save_prefs(fof_current_user(), $fof_user_prefs);
-    
-    $fof_admin_prefs = $fof_user_prefs;
+	$prefs->save();
     	
 	$message .= ' Saved admin prefs.';
 }
@@ -55,20 +55,20 @@ if(isset($_GET['untagfeed']))
 
 if(isset($_POST['prefs']))
 {
-	$fof_user_prefs['favicons'] = isset($_POST['favicons']);
-	$fof_user_prefs['keyboard'] = isset($_POST['keyboard']);
-	$fof_user_prefs['tzoffset'] = intval($_POST['tzoffset']);
-	$fof_user_prefs['howmany'] = intval($_POST['howmany']);
-	$fof_user_prefs['order'] = $_POST['order'];
+	$prefs->set('favicons', isset($_POST['favicons']));
+	$prefs->set('keyboard', isset($_POST['keyboard']));
+	$prefs->set('tzoffset', intval($_POST['tzoffset']));
+	$prefs->set('howmany', intval($_POST['howmany']));
+	$prefs->set('order', $_POST['order']);
 
     foreach(fof_get_plugin_prefs() as $plugin_pref)
     {
         $key = $plugin_pref[1];
         
-        $fof_user_prefs[$key] = $_POST[$key];
+        $prefs->set($key, $_POST[$key]);
     }
      
-	fof_db_save_prefs(fof_current_user(), $fof_user_prefs);
+	$prefs->save(fof_current_user());
     
     if($_POST['password'] && ($_POST['password'] == $_POST['password2']))
     {
@@ -121,7 +121,6 @@ if(isset($_POST['deleteuser']) && $_POST['username'])
 
 include("header.php");
 
-$favicons = $_POST['favicons'];
 ?>
 
 <?php if(isset($message)) { ?>
@@ -132,17 +131,17 @@ $favicons = $_POST['favicons'];
 
 <br><h1>Feed on Feeds - Preferences</h1>
 <form method="post" action="prefs.php" style="border: 1px solid black; margin: 10px; padding: 10px;">
-Default display order: <select name="order"><option value=desc>new to old</option><option value=asc <?php if($fof_user_prefs['order'] == "asc") echo "selected";?>>old to new</option></select><br><br>
-Number of items in paged displays: <input type="string" name="howmany" value="<?php echo $fof_user_prefs['howmany']?>"><br><br>
-Display custom feed favicons? <input type="checkbox" name="favicons" <?php if($fof_user_prefs['favicons']) echo "checked=true";?> ><br><br>
-Use keyboard shortcuts? <input type="checkbox" name="keyboard" <?php if($fof_user_prefs['keyboard']) echo "checked=true";?> ><br><br>
-Time offset in hours: <input size=3 type=string name=tzoffset value="<?php echo $fof_user_prefs['tzoffset']?>"> (UTC time: <?php echo gmdate("Y-n-d g:ia") ?>, local time: <?php echo gmdate("Y-n-d g:ia", time() + $fof_user_prefs["tzoffset"]*60*60) ?>)<br><br>
+Default display order: <select name="order"><option value=desc>new to old</option><option value=asc <?php if($prefs->get('order') == "asc") echo "selected";?>>old to new</option></select><br><br>
+Number of items in paged displays: <input type="string" name="howmany" value="<?php echo $prefs->get('howmany') ?>"><br><br>
+Display custom feed favicons? <input type="checkbox" name="favicons" <?php if($prefs->get('favicons')) echo "checked=true";?> ><br><br>
+Use keyboard shortcuts? <input type="checkbox" name="keyboard" <?php if($prefs->get('keyboard')) echo "checked=true";?> ><br><br>
+Time offset in hours: <input size=3 type=string name=tzoffset value="<?php echo $prefs->get('tzoffset')?>"> (UTC time: <?php echo gmdate("Y-n-d g:ia") ?>, local time: <?php echo gmdate("Y-n-d g:ia", time() + $prefs->get("tzoffset")*60*60) ?>)<br><br>
 <table border=0 cellspacing=0 cellpadding=2><tr><td>New password:</td><td><input type=password name=password> (leave blank to not change)</td></tr>
 <tr><td>Repeat new password:</td><td><input type=password name=password2></td></tr></table>
 <br>
 
 <?php foreach(fof_get_plugin_prefs() as $plugin_pref) { $name = $plugin_pref[0]; $key = $plugin_pref[1]; ?>
-<?php echo $name ?>: <input name="<?php echo $key ?>" value="<?php echo $fof_user_prefs[$key]?>"> <i><small>(this preference is from a plugin)</small></i><br><br>
+<?php echo $name ?>: <input name="<?php echo $key ?>" value="<?php echo $prefs->get($key)?>"> <i><small>(this preference is from a plugin)</small></i><br><br>
 <?php } ?>
 <input type=submit name=prefs value="Save Preferences">
 </form>
@@ -166,7 +165,6 @@ foreach($feeds as $row)
    $agestrabbr = $row['agestrabbr'];
    $lateststr = $row['lateststr'];
    $lateststrabbr = $row['lateststrabbr'];   
-   $prefs = $row['prefs'];
    $tags = $row['tags'];
    
    if(++$t % 2)
@@ -178,7 +176,7 @@ foreach($feeds as $row)
       print "<tr>";
    }
 
-   if($row['feed_image'] && $fof_user_prefs['favicons'])
+   if($row['feed_image'] && $prefs->get('favicons'))
    {
 	   print "<td><a href=\"$url\" title=\"feed\"><img src='" . $row['feed_image'] . "' width='16' height='16' border='0' /></a></td>";
    }
@@ -217,9 +215,9 @@ foreach($feeds as $row)
 
 <br><h1>Feed on Feeds - Admin Options</h1>
 <form method="post" action="prefs.php" style="border: 1px solid black; margin: 10px; padding: 10px;">
-Purge read items after <input size=4 type=string name=purge value="<?php echo $fof_admin_prefs['purge']?>"> days (leave blank to never purge)<br><br>
-Allow automatic feed updates every <input size=4 type=string name=autotimeout value="<?php echo $fof_admin_prefs['autotimeout']?>"> minutes<br><br>
-Allow manual feed updates every <input size=4 type=string name=manualtimeout value="<?php echo $fof_admin_prefs['manualtimeout']?>"> minutes<br><br>
+Purge read items after <input size=4 type=string name=purge value="<?php echo $prefs->get('purge')?>"> days (leave blank to never purge)<br><br>
+Allow automatic feed updates every <input size=4 type=string name=autotimeout value="<?php echo $prefs->get('autotimeout')?>"> minutes<br><br>
+Allow manual feed updates every <input size=4 type=string name=manualtimeout value="<?php echo $prefs->get('manualtimeout')?>"> minutes<br><br>
 <input type=submit name=adminprefs value="Save Options">
 </form>
 

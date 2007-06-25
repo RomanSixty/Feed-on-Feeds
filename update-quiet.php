@@ -19,6 +19,9 @@ ob_start();
 $fof_no_login = true;
 include_once("fof-main.php");
 
+$p = new FoF_Prefs(1);
+$fof_admin_prefs = $p->prefs;
+
 $result = fof_safe_query("select user_prefs from $FOF_USER_TABLE where user_id = 1");
 $row = mysql_fetch_array($result);
 $fof_admin_prefs = unserialize($row['user_prefs']);

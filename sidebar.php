@@ -248,7 +248,7 @@ foreach($feeds as $row)
    print "</td>";
 
 	print "<td align='center'>";
-	if($row['feed_image'] && $fof_user_prefs['favicons'])
+	if($row['feed_image'] && $fof_prefs_obj->get('favicons'))
 	{
 	   print "<a href=\"$url\" title=\"feed\"><img src='" . $row['feed_image'] . "' width='16' height='16' border='0' /></a>";
 	}

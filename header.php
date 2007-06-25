@@ -43,7 +43,7 @@ $unread_count = fof_get_unread_count(fof_current_user());
       <script>
       	document.onmousemove = dragResize;
       	document.onmouseup = completeDrag;
-      	<?php if($fof_user_prefs['keyboard']) { ?>
+      	<?php if($fof_prefs_obj->get('keyboard')) { ?>
             document.onkeypress = keyboard;
       	<?php } ?>
         isIE = false;

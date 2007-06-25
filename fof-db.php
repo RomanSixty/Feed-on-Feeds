@@ -742,16 +742,16 @@ function fof_db_delete_user($username)
 
 function fof_db_save_prefs($user_id, $prefs)
 {
-    global $FOF_USER_TABLE, $fof_user_prefs;
+    global $FOF_USER_TABLE;
     
-    $prefs = serialize($fof_user_prefs);
+    $prefs = serialize($prefs);
     
     fof_safe_query("update $FOF_USER_TABLE set user_prefs = '%s' where user_id = %d", $prefs, $user_id);
 }
 
 function fof_db_authenticate($user_name, $user_password_hash)
 {
-    global $FOF_USER_TABLE, $FOF_ITEM_TABLE, $FOF_ITEM_TAG_TABLE, $fof_connection, $fof_user_id, $fof_user_name, $fof_user_level, $fof_user_prefs, $fof_admin_prefs;
+    global $FOF_USER_TABLE, $FOF_ITEM_TABLE, $FOF_ITEM_TAG_TABLE, $fof_connection, $fof_user_id, $fof_user_name, $fof_user_level;
     
     $result = fof_safe_query("select * from $FOF_USER_TABLE where user_name = '%s' and user_password_hash = '%s'", $user_name, $user_password_hash);
     
@@ -765,30 +765,6 @@ function fof_db_authenticate($user_name, $user_password_hash)
     $fof_user_name = $row['user_name'];
     $fof_user_id = $row['user_id'];
     $fof_user_level = $row['user_level'];
-    $fof_user_prefs = unserialize($row['user_prefs']);
-    
-    if(!is_array($fof_user_prefs)) $fof_user_prefs = array();
-    if(!isset($fof_user_prefs['favicons'])) $fof_user_prefs['favicons'] = true;
-    if(!isset($fof_user_prefs['keyboard'])) $fof_user_prefs['keyboard'] = false;
-    if(!isset($fof_user_prefs['direction'])) $fof_user_prefs['direction'] = "desc";
-    if(!isset($fof_user_prefs['howmany'])) $fof_user_prefs['howmany'] = 50;
-    
-    if($fof_user_id != 1)
-    {
-        $result = fof_safe_query("select user_prefs from $FOF_USER_TABLE where user_id = 1");
-                
-        $row = mysql_fetch_array($result);
-        
-        $fof_admin_prefs = unserialize($row['user_prefs']);
-    }
-    else
-    {
-        $fof_admin_prefs = $fof_user_prefs;
-    }
-    
-    if(!isset($fof_admin_prefs['purge'])) $fof_admin_prefs['purge'] = 30;
-    if(!isset($fof_admin_prefs['autotimeout'])) $fof_admin_prefs['autotimeout'] = 30;
-    if(!isset($fof_admin_prefs['manualtimeout'])) $fof_admin_prefs['manualtimeout'] = 15;
     
     return true;
 }

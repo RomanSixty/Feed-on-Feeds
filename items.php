@@ -25,7 +25,7 @@ else
 
 if(!isset($_GET['order']))
 {
-	$order = $fof_user_prefs["order"];
+	$order = $fof_prefs_obj->get("order");
 }
 
 $how = $_GET['how'];
