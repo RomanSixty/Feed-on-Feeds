@@ -60,7 +60,7 @@ $url = $prefs->get("sharedurl");
 
 <?php
 $which = ($sharing == "all") ? "all" : "shared";
-$result = fof_get_items($user, NULL, $which, NULL, NULL, 100);
+$result = fof_get_items($user, NULL, $which, NULL, 0, 100);
 
 $first = true;
 
