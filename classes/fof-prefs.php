@@ -44,6 +44,11 @@ class FoF_Prefs
         }
         
         $this->populate_defaults();
+        
+        if($user_id == 1)
+        {
+           $this->prefs = array_merge($this->prefs, $this->admin_prefs);
+        }
     }
     
     function &instance()
