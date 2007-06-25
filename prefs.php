@@ -60,6 +60,9 @@ if(isset($_POST['prefs']))
 	$prefs->set('tzoffset', intval($_POST['tzoffset']));
 	$prefs->set('howmany', intval($_POST['howmany']));
 	$prefs->set('order', $_POST['order']);
+	$prefs->set('sharing', $_POST['sharing']);
+	$prefs->set('sharedname', $_POST['sharedname']);
+	$prefs->set('sharedurl', $_POST['sharedurl']);
 
     foreach(fof_get_plugin_prefs() as $plugin_pref)
     {
@@ -139,6 +142,19 @@ Time offset in hours: <input size=3 type=string name=tzoffset value="<?php echo 
 <table border=0 cellspacing=0 cellpadding=2><tr><td>New password:</td><td><input type=password name=password> (leave blank to not change)</td></tr>
 <tr><td>Repeat new password:</td><td><input type=password name=password2></td></tr></table>
 <br>
+
+Share 
+<select name="sharing">
+<option value=no>no</option>
+<option value=all <?php if($prefs->get('sharing') == "all") echo "selected";?>>all</option>
+<option value=tagged <?php if($prefs->get('sharing') == "tagged") echo "selected";?>>tagged as "shared"</option>
+</select>
+items.
+<?php if($prefs->get('sharing') != "no") echo " <small><i>(your shared page is <a href='./shared.php?user=$fof_user_id'>here</a>)</i></small>";?><br><br>
+Name to be shown on shared page: <input type=string name=sharedname value="<?php echo $prefs->get('sharedname')?>"><br><br>
+URL to be linked on shared page: <input type=string name=sharedurl value="<?php echo $prefs->get('sharedurl')?>">
+<br><br>
+
 
 <?php foreach(fof_get_plugin_prefs() as $plugin_pref) { $name = $plugin_pref[0]; $key = $plugin_pref[1]; ?>
 <?php echo $name ?>: <input name="<?php echo $key ?>" value="<?php echo $prefs->get($key)?>"> <i><small>(this preference is from a plugin)</small></i><br><br>

@@ -66,6 +66,7 @@ class FoF_Prefs
             "keyboard" => false,
             "direction" => "desc",
             "howmany" => 50,
+            "sharing" => "no",
             );
         
         $admin_defaults = array(
