@@ -54,7 +54,7 @@ class FoF_Prefs
     function &instance()
     {
         static $instance;
-        if(!isset($instance)) $instance =& new FoF_Prefs(fof_current_user());
+        if(!isset($instance)) $instance = new FoF_Prefs(fof_current_user());
         
         return $instance;
     }
