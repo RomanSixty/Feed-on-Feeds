@@ -201,7 +201,8 @@ CREATE TABLE IF NOT EXISTS `$FOF_ITEM_TABLE` (
   `item_content` text NOT NULL,
   PRIMARY KEY  (`item_id`),
   KEY `feed_id` (`feed_id`),
-  KEY `item_guid` (`item_guid`(255))
+  KEY `item_guid` (`item_guid`(255)),
+  KEY `feed_id_item_cached` (`feed_id`,`item_cached`)
 ) ENGINE=MyISAM DEFAULT CHARSET=latin1;
 EOQ;
 
