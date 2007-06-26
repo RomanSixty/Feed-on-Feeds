@@ -60,7 +60,14 @@ foreach($result as $item)
 	$feed_title = htmlspecialchars($item['feed_title']);
 
 	$item_link = htmlspecialchars($item['item_link']);
-	$item_guid = htmlspecialchars($item['item_guid']);
+    
+    $item_guid = $item['item_guid'];
+    if(!ereg("^[a-z0-9\.\+\-]+:", $item_guid))
+    {
+        $item_guid = $feed_link . '#' . $item_guid;
+    }
+    $item_guid = htmlspecialchars($item_guid);
+    
 	$item_title = htmlspecialchars($item['item_title']);
 	$item_content = htmlspecialchars($item['item_content']);
 
