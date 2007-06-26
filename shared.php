@@ -31,14 +31,13 @@ $url = $prefs->get("sharedurl");
 $which = ($sharing == "all") ? "all" : "shared";
 $result = fof_get_items($user, NULL, $which, NULL, 0, 100);
 
-header("Content-Type: text/html; charset=utf-8");
 
 $shared_feed = htmlspecialchars("http://" . $_SERVER['SERVER_NAME'] . $_SERVER['PHP_SELF'] . "?user=$user&format=atom");
 $shared_link = htmlspecialchars("http://" . $_SERVER['SERVER_NAME'] . $_SERVER['PHP_SELF'] . "?user=$user");
 
 if($format == "atom")
 {
-
+header("Content-Type: application/atom+xml; charset=utf-8");
 echo '<?xml version="1.0"?>';
 ?>
 
@@ -98,6 +97,7 @@ echo '</feed>';
 }
 else
 {
+header("Content-Type: text/html; charset=utf-8");
 ?>
 <!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
 <html xmlns="http://www.w3.org/1999/xhtml">
