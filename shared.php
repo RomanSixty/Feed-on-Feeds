@@ -81,7 +81,7 @@ foreach($result as $item)
   <entry>
     <id><?php echo $item_guid ?></id>
     <link href="<?php echo $item_link ?>" rel="alternate" type="text/html"/>
-    <title><?php echo $item_title ?></title>
+    <title type="html"><?php echo $item_title ?></title>
     <summary type="html"><?php echo $item_content ?></summary>
     <updated><?php echo $item_updated ?></updated>
     <source>
