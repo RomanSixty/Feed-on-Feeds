@@ -168,6 +168,8 @@ function fof_render_item($item)
     if($widgets) {
 ?>
 
+<div class="clearer"></div>
+
 <div class="widgets">
 
 <?php
@@ -180,8 +182,6 @@ function fof_render_item($item)
 </div>
 
 <?php } ?>
-
-<div class="clearer"></div>
 
 <?php
 }
