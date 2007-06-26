@@ -19,6 +19,8 @@ include_once("fof-render.php");
 $user = $_GET['user'];
 if(!isset($user)) die;
 
+$format = $_GET['format'];
+
 $prefs = new FoF_Prefs($user);
 $sharing = $prefs->get("sharing");
 if($sharing == "no") die;
@@ -26,12 +28,75 @@ if($sharing == "no") die;
 $name = $prefs->get("sharedname");
 $url = $prefs->get("sharedurl");
 
+$which = ($sharing == "all") ? "all" : "shared";
+$result = fof_get_items($user, NULL, $which, NULL, 0, 100);
+
 header("Content-Type: text/html; charset=utf-8");
+
+$shared_feed = htmlspecialchars("http://" . $_SERVER['SERVER_NAME'] . $_SERVER['PHP_SELF'] . "?user=$user&format=atom");
+$shared_link = htmlspecialchars("http://" . $_SERVER['SERVER_NAME'] . $_SERVER['PHP_SELF'] . "?user=$user");
+
+if($format == "atom")
+{
+
+echo '<?xml version="1.0"?>';
+?>
+
+<feed xmlns="http://www.w3.org/2005/Atom">
+  <title>Feed on Feeds - Shared Items<?php if($name) echo " from $name" ?></title>
+  <updated><?php echo gmdate('Y-m-d\TH:i:s\Z')?></updated>
+  <generator uri="http://feedonfeeds.com/">Feed on Feeds</generator>
+  <?php if($name) echo "<author><name>$name</name></author>"; ?>
+  <id><?php echo $shared_feed ?></id>
+  <link href="<?php echo $shared_feed ?>" rel="self" type="application/atom+xml"/>
+  <link href="<?php echo $shared_link ?>" rel="alternate"/>
+
+<?php
+
+foreach($result as $item)
+{
+    $feed_link = htmlspecialchars($item['feed_link']);
+    $feed_url = htmlspecialchars($item['feed_url']);
+	$feed_title = htmlspecialchars($item['feed_title']);
+
+	$item_link = htmlspecialchars($item['item_link']);
+	$item_guid = htmlspecialchars($item['item_guid']);
+	$item_title = htmlspecialchars($item['item_title']);
+	$item_content = htmlspecialchars($item['item_content']);
+
+	$item_published = gmdate('Y-m-d\TH:i:s\Z', $item['item_published']);
+	$item_cached = gmdate('Y-m-d\TH:i:s\Z', $item['item_cached']);
+	$item_updated = gmdate('Y-m-d\TH:i:s\Z', $item['item_updated']);
+
+	if(!$item_title) $item_title = "[no title]";
+	
+?>
+
+  <entry>
+    <id><?php echo $item_guid ?></id>
+    <link href="<?php echo $item_link ?>" rel="alternate" type="text/html"/>
+    <title><?php echo $item_title ?></title>
+    <summary type="html"><?php echo $item_content ?></summary>
+    <updated><?php echo $item_updated ?></updated>
+    <source>
+      <id><?php echo $feed_link ?></id>
+      <link href="<?php echo $feed_link ?>" rel="alternate" type="text/html"/>
+      <link href="<?php echo $feed_url ?>" rel="self" type="application/atom+xml"/>
+      <title><?php echo $feed_title ?></title>
+    </source>
+  </entry>    
+<?php
+}
+echo '</feed>';
+}
+else
+{
 ?>
 <!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
 <html xmlns="http://www.w3.org/1999/xhtml">
 
    <head>
+      <link rel="alternate" href="<?php echo $shared_feed?>" type="application/atom+xml"/>
       <title>Feed on Feeds - Shared Items<?php if($name) echo " from $name" ?></title>
       <link rel="stylesheet" href="fof.css" media="screen" />
       <style>
@@ -60,8 +125,6 @@ header("Content-Type: text/html; charset=utf-8");
 <div id="items">
 
 <?php
-$which = ($sharing == "all") ? "all" : "shared";
-$result = fof_get_items($user, NULL, $which, NULL, 0, 100);
 
 $first = true;
 
@@ -128,3 +191,5 @@ if(count($result) == 0)
 ?>
 
 </div></body></html>
+
+<?php } ?>
