@@ -653,7 +653,7 @@ function fof_mark_item_unread($feed_id, $id)
 
 function fof_parse($url)
 {
-    $p = FoF_Prefs::instance();
+    $p &= FoF_Prefs::instance();
     $admin_prefs = $p->admin_prefs;
     
     $pie = new SimplePie();
@@ -819,7 +819,7 @@ function fof_update_feed($id)
     // unread or starred, not currently in the feed or within sizeof(feed) items
     // of being in the feed, and are over 'purge' many days old
     
-    $p = FoF_Prefs::instance();
+    $p &= FoF_Prefs::instance();
     $admin_prefs = $p->admin_prefs;
     
     if($admin_prefs['purge'] != "")
