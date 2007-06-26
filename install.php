@@ -227,7 +227,8 @@ $tables[] = <<<EOQ
 CREATE TABLE IF NOT EXISTS `$FOF_TAG_TABLE` (
   `tag_id` int(11) NOT NULL auto_increment,
   `tag_name` char(100) NOT NULL default '',
-  PRIMARY KEY  (`tag_id`)
+  PRIMARY KEY  (`tag_id`),
+  UNIQUE KEY (`tag_name`)
 ) ENGINE=MyISAM DEFAULT CHARSET=latin1;
 EOQ;
 
