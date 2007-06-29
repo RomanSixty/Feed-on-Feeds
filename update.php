@@ -19,7 +19,7 @@ print("<br>");
 $feed = $_GET['feed'];
 $feeds = array();
 
-$p = FoF_Prefs::instance();
+$p =& FoF_Prefs::instance();
 $admin_prefs = $p->admin_prefs;
 
 if($feed)

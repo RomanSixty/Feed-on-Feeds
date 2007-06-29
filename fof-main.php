@@ -33,7 +33,7 @@ ob_end_clean();
 if(!$fof_no_login)
 {
     require_user();
-    $fof_prefs_obj = FoF_Prefs::instance();
+    $fof_prefs_obj =& FoF_Prefs::instance();
 }
 
 require_once('simplepie/simplepie.inc');
@@ -663,7 +663,7 @@ function fof_mark_item_unread($feed_id, $id)
 
 function fof_parse($url)
 {
-    $p &= FoF_Prefs::instance();
+    $p =& FoF_Prefs::instance();
     $admin_prefs = $p->admin_prefs;
     
     $pie = new SimplePie();
@@ -829,7 +829,7 @@ function fof_update_feed($id)
     // unread or starred, not currently in the feed or within sizeof(feed) items
     // of being in the feed, and are over 'purge' many days old
     
-    $p &= FoF_Prefs::instance();
+    $p =& FoF_Prefs::instance();
     $admin_prefs = $p->admin_prefs;
     
     if($admin_prefs['purge'] != "")

@@ -17,15 +17,11 @@ set_time_limit(60*10);
 ob_start();
 
 $fof_no_login = true;
+$fof_user_id = 1;
 include_once("fof-main.php");
 
-$p = new FoF_Prefs(1);
+$p =& FoF_Prefs::instance();
 $fof_admin_prefs = $p->prefs;
-
-$result = fof_safe_query("select user_prefs from $FOF_USER_TABLE where user_id = 1");
-$row = mysql_fetch_array($result);
-$fof_admin_prefs = unserialize($row['user_prefs']);
-if(!isset($fof_admin_prefs['autotimeout'])) $fof_admin_prefs['autotimeout'] = 30;
 
 $result = fof_db_get_feeds();
 
