@@ -2,7 +2,7 @@
 /*
  * This file is part of FEED ON FEEDS - http://feedonfeeds.com/
  *
- * add.php - displays form to add a feed
+ * add-single.php - adds a single feed
  *
  *
  * Copyright (C) 2004-2007 Stephen Minutillo

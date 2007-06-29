@@ -1,4 +1,16 @@
 <?php
+/*
+ * This file is part of FEED ON FEEDS - http://feedonfeeds.com/
+ *
+ * fof-render.php - contains function used to render a single item
+ *
+ *
+ * Copyright (C) 2004-2007 Stephen Minutillo
+ * steve@minutillo.com - http://minutillo.com/steve/
+ *
+ * Distributed under the GPL - see LICENSE
+ *
+ */
 
 // From Brian Suda @ http://suda.co.uk/projects/SEHL/
 

@@ -1,4 +1,16 @@
 <?php
+/*
+ * This file is part of FEED ON FEEDS - http://feedonfeeds.com/
+ *
+ * items.php - displays right hand side "frame"
+ *
+ *
+ * Copyright (C) 2004-2007 Stephen Minutillo
+ * steve@minutillo.com - http://minutillo.com/steve/
+ *
+ * Distributed under the GPL - see LICENSE
+ *
+ */
 
 include_once("fof-main.php");
 include_once("fof-render.php");

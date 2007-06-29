@@ -2,7 +2,7 @@
 /*
  * This file is part of FEED ON FEEDS - http://feedonfeeds.com/
  *
- * update.php - updates feeds with feedback
+ * update-single.php - updates a single feed
  *
  *
  * Copyright (C) 2004-2007 Stephen Minutillo

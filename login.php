@@ -17,7 +17,8 @@ ob_start();
 $fof_no_login = true;
 
 include_once("fof-main.php");
-header("Content-Type: text/html; charset=utf-8");
+
+fof_set_content_type();
 
 if(isset($_POST["user_name"]) && isset($_POST["user_password"]))
 {

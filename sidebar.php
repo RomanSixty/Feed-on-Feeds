@@ -14,6 +14,8 @@
 
 include_once("fof-main.php");
 
+fof_set_content_type();
+
 ?>
 <img id="throbber" src="image/throbber.gif" align="left" style="position: fixed; left: 0; top: 0; display: none">
 
@@ -298,8 +300,4 @@ if(!isset($direction))
 }
 
 ?>
-
-
-
-
 

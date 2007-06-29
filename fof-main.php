@@ -38,6 +38,16 @@ if(!$fof_no_login)
 
 require_once('simplepie/simplepie.inc');
 
+function fof_set_content_type()
+{
+    static $set;
+    if(!$set)
+    {
+        header("Content-Type: text/html; charset=utf-8");
+        $set = true;
+    }
+}
+
 function fof_log($message)
 {
     global $LOG;

@@ -14,8 +14,6 @@
 
 include_once("fof-main.php");
 
-header("Content-Type: text/html; charset=utf-8");
-
 while (list ($key, $val) = each ($_POST))
 {
     $first = false;

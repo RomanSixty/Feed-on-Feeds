@@ -2,7 +2,7 @@
 /*
  * This file is part of FEED ON FEEDS - http://feedonfeeds.com/
  *
- * init.php - (nearly) all of the DB specific code
+ * fof-db.php - (nearly) all of the DB specific code
  *
  *
  * Copyright (C) 2004-2007 Stephen Minutillo

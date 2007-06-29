@@ -14,7 +14,6 @@
 ob_start();
 
 include_once("fof-main.php");
-header("Content-Type: text/html; charset=utf-8");
 
 fof_logout();
 
