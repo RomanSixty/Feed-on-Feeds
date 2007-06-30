@@ -6606,6 +6606,8 @@ class SimplePie_File
 				{
 					$this->error = 'cURL error ' . curl_errno($fp) . ': ' . curl_error($fp);
 					$this->success = false;
+                    
+                    fof_log("SimplePie_File (curl) $url: error: $this->error", "update"); 
 				}
 				else
 				{
@@ -6619,6 +6621,9 @@ class SimplePie_File
 						$this->headers = $parser->headers;
 						$this->body = $parser->body;
 						$this->status_code = $parser->status_code;
+
+                        fof_log("SimplePie_File (curl) $url: $this->status_code", "update"); 
+
 						if (($this->status_code == 300 || $this->status_code == 301 || $this->status_code == 302 || $this->status_code == 303 || $this->status_code == 307 || $this->status_code > 307 && $this->status_code < 400) && !empty($this->headers['location']) && $this->redirects < $redirects)
 						{
 							$this->redirects++;
@@ -6645,6 +6650,8 @@ class SimplePie_File
 				{
 					$this->error = 'fsockopen error: ' . $errstr;
 					$this->success = false;
+                    
+                    fof_log("SimplePie_File (fsockopen) $url: error: $this->error", "update"); 
 				}
 				else
 				{
@@ -6684,6 +6691,7 @@ class SimplePie_File
 							$this->headers = $parser->headers;
 							$this->body = $parser->body;
 							$this->status_code = $parser->status_code;
+                            fof_log("SimplePie_File (fsockopen) $url: $this->status_code", "update"); 
 							if (($this->status_code == 300 || $this->status_code == 301 || $this->status_code == 302 || $this->status_code == 303 || $this->status_code == 307 || $this->status_code > 307 && $this->status_code < 400) && !empty($this->headers['location']) && $this->redirects < $redirects)
 							{
 								$this->redirects++;
@@ -6703,6 +6711,7 @@ class SimplePie_File
 					{
 						$this->error = 'fsocket timed out';
 						$this->success = false;
+                        fof_log("SimplePie_File (fsockopen) $url: error: $this->error", "update"); 
 					}
 					fclose($this->fp);
 				}

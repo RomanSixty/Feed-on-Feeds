@@ -35,6 +35,11 @@ if(!$fof_no_login)
     require_user();
     $fof_prefs_obj =& FoF_Prefs::instance();
 }
+else
+{
+    $fof_user_id = 1;
+    $fof_prefs_obj =& FoF_Prefs::instance();
+}
 
 require_once('simplepie/simplepie.inc');
 
@@ -48,11 +53,21 @@ function fof_set_content_type()
     }
 }
 
-function fof_log($message)
+function fof_log($message, $topic="debug")
 {
-    global $LOG;
-    //if(!isset($LOG)) $LOG = fopen("fof.log", 'a');
-    //fwrite($LOG, "$message\n");
+    global $fof_prefs_obj;
+    
+    if(!$fof_prefs_obj) return;
+    
+    $p = $fof_prefs_obj->admin_prefs;
+    if(!$p['logging']) return;
+    
+    static $log;
+    if(!isset($log)) $log = fopen("fof.log", 'a');
+    
+    $message = str_replace ("\n", " ", $message); 
+    
+    fwrite($log, date('r') . " [$topic] $message\n");
 }
 
 function require_user()
@@ -711,18 +726,29 @@ function fof_update_feed($id)
     
     if ($rss->error())
     {
+        fof_log("feed update failed: " . $rss->error(), "update");
         return array(0, "Error: <b>" . $rss->error() . "</b> <a href=\"http://feedvalidator.org/check?url=$url\">try to validate it?</a>");
     }
-    
+        
     $sub = $rss->subscribe_url();    
     $self_link = $rss->get_link(0, 'self');
     if($self_link) $sub = $self_link;
     
     fof_log("subscription url is $sub");
+    
+    $image = $feed['feed_image'];
+    $image_cache_date = $feed['feed_image_cache_date'];
+    
+    if($feed['feed_image_cache_date'] < (time() - (7*24*60*60)))
+    {
+        $image = $rss->get_favicon("./image/feed-icon.png");
+        $image_cache_date = time();
+    }
 
-    fof_db_feed_update_metadata($id, $sub, $rss->get_title(), $rss->get_link(), $rss->get_description(), $rss->get_favicon("./image/feed-icon.png") );
+    fof_db_feed_update_metadata($id, $sub, $rss->get_title(), $rss->get_link(), $rss->get_description(), $image, $image_cache_date );
     
     $feed_id = $feed['feed_id'];
+    $n = 0;
     
     if($rss->get_items())
     {
@@ -743,9 +769,7 @@ function fof_update_feed($id)
             $id = fof_db_find_item($feed_id, $item_id);
 
             if($id == NULL)
-            {
-                fof_log("$id ($title) is a new item");
-                
+            {                
                 $n++;
                 $id = fof_db_add_item($feed_id, $item_id, $link, $title, $content, time(), $date, $date);
                 fof_apply_tags($feed_id, $id);
@@ -857,8 +881,10 @@ function fof_update_feed($id)
                 }
             }
             
+            $ndelete = count($delete);
             if(count($delete) != 0)
             {
+                fof_log("purging " . count($delete) . "items", "update");
                 $in = implode(", ", $delete); 
                 fof_db_query( "delete from $FOF_ITEM_TABLE where item_id in ($in)" );
                 fof_db_query( "delete from $FOF_ITEM_TAG_TABLE where item_id in ($in)" );
@@ -870,6 +896,14 @@ function fof_update_feed($id)
     
     fof_db_feed_mark_cached($feed_id);
     
+    $log = "feed update complete, $n new items, $ndelete items purged";
+    if($admin_prefs['purge'] == "")
+    {
+        $log .= " (purging disabled)";
+    }
+    
+    fof_log($log, "update");
+
     return array($n, "");
 }
 

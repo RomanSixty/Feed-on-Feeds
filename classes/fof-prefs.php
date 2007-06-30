@@ -73,6 +73,7 @@ class FoF_Prefs
             "purge" => 30,
             "autotimeout" => 30,
             "manualtimeout" => 15,
+            "logging" => false,
              );
         
         $this->stuff_array($this->prefs, $defaults);

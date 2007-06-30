@@ -21,6 +21,7 @@ if(isset($_POST['adminprefs']))
 	$prefs->set('purge', $_POST['purge']);
 	$prefs->set('manualtimeout', $_POST['manualtimeout']);
 	$prefs->set('autotimeout', $_POST['autotimeout']);
+	$prefs->set('logging', $_POST['logging']);
 
 	$prefs->save();
     	
@@ -231,6 +232,7 @@ foreach($feeds as $row)
 
 <br><h1>Feed on Feeds - Admin Options</h1>
 <form method="post" action="prefs.php" style="border: 1px solid black; margin: 10px; padding: 10px;">
+Enable logging? <input type=checkbox name=logging <?php if($prefs->get('logging')) echo "checked" ?>><br><br>
 Purge read items after <input size=4 type=string name=purge value="<?php echo $prefs->get('purge')?>"> days (leave blank to never purge)<br><br>
 Allow automatic feed updates every <input size=4 type=string name=autotimeout value="<?php echo $prefs->get('autotimeout')?>"> minutes<br><br>
 Allow manual feed updates every <input size=4 type=string name=manualtimeout value="<?php echo $prefs->get('manualtimeout')?>"> minutes<br><br>

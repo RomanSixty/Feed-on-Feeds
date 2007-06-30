@@ -65,7 +65,7 @@ function fof_db_query($sql, $live=0)
     $t2 = (float)$sec + (float)$usec;
     $elapsed = $t2 - $t1;
     $logmessage = sprintf("%.3f: [%s] (%d / %d)", $elapsed, $sql, $num, $affected);
-    fof_log($logmessage);
+    fof_log($logmessage, "query");
     
     if($live)
     {
@@ -108,7 +108,7 @@ function fof_db_feed_mark_attempted_cache($feed_id)
 	$result = fof_safe_query("update $FOF_FEED_TABLE set feed_cache_attempt_date = %d where feed_id = %d", time(), $feed_id);
 }
 
-function fof_db_feed_update_metadata($feed_id, $url, $title, $link, $description, $image)
+function fof_db_feed_update_metadata($feed_id, $url, $title, $link, $description, $image, $image_cache_date)
 {
     global $FOF_FEED_TABLE;
     
@@ -125,6 +125,9 @@ function fof_db_feed_update_metadata($feed_id, $url, $title, $link, $description
 		$sql .= ", feed_image = NULL ";
 	}
 	
+    $sql .= ", feed_image_cache_date = %d ";
+    $args[] = $image_cache_date;
+    
 	$sql .= "where feed_id = %d";
     $args[] = $feed_id;
     

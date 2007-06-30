@@ -23,6 +23,8 @@ include_once("fof-main.php");
 $p =& FoF_Prefs::instance();
 $fof_admin_prefs = $p->prefs;
 
+fof_log("=== update started, timeout = $fof_admin_prefs[autotimeout], purge = $fof_admin_prefs[purge] ===", "update");
+
 $result = fof_db_get_feeds();
 
 $feeds = array();
@@ -33,6 +35,10 @@ while($feed = fof_db_get_row($result))
     {
         $feeds[] = $feed;
     }
+    else
+    {
+        fof_log("skipping $feed[feed_url]", "update");
+    }
 }
 
 $feeds = fof_multi_sort($feeds, 'feed_cache_attempt_date', false);
@@ -40,10 +46,15 @@ $feeds = fof_multi_sort($feeds, 'feed_cache_attempt_date', false);
 foreach($feeds as $feed)
 {
 	$id = $feed['feed_id'];
+    fof_log("updating $feed[feed_url]", "update");
 	fof_update_feed($id);
 }
 
+fof_log("optimizing database", "update");
+
 fof_db_optimize();
+
+fof_log("=== update complete ===", "update");
 
 ob_end_clean();
 ?>
