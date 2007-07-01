@@ -887,7 +887,6 @@ function fof_update_feed($id)
             $ndelete = count($delete);
             if(count($delete) != 0)
             {
-                fof_log("purging " . count($delete) . "items", "update");
                 $in = implode(", ", $delete); 
                 fof_db_query( "delete from $FOF_ITEM_TABLE where item_id in ($in)" );
                 fof_db_query( "delete from $FOF_ITEM_TAG_TABLE where item_id in ($in)" );
@@ -904,7 +903,6 @@ function fof_update_feed($id)
     {
         $log .= " (purging disabled)";
     }
-    
     fof_log($log, "update");
 
     return array($n, "");
