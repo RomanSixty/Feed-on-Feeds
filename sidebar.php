@@ -19,7 +19,7 @@ fof_set_content_type();
 ?>
 <img id="throbber" src="image/throbber.gif" align="left" style="position: fixed; left: 0; top: 0; display: none">
 
-<center>Welcome <b><?php echo $fof_user_name ?></b>! <a href="prefs.php">prefs</a> | <a href="logout.php">log out</a></center>
+<center>Welcome <b><?php echo $fof_user_name ?></b>! <a href="prefs.php">prefs</a> | <a href="logout.php">log out</a> | <a href="http://feedonfeeds.com/">about</a></center>
 
 <ul>
 <li><a href="javascript:flag_all();mark_read()"><b>Mark all read</b></a> -
