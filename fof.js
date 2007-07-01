@@ -54,6 +54,13 @@ function keyboard(e)
 {
     if (!e) e = window.event;
     
+    target = window.event ? window.event.srcElement : event.target;
+
+    if(target != null && target.type != null && (target.type == "textarea" || target.type=="text" || target.type=="password"))
+    {
+        return true;
+    }
+
     if (e.keyCode) keycode=e.keyCode;
     else keycode=e.which;
     
