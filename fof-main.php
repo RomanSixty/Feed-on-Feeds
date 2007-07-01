@@ -30,15 +30,18 @@ ob_start();
 fof_init_plugins();
 ob_end_clean();
 
-if(!$fof_no_login)
+if(!$fof_installer)
 {
-    require_user();
-    $fof_prefs_obj =& FoF_Prefs::instance();
-}
-else
-{
-    $fof_user_id = 1;
-    $fof_prefs_obj =& FoF_Prefs::instance();
+    if(!$fof_no_login)
+    {
+        require_user();
+        $fof_prefs_obj =& FoF_Prefs::instance();
+    }
+    else
+    {
+        $fof_user_id = 1;
+        $fof_prefs_obj =& FoF_Prefs::instance();
+    }
 }
 
 require_once('simplepie/simplepie.inc');

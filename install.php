@@ -13,6 +13,7 @@
  */
 
 $fof_no_login = true;
+$fof_installer = true;
 
 include_once("fof-main.php");
 
