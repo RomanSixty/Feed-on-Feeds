@@ -1,16 +1,19 @@
 Index: simplepie.inc
 ===================================================================
---- simplepie.inc	(revision 754)
+--- simplepie.inc	(revision 797)
 +++ simplepie.inc	(working copy)
-@@ -6585,6 +6585,11 @@
+@@ -6487,7 +6487,13 @@
  				curl_setopt($fp, CURLOPT_REFERER, $url);
  				curl_setopt($fp, CURLOPT_USERAGENT, $useragent);
  				curl_setopt($fp, CURLOPT_HTTPHEADER, $headers2);
+-				if (!ini_get('open_basedir') && !ini_get('safe_mode'))
 +
 +				// added by FoF to enable https and digest authentication
 +				curl_setopt($fp, CURLOPT_SSL_VERIFYPEER, false);
 +				curl_setopt($fp, CURLOPT_HTTPAUTH, CURLAUTH_ANY);
 +
- 				if (!ini_get('open_basedir') && !ini_get('safe_mode'))
++				// also changed by FoF - cURL's redirect handling was busted before 7.15.2
++				if (version_compare(SimplePie_Misc::get_curl_version(), '7.15.2', '>=') && !ini_get('open_basedir') && !ini_get('safe_mode'))
  				{
  					curl_setopt($fp, CURLOPT_FOLLOWLOCATION, 1);
+ 					curl_setopt($fp, CURLOPT_MAXREDIRS, $redirects);

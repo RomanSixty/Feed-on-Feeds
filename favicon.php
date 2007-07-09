@@ -12,5 +12,13 @@
  *
  */
 require_once('simplepie/simplepie.inc');
-SimplePie_Misc::display_cached_file($_GET['i'], './cache', 'spi');
+
+if(file_exists("./cache/" . md5($_GET[i]) . ".spi"))
+{
+    SimplePie_Misc::display_cached_file($_GET['i'], './cache', 'spi');
+}
+else
+{
+    header("Location: image/feed-icon.png");
+}
 ?>

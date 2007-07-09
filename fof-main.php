@@ -68,7 +68,8 @@ function fof_log($message, $topic="debug")
     static $log;
     if(!isset($log)) $log = fopen("fof.log", 'a');
     
-    $message = str_replace ("\n", " ", $message); 
+    $message = str_replace ("\n", "\\n", $message); 
+    $message = str_replace ("\r", "\\r", $message); 
     
     fwrite($log, date('r') . " [$topic] $message\n");
 }
@@ -744,7 +745,7 @@ function fof_update_feed($id)
     
     if($feed['feed_image_cache_date'] < (time() - (7*24*60*60)))
     {
-        $image = $rss->get_favicon("./image/feed-icon.png");
+        $image = $rss->get_favicon();
         $image_cache_date = time();
     }
 
