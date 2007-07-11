@@ -51,13 +51,15 @@ define('SIMPLEPIE_NAME', 'SimplePie');
 /**
  * SimplePie Version
  */
-define('SIMPLEPIE_VERSION', 'Razzleberry++');
+//define('SIMPLEPIE_VERSION', 'Razzleberry++');
+define('SIMPLEPIE_VERSION', '1.0');
 
 /**
  * SimplePie Build
  * @todo Hardcode for release (there's no need to have to call SimplePie_Misc::parse_date() only every load of simplepie.inc)
  */
-define('SIMPLEPIE_BUILD', gmdate('YmdHis', SimplePie_Misc::parse_date(substr('$Date: 2007-07-08 15:00:45 -0400 (Sun, 08 Jul 2007) $', 7, 25))));
+//define('SIMPLEPIE_BUILD', gmdate('YmdHis', SimplePie_Misc::parse_date(substr('$Date:2007-07-10 11:07:50 -0700 (Tue, 10 Jul 2007) $', 7, 25))));
+define('SIMPLEPIE_BUILD', '20070710163925');
 
 /**
  * SimplePie Website URL
@@ -1928,7 +1930,7 @@ function embed_wmedia(width, height, link) {
 
 	function subscribe_bloglines()
 	{
-		return $this->subscribe_service('http://www.bloglines.com/sub/');
+		return urldecode($this->subscribe_service('http://www.bloglines.com/sub/'));
 	}
 
 	function subscribe_eskobo()
@@ -6469,7 +6471,7 @@ class SimplePie_File
 			{
 				$headers = array();
 			}
-			if (extension_loaded('curl') && version_compare(SimplePie_Misc::get_curl_version(), '7.10.5', '>=') && !$force_fsockopen)
+			if (!$force_fsockopen && extension_loaded('curl'))
 			{
 				$this->method = 'curl';
 				$fp = curl_init();
@@ -6478,7 +6480,10 @@ class SimplePie_File
 				{
 					$headers2[] = "$key: $value";
 				}
-				curl_setopt($fp, CURLOPT_ENCODING, '');
+				if (version_compare(SimplePie_Misc::get_curl_version(), '7.10.5', '>='))
+				{
+					curl_setopt($fp, CURLOPT_ENCODING, '');
+				}
 				curl_setopt($fp, CURLOPT_URL, $url);
 				curl_setopt($fp, CURLOPT_HEADER, 1);
 				curl_setopt($fp, CURLOPT_RETURNTRANSFER, 1);
@@ -6487,17 +6492,15 @@ class SimplePie_File
 				curl_setopt($fp, CURLOPT_REFERER, $url);
 				curl_setopt($fp, CURLOPT_USERAGENT, $useragent);
 				curl_setopt($fp, CURLOPT_HTTPHEADER, $headers2);
-
-				// added by FoF to enable https and digest authentication
-				curl_setopt($fp, CURLOPT_SSL_VERIFYPEER, false);
-				curl_setopt($fp, CURLOPT_HTTPAUTH, CURLAUTH_ANY);
-
-				// also changed by FoF - cURL's redirect handling was busted before 7.15.2
-				if (version_compare(SimplePie_Misc::get_curl_version(), '7.15.2', '>=') && !ini_get('open_basedir') && !ini_get('safe_mode'))
+				if (!ini_get('open_basedir') && !ini_get('safe_mode') && version_compare(SimplePie_Misc::get_curl_version(), '7.15.2', '>='))
 				{
 					curl_setopt($fp, CURLOPT_FOLLOWLOCATION, 1);
 					curl_setopt($fp, CURLOPT_MAXREDIRS, $redirects);
 				}
+                
+				// added by FoF to enable https and digest authentication
+				curl_setopt($fp, CURLOPT_SSL_VERIFYPEER, false);
+				curl_setopt($fp, CURLOPT_HTTPAUTH, CURLAUTH_ANY)
 
 				$this->headers = curl_exec($fp);
 				if (curl_errno($fp) == 23 || curl_errno($fp) == 61)
@@ -7488,9 +7491,14 @@ class SimplePie_Misc
 	{
 		$url = SimplePie_Misc::normalize_url($url);
 		$parsed = SimplePie_Misc::parse_url($url);
-		if ($parsed['scheme'] !== '' && $parsed['scheme'] != 'http' && $parsed['scheme'] != 'https' || $parsed['scheme'] === '' && !file_exists($url))
+		if ($parsed['scheme'] !== '' && $parsed['scheme'] != 'http' && $parsed['scheme'] != 'https')
 		{
 			return SimplePie_Misc::fix_protocol(SimplePie_Misc::compress_parse_url('http', $parsed['authority'], $parsed['path'], $parsed['query'], $parsed['fragment']), $http);
+		}
+		
+		if ($parsed['scheme'] === '' && $parsed['authority'] === '')
+		{
+			return SimplePie_Misc::fix_protocol(SimplePie_Misc::compress_parse_url('http', $parsed['path'], '', $parsed['query'], $parsed['fragment']), $http);
 		}
 
 		if ($http == 2 && $parsed['scheme'] !== '')
