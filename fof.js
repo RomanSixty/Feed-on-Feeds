@@ -54,7 +54,7 @@ function keyboard(e)
 {
     if (!e) e = window.event;
     
-    target = window.event ? window.event.srcElement : event.target;
+    target = window.event ? window.event.srcElement : e.target;
 
     if(target != null && target.type != null && (target.type == "textarea" || target.type=="text" || target.type=="password"))
     {
@@ -193,16 +193,46 @@ function keyboard(e)
             }
             else
             {
-                if(confirm("No more items!  Mark flagged as read?"))
+                if( typeof( window.innerHeight ) == 'number' ) {
+                    //Non-IE
+                    windowHeight = window.innerHeight;
+                } else if( document.documentElement && document.documentElement.clientHeight ) {
+                    //IE 6+ in 'standards compliant mode'
+                    windowHeight = document.documentElement.clientHeight;
+                } else if( document.body && document.body.clientHeight ) {
+                    //IE 4 compatible
+                    windowHeight = document.body.clientHeight;
+                }
+
+                scrollHeight = document.body.scrollTop ? document.body.scrollTop : pageYOffset;
+
+                e = $('end-of-items');
+                
+                if (e.offsetParent) {
+                    y = e.offsetTop
+                    while (e = e.offsetParent) {
+                        y += e.offsetTop
+                    }
+                }
+                
+                if(y > scrollHeight + windowHeight)
                 {
-                    mark_read();
+                    window.scrollTo(0, scrollHeight + (.8 * windowHeight));
+                    return false;
                 }
                 else
                 {
-                    item = firstItem;
-                    itemElement = $(item);
-                    select(itemElement);                    
-                    return false;
+                    if(confirm("No more items!  Mark flagged as read?"))
+                    {
+                        mark_read();
+                    }
+                    else
+                    {
+                        item = firstItem;
+                        itemElement = $(item);
+                        select(itemElement);                    
+                        return false;
+                    }
                 }
             }
             

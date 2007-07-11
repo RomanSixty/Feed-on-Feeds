@@ -116,3 +116,5 @@ if(count($result) == 0)
 
 ?>
 		</form>
+        
+        <div id="end-of-items"></div>
