@@ -38,18 +38,8 @@ fof_set_content_type();
 
 <?php
 
-$order = $_GET['order'];
-$direction = $_GET['direction'];
-
-if(!isset($order))
-{
-   $order = "feed_title";
-}
-
-if(!isset($direction))
-{
-   $direction = "asc";
-}
+$order = $fof_prefs_obj->get('feed_order');
+$direction = $fof_prefs_obj->get('feed_direction');
 
 if(!isset($_GET['what']))
 {
@@ -172,30 +162,46 @@ foreach($tags as $tag)
 
 <?php
 
-$title["age"] = "sort by last update time";
-$title["unread"] = "sort by number of unread items";
-$title["title"] = "sort by feed title";
+$title["feed_age"] = "sort by last update time";
+$title["max_date"] = "sort by last new item";
+$title["feed_unread"] = "sort by number of unread items";
+$title["feed_url"] = "sort by feed URL";
+$title["feed_title"] = "sort by feed title";
 
-foreach (array("age", "latest", "unread", "feed", "title") as $col)
+$name["feed_age"] = "age";
+$name["max_date"] = "latest";
+$name["feed_unread"] = "#";
+$name["feed_url"] = "feed";
+$name["feed_title"] = "title";
+
+foreach (array("feed_age", "max_date", "feed_unread", "feed_url", "feed_title") as $col)
 {
-   echo "<td><nobr>";
-
-
-   if($col == "unread")
-   {
-      echo "<span class=\"unread\">#</span>";
-   }
-   else
-   {
-      echo $col;
-   }
-
-   if($col == $order)
-   {
-      echo ($direction == "asc") ? "&darr;" : "&uarr;";
-   }
-
-   echo "</nobr></td>";
+    if($col == $order)
+    {
+        $url = "return change_feed_order('$col', '" . ($direction == "asc" ? "desc" : "asc") . "')";
+    }
+    else
+    {
+        $url = "return change_feed_order('$col', 'asc')";
+    }
+    
+    echo "<td><nobr><a href='#' title='$title[$col]' onclick=\"$url\">";
+    
+    if($col == "feed_unread")
+    {
+        echo "<span class=\"unread\">#</span>";
+    }
+    else
+    {
+        echo $name[$col];
+    }
+    
+    if($col == $order)
+    {
+        echo ($direction == "asc") ? "&darr;" : "&uarr;";
+    }
+    
+    echo "</a></nobr></td>";
 }
 
 ?>

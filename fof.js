@@ -535,6 +535,21 @@ function delete_tag(tag)
     return false;
 }
 
+function change_feed_order(order, direction)
+{
+    throb();
+    
+    var url = "set-prefs.php";
+    var params = "feed_order=" + order + "&feed_direction=" + direction;
+    var complete = function () { refreshlist(); };
+    var options = { method: 'post', parameters: params, onComplete: complete };
+    
+    new Ajax.Request(url, options);
+    
+    return false;
+
+}
+
 function toggle_favorite(id)
 {
     throb();

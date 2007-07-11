@@ -67,6 +67,8 @@ class FoF_Prefs
             "direction" => "desc",
             "howmany" => 50,
             "sharing" => "no",
+            "feed_order" => "feed_title",
+            "feed_direction" => "asc",
             );
         
         $admin_defaults = array(
