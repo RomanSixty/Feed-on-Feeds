@@ -6500,7 +6500,7 @@ class SimplePie_File
                 
 				// added by FoF to enable https and digest authentication
 				curl_setopt($fp, CURLOPT_SSL_VERIFYPEER, false);
-				curl_setopt($fp, CURLOPT_HTTPAUTH, CURLAUTH_ANY)
+				curl_setopt($fp, CURLOPT_HTTPAUTH, CURLAUTH_ANY);
 
 				$this->headers = curl_exec($fp);
 				if (curl_errno($fp) == 23 || curl_errno($fp) == 61)
