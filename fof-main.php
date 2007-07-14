@@ -615,9 +615,9 @@ function fof_subscribe($user_id, $url, $unread="today")
     }
     else
     {
-        $url = $rss->subscribe_url();
+        $url = html_entity_decode($rss->subscribe_url(), ENT_QUOTES);
         $self = $rss->get_link(0, 'self');
-        if($self) $url = $self;
+        if($self) $url = html_entity_decode($self, ENT_QUOTES);
 
         if(fof_feed_exists($url))
         {
@@ -734,9 +734,9 @@ function fof_update_feed($id)
         return array(0, "Error: <b>" . $rss->error() . "</b> <a href=\"http://feedvalidator.org/check?url=$url\">try to validate it?</a>");
     }
         
-    $sub = $rss->subscribe_url();    
+    $sub = html_entity_decode($rss->subscribe_url(), ENT_QUOTES);
     $self_link = $rss->get_link(0, 'self');
-    if($self_link) $sub = $self_link;
+    if($self_link) $sub = html_entity_decode($self_link, ENT_QUOTES);
     
     fof_log("subscription url is $sub");
     
