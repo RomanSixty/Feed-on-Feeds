@@ -51,15 +51,13 @@ define('SIMPLEPIE_NAME', 'SimplePie');
 /**
  * SimplePie Version
  */
-//define('SIMPLEPIE_VERSION', 'Razzleberry++');
 define('SIMPLEPIE_VERSION', '1.0');
 
 /**
  * SimplePie Build
  * @todo Hardcode for release (there's no need to have to call SimplePie_Misc::parse_date() only every load of simplepie.inc)
  */
-//define('SIMPLEPIE_BUILD', gmdate('YmdHis', SimplePie_Misc::parse_date(substr('$Date:2007-07-10 11:07:50 -0700 (Tue, 10 Jul 2007) $', 7, 25))));
-define('SIMPLEPIE_BUILD', '20070710163925');
+define('SIMPLEPIE_BUILD', '20070715235228');
 
 /**
  * SimplePie Website URL
@@ -676,7 +674,7 @@ class SimplePie
 	 */
 	function __toString()
 	{
-		return md5(serialize($this));
+		return md5(serialize($this->data));
 	}
 
 	/**
@@ -1798,7 +1796,7 @@ function embed_wmedia(width, height, link) {
 		{
 			$favicon = SimplePie_Misc::absolutize_url('/favicon.ico', $url);
 
-			if ($this->cache)
+			if ($this->cache && $this->favicon_handler)
 			{
 				$cache =& new $this->cache_class($this->cache_location, call_user_func($this->cache_name_function, $favicon), 'spi');
 
@@ -1806,7 +1804,7 @@ function embed_wmedia(width, height, link) {
 				{
 					return $this->sanitize($this->favicon_handler . rawurlencode($favicon), SIMPLEPIE_CONSTRUCT_IRI);
 				}
-				elseif ($this->favicon_handler)
+				else
 				{
 					$file =& new $this->file_class($favicon, $this->timeout / 10, 5, array('X-FORWARDED-FOR' => $_SERVER['REMOTE_ADDR']), $this->useragent, $this->force_fsockopen);
 
@@ -2708,7 +2706,7 @@ class SimplePie_Item
 
 	function __toString()
 	{
-		return md5(serialize($this));
+		return md5(serialize($this->data));
 	}
 
 	function get_item_tags($namespace, $tag)
@@ -5107,7 +5105,7 @@ class SimplePie_Author
 
 	function __toString()
 	{
-		return md5(serialize($this));
+		return md5(serialize($this->data));
 	}
 
 	function get_name()
@@ -5163,7 +5161,7 @@ class SimplePie_Category
 
 	function __toString()
 	{
-		return md5(serialize($this));
+		return md5(serialize($this->data));
 	}
 
 	function get_term()
@@ -5273,7 +5271,7 @@ class SimplePie_Enclosure
 
 	function __toString()
 	{
-		return md5(serialize($this));
+		return md5(serialize($this->data));
 	}
 
 	function get_bitrate()
@@ -6175,7 +6173,7 @@ class SimplePie_Caption
 
 	function __toString()
 	{
-		return md5(serialize($this));
+		return md5(serialize($this->data));
 	}
 
 	function get_endtime()
@@ -6255,7 +6253,7 @@ class SimplePie_Credit
 
 	function __toString()
 	{
-		return md5(serialize($this));
+		return md5(serialize($this->data));
 	}
 
 	function get_role()
@@ -6309,7 +6307,7 @@ class SimplePie_Copyright
 
 	function __toString()
 	{
-		return md5(serialize($this));
+		return md5(serialize($this->data));
 	}
 
 	function get_url()
@@ -6351,7 +6349,7 @@ class SimplePie_Rating
 
 	function __toString()
 	{
-		return md5(serialize($this));
+		return md5(serialize($this->data));
 	}
 
 	function get_scheme()
@@ -6395,7 +6393,7 @@ class SimplePie_Restriction
 
 	function __toString()
 	{
-		return md5(serialize($this));
+		return md5(serialize($this->data));
 	}
 
 	function get_relationship()
@@ -6528,7 +6526,15 @@ class SimplePie_File
 						if (($this->status_code == 300 || $this->status_code == 301 || $this->status_code == 302 || $this->status_code == 303 || $this->status_code == 307 || $this->status_code > 307 && $this->status_code < 400) && isset($this->headers['location']) && $this->redirects < $redirects)
 						{
 							$this->redirects++;
-							return $this->SimplePie_File($this->headers['location'], $timeout, $redirects, $headers, $useragent, $force_fsockopen);
+							if (isset($this->headers['content-location']))
+							{
+								$location = SimplePie_Misc::absolutize_url($this->headers['location'], SimplePie_Misc::absolutize_url($this->headers['content-location'], $url));
+							}
+							else
+							{
+								$location = SimplePie_Misc::absolutize_url($this->headers['location'], $url);
+							}
+							return $this->SimplePie_File($location, $timeout, $redirects, $headers, $useragent, $force_fsockopen);
 						}
 					}
 				}
@@ -6615,7 +6621,15 @@ class SimplePie_File
 							if (($this->status_code == 300 || $this->status_code == 301 || $this->status_code == 302 || $this->status_code == 303 || $this->status_code == 307 || $this->status_code > 307 && $this->status_code < 400) && isset($this->headers['location']) && $this->redirects < $redirects)
 							{
 								$this->redirects++;
-								return $this->SimplePie_File($this->headers['location'], $timeout, $redirects, $headers, $useragent, $force_fsockopen);
+								if (isset($this->headers['content-location']))
+								{
+									$location = SimplePie_Misc::absolutize_url($this->headers['location'], SimplePie_Misc::absolutize_url($this->headers['content-location'], $url));
+								}
+								else
+								{
+									$location = SimplePie_Misc::absolutize_url($this->headers['location'], $url);
+								}
+								return $this->SimplePie_File($location, $timeout, $redirects, $headers, $useragent, $force_fsockopen);
 							}
 							if (isset($this->headers['content-encoding']) && ($this->headers['content-encoding'] == 'gzip' || $this->headers['content-encoding'] == 'deflate'))
 							{

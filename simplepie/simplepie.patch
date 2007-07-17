@@ -1,8 +1,8 @@
 Index: simplepie.inc
 ===================================================================
---- simplepie.inc	(revision 802)
+--- simplepie.inc	(revision 810)
 +++ simplepie.inc	(working copy)
-@@ -6497,6 +6497,10 @@
+@@ -6495,6 +6495,10 @@
  					curl_setopt($fp, CURLOPT_FOLLOWLOCATION, 1);
  					curl_setopt($fp, CURLOPT_MAXREDIRS, $redirects);
  				}
