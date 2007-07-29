@@ -46,8 +46,8 @@ else
 		{
 			fof_db_mark_unread(fof_current_user(), $items);
 		}
-	
-        header("Location: " . urldecode($_POST['return']));
 	}
+    
+    header("Location: " . urldecode($_POST['return']));
 }
 ?>
