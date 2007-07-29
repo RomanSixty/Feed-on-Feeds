@@ -365,9 +365,9 @@ function fof_db_get_items($user_id=1, $feed=NULL, $what="unread", $when=NULL, $s
         $args[] = $search;
     }
     
-    $order = "order by i.item_published desc $limit_clause ";
+    $order_by = "order by i.item_published desc $limit_clause ";
     
-    $query = $select . $from . $where . $group . $order;
+    $query = $select . $from . $where . $group . $order_by;
     
     $result = fof_safe_query($query, $args);
     
