@@ -26,6 +26,11 @@ if(isset($_POST['adminprefs']))
 	$prefs->save();
     	
 	$message .= ' Saved admin prefs.';
+    
+    if($prefs->get('logging') && !@fopen("fof.log", 'a'))
+    {
+        $message .= ' Warning: could not write to log file!';
+    }
 }
 
 if(isset($_POST['tagfeed']))

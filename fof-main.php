@@ -66,7 +66,9 @@ function fof_log($message, $topic="debug")
     if(!$p['logging']) return;
     
     static $log;
-    if(!isset($log)) $log = fopen("fof.log", 'a');
+    if(!isset($log)) $log = @fopen("fof.log", 'a');
+    
+    if(!$log) return;
     
     $message = str_replace ("\n", "\\n", $message); 
     $message = str_replace ("\r", "\\r", $message); 
