@@ -151,7 +151,7 @@ function keyboard(e)
         {
             // is the next element visible yet?  scroll if not.  
             
-            if(itemElement.nextSibling.id)
+            if(itemElement.nextSibling.id && itemElement.nextSibling.id != "end-of-items")
             {
                 nextElement = itemElement.nextSibling;
                 scrollHeight = document.body.scrollTop ? document.body.scrollTop : pageYOffset;
@@ -173,7 +173,7 @@ function keyboard(e)
                     //IE 4 compatible
                     windowHeight = document.body.clientHeight;
                 }
-                                
+                
                 if(y > scrollHeight + windowHeight)
                 {
                     window.scrollTo(0, scrollHeight + (.8 * windowHeight));
@@ -187,7 +187,7 @@ function keyboard(e)
 
             next = itemElement.nextSibling;
             
-            if(next.id)
+            if(next.id && next.id != "end-of-items")
             {
                 itemElement = next;
             }
@@ -215,7 +215,7 @@ function keyboard(e)
                     }
                 }
                 
-                if(y > scrollHeight + windowHeight)
+                if(y - 10 > scrollHeight + windowHeight)
                 {
                     window.scrollTo(0, scrollHeight + (.8 * windowHeight));
                     return false;
