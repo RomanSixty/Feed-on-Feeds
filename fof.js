@@ -27,7 +27,7 @@ function select(item)
     Element.addClassName(itemElement, 'selected');
     
     y = itemElement.y ? itemElement.y : itemElement.offsetTop;
-    window.scrollTo(0, y);
+    window.scrollTo(0, y - 10);
     
     n = itemElements.length;
     i = itemElements.indexOf(itemElement);
