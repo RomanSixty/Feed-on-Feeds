@@ -29,11 +29,39 @@ $name = $prefs->get("sharedname");
 $url = $prefs->get("sharedurl");
 
 $which = ($sharing == "all") ? "all" : "shared";
-$result = fof_get_items($user, NULL, $which, NULL, 0, 100);
+
+if(isset($_GET['which']))
+{
+    $which = ($sharing == "all") ? $_GET['which'] : "shared " . $_GET['which'];
+    $extratitle = " items tagged " . $_GET['which'];
+}
+
+$feed = NULL;
+if(isset($_GET['feed']))
+{
+    $feed = $_GET['feed'];
+    $r = fof_db_get_feed_by_id($feed);
+    $extratitle .= " from <a href='" . $r['feed_link'] . "'>" . $r['feed_title'] . "</a>";
+}
+
+$result = fof_get_items($user, $feed, $which, NULL, 0, 100);
 
 
 $shared_feed = htmlspecialchars("http://" . $_SERVER['SERVER_NAME'] . $_SERVER['PHP_SELF'] . "?user=$user&format=atom");
 $shared_link = htmlspecialchars("http://" . $_SERVER['SERVER_NAME'] . $_SERVER['PHP_SELF'] . "?user=$user");
+
+if(isset($_GET['which']))
+{
+    $shared_feed .= '&which=' . $_GET['which'];
+    $shared_link .= '&which=' . $_GET['which'];
+}
+
+if(isset($_GET['feed']))
+{
+    $shared_feed .= '&feed=' . $_GET['feed'];
+    $shared_link .= '&feed=' . $_GET['feed'];
+}
+
 
 if($format == "atom")
 {
@@ -42,7 +70,7 @@ echo '<?xml version="1.0"?>';
 ?>
 
 <feed xmlns="http://www.w3.org/2005/Atom">
-  <title>Feed on Feeds - Shared Items<?php if($name) echo " from $name" ?></title>
+  <title>Feed on Feeds - Shared Items<?php if($name) echo " from $name"; if($extratitle) echo " " . strip_tags($extratitle) ?></title>
   <updated><?php echo gmdate('Y-m-d\TH:i:s\Z')?></updated>
   <generator uri="http://feedonfeeds.com/">Feed on Feeds</generator>
   <?php if($name) echo "<author><name>$name</name></author>"; ?>
@@ -104,7 +132,7 @@ header("Content-Type: text/html; charset=utf-8");
 
    <head>
       <link rel="alternate" href="<?php echo $shared_feed?>" type="application/atom+xml"/>
-      <title>Feed on Feeds - Shared Items<?php if($name) echo " from $name" ?></title>
+      <title>Feed on Feeds - Shared Items<?php if($name) echo " from $name"; if($extratitle) echo " " . strip_tags($extratitle) ?></title>
       <link rel="stylesheet" href="fof.css" media="screen" />
       <style>
       .box
@@ -124,10 +152,11 @@ header("Content-Type: text/html; charset=utf-8");
   <body>
 
   <h1 class="box"><a href="http://feedonfeeds.com/">Feed on Feeds</a> - Shared Items
-  <?php if($name) echo " from" ?>
-  <?php if($url) echo "<a href='$url'>" ?>
-  <?php if($name) echo "$name" ?>
-  <?php if($url) echo "</a>" ?>
+  <?php if($name) echo " from ";
+  if($url) echo "<a href='$url'>";
+  if($name) echo "$name";
+  if($url) echo "</a>";
+  if($extratitle) echo "<br><i>$extratitle</i>" ?>
  </h1>
 <div id="items">
 
