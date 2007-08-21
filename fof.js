@@ -35,7 +35,7 @@ function embed_wmedia(width, height, link) {
 }
 
 function checkbox(event)
-{    
+{
     if(!event) event = window.event; 
     target = window.event ? window.event.srcElement : event.target;
      
@@ -52,7 +52,9 @@ function select(item)
     Element.addClassName(itemElement, 'selected');
     
     y = itemElement.y ? itemElement.y : itemElement.offsetTop;
-    window.scrollTo(0, y - 30);
+
+    bar = $('item-display-controls').offsetHeight;
+    window.scrollTo(0, y - (bar + 10));
     
     n = itemElements.length;
     i = itemElements.indexOf(itemElement);
