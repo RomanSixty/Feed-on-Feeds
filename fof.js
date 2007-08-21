@@ -27,7 +27,7 @@ function select(item)
     Element.addClassName(itemElement, 'selected');
     
     y = itemElement.y ? itemElement.y : itemElement.offsetTop;
-    window.scrollTo(0, y - 10);
+    window.scrollTo(0, y - 30);
     
     n = itemElements.length;
     i = itemElements.indexOf(itemElement);
@@ -255,6 +255,52 @@ function keyboard(e)
         }
     }
     
+    if(key == "J")
+    {
+        if(itemElement)
+        {
+            unselect(itemElement);
+            checkbox = ($('c' + itemElement.id.substring(1)));
+            checkbox.checked = true;
+
+            next = itemElement.nextSibling;
+            
+            if(next.id)
+            {
+                itemElement = next;
+            }
+            else
+            {
+                if(confirm("No more items!  Mark flagged as read?"))
+                {
+                    mark_read();
+                }
+                else
+                {
+                    item = firstItem;
+                    itemElement = $(item);
+                }
+            }
+            
+            item = itemElement.id;
+            itemElement = $(item);
+            
+            select(itemElement);
+            
+            return false;
+        }
+        else
+        {
+            item = firstItem;
+            itemElement = $(item);
+            itemElements = $$('.item');
+            
+            select(itemElement);
+            
+            return false;
+        }
+    }
+
     if(key == "n")
     {
         if(itemElement)
@@ -409,6 +455,8 @@ function completeDrag(e)
         $('sidebar').style.width=newWidth+'px';
         $('handle').style.left=newWidth+'px';
         $('items').style.marginLeft=(newWidth+20)+'px';
+        $('item-display-controls').style.left=(newWidth+10)+'px';
+
         if(isIE)
         {
             tables = $$('#sidebar table');

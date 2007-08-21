@@ -17,23 +17,12 @@ include_once("fof-main.php");
 fof_set_content_type();
 
 ?>
-<img id="throbber" src="image/throbber.gif" align="left" style="position: fixed; left: 0; top: 0; display: none">
+<img id="throbber" src="image/throbber.gif" align="left" style="position: fixed; left: 0; top: 0; display: none;">
 
-<center>Welcome <b><?php echo $fof_user_name ?></b>! <a href="prefs.php">prefs</a> | <a href="logout.php">log out</a> | <a href="http://feedonfeeds.com/">about</a></center>
+<center id="welcome">Welcome <b><?php echo $fof_user_name ?></b>! <a href="prefs.php">prefs</a> | <a href="logout.php">log out</a> | <a href="http://feedonfeeds.com/">about</a></center>
+<br>
+<center><a href="add.php"><b>Add Feeds</b></a> / <a href="update.php"><b>Update Feeds</b></a></center>
 
-<ul>
-<li><a href="javascript:flag_all();mark_read()"><b>Mark all read</b></a> -
-<a href="add.php">Add Feeds</a> - 
-<a href="update.php">Update Feeds</a></li><br />
-<li><a href="javascript:flag_all()">Flag all</a> |
-<a href="javascript:unflag_all()">Unflag all</a> |
-<a href="javascript:toggle_all()">Toggle all</a> |
-<a href="javascript:show_all()">Show all</a> |
-<a href="javascript:hide_all()">Hide all</a>
-</li><br />
-<li>Flagged items: <a href="javascript:mark_read()">Mark as read</a> | <a href="javascript:mark_unread()">Mark as unread</a></li>
-</ul>
-<hr>
 <ul id="nav">
 
 <?php
@@ -77,7 +66,7 @@ else
 }
 
 ?>
-
+        
 <li <?php if($what == "unread") echo "style='background: #ddd'" ?> ><a href=".?what=unread"><font color=red><b>Unread <?php if($unread) echo "($unread)" ?></b></font></a></li>
 <li <?php if($what == "star") echo "style='background: #ddd'" ?> ><a href=".?what=star"><img src="image/star-on.gif" border="0" height="10" width="10"> Starred <?php if($starred) echo "($starred)" ?></a></li>
 <li <?php if($what == "all" && isset($when)) echo "style='background: #ddd'" ?> ><a href=".?what=all&when=today">&lt; Today</a></li>
@@ -95,9 +84,23 @@ else
 </form>
 </li>
 </ul>
-<hr>
-<form></form>
-<br>
+
+<?php
+
+$tags = fof_get_tags(fof_current_user());
+
+$n = 0;
+
+foreach($tags as $tag)
+{
+    $tag_id = $tag['tag_id'];
+    if($tag_id == 1 || $tag_id == 2) continue;
+    $n++;
+}
+
+if($n)
+{
+?>
 
 <div id="tags">
 
@@ -108,16 +111,6 @@ else
 </tr>
 
 <?php
-
-$tags = fof_get_tags(fof_current_user());
-
-$n = 0;
-
-foreach($tags as $tag)
-{
-    $n++;
-}
-
 foreach($tags as $tag)
 {   
    $tag_name = $tag['tag_name'];
@@ -151,7 +144,12 @@ foreach($tags as $tag)
 </table>
 
 </div>
-<br><hr><br>
+
+<br>
+
+<?php } ?>
+
+
 <div id="feeds">
 
 <div id="feedlist">

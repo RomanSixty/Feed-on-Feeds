@@ -64,6 +64,8 @@ $unread_count = fof_get_unread_count(fof_current_user());
 		{
 			margin-left: <?php echo $width+20 ?>px;
 		}
+        
+		#item-display-controls { left: <?php echo $width+10 ?>px; }
 	  </style>
 
 	<!--[if IE]>

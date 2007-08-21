@@ -49,32 +49,33 @@ $title = fof_view_title($_GET['feed'], $what, $_GET['when'], $which, $_GET['howm
 $noedit = $_GET['noedit'];
 
 ?>
+<br><br>
 
-<?php // print_r(fof_prefs()); ?>
+<p><?php echo $title?></p>
 
-<?php
 
-//$junk = "blahdeblah";
-//fof_db_save_prefs($fof_user_id, $junk);
+<ul id="item-display-controls" class="inline-list">
+	<li class="orderby"><?php
 
-?>
+	echo ($order == "desc") ? '[new to old]' : "<a href=\".?feed=$feed&amp;what=$what&amp;when=$when&amp;how=$how&amp;howmany=$howmany&amp;order=desc\">[new to old]</a>" ;
+	
+	?></li>
+	<li class="orderby"><?php
 
-<p><?php echo $title?> -
-<?php
+	echo ($order == "asc") ? '[old to new]' : "<a href=\".?feed=$feed&amp;what=$what&amp;when=$when&amp;how=$how&amp;howmany=$howmany&amp;order=asc\">[old to new]</a>" ;
+	
+	?></li>
+	<li><a href="javascript:flag_all();mark_read()"><strong>Mark all read</strong></a></li>
+	<li><a href="javascript:flag_all()">Flag all</a></li>
+	<li><a href="javascript:unflag_all()">Unflag all</a></li>
+	<li><a href="javascript:toggle_all()">Toggle all</a></li>
+	<li><a href="javascript:mark_read()">Mark flagged read</a></li>
+	<li><a href="javascript:mark_unread()">Mark flagged unread</a></li>
+	<li><a href="javascript:show_all()">Show all</a></li>
+	<li><a href="javascript:hide_all()">Hide all</a></li>
+</ul>
 
-if($order == "desc")
-{
-echo '[new to old] ';
-echo "<a href=\".?feed=$feed&amp;what=$what&amp;when=$when&amp;how=$how&amp;howmany=$howmany&amp;order=asc\">[old to new]</a>";
-}
-else
-{
-echo "<a href=\".?feed=$feed&amp;what=$what&amp;when=$when&amp;how=$how&amp;howmany=$howmany&amp;order=desc\">[new to old]</a>";
-echo ' [old to new]';
-}
 
-?>
-</p>
 
 <!-- close this form to fix first item! -->
 
