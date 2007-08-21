@@ -15,6 +15,6 @@ function fof_sharing($item)
 	$shared_link = $shared ? "javascript:remove_tag($id, 'shared')" : "javascript:add_tag($id, 'shared')";
 	$shared_text = $shared ? "shared" : "not shared";
    
-    return "<a href=\"$shared_link\"><img src=\"$shared_image\" width=\"12\" height=\"12\" /></a> <a href=\"$shared_link\">$shared_text</a> ";
+    return "<a href=\"$shared_link\"><img src=\"$shared_image\" width=\"12\" height=\"12\" border=\"0\"/></a> <a href=\"$shared_link\">$shared_text</a> ";
 }
 ?>

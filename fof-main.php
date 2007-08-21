@@ -691,6 +691,7 @@ function fof_parse($url)
     $pie->set_cache_duration($admin_prefs["manualtimeout"] * 60);
     $pie->set_favicon_handler("favicon.php");
 	$pie->set_feed_url($url);
+	$pie->set_javascript(false);
 	$pie->remove_div(false);
 	$pie->init();
 	
@@ -777,6 +778,13 @@ function fof_update_feed($id)
             if($id == NULL)
             {                
                 $n++;
+                
+                global $fof_item_prefilters;
+                foreach($fof_item_prefilters as $filter)
+                {
+                    list($link, $title, $content) = $filter($item, $link, $title, $content);
+                }
+                
                 $id = fof_db_add_item($feed_id, $item_id, $link, $title, $content, time(), $date, $date);
                 fof_apply_tags($feed_id, $id);
 
@@ -918,9 +926,10 @@ function fof_item_has_tags($item_id)
 
 function fof_init_plugins()
 {
-    global $fof_item_filters;
+    global $fof_item_filters, $fof_item_prefilters;
     
     $fof_item_filters = array();
+    $fof_item_prefilters = array();
     
     $dirlist = opendir(FOF_DIR . "/plugins");
     while($file=readdir($dirlist))
@@ -942,6 +951,13 @@ function fof_add_item_filter($function)
     global $fof_item_filters;
     
     $fof_item_filters[] = $function;
+}
+
+function fof_add_item_prefilter($function)
+{
+    global $fof_item_prefilters;
+    
+    $fof_item_prefilters[] = $function;
 }
 
 function fof_add_pref($name, $key)
