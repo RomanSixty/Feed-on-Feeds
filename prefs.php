@@ -70,13 +70,6 @@ if(isset($_POST['prefs']))
 	$prefs->set('sharedname', $_POST['sharedname']);
 	$prefs->set('sharedurl', $_POST['sharedurl']);
 
-    foreach(fof_get_plugin_prefs() as $plugin_pref)
-    {
-        $key = $plugin_pref[1];
-        
-        $prefs->set($key, $_POST[$key]);
-    }
-     
 	$prefs->save(fof_current_user());
     
     if($_POST['password'] && ($_POST['password'] == $_POST['password2']))
@@ -93,6 +86,36 @@ if(isset($_POST['prefs']))
 	$message .= ' Saved prefs.';
 }
 
+if(isset($_POST['plugins']))
+{
+    foreach(fof_get_plugin_prefs() as $plugin_pref)
+    {
+        $key = $plugin_pref[1];
+        
+        $prefs->set($key, $_POST[$key]);
+    }
+    
+    $plugins = array();
+    $dirlist = opendir(FOF_DIR . "/plugins");
+    while($file=readdir($dirlist))
+    {
+        if(ereg('\.php$',$file))
+        {
+           $plugins[] = substr($file, 0, -4);
+        }
+    }
+
+    closedir();
+        
+    foreach($plugins as $plugin)
+    {
+        $prefs->set("plugin_" . $plugin, $_POST[$plugin] != "on");
+    }
+
+	$prefs->save(fof_current_user());
+
+	$message .= ' Saved plugin prefs.';
+}
 
 if(isset($_POST['changepassword'])) 
 {
@@ -161,13 +184,42 @@ Name to be shown on shared page: <input type=string name=sharedname value="<?php
 URL to be linked on shared page: <input type=string name=sharedurl value="<?php echo $prefs->get('sharedurl')?>">
 <br><br>
 
-
-<?php foreach(fof_get_plugin_prefs() as $plugin_pref) { $name = $plugin_pref[0]; $key = $plugin_pref[1]; ?>
-<?php echo $name ?>: <input name="<?php echo $key ?>" value="<?php echo $prefs->get($key)?>"> <i><small>(this preference is from a plugin)</small></i><br><br>
-<?php } ?>
 <input type=submit name=prefs value="Save Preferences">
 </form>
 
+<br><h1>Feed on Feeds - Plugin Preferences</h1>
+<form method="post" action="prefs.php" style="border: 1px solid black; margin: 10px; padding: 10px;">
+
+<?php
+    $plugins = array();
+    $dirlist = opendir(FOF_DIR . "/plugins");
+    while($file=readdir($dirlist))
+    {
+    	fof_log("considering " . $file);
+        if(ereg('\.php$',$file))
+        {
+           $plugins[] = substr($file, 0, -4);
+        }
+    }
+
+    closedir();
+
+?>
+
+<?php foreach($plugins as $plugin) { ?>
+<input type=checkbox name=<?php echo $plugin ?> <?php if(!$prefs->get("plugin_" . $plugin)) echo "checked"; ?>> Enable plugin <tt><?php echo $plugin?></tt>?<br>
+<?php } ?>
+
+<br>
+<?php foreach(fof_get_plugin_prefs() as $plugin_pref) { $name = $plugin_pref[0]; $key = $plugin_pref[1]; ?>
+<?php echo $name ?>: <input name="<?php echo $key ?>" value="<?php echo $prefs->get($key)?>"><br>
+<?php } ?>
+<br>
+<input type=submit name=plugins value="Save Plugin Preferences">
+</form>
+
+    
+    
 <br><h1>Feed on Feeds - Feeds and Tags</h1>
 <div style="border: 1px solid black; margin: 10px; padding: 10px; font-size: 12px; font-family: verdana, arial;">
 <table cellpadding=3 cellspacing=0>

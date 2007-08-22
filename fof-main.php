@@ -26,10 +26,6 @@ require_once("classes/fof-prefs.php");
 
 fof_db_connect();
 
-ob_start();
-fof_init_plugins();
-ob_end_clean();
-
 if(!$fof_installer)
 {
     if(!$fof_no_login)
@@ -42,6 +38,10 @@ if(!$fof_installer)
         $fof_user_id = 1;
         $fof_prefs_obj =& FoF_Prefs::instance();
     }
+
+    ob_start();
+    fof_init_plugins();
+    ob_end_clean();
 }
 
 require_once('simplepie/simplepie.inc');
@@ -926,16 +926,19 @@ function fof_item_has_tags($item_id)
 
 function fof_init_plugins()
 {
-    global $fof_item_filters, $fof_item_prefilters;
+    global $fof_item_filters, $fof_item_prefilters, $fof_plugin_prefs;
     
     $fof_item_filters = array();
     $fof_item_prefilters = array();
+    $fof_plugin_prefs = array();
+    
+    $p =& FoF_Prefs::instance();
     
     $dirlist = opendir(FOF_DIR . "/plugins");
     while($file=readdir($dirlist))
     {
     	fof_log("considering " . $file);
-        if(ereg('\.php$',$file))
+        if(ereg('\.php$',$file) && !$p->get('plugin_' . substr($file, 0, -4)))
         {
         	fof_log("including " . $file);
 
