@@ -328,6 +328,26 @@ padding: 5px 4px;
 padding: 0;
 }
 
+#item-display-controls-spacer
+{
+font: normal 10px Verdana;
+top: 0;
+left: 0;
+right: 0;
+margin: 0;
+padding: 0;
+}
+
+#item-display-controls-spacer li
+{
+padding: 5px 4px;
+}
+
+#item-display-controls-spacer li a
+{
+padding: 0;
+}
+
 .item-date-nav
 {
 text-align: center;
