@@ -9,6 +9,73 @@ var item;
 var itemElement;
 var itemElements;
 
+// magic from http://peter.michaux.ca/article/3556
+
+var getScrollY = function() {
+
+    if (typeof window.pageYOffset == 'number') {
+
+        getScrollY = function() {
+            return window.pageYOffset;
+        };
+
+    } else if ((typeof document.compatMode == 'string') &&
+               (document.compatMode.indexOf('CSS') >= 0) &&
+               (document.documentElement) &&
+               (typeof document.documentElement.scrollTop == 'number')) {
+
+        getScrollY = function() {
+            return document.documentElement.scrollTop;
+        };
+
+    } else if ((document.body) &&
+               (typeof document.body.scrollTop == 'number')) {
+
+      getScrollY = function() {
+          return document.body.scrollTop;
+      }
+
+    } else {
+
+      getScrollY = function() {
+          return NaN;
+      };
+
+    }
+
+    return getScrollY();
+}
+
+var getY = function(e)
+{
+    var y = NaN;
+    
+    if (e.offsetParent) {
+        y = e.offsetTop
+        while (e = e.offsetParent) {
+            y += e.offsetTop
+        }
+    }
+    
+    return y;
+}
+
+function getWindowHeight()
+{    
+    if( typeof( window.innerHeight ) == 'number' ) {
+        //Non-IE
+        return window.innerHeight;
+    } else if( document.documentElement && document.documentElement.clientHeight ) {
+        //IE 6+ in 'standards compliant mode'
+        return document.documentElement.clientHeight;
+    } else if( document.body && document.body.clientHeight ) {
+        //IE 4 compatible
+        return document.body.clientHeight;
+    }
+    
+    return NaN;
+}
+
 function embed_odeo(link) {
 	document.writeln('<embed src="http://odeo.com/flash/audio_player_fullsize.swf" pluginspage="http://www.macromedia.com/go/getflashplayer" type="application/x-shockwave-flash" quality="high" width="440" height="80" wmode="transparent" allowScriptAccess="any" flashvars="valid_sample_rate=true&external_url='+link+'"></embed>');
 }
@@ -49,23 +116,22 @@ function checkbox(event)
 
 function select(item)
 {
-    Element.addClassName(itemElement, 'selected');
+    Element.addClassName(item, 'selected');
     
-    y = itemElement.y ? itemElement.y : itemElement.offsetTop;
-
-    bar = $('item-display-controls').offsetHeight;
+    y = getY(item);
+    bar = $('item-display-controls').getHeight();
     window.scrollTo(0, y - (bar + 10));
     
-    n = itemElements.length;
-    i = itemElements.indexOf(itemElement);
+    i = itemElements.indexOf(item);
     
     if(i == -1)
     {
         // in case page was partially loaded when itemElements was initialized
         itemElements = $$('.item');
-        i = itemElements.indexOf(itemElement);
+        i = itemElements.indexOf(item);
     }
     
+    n = itemElements.length;
     i++;
     
     document.title = "Feed on Feeds - " + i + " of " + n;
@@ -108,6 +174,8 @@ function keyboard(e)
     
     if(!itemElements) itemElements = $$('.item');
     
+    windowHeight = getWindowHeight();
+
     if(key == "H")
     {
         itemElements.each(
@@ -192,25 +260,8 @@ function keyboard(e)
             if(itemElement.nextSibling.id && itemElement.nextSibling.id != "end-of-items")
             {
                 nextElement = itemElement.nextSibling;
-                scrollHeight = document.body.scrollTop ? document.body.scrollTop : pageYOffset;
-                
-                if (nextElement.offsetParent) {
-                    y = nextElement.offsetTop
-                    while (nextElement = nextElement.offsetParent) {
-                        y += nextElement.offsetTop
-                    }
-                }
-                
-                if( typeof( window.innerHeight ) == 'number' ) {
-                    //Non-IE
-                    windowHeight = window.innerHeight;
-                } else if( document.documentElement && document.documentElement.clientHeight ) {
-                    //IE 6+ in 'standards compliant mode'
-                    windowHeight = document.documentElement.clientHeight;
-                } else if( document.body && document.body.clientHeight ) {
-                    //IE 4 compatible
-                    windowHeight = document.body.clientHeight;
-                }
+                scrollHeight = getScrollY();
+                y = getY(nextElement);
                 
                 if(y > scrollHeight + windowHeight)
                 {
@@ -231,18 +282,7 @@ function keyboard(e)
             }
             else
             {
-                if( typeof( window.innerHeight ) == 'number' ) {
-                    //Non-IE
-                    windowHeight = window.innerHeight;
-                } else if( document.documentElement && document.documentElement.clientHeight ) {
-                    //IE 6+ in 'standards compliant mode'
-                    windowHeight = document.documentElement.clientHeight;
-                } else if( document.body && document.body.clientHeight ) {
-                    //IE 4 compatible
-                    windowHeight = document.body.clientHeight;
-                }
-
-                scrollHeight = document.body.scrollTop ? document.body.scrollTop : pageYOffset;
+                scrollHeight = getScrollY();
 
                 e = $('end-of-items');
                 
@@ -709,6 +749,7 @@ function refreshlist()
     
     var url = 'sidebar.php';
     var params = "what=" + what + "&when=" + when;
+        
     new Ajax.Updater($('sidebar'), url, {method: 'get', parameters: params, evalScripts: true });
 }
 
@@ -783,3 +824,4 @@ function ajaxadd()
     feedi = iterate(feedslist);
     continueadd();
 }
+
