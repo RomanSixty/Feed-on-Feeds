@@ -710,21 +710,48 @@ function toggle_favorite(id)
 {
     throb();
     
-    image = $('fav' + id);    
+    var image = $('fav' + id);    
     
     var url = "add-tag.php?tag=star";
     var params = "&item=" + id;
-    var complete = function () { refreshlist(); refreshitem(id); };
-    var options = { method: 'get', parameters: params, onComplete: complete };
-    
+    image.src = 'image/star-pending.gif';
+	
     if(image.star)
     {
         params += "&remove=true";
-        var complete = function() { image.src='image/star-off.gif'; image.star = false; refreshlist(); };
+        var complete = function()
+		{
+			image.src='image/star-off.gif';
+			image.star = false;
+			starred--;
+			if(starred)
+			{
+				$('starredcount').update('(' + starred + ')');
+			}
+			else
+			{
+				$('starredcount').update('');
+			}
+			unthrob();
+		};
     }
     else
     {
-        var complete = function() { image.src='image/star-on.gif'; image.star = true; refreshlist(); };
+        var complete = function()
+		{
+			image.src='image/star-on.gif';
+			image.star = true;
+			starred++;
+			if(starred)
+			{
+				$('starredcount').update('(' + starred + ')');
+			}
+			else
+			{
+				$('starredcount').update('');
+			}
+			unthrob();
+		};
     }
     
     var options = { method: 'get', parameters: params, onComplete: complete };  
@@ -756,6 +783,11 @@ function refreshlist()
 function throb()
 {
     Element.show('throbber');
+}
+
+function unthrob()
+{
+    Element.hide('throbber');
 }
 
 // this fancy bit of computer science from Aristotle Pagaltzis @ http://plasmasturm.org/log/311/
