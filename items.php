@@ -121,7 +121,6 @@ foreach($result as $row)
 	print '<div class="item shown" id="i' . $item_id . '">';
 	fof_render_item($row);
 	print '</div>';
-
 }
 
 if(count($result) == 0)
@@ -133,3 +132,5 @@ if(count($result) == 0)
 		</form>
         
         <div id="end-of-items"></div>
+
+<script>itemElements = $$('.item');</script>
