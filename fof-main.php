@@ -648,6 +648,8 @@ function fof_subscribe($user_id, $url, $unread="today")
 
 function fof_add_feed($url, $title, $link, $description)
 {
+   if($title == "") $title = "[no title]";
+
    $id = fof_db_add_feed($url, $title, $link, $description);
    
    return $id;
@@ -751,8 +753,11 @@ function fof_update_feed($id)
         $image = $rss->get_favicon();
         $image_cache_date = time();
     }
-
-    fof_db_feed_update_metadata($id, $sub, $rss->get_title(), $rss->get_link(), $rss->get_description(), $image, $image_cache_date );
+	
+	$title =  $rss->get_title();
+	if($title == "") $title = "[no title]";
+	
+    fof_db_feed_update_metadata($id, $sub, $title, $rss->get_link(), $rss->get_description(), $image, $image_cache_date );
     
     $feed_id = $feed['feed_id'];
     $n = 0;
