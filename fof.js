@@ -101,6 +101,53 @@ function embed_wmedia(width, height, link) {
 	document.writeln('<embed type="application/x-mplayer2" src="'+link+'" autosize="1" width="'+width+'" height="'+height+'" showcontrols="1" showstatusbar="0" showdisplay="0" autostart="0"></embed>');
 }
 
+function itemClicked(event)
+{
+    if(!event) event = window.event; 
+    target = window.event ? window.event.srcElement : event.target;
+     
+    if(event.altKey)
+    {
+		Event.stop(event);
+		
+		unselect(itemElement);
+		while(target.parentNode)
+		{
+			if(Element.hasClassName(target, "item"))
+			{
+				break;
+			}
+			target = target.parentNode;
+		}
+		
+		if(itemElement == target)
+		{
+			itemElement = null;
+			return false;
+		}
+		
+	    Element.addClassName(target, 'selected');
+		itemElement = target;
+
+	    i = itemElements.indexOf(target);
+
+	    if(i == -1)
+	    {
+	        // in case page was partially loaded when itemElements was initialized
+	        itemElements = $$('.item');
+	        i = itemElements.indexOf(target);
+	    }
+
+	    n = itemElements.length;
+	    i++;
+
+	    document.title = "Feed on Feeds - " + i + " of " + n;
+		return false;
+	}
+	
+	return true;
+}
+
 function checkbox(event)
 {
     if(!event) event = window.event; 
@@ -140,6 +187,8 @@ function select(item)
 function unselect(item)
 {
     Element.removeClassName(item, 'selected');
+    document.title = "Feed on Feeds";
+
 }
 
 function show_enclosure(e)

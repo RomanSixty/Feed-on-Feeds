@@ -118,7 +118,7 @@ foreach($result as $row)
 	$item_id = $row['item_id'];
 	if($first) print "<script>firstItem = 'i$item_id'; </script>";
 	$first = false;
-	print '<div class="item shown" id="i' . $item_id . '">';
+	print '<div class="item shown" id="i' . $item_id . '"  onclick="return itemClicked(event)">';
 	fof_render_item($row);
 	print '</div>';
 }
