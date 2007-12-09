@@ -980,12 +980,18 @@ function fof_add_item_widget($function)
 function fof_get_widgets($item)
 {
     global $fof_item_widgets;
+
+    if (!is_array($fof_item_widgets))
+    {
+		return false;
+	}
+
     foreach($fof_item_widgets as $widget)
     {
         $w = $widget($item);
         if($w) $widgets[] = $w;
     }
-    
+     
     return $widgets;
 }
 
