@@ -94,6 +94,7 @@ function fof_render_item($item)
 			value="checked"
 			ondblclick='flag_upto("c<?php echo $item_id?>");'
             onclick='return checkbox(event);'
+			title='shift-click or double-click to flag all items up to this one'
 		/>
 	</span>
 	
