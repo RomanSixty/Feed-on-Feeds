@@ -90,8 +90,7 @@ if(isset($_POST['plugins']))
 {
     foreach(fof_get_plugin_prefs() as $plugin_pref)
     {
-        $key = $plugin_pref[1];
-        
+        $key = $plugin_pref[1];   
         $prefs->set($key, $_POST[$key]);
     }
     
@@ -211,9 +210,14 @@ URL to be linked on shared page: <input type=string name=sharedurl value="<?php 
 <?php } ?>
 
 <br>
-<?php foreach(fof_get_plugin_prefs() as $plugin_pref) { $name = $plugin_pref[0]; $key = $plugin_pref[1]; ?>
-<?php echo $name ?>: <input name="<?php echo $key ?>" value="<?php echo $prefs->get($key)?>"><br>
-<?php } ?>
+<?php foreach(fof_get_plugin_prefs() as $plugin_pref) { $name = $plugin_pref[0]; $key = $plugin_pref[1]; $type = $plugin_pref[2]; ?>
+<?php echo $name ?>: 
+
+<?php if($type == "boolean") { ?>
+<input name="<?php echo $key ?>" type="checkbox" <?php if($prefs->get($key)) echo "checked" ?>><br>
+<?php } else { ?>
+<input name="<?php echo $key ?>" value="<?php echo $prefs->get($key)?>"><br>
+<?php } } ?>
 <br>
 <input type=submit name=plugins value="Save Plugin Preferences">
 </form>

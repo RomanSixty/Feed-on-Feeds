@@ -968,11 +968,11 @@ function fof_add_item_prefilter($function)
     $fof_item_prefilters[] = $function;
 }
 
-function fof_add_pref($name, $key)
+function fof_add_pref($name, $key, $type="string")
 {
     global $fof_plugin_prefs;
     
-    $fof_plugin_prefs[] = array($name, $key);
+    $fof_plugin_prefs[] = array($name, $key, $type);
 }
 
 function fof_add_item_widget($function)
