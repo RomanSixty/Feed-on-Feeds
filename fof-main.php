@@ -580,6 +580,8 @@ function fof_prepare_url($url)
 {
    $url = trim($url);
 
+   if(substr($url, 0, 7) == "feed://") $url = substr($url, 7);
+
    if(substr($url, 0, 7) != 'http://' && substr($url, 0, 8) != 'https://')
    {
      $url = 'http://' . $url;
