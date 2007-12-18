@@ -418,18 +418,20 @@ function fof_db_get_item($user_id, $item_id)
     
     $item = mysql_fetch_assoc($result);
     
-    $result = fof_safe_query("select $FOF_TAG_TABLE.tag_name from $FOF_TAG_TABLE, $FOF_ITEM_TAG_TABLE where $FOF_TAG_TABLE.tag_id = $FOF_ITEM_TAG_TABLE.tag_id and $FOF_ITEM_TAG_TABLE.item_id = %d and $FOF_ITEM_TAG_TABLE.user_id = %d", $item_id, $user_id);
-
     $item['tags'] = array();
     
-    while($row = fof_db_get_row($result))
-    {
-        $item['tags'][] = $row['tag_name'];
-    }
+	if($user_id)
+	{
+		$result = fof_safe_query("select $FOF_TAG_TABLE.tag_name from $FOF_TAG_TABLE, $FOF_ITEM_TAG_TABLE where $FOF_TAG_TABLE.tag_id = $FOF_ITEM_TAG_TABLE.tag_id and $FOF_ITEM_TAG_TABLE.item_id = %d and $FOF_ITEM_TAG_TABLE.user_id = %d", $item_id, $user_id);
+
+		while($row = fof_db_get_row($result))
+		{
+			$item['tags'][] = $row['tag_name'];
+		}
+	}
     
     return $item;
 }
-
 
 ////////////////////////////////////////////////////////////////////////////////
 // Tag stuff
@@ -705,6 +707,19 @@ function fof_db_untag_items($user_id, $tag_id, $items)
 ////////////////////////////////////////////////////////////////////////////////
 // User stuff
 ////////////////////////////////////////////////////////////////////////////////
+
+function fof_db_get_users()
+{
+    global $FOF_USER_TABLE;
+    
+    $result = fof_safe_query("select user_name, user_id, user_prefs from $FOF_USER_TABLE");
+    
+    while($row = fof_db_get_row($result))
+    {
+        $users[$row['user_id']['user_name']] = $row['user_name'];
+        $users[$row['user_id']['user_prefs']] = unserialize($row['user_prefs']);
+    }
+}
 
 function fof_db_add_user($username, $password)
 {

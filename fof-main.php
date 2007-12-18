@@ -126,6 +126,11 @@ function fof_username()
     return $fof_user_name;
 }
 
+function fof_get_users()
+{
+    return fof_db_get_users();
+}
+
 function fof_prefs()
 {        
     $p =& FoF_Prefs::instance();
@@ -221,13 +226,18 @@ function fof_untag_feed($user_id, $feed_id, $tag)
 
 function fof_tag_item($user_id, $item_id, $tag)
 {
-   $tag_id = fof_db_get_tag_by_name($user_id, $tag);
-   if($tag_id == NULL)
-   {
-    $tag_id = fof_db_create_tag($user_id, $tag);
-   }
-
-   fof_db_tag_items($user_id, $tag_id, $item_id);   
+	if(is_array($tag)) $tags = $tag; else $tags[] = $tag;
+	
+	foreach($tags as $tag)
+	{
+		$tag_id = fof_db_get_tag_by_name($user_id, $tag);
+		if($tag_id == NULL)
+		{
+			$tag_id = fof_db_create_tag($user_id, $tag);
+		}
+		
+		fof_db_tag_items($user_id, $tag_id, $item_id);   
+	}
 }
 
 function fof_untag_item($user_id, $item_id, $tag)
@@ -605,6 +615,7 @@ function fof_subscribe($user_id, $url, $unread="today")
     if(fof_feed_exists($url))
     {
         fof_db_add_subscription($user_id, $feed['feed_id']);
+        fof_apply_plugin_tags($id, NULL, $user_id);
         fof_update_feed($feed['feed_id']);
         
         if($unread != "no") fof_db_mark_feed_unread($user_id, $feed['feed_id'], $unread);
@@ -644,7 +655,9 @@ function fof_subscribe($user_id, $url, $unread="today")
         fof_db_add_subscription($user_id, $id);
         if($unread != "no") fof_db_mark_feed_unread($user_id, $id, $unread);
         
-        return '<font color="green"><b>Subscribed.</b></font><br>';
+        fof_apply_plugin_tags($id, NULL, $user_id);
+ 
+       return '<font color="green"><b>Subscribed.</b></font><br>';
     }
 }
 
@@ -864,6 +877,8 @@ function fof_update_feed($id)
                 {
                     fof_mark_item_unread($feed_id, $id);                
                 }
+
+				fof_apply_plugin_tags($feed_id, $id, NULL);
             }
             
             $ids[] = $id;
@@ -926,6 +941,62 @@ function fof_update_feed($id)
     return array($n, "");
 }
 
+function fof_apply_plugin_tags($feed_id, $item_id = NULL, $user_id = NULL)
+{
+    $users = array();
+
+    if($user_id)
+    {
+        $users[] = $user_id;
+    }
+    else
+    {
+        $result = fof_get_subscribed_users($feed_id);
+        
+        while($row = fof_db_get_row($result))
+        {
+            $users[] = $row['user_id'];
+        }
+    }
+    
+    $items = array();
+    if($item_id)
+    {
+        $items[] = fof_db_get_item($user_id, $item_id);
+    }
+    else
+    {
+        $result = fof_db_get_items($user_id, $feed_id, $what="all", NULL, NULL);
+        
+        foreach($result as $r)
+        {
+            $items[] = $r;
+        }
+    }
+    
+    $userdata = fof_get_users();
+    
+    foreach($users as $user)
+    {
+        fof_log("tagging for $user");
+                
+        global $fof_tag_prefilters;
+        foreach($fof_tag_prefilters as $plugin => $filter)
+        {
+            fof_log("considering $plugin $filter");
+    
+            if(!$userdata[$user]['prefs']['plugin_' . $plugin])
+            {
+                foreach($items as $item)
+                {
+                    $tags = $filter($item['item_link'], $item['item_title'], $item['item_content']);
+                    fof_tag_item($user, $item['item_id'], $tags);
+                }
+            }
+        }
+    }
+}
+
 function fof_item_has_tags($item_id)
 {
 	return fof_db_item_has_tags($item_id);
@@ -933,12 +1004,13 @@ function fof_item_has_tags($item_id)
 
 function fof_init_plugins()
 {
-    global $fof_item_filters, $fof_item_prefilters, $fof_plugin_prefs;
+	global $fof_item_filters, $fof_item_prefilters, $fof_tag_prefilters, $fof_plugin_prefs;
     
     $fof_item_filters = array();
     $fof_item_prefilters = array();
     $fof_plugin_prefs = array();
-    
+	$fof_tag_prefilters = array();
+
     $p =& FoF_Prefs::instance();
     
     $dirlist = opendir(FOF_DIR . "/plugins");
@@ -954,6 +1026,13 @@ function fof_init_plugins()
     }
 
     closedir();
+}
+
+function fof_add_tag_prefilter($plugin, $function)
+{
+    global $fof_tag_prefilters;
+    
+    $fof_tag_prefilters[$plugin] = $function;
 }
 
 function fof_add_item_filter($function)
