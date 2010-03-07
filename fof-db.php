@@ -28,7 +28,11 @@ function fof_db_connect()
     global $fof_connection;
     
     $fof_connection = mysql_connect(FOF_DB_HOST, FOF_DB_USER, FOF_DB_PASS) or die("<br><br>Cannot connect to database.  Please update configuration in <b>fof-config.php</b>.  Mysql says: <i>" . mysql_error() . "</i>");
-    mysql_select_db(FOF_DB_DBNAME, $fof_connection) or die("<br><br>Cannot select database.  Please update configuration in <b>fof-config.php</b>.  Mysql says: <i>" . mysql_error() . "</i>");
+    if(!mysql_select_db(FOF_DB_DBNAME, $fof_connection))
+	{
+		fof_safe_query("create database " . FOF_DB_DBNAME) or die("Cannot create database.  Please create it manually. Mysql says:<i>" . mysql_error() . "</i>");
+		mysql_select_db(FOF_DB_DBNAME, $fof_connection) or die("<br><br>Cannot select database.  Please update configuration in <b>fof-config.php</b>.  Mysql says: <i>" . mysql_error() . "</i>");
+	}
 }
 
 function fof_db_optimize()
