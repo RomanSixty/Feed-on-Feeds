@@ -39,7 +39,7 @@ else
     }
     while($feed = fof_db_get_row($result))
     {
-        if((time() - $feed["feed_cache_date"]) < ($admin_prefs["manualtimeout"] * 60))
+        if(((time() - $feed["feed_cache_date"]) < ($admin_prefs["manualtimeout"] * 60)))
         {
             $title = $feed['feed_title'];
             list($timestamp, ) = fof_nice_time_stamp($feed['feed_cache_date']);
