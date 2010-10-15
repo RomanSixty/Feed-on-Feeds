@@ -28,7 +28,11 @@ function fof_db_connect()
     global $fof_connection;
     
     $fof_connection = mysql_connect(FOF_DB_HOST, FOF_DB_USER, FOF_DB_PASS) or die("<br><br>Cannot connect to database.  Please update configuration in <b>fof-config.php</b>.  Mysql says: <i>" . mysql_error() . "</i>");
-    mysql_select_db(FOF_DB_DBNAME, $fof_connection) or die("<br><br>Cannot select database.  Please update configuration in <b>fof-config.php</b>.  Mysql says: <i>" . mysql_error() . "</i>");
+    if(!mysql_select_db(FOF_DB_DBNAME, $fof_connection))
+	{
+		fof_safe_query("create database " . FOF_DB_DBNAME) or die("Cannot create database.  Please create it manually. Mysql says:<i>" . mysql_error() . "</i>");
+		mysql_select_db(FOF_DB_DBNAME, $fof_connection) or die("<br><br>Cannot select database.  Please update configuration in <b>fof-config.php</b>.  Mysql says: <i>" . mysql_error() . "</i>");
+	}
 }
 
 function fof_db_optimize()
@@ -244,7 +248,6 @@ function fof_db_add_subscription($user_id, $feed_id)
 function fof_db_delete_subscription($user_id, $feed_id)
 {
     global $FOF_SUBSCRIPTION_TABLE, $FOF_ITEM_TAG_TABLE;
-        
 	$result = fof_db_get_items($user_id, $feed_id, $what="all", NULL, NULL);
     
     foreach($result as $r)
@@ -252,11 +255,14 @@ function fof_db_delete_subscription($user_id, $feed_id)
         $items[] = $r['item_id'];
     }
     
-    $itemclause = join(", ", $items);
+    if(count($items)>0) {
+        $itemclause = join(", ", $items);
+	fof_safe_query("delete from $FOF_ITEM_TAG_TABLE where user_id = %d and item_id in ($itemclause)", $user_id);
+    }
 
     fof_safe_query("delete from $FOF_SUBSCRIPTION_TABLE where feed_id = %d and user_id = %d", $feed_id, $user_id);
 
-    fof_safe_query("delete from $FOF_ITEM_TAG_TABLE where user_id = %d and item_id in ($itemclause)", $user_id);
+#    fof_safe_query("delete from $FOF_ITEM_TAG_TABLE where user_id = %d and item_id in ($itemclause)", $user_id);
 }
 
 function fof_db_delete_feed($feed_id)
@@ -302,7 +308,7 @@ function fof_db_add_item($feed_id, $guid, $link, $title, $content, $cached, $pub
 function fof_db_get_items($user_id=1, $feed=NULL, $what="unread", $when=NULL, $start=NULL, $limit=NULL, $order="desc", $search=NULL)
 {
     global $FOF_SUBSCRIPTION_TABLE, $FOF_FEED_TABLE, $FOF_ITEM_TABLE, $FOF_ITEM_TAG_TABLE, $FOF_TAG_TABLE;
-    
+
     $prefs = fof_prefs();
     $offset = $prefs['tzoffset'];
     

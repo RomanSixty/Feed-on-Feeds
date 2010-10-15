@@ -1808,7 +1808,14 @@ function embed_wmedia(width, height, link) {
 				{
 					$file =& new $this->file_class($favicon, $this->timeout / 10, 5, array('X-FORWARDED-FOR' => $_SERVER['REMOTE_ADDR']), $this->useragent, $this->force_fsockopen);
 
-					if ($file->success && ($file->status_code == 200 || ($file->status_code > 206 && $file->status_code < 300)) && strlen($file->body) > 0)
+					if ($file->success 
+					    && (
+						$file->status_code == 200 || 
+						($file->status_code > 206 && $file->status_code < 300)
+					    ) 
+					    && strlen($file->body) > 0
+					    && in_array($file->headers['content-type'], array('image/x-icon','image/gif','image/png' ,'image/vnd.microsoft.icon'))
+					)
 					{
 						if ($cache->save(array('headers' => $file->headers, 'body' => $file->body)))
 						{
@@ -6572,11 +6579,12 @@ class SimplePie_File
 					$out = "GET $get HTTP/1.0\r\n";
 					$out .= "Host: $url_parts[host]\r\n";
 					$out .= "User-Agent: $useragent\r\n";
+					/*
 					if (function_exists('gzinflate'))
 					{
 						$out .= "Accept-Encoding: gzip,deflate\r\n";
 					}
-
+					#    */
 					if (isset($url_parts['user']) && isset($url_parts['pass']))
 					{
 						$out .= "Authorization: Basic " . base64_encode("$url_parts[user]:$url_parts[pass]") . "\r\n";
