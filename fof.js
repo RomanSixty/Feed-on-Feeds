@@ -603,13 +603,13 @@ function completeDrag(e)
 
 function hide_all()
 {
-    items = document.getElementsByClassName("item", "items");
+    items = $A(document.getElementsByClassName("item", "items"));
     items.each( function(e) { e.className = "item hidden"; });
 }
 
 function show_all()
 {
-    items = document.getElementsByClassName("item", "items");
+    items = $A(document.getElementsByClassName("item", "items"));
     items.each( function(e) { e.className = "item shown"; });
 }
 
