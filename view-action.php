@@ -33,6 +33,10 @@ else if($_POST['feed'])
 {
 	fof_db_mark_feed_read(fof_current_user(), $_POST['feed']);
 }
+else if($_POST['mark_read'])
+{
+	fof_db_mark_read(fof_current_user(), array($_POST['mark_read']));
+}
 else
 {
 	if($items)
