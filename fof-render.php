@@ -90,7 +90,7 @@ function fof_render_item($item)
 		<a
 			href=""
 			onclick="document.getElementById('c<?php echo $item_id ?>').checked = true;
-					 mark_read();
+					 ajax_mark_read(<?php echo $item_id ?>);
 					 return false;">
 			mark read
 		</a>

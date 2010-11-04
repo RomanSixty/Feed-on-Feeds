@@ -685,6 +685,20 @@ function mark_unread()
     document.items.submit();
 }
 
+function ajax_mark_read(id)
+{
+    throb();
+
+    var url = "view-action.php";
+    var params = "mark_read=" + id;
+    var complete = function () { refreshlist(); $('i'+id).remove(); };
+    var options = { method: 'post', parameters: params, onComplete: complete };
+
+    new Ajax.Request(url, options);
+
+    return false;
+}
+
 function mark_feed_read(id)
 {
     throb();
