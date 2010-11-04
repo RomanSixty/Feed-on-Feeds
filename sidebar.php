@@ -185,7 +185,12 @@ foreach (array("feed_age", "max_date", "feed_unread", "feed_url", "feed_title") 
         $url = "return change_feed_order('$col', 'asc')";
     }
     
-    echo "<td><nobr><a href='#' title='$title[$col]' onclick=\"$url\">";
+    echo "<td";
+
+    if($col == "feed_unread")
+        echo " style=\"text-align: right\"";
+
+    echo "><nobr><a href='#' title='$title[$col]' onclick=\"$url\">";
     
     if($col == "feed_unread")
     {
@@ -240,11 +245,11 @@ foreach($feeds as $row)
    $u = ".?feed=$id";
    $u2 = ".?feed=$id&amp;what=all&amp;how=paged";
 
-   print "<td><span title=\"$agestr\" id=\"${id}-agestr\">$agestrabbr</span></td>";
+   print "<td style=\"text-align: right\"><span title=\"$agestr\" id=\"${id}-agestr\">$agestrabbr</span></td>";
 
-   print "<td><span title=\"$lateststr\" id=\"${id}-lateststr\">$lateststrabbr</span></td>";
+   print "<td style=\"text-align: right\"><span title=\"$lateststr\" id=\"${id}-lateststr\">$lateststrabbr</span></td>";
 
-   print "<td class=\"nowrap\" id=\"${id}-items\">";
+   print "<td style=\"text-align: right\" class=\"nowrap\" id=\"${id}-items\">";
 
    if($unread)
    {

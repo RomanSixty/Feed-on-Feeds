@@ -67,7 +67,7 @@ function fof_render_item($item)
 	$item_updated = gmdate("Y-n-d g:ia", $item['item_updated'] + $offset*60*60);
 
 	if(!$item_title) $item_title = "[no title]";
-	
+
 	if($_GET['search'])
 	{
 		$item_content = do_highlight("<span>$item_content</span>", $_GET['search'], "highlight");
@@ -85,20 +85,27 @@ function fof_render_item($item)
 <div class="header">
 
 	<span class="controls">
-		<a class='uparrow' href='javascript:hide_body("<?php echo $item_id ?>")'>&uarr;</a>
-		<a class='downarrow' href='javascript:show_body("<?php echo $item_id ?>")'>&darr;</a>
+		<a class='uparrow' href='javascript:hide_body("<?php echo $item_id ?>")'>fold &uarr;</a>
+		<a class='downarrow' href='javascript:show_body("<?php echo $item_id ?>")'>unfold &darr;</a>
+		<a
+			href=""
+			onclick="document.getElementById('c<?php echo $item_id ?>').checked = true;
+					 mark_read();
+					 return false;">
+			mark read
+		</a>
+	</span>
+	
+	<h1 <?php if($unread) echo "class='unread-item'" ?> >
 		<input
 			type="checkbox"
 			name="c<?php echo $item_id ?>"
 			id="c<?php echo $item_id ?>"
 			value="checked"
 			ondblclick='flag_upto("c<?php echo $item_id?>");'
-            onclick='return checkbox(event);'
+			onclick='return checkbox(event);'
 			title='shift-click or double-click to flag all items up to this one'
 		/>
-	</span>
-	
-	<h1 <?php if($unread) echo "class='unread-item'" ?> >
 		<img
 			height="16"
 			width="16"
