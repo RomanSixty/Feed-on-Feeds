@@ -225,7 +225,7 @@ function keyboard(e)
     
     windowHeight = getWindowHeight();
 
-    if(key == "H")
+    if(key == "H") // toggle all item foldings
     {
         itemElements.each(
             function(i) {
@@ -240,7 +240,7 @@ function keyboard(e)
         return false;
     }
     
-    if(key == "h")
+    if(key == "h") // toggle current item folding
     {        
         if(itemElement)
         {
@@ -251,7 +251,7 @@ function keyboard(e)
         }
     }
     
-    if(key == "s")
+    if(key == "s") // (un)flag current item as favorite
     {
         if(itemElement)
         {
@@ -261,7 +261,7 @@ function keyboard(e)
         }
     }
     
-    if(key == "f")
+    if(key == "f") // mark current item read
     {
         if(itemElement)
         {
@@ -271,7 +271,7 @@ function keyboard(e)
         }
     }
     
-    if(key == "F")
+    if(key == "F") // mark current and all previous items read
     {
         itemElements.each(
             function(i) {
@@ -288,7 +288,7 @@ function keyboard(e)
         return false;
     }
 
-    if(key == "U")
+    if(key == "U") // mark all items unread
     {
         itemElements.each(
             function(i) {
@@ -300,7 +300,7 @@ function keyboard(e)
         return false;
     }
 
-    if(key == "j")
+    if(key == "j") // skip to next item, mark current item as read
     {
         if(itemElement)
         {
@@ -428,7 +428,7 @@ function keyboard(e)
         }
     }
 
-    if(key == "n")
+    if(key == "n") // skip to next item
     {
         if(itemElement)
         {
@@ -465,7 +465,7 @@ function keyboard(e)
         }
     }
     
-    if(key == "N")
+    if(key == "N") // skip to last item
     {
         if(itemElement) unselect(itemElement);
             
@@ -477,7 +477,7 @@ function keyboard(e)
         return false;
     }
     
-    if(key == "P")
+    if(key == "P") // skip to first item
     {
         if(itemElement) unselect(itemElement);
 
@@ -490,7 +490,7 @@ function keyboard(e)
         return false;
     }
     
-    if(key == "p")
+    if(key == "p") // skip to previous item
     {
         if(itemElement)
         {
@@ -583,6 +583,7 @@ function completeDrag(e)
         $('handle').style.left=newWidth+'px';
         $('items').style.marginLeft=(newWidth+20)+'px';
         $('item-display-controls').style.left=(newWidth+10)+'px';
+        $('welcome').style.width=(newWidth-30)+'px';
 
         if(isIE)
         {

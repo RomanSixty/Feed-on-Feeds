@@ -68,6 +68,7 @@ $unread_count = fof_get_unread_count(fof_current_user());
 		}
         
 		#item-display-controls { left: <?php echo $width+10 ?>px; }
+		#welcome { width: <?php echo $width-30 ?>px; }
 	  </style>
 
 	<!--[if IE]>
