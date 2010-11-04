@@ -1786,7 +1786,7 @@ function embed_wmedia(width, height, link) {
 	 * @access public
 	 * @since 1.0
 	 */
-	function get_favicon()
+	function get_favicon($alt_image=null)
 	{
 		if ($return = $this->get_channel_tags(SIMPLEPIE_NAMESPACE_ATOM_10, 'icon'))
 		{
@@ -1794,7 +1794,10 @@ function embed_wmedia(width, height, link) {
 		}
 		elseif (($url = $this->get_link()) !== null && preg_match('/^http(s)?:\/\//i', $url))
 		{
-			$favicon = SimplePie_Misc::absolutize_url('/favicon.ico', $url);
+			if (empty($alt_image))
+				$favicon = SimplePie_Misc::absolutize_url('/favicon.ico', $url);
+			else 
+				$favicon = $alt_image;
 
 			if ($this->cache && $this->favicon_handler)
 			{
