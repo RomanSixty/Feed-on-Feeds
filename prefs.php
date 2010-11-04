@@ -33,6 +33,16 @@ if(fof_is_admin() && isset($_POST['adminprefs']))
     }
 }
 
+if(isset($_POST['changed']))
+{
+    $feed_id = $_POST['changed'];
+    $title = $_POST['title'];
+    $alt_image = $_POST['alt_image'];
+
+    fof_update_feed_prefs($feed_id, $title, $alt_image);
+    $message .= " Updated feed settings of '$title'.";
+}
+
 if(isset($_POST['tagfeed']))
 {
     $tags = $_POST['tag'];
@@ -233,6 +243,7 @@ foreach($feeds as $row)
    $id = $row['feed_id'];
    $url = $row['feed_url'];
    $title = $row['feed_title'];
+   $alt_image = $row['alt_image'];
    $link = $row['feed_link'];
    $description = $row['feed_description'];
    $age = $row['feed_age'];
@@ -263,7 +274,15 @@ foreach($feeds as $row)
 	   print "<td><a href=\"$url\" title=\"feed\"><img src='image/feed-icon.png' width='16' height='16' border='0' /></a></td>";
    }
     
-   print "<td><a href=\"$link\" title=\"home page\">$title</a></td>";
+   print "<td>
+            <form method=\"post\" action=\"prefs.php\">
+            <input type=\"hidden\" name=\"changed\" value=\"$id\"/>
+            <input type=\"text\" name=\"title\" value=\"$title\" size=\"50\"/>
+            <input type=\"text\" name=\"alt_image\" value=\"$alt_image\" size=\"50\"/>
+            <input type=\"submit\" value=\"submit\"/>
+            </form>
+          </td>";
+
    
    print "<td align=right>";
    
@@ -282,7 +301,7 @@ foreach($feeds as $row)
    
    print "</td>";
    $title = htmlspecialchars($title);
-   print "<td><form method=post action=prefs.php><input type=hidden name=title value=\"$title\"><input type=hidden name=feed_id value=$id><input type=string name=tag> <input type=submit name=tagfeed value='Tag Feed'> <small><i>(separate tags with spaces)</i></small></form></td></tr>";
+   print "<td><form method=\"post\" action=\"prefs.php\"><input type=\"hidden\" name=\"title\" value=\"$title\"><input type=\"hidden\" name=\"feed_id\" value=\"$id\"><input type=\"text\" name=\"tag\"> <input type=\"submit\" name=\"tagfeed\" value=\"Tag Feed\"> <small><i>(separate tags with spaces)</i></small></form></td></tr>";
 }
 ?>
 </table>

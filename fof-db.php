@@ -116,8 +116,8 @@ function fof_db_feed_update_metadata($feed_id, $url, $title, $link, $description
 {
     global $FOF_FEED_TABLE;
     
-    $sql = "update $FOF_FEED_TABLE set feed_url = '%s', feed_title = '%s', feed_link = '%s', feed_description = '%s'";
-    $args = array($url, $title, $link, $description);
+    $sql = "update $FOF_FEED_TABLE set feed_url = '%s', feed_link = '%s', feed_description = '%s'";
+    $args = array($url, $link, $description);
     
 	if($image)
 	{

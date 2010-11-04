@@ -184,6 +184,16 @@ function fof_get_item_tags($user_id, $item_id)
 	return $tags;
 }
 
+function fof_update_feed_prefs($feed_id, $title, $alt_image)
+{
+    global $FOF_FEED_TABLE;
+
+    $sql = "UPDATE $FOF_FEED_TABLE SET feed_title='$title', alt_image='$alt_image', feed_image_cache_date=1 WHERE feed_id=$feed_id";
+    fof_db_query($sql);
+
+    return true;
+}
+
 function fof_tag_feed($user_id, $feed_id, $tag)
 {
     $tag_id = fof_db_get_tag_by_name($user_id, $tag);
@@ -335,6 +345,7 @@ function fof_get_feeds($user_id, $order = 'feed_title', $direction = 'asc')
       $feeds[$i]['feed_link'] = $row['feed_link'];
       $feeds[$i]['feed_description'] = $row['feed_description'];
       $feeds[$i]['feed_image'] = $row['feed_image'];
+      $feeds[$i]['alt_image'] = $row['alt_image'];
       $feeds[$i]['prefs'] = unserialize($row['subscription_prefs']);
       $feeds[$i]['feed_age'] = $age;
 
@@ -765,7 +776,7 @@ function fof_update_feed($id)
     
     if($feed['feed_image_cache_date'] < (time() - (7*24*60*60)))
     {
-        $image = $rss->get_favicon();
+        $image = $rss->get_favicon($feed['alt_image']);
         $image_cache_date = time();
     }
 	
@@ -810,69 +821,6 @@ function fof_update_feed($id)
 
                 $republished = false;
                 
-                // this was a failed attempt to avoid duplicates when subscribing to
-                // a "planet" type feed when you already have some of the feeds in the
-                // planet subscribed.  in the end there were just too many cases where
-                // dupes still got through (like the 'source' feed url being just slightly
-                // different from the subscribed url).
-                //
-                // maybe a better approach would be simply using the Atom GUID as a
-                // true *GU* ID.
-                
-                /*
-                $source = $item->get_item_tags(SIMPLEPIE_NAMESPACE_ATOM_10, 'source');
-                $links = $source[0]['child'][SIMPLEPIE_NAMESPACE_ATOM_10]['link'];
-                
-                if(is_array($links))
-                {                    
-                    foreach($links as $link)
-                    {
-                        if($link['attribs']['']['rel'] == 'self')
-                        {
-                            $feed_url = $link['attribs']['']['href'];
-                                                        
-                            $feed = fof_db_get_feed_by_url($feed_url);
-                            
-                            if($feed)
-                            {
-                                fof_log("was repub from $feed_url");
-                                
-                                $republished = true;
-                                
-                                $result = fof_get_subscribed_users($feed_id);
-                                
-                                $repub_subscribers = array();
-                                while($row = fof_db_get_row($result))
-                                {
-                                   $repub_subscribers[] = $row['user_id'];
-                                   fof_log("repub_sub: " . $row['user_id']);
-                                }
-                                
-                                $result = fof_get_subscribed_users($feed['feed_id']);
-                                
-                                $original_subscribers = array();
-                                while($row = fof_db_get_row($result))
-                                {
-                                   $original_subscribers[] = $row['user_id'];
-                                   fof_log("orig_sub: " . $row['user_id']);
-                                }
-                                
-                                $new_subscribers = array_diff($repub_subscribers, $original_subscribers);
-                                
-                                fof_db_mark_item_unread($new_subscribers, $id);
-                                
-                                $old_subscribers = array_intersect($original_subscribers, $repub_subscribers);
-
-                                foreach($old_subscribers as $user)
-                                {
-                                    fof_tag_item($user, $id, 'republished');
-                                }
-                            }
-                        }
-                    }
-                }
-                */
-
                 if(!$republished)
                 {
                     fof_mark_item_unread($feed_id, $id);                

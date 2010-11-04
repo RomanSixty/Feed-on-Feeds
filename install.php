@@ -182,6 +182,7 @@ CREATE TABLE IF NOT EXISTS `$FOF_FEED_TABLE` (
   `feed_link` text NOT NULL,
   `feed_description` text NOT NULL,
   `feed_image` text,
+  `alt_image` text,
   `feed_image_cache_date` int(11) default '0',
   `feed_cache_date` int(11) default '0',
   `feed_cache_attempt_date` int(11) default '0',
