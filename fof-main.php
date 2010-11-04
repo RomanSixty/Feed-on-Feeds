@@ -851,7 +851,9 @@ function fof_update_feed($id)
             $in = implode ( ", ", $ids );
             
             global $FOF_ITEM_TABLE, $FOF_ITEM_TAG_TABLE;
-            $sql = "select item_id, item_cached from $FOF_ITEM_TABLE where feed_id = $feed_id and item_id not in ($in) order by item_cached desc limit $count, 1000000000";
+
+            // LX: purge only untagged items
+            $sql = "select i.item_id, item_cached, tag_id from $FOF_ITEM_TABLE i left join $FOF_ITEM_TAG_TABLE t on i.item_id=t.item_id where tag_id is null and feed_id = $feed_id and i.item_id not in ($in) order by item_cached desc limit $count, 1000000000";
             $result = fof_db_query($sql);
             
             while($row = fof_db_get_row($result))
