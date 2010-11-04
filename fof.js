@@ -896,7 +896,11 @@ function ajaxupdate()
 {
     throb();
     feedi = iterate(feedslist);
-    continueupdate();
+    setTimeout(continueupdate,100);
+    setTimeout(continueupdate,100);
+    setTimeout(continueupdate,100);
+    setTimeout(continueupdate,100);
+    setTimeout(continueupdate,100);
 }
 
 function ajaxadd()
