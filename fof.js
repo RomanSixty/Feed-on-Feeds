@@ -583,6 +583,7 @@ function completeDrag(e)
         $('handle').style.left=newWidth+'px';
         $('items').style.marginLeft=(newWidth+20)+'px';
         $('item-display-controls').style.left=(newWidth+10)+'px';
+        $('welcome').style.width=(newWidth-30)+'px';
 
         if(isIE)
         {
