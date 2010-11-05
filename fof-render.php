@@ -89,9 +89,8 @@ function fof_render_item($item)
 		<a class='downarrow' href='javascript:show_body("<?php echo $item_id ?>")'>unfold &darr;</a>
 		<a
 			href=""
-			onclick="document.getElementById('c<?php echo $item_id ?>').checked = true;
-					 ajax_mark_read(<?php echo $item_id ?>);
-					 return false;">
+			onclick="ajax_mark_read(<?php echo $item_id ?>);
+				 return false;">
 			mark read
 		</a>
 	</span>
@@ -184,6 +183,8 @@ function fof_render_item($item)
 
 <?php
     $widgets = fof_get_widgets($item);
+
+    $widgets[] = '<a href="" onclick="ajax_mark_read('.$item_id.'); return false;">mark read</a>';
     
     if($widgets) {
 ?>
