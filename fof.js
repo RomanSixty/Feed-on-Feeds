@@ -691,7 +691,25 @@ function ajax_mark_read(id)
 
     var url = "view-action.php";
     var params = "mark_read=" + id;
-    var complete = function () { refreshlist(); $('i'+id).remove(); };
+    var complete = function () {
+        refreshlist();
+
+        item = $('i'+id);
+
+        // scroll to start of next item if it flips out of the viewport
+        // by removing the read item
+
+        y = getY(item);
+        scrollHeight = getScrollY();
+
+        item.remove();
+
+        if(y < scrollHeight) {
+            bar = $('item-display-controls').getHeight();
+
+            window.scrollTo(0, y - (bar + 10));
+        }
+    };
     var options = { method: 'post', parameters: params, onComplete: complete };
 
     new Ajax.Request(url, options);
