@@ -130,6 +130,8 @@ p
     font-family: georgia;
 }
 
+.item .body img { max-width: 100%; }
+
 .highlight-on .highlight
 {
     background: yellow;
