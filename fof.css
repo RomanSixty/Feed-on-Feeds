@@ -240,6 +240,12 @@ body
     float: right;
 }
 
+.starred,
+.unstarred
+{
+    cursor: pointer;
+}
+
 .tags
 {
     font-size: 70%;

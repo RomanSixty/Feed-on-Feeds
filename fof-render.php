@@ -108,6 +108,7 @@ function fof_render_item($item)
 		<img
 			height="16"
 			width="16"
+                        class="<?php if (!$star) echo 'un'; ?>starred"
 			src="<?php echo $star_image ?>"
 			id="fav<?php echo $item_id ?>"
 			onclick="return toggle_favorite('<?php echo $item_id ?>')"
