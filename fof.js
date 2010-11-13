@@ -929,7 +929,7 @@ function ajaxupdate()
 {
     throb();
     feedi = iterate(feedslist);
-    for (var i=0; i<5; i++)
+    for (var i=0; i<Math.min(feedslist.length, 5); i++)
 	    setTimeout(continueupdate,50);
 }
 
