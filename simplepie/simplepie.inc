@@ -1809,7 +1809,7 @@ function embed_wmedia(width, height, link) {
 				}
 				else
 				{
-					$file =& new $this->file_class($favicon, $this->timeout / 10, 5, array('X-FORWARDED-FOR' => $_SERVER['REMOTE_ADDR']), $this->useragent, $this->force_fsockopen);
+					$file =& new $this->file_class($favicon, $this->timeout / 5, 5, array('X-FORWARDED-FOR' => $_SERVER['REMOTE_ADDR']), $this->useragent, $this->force_fsockopen);
 
 					if ($file->success 
 					    && (
@@ -1817,17 +1817,25 @@ function embed_wmedia(width, height, link) {
 						($file->status_code > 206 && $file->status_code < 300)
 					    ) 
 					    && strlen($file->body) > 0
-					    && in_array($file->headers['content-type'], array('image/x-icon','image/gif','image/png' ,'image/vnd.microsoft.icon'))
 					)
 					{
-						if ($cache->save(array('headers' => $file->headers, 'body' => $file->body)))
+						// some servers send favicon as plain text
+						if (strncmp($file->headers['content-type'], 'text/plain', 10) == 0)
 						{
-							return $this->sanitize($this->favicon_handler . rawurlencode($favicon), SIMPLEPIE_CONSTRUCT_IRI);
+							$file->headers['content-type'] = 'image/x-icon';
 						}
-						else
+
+						if (in_array($file->headers['content-type'], array('image/x-icon','image/gif','image/png','image/vnd.microsoft.icon')))
 						{
-							trigger_error("$cache->name is not writeable", E_USER_WARNING);
-							return $this->sanitize($favicon, SIMPLEPIE_CONSTRUCT_IRI);
+							if ($cache->save(array('headers' => $file->headers, 'body' => $file->body)))
+							{
+								return $this->sanitize($this->favicon_handler . rawurlencode($favicon), SIMPLEPIE_CONSTRUCT_IRI);
+							}
+							else
+							{
+								trigger_error("$cache->name is not writeable", E_USER_WARNING);
+								return $this->sanitize($favicon, SIMPLEPIE_CONSTRUCT_IRI);
+							}
 						}
 					}
 				}
