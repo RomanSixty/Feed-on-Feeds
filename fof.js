@@ -797,14 +797,14 @@ function toggle_favorite(id)
     var url = "add-tag.php?tag=star";
     var params = "&item=" + id;
     image.src = 'image/star-pending.gif';
-	
-    if(image.star)
+    
+    if(image.className == 'starred')
     {
         params += "&remove=true";
         var complete = function()
 		{
 			image.src='image/star-off.gif';
-			image.star = false;
+                        image.className='unstarred';
 			starred--;
 			if(starred)
 			{
@@ -822,7 +822,7 @@ function toggle_favorite(id)
         var complete = function()
 		{
 			image.src='image/star-on.gif';
-			image.star = true;
+                        image.className='starred';
 			starred++;
 			if(starred)
 			{
@@ -929,7 +929,7 @@ function ajaxupdate()
 {
     throb();
     feedi = iterate(feedslist);
-    for (var i=0; i<5; i++)
+    for (var i=0; i<Math.min(feedslist.length, 5); i++)
 	    setTimeout(continueupdate,50);
 }
 

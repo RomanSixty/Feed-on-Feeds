@@ -56,10 +56,10 @@ p
     font-size: 10px;
     margin: 0;
     top: 0px;
+    bottom: 0px;
     left: 0px;
-    height: 100%;
     position: fixed;
-    overflow: scroll;
+    overflow: auto;
     padding-top: 25px;
 }
 
@@ -238,6 +238,12 @@ body
 .controls
 {
     float: right;
+}
+
+.starred,
+.unstarred
+{
+    cursor: pointer;
 }
 
 .tags
