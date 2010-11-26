@@ -1825,7 +1825,7 @@ function embed_wmedia(width, height, link) {
 							$file->headers['content-type'] = 'image/x-icon';
 						}
 
-						if (in_array($file->headers['content-type'], array('image/x-icon','image/gif','image/png','image/vnd.microsoft.icon')))
+						if (in_array($file->headers['content-type'], array('image/x-icon','image/x-ico','image/gif','image/png','image/vnd.microsoft.icon')))
 						{
 							if ($cache->save(array('headers' => $file->headers, 'body' => $file->body)))
 							{
