@@ -37,6 +37,14 @@ else if($_POST['mark_read'])
 {
 	fof_db_mark_read(fof_current_user(), array($_POST['mark_read']));
 }
+else if($_POST['fold'])
+{
+	fof_db_fold(fof_current_user(), array($_POST['fold']));
+}
+else if($_POST['unfold'])
+{
+	fof_db_unfold(fof_current_user(), array($_POST['unfold']));
+}
 else
 {
 	if($items)
