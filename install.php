@@ -308,6 +308,7 @@ Inserting initial data...
 <?php
 fof_db_query("insert into $FOF_TAG_TABLE (tag_id, tag_name) values (1, 'unread')", 1);
 fof_db_query("insert into $FOF_TAG_TABLE (tag_id, tag_name) values (2, 'star')", 1);
+fof_db_query("insert into $FOF_TAG_TABLE (tag_id, tag_name) values (3, 'folded')", 1);
 ?>
 
 Done.<hr>

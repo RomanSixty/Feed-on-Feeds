@@ -128,7 +128,7 @@ function fof_render_item($item)
 	{
 		foreach($tags as $tag)
 		{
-			if($tag == "unread" || $tag == "star") continue;
+			if($tag == "unread" || $tag == "star" || $tag == "folded") continue;
 ?>
 		<a href='?what=<?php echo $tag ?>'><?php echo $tag ?></a>
 		

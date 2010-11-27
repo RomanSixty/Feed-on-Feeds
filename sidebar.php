@@ -120,7 +120,7 @@ foreach($tags as $tag)
    $count = $tag['count'];
    $unread = $tag['unread'];
  
-   if($tag_id == 1 || $tag_id == 2) continue;
+   if($tag_id == 1 || $tag_id == 2 || $tag_name == "folded") continue;
 
    if(++$t % 2)
    {
