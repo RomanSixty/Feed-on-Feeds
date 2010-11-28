@@ -32,7 +32,7 @@ $which = ($sharing == "all") ? "all" : "shared";
 
 if(isset($_GET['which']))
 {
-    $which = ($sharing == "all") ? $_GET['which'] : "shared " . $_GET['which'];
+    $which = ($sharing == "all" || $sharing == "all_tagged") ? $_GET['which'] : "shared " . $_GET['which'];
     $extratitle = " items tagged " . $_GET['which'];
 }
 
@@ -52,14 +52,14 @@ $shared_link = htmlspecialchars("http://" . $_SERVER['SERVER_NAME'] . $_SERVER['
 
 if(isset($_GET['which']))
 {
-    $shared_feed .= '&which=' . $_GET['which'];
-    $shared_link .= '&which=' . $_GET['which'];
+    $shared_feed .= '&amp;which=' . $_GET['which'];
+    $shared_link .= '&amp;which=' . $_GET['which'];
 }
 
 if(isset($_GET['feed']))
 {
-    $shared_feed .= '&feed=' . $_GET['feed'];
-    $shared_link .= '&feed=' . $_GET['feed'];
+    $shared_feed .= '&amp;feed=' . $_GET['feed'];
+    $shared_link .= '&amp;feed=' . $_GET['feed'];
 }
 
 
@@ -87,14 +87,14 @@ foreach($result as $item)
 	$feed_title = htmlspecialchars($item['feed_title']);
 
 	$item_link = htmlspecialchars($item['item_link']);
-    
+
     $item_guid = $item['item_guid'];
     if(!ereg("^[a-z0-9\.\+\-]+:", $item_guid))
     {
         $item_guid = $feed_link . '#' . $item_guid;
     }
     $item_guid = htmlspecialchars($item_guid);
-    
+
 	$item_title = htmlspecialchars($item['item_title']);
 	$item_content = htmlspecialchars($item['item_content']);
 
@@ -103,7 +103,7 @@ foreach($result as $item)
 	$item_updated = gmdate('Y-m-d\TH:i:s\Z', $item['item_updated']);
 
 	if(!$item_title) $item_title = "[no title]";
-	
+
 ?>
 
   <entry>
@@ -118,7 +118,7 @@ foreach($result as $item)
       <link href="<?php echo $feed_url ?>" rel="self" type="application/atom+xml"/>
       <title><?php echo $feed_title ?></title>
     </source>
-  </entry>    
+  </entry>
 <?php
 }
 echo '</feed>';
@@ -148,7 +148,7 @@ header("Content-Type: text/html; charset=utf-8");
       </style>
 
    </head>
-      
+
   <body>
 
   <h1 class="box"><a href="http://feedonfeeds.com/">Feed on Feeds</a> - Shared Items
@@ -168,7 +168,7 @@ foreach($result as $item)
 {
 	$item_id = $item['item_id'];
 	print '<div class="item shown" id="i' . $item_id . '">';
-    
+
     $feed_link = $item['feed_link'];
 	$feed_title = $item['feed_title'];
 	$feed_image = $item['feed_image'];
@@ -185,7 +185,7 @@ foreach($result as $item)
 	$item_updated = gmdate("Y-n-d g:ia", $item['item_updated'] + $offset*60*60);
 
 	if(!$item_title) $item_title = "[no title]";
-	
+
 ?>
 
 <div class="header">
@@ -195,10 +195,10 @@ foreach($result as $item)
             <?php echo $item_title ?>
 		</a>
 	</h1>
-	
-    
+
+
     <span class='dash'> - </span>
-    
+
     <h2>
 
     <a href="<?php echo $feed_link ?>" title='<?php echo $feed_description ?>'><img src="<?php echo $feed_image ?>" height="16" width="16" border="0" /></a>
