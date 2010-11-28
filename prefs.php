@@ -24,9 +24,9 @@ if(isset($_POST['adminprefs']))
 	$prefs->set('logging', $_POST['logging']);
 
 	$prefs->save();
-    	
+
 	$message .= ' Saved admin prefs.';
-    
+
     if($prefs->get('logging') && !@fopen("fof.log", 'a'))
     {
         $message .= ' Warning: could not write to log file!';
@@ -48,7 +48,7 @@ if(isset($_POST['tagfeed']))
     $tags = $_POST['tag'];
     $feed_id = $_POST['feed_id'];
     $title = $_POST['title'];
-    
+
     foreach(explode(" ", $tags) as $tag)
     {
         fof_tag_feed(fof_current_user(), $feed_id, $tag);
@@ -61,7 +61,7 @@ if(isset($_GET['untagfeed']))
     $feed_id = $_GET['untagfeed'];
     $tags = $_GET['tag'];
     $title = $_GET['title'];
-	
+
     foreach(explode(" ", $tags) as $tag)
     {
         fof_untag_feed(fof_current_user(), $feed_id, $tag);
@@ -81,7 +81,7 @@ if(isset($_POST['prefs']))
 	$prefs->set('sharedurl', $_POST['sharedurl']);
 
 	$prefs->save(fof_current_user());
-    
+
     if($_POST['password'] && ($_POST['password'] == $_POST['password2']))
     {
         fof_db_change_password($fof_user_name, $_POST['password']);
@@ -92,7 +92,7 @@ if(isset($_POST['prefs']))
     {
         $message = "Passwords do not match!";
     }
-	
+
 	$message .= ' Saved prefs.';
 }
 
@@ -100,10 +100,10 @@ if(isset($_POST['plugins']))
 {
     foreach(fof_get_plugin_prefs() as $plugin_pref)
     {
-        $key = $plugin_pref[1];   
+        $key = $plugin_pref[1];
         $prefs->set($key, $_POST[$key]);
     }
-    
+
     $plugins = array();
     $dirlist = opendir(FOF_DIR . "/plugins");
     while($file=readdir($dirlist))
@@ -115,7 +115,7 @@ if(isset($_POST['plugins']))
     }
 
     closedir();
-        
+
     foreach($plugins as $plugin)
     {
         $prefs->set("plugin_" . $plugin, $_POST[$plugin] != "on");
@@ -126,7 +126,7 @@ if(isset($_POST['plugins']))
 	$message .= ' Saved plugin prefs.';
 }
 
-if(isset($_POST['changepassword'])) 
+if(isset($_POST['changepassword']))
 {
     if($_POST['password'] != $_POST['password2'])
     {
@@ -137,12 +137,12 @@ if(isset($_POST['changepassword']))
         $username = $_POST['username'];
         $password = $_POST['password'];
         fof_db_change_password($username, $password);
-        
+
         $message = "Changed password for $username.";
     }
 }
 
-if(isset($_POST['adduser']) && $_POST['username'] && $_POST['password']) 
+if(isset($_POST['adduser']) && $_POST['username'] && $_POST['password'])
 {
     $username = $_POST['username'];
     $password = $_POST['password'];
@@ -155,7 +155,7 @@ if(isset($_POST['adduser']) && $_POST['username'] && $_POST['password'])
 if(isset($_POST['deleteuser']) && $_POST['username'])
 {
 	$username = $_POST['username'];
-	
+
 	fof_db_delete_user($username);
 	$message = "User '$username' deleted.";
 }
@@ -176,21 +176,22 @@ Default display order: <select name="order"><option value=desc>new to old</optio
 Number of items in paged displays: <input type="string" name="howmany" value="<?php echo $prefs->get('howmany') ?>"><br><br>
 Display custom feed favicons? <input type="checkbox" name="favicons" <?php if($prefs->get('favicons')) echo "checked=true";?> ><br><br>
 Use keyboard shortcuts? <input type="checkbox" name="keyboard" <?php if($prefs->get('keyboard')) echo "checked=true";?> ><br><br>
-Time offset in hours: <input size=3 type=string name=tzoffset value="<?php echo $prefs->get('tzoffset')?>"> (UTC time: <?php echo gmdate("Y-n-d g:ia") ?>, local time: <?php echo gmdate("Y-n-d g:ia", time() + $prefs->get("tzoffset")*60*60) ?>)<br><br>
+Time offset in hours: <input size=3 type="text" name=tzoffset value="<?php echo $prefs->get('tzoffset')?>"> (UTC time: <?php echo gmdate("Y-n-d g:ia") ?>, local time: <?php echo gmdate("Y-n-d g:ia", time() + $prefs->get("tzoffset")*60*60) ?>)<br><br>
 <table border=0 cellspacing=0 cellpadding=2><tr><td>New password:</td><td><input type=password name=password> (leave blank to not change)</td></tr>
 <tr><td>Repeat new password:</td><td><input type=password name=password2></td></tr></table>
 <br>
 
-Share 
+Share
 <select name="sharing">
-<option value=no>no</option>
-<option value=all <?php if($prefs->get('sharing') == "all") echo "selected";?>>all</option>
-<option value=tagged <?php if($prefs->get('sharing') == "tagged") echo "selected";?>>tagged as "shared"</option>
+<option value="no"">no</option>
+<option value="all" <?php if($prefs->get('sharing') == "all") echo "selected";?>>all</option>
+<option value="tagged" <?php if($prefs->get('sharing') == "tagged") echo "selected";?>>tagged as "shared"</option>
+<option value="all_tagged" <?php if($prefs->get('sharing') == "all_tagged") echo "selected";?>>all tagged items</option>
 </select>
 items.
-<?php if($prefs->get('sharing') != "no") echo " <small><i>(your shared page is <a href='./shared.php?user=$fof_user_id'>here</a>)</i></small>";?><br><br>
-Name to be shown on shared page: <input type=string name=sharedname value="<?php echo $prefs->get('sharedname')?>"><br><br>
-URL to be linked on shared page: <input type=string name=sharedurl value="<?php echo $prefs->get('sharedurl')?>">
+<?php if($prefs->get('sharing') != "no") echo " <small><i>(your default shared page is <a href='./shared.php?user=$fof_user_id'>here</a>)</i></small>";?><br><br>
+Name to be shown on shared page: <input type="text" name="sharedname" value="<?php echo $prefs->get('sharedname')?>"><br><br>
+URL to be linked on shared page: <input type="text" name="sharedurl" value="<?php echo $prefs->get('sharedurl')?>">
 <br><br>
 
 <input type=submit name=prefs value="Save Preferences">
@@ -221,7 +222,7 @@ URL to be linked on shared page: <input type=string name=sharedurl value="<?php 
 
 <br>
 <?php foreach(fof_get_plugin_prefs() as $plugin_pref) { $name = $plugin_pref[0]; $key = $plugin_pref[1]; $type = $plugin_pref[2]; ?>
-<?php echo $name ?>: 
+<?php echo $name ?>:
 
 <?php if($type == "boolean") { ?>
 <input name="<?php echo $key ?>" type="checkbox" <?php if($prefs->get($key)) echo "checked" ?>><br>
@@ -232,8 +233,8 @@ URL to be linked on shared page: <input type=string name=sharedurl value="<?php 
 <input type=submit name=plugins value="Save Plugin Preferences">
 </form>
 
-    
-    
+
+
 <br><h1>Feed on Feeds - Feeds and Tags</h1>
 <div style="border: 1px solid black; margin: 10px; padding: 10px; font-size: 12px; font-family: verdana, arial;">
 <table cellpadding=3 cellspacing=0>
@@ -253,9 +254,9 @@ foreach($feeds as $row)
    $agestr = $row['agestr'];
    $agestrabbr = $row['agestrabbr'];
    $lateststr = $row['lateststr'];
-   $lateststrabbr = $row['lateststrabbr'];   
+   $lateststrabbr = $row['lateststrabbr'];
    $tags = $row['tags'];
-   
+
    if(++$t % 2)
    {
       print "<tr class=\"odd-row\">";
@@ -273,7 +274,7 @@ foreach($feeds as $row)
    {
 	   print "<td><a href=\"$url\" title=\"feed\"><img src='image/feed-icon.png' width='16' height='16' border='0' /></a></td>";
    }
-    
+
    print "<td>
             <form method=\"post\" action=\"prefs.php\">
             <input type=\"hidden\" name=\"changed\" value=\"$id\"/>
@@ -283,9 +284,9 @@ foreach($feeds as $row)
             </form>
           </td>";
 
-   
+
    print "<td align=right>";
-   
+
    if($tags)
    {
        foreach($tags as $tag)
@@ -298,7 +299,7 @@ foreach($feeds as $row)
    else
    {
    }
-   
+
    print "</td>";
    $title = htmlspecialchars($title);
    print "<td><form method=\"post\" action=\"prefs.php\"><input type=\"hidden\" name=\"title\" value=\"$title\"><input type=\"hidden\" name=\"feed_id\" value=\"$id\"><input type=\"text\" name=\"tag\"> <input type=\"submit\" name=\"tagfeed\" value=\"Tag Feed\"> <small><i>(separate tags with spaces)</i></small></form></td></tr>";
@@ -313,20 +314,20 @@ foreach($feeds as $row)
 <br><h1>Feed on Feeds - Admin Options</h1>
 <form method="post" action="prefs.php" style="border: 1px solid black; margin: 10px; padding: 10px;">
 Enable logging? <input type=checkbox name=logging <?php if($prefs->get('logging')) echo "checked" ?>><br><br>
-Purge read items after <input size=4 type=string name=purge value="<?php echo $prefs->get('purge')?>"> days (leave blank to never purge)<br><br>
-Allow automatic feed updates every <input size=4 type=string name=autotimeout value="<?php echo $prefs->get('autotimeout')?>"> minutes<br><br>
-Allow manual feed updates every <input size=4 type=string name=manualtimeout value="<?php echo $prefs->get('manualtimeout')?>"> minutes<br><br>
+Purge read items after <input size=4 type="text" name=purge value="<?php echo $prefs->get('purge')?>"> days (leave blank to never purge)<br><br>
+Allow automatic feed updates every <input size=4 type="text" name=autotimeout value="<?php echo $prefs->get('autotimeout')?>"> minutes<br><br>
+Allow manual feed updates every <input size=4 type="text" name=manualtimeout value="<?php echo $prefs->get('manualtimeout')?>"> minutes<br><br>
 <input type=submit name=adminprefs value="Save Options">
 </form>
 
 <br><h1>Add User</h1>
 <form method="post" action="prefs.php" style="border: 1px solid black; margin: 10px; padding: 10px;">
-Username: <input type=string name=username> Password: <input type=string name=password> <input type=submit name=adduser value="Add user">
+Username: <input type="text" name=username> Password: <input type="text" name=password> <input type=submit name=adduser value="Add user">
 </form>
 
 <?php
 	$result = fof_db_query("select user_name from $FOF_USER_TABLE where user_id > 1");
-	
+
 	while($row = fof_db_get_row($result))
 	{
 		$username = $row['user_name'];
