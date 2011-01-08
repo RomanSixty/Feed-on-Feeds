@@ -150,7 +150,22 @@ function fof_db_get_subscriptions($user_id)
 {
     global $FOF_FEED_TABLE, $FOF_ITEM_TABLE, $FOF_SUBSCRIPTION_TABLE, $FOF_ITEM_TAG_TABLE;
 
-    return(fof_safe_query("select * from $FOF_FEED_TABLE, $FOF_SUBSCRIPTION_TABLE where $FOF_SUBSCRIPTION_TABLE.user_id = %d and $FOF_FEED_TABLE.feed_id = $FOF_SUBSCRIPTION_TABLE.feed_id order by feed_title", $user_id));
+    $folded_id = fof_db_get_tag_by_name($user_id, "folded");
+
+    return(fof_safe_query("select *,
+                                count($FOF_ITEM_TABLE.item_id) as itemcount,
+                                count(tag_unread.item_id) as unreadcount,
+                                count(tag_starred.item_id) as starredcount,
+                                count(tag_tagged.item_id) as taggedcount
+                           from $FOF_FEED_TABLE
+                           left join $FOF_SUBSCRIPTION_TABLE on $FOF_FEED_TABLE.feed_id = $FOF_SUBSCRIPTION_TABLE.feed_id
+                           left join $FOF_ITEM_TABLE on $FOF_ITEM_TABLE.feed_id = $FOF_SUBSCRIPTION_TABLE.feed_id
+                           left join $FOF_ITEM_TAG_TABLE tag_unread on (tag_unread.item_id = $FOF_ITEM_TABLE.item_id and tag_unread.tag_id = 1)
+                           left join $FOF_ITEM_TAG_TABLE tag_starred on (tag_starred.item_id = $FOF_ITEM_TABLE.item_id and tag_starred.tag_id = 2)
+                           left join $FOF_ITEM_TAG_TABLE tag_tagged on (tag_tagged.item_id = $FOF_ITEM_TABLE.item_id and tag_tagged.tag_id != 1 and tag_tagged.tag_id != 2 and tag_tagged.tag_id != $folded_id)
+                           where $FOF_SUBSCRIPTION_TABLE.user_id = %d
+                           group by $FOF_FEED_TABLE.feed_id
+                           order by feed_title", $user_id));
 }
 
 function fof_db_get_feeds()
@@ -158,27 +173,6 @@ function fof_db_get_feeds()
     global $FOF_FEED_TABLE, $FOF_ITEM_TABLE, $FOF_SUBSCRIPTION_TABLE, $FOF_ITEM_TAG_TABLE;
 
     return(fof_db_query("select * from $FOF_FEED_TABLE order by feed_title"));
-}
-
-function fof_db_get_item_count($user_id)
-{
-    global $FOF_FEED_TABLE, $FOF_ITEM_TABLE, $FOF_SUBSCRIPTION_TABLE, $FOF_ITEM_TAG_TABLE;
-
-    return(fof_safe_query("select count(*) as count, $FOF_ITEM_TABLE.feed_id as id from $FOF_ITEM_TABLE, $FOF_SUBSCRIPTION_TABLE where $FOF_SUBSCRIPTION_TABLE.user_id = %d and $FOF_ITEM_TABLE.feed_id = $FOF_SUBSCRIPTION_TABLE.feed_id group by id", $user_id));
-}
-
-function fof_db_get_unread_item_count($user_id)
-{
-    global $FOF_FEED_TABLE, $FOF_ITEM_TABLE, $FOF_SUBSCRIPTION_TABLE, $FOF_ITEM_TAG_TABLE;
-
-    return(fof_safe_query("select count(*) as count, $FOF_ITEM_TABLE.feed_id as id from $FOF_ITEM_TABLE, $FOF_SUBSCRIPTION_TABLE, $FOF_ITEM_TAG_TABLE, $FOF_FEED_TABLE where $FOF_ITEM_TABLE.item_id = $FOF_ITEM_TAG_TABLE.item_id and $FOF_SUBSCRIPTION_TABLE.user_id = $user_id and  $FOF_ITEM_TAG_TABLE.tag_id = 1 and $FOF_ITEM_TAG_TABLE.user_id = %d and $FOF_FEED_TABLE.feed_id = $FOF_SUBSCRIPTION_TABLE.feed_id and $FOF_ITEM_TABLE.feed_id = $FOF_FEED_TABLE.feed_id group by id", $user_id));
-}
-
-function fof_db_get_starred_item_count($user_id)
-{
-    global $FOF_FEED_TABLE, $FOF_ITEM_TABLE, $FOF_SUBSCRIPTION_TABLE, $FOF_ITEM_TAG_TABLE;
-
-    return(fof_safe_query("select count(*) as count, $FOF_ITEM_TABLE.feed_id as id from $FOF_ITEM_TABLE, $FOF_SUBSCRIPTION_TABLE, $FOF_ITEM_TAG_TABLE, $FOF_FEED_TABLE where $FOF_ITEM_TABLE.item_id = $FOF_ITEM_TAG_TABLE.item_id and $FOF_SUBSCRIPTION_TABLE.user_id = $user_id and  $FOF_ITEM_TAG_TABLE.tag_id = 2 and $FOF_ITEM_TAG_TABLE.user_id = %d and $FOF_FEED_TABLE.feed_id = $FOF_SUBSCRIPTION_TABLE.feed_id and $FOF_ITEM_TABLE.feed_id = $FOF_FEED_TABLE.feed_id group by id", $user_id));
 }
 
 function fof_db_get_subscribed_users($feed_id)
