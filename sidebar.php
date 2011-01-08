@@ -142,7 +142,7 @@ foreach($tags as $tag)
 
    if ($sharing == 'all_tagged')
    {
-      print "<td><a href=\"./shared.php?user=$fof_user_id&which=$tag_name\">shared [$tag_name]</a>";
+      print "<td><a href=\"./shared.php?user=$fof_user_id&which=$tag_name\">[$tag_name]</a>";
    }
 
    print "</tr>";
@@ -234,6 +234,7 @@ foreach($feeds as $row)
    $age = $row['feed_age'];
    $unread = $row['feed_unread'];
    $starred = $row['feed_starred'];
+   $tagged = $row['feed_tagged'];
    $items = $row['feed_items'];
    $agestr = $row['agestr'];
    $agestrabbr = $row['agestrabbr'];
@@ -264,7 +265,7 @@ foreach($feeds as $row)
       print "<a class=\"unread\" title=\"new items\" href=\"$u\">$unread</a>/";
    }
 
-   print "<a href=\"$u2\" title=\"all items\">$items</a>";
+   print "<a href=\"$u2\" title=\"all items, $starred starred, $tagged tagged\">$items</a>";
 
    print "</td>";
 
