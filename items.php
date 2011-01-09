@@ -98,7 +98,9 @@ $noedit = $_GET['noedit'];
 		<input type="hidden" name="return" />
 
 <?php
-	$links = fof_get_nav_links($_GET['feed'], $what, $_GET['when'], $which, $_GET['howmany']);
+	$itemcount = fof_db_get_item_count(fof_current_user(), $_GET['feed'], $what, $_GET['search']);
+
+	$links = fof_get_nav_links($_GET['feed'], $what, $_GET['when'], $which, $_GET['howmany'], $itemcount);
 
 	if($links)
 	{
@@ -107,7 +109,6 @@ $noedit = $_GET['noedit'];
 
 <?php
 	}
-
 
 $result = fof_get_items(fof_current_user(), $_GET['feed'], $what, $_GET['when'], $which, $_GET['howmany'], $order, $_GET['search']);
 
@@ -133,5 +134,15 @@ if(count($result) == 0)
 		</form>
         
         <div id="end-of-items"></div>
+
+<?php
+        if($links)
+        {
+?>
+                <center><?php echo $links ?></center>
+
+<?php
+        }
+?>
 
 <script>itemElements = $$('.item');</script>

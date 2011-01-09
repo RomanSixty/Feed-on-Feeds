@@ -299,6 +299,56 @@ function fof_db_add_item($feed_id, $guid, $link, $title, $content, $cached, $pub
     return(mysql_insert_id($fof_connection));
 }
 
+function fof_db_get_item_count($user_id=1, $feed=NULL, $what="unread", $search=NULL)
+{
+    global $FOF_SUBSCRIPTION_TABLE, $FOF_FEED_TABLE, $FOF_ITEM_TABLE, $FOF_ITEM_TAG_TABLE, $FOF_TAG_TABLE;
+
+    $prefs = fof_prefs();
+    $offset = $prefs['tzoffset'];
+
+    $select = "SELECT count(i.item_id) as itemcount ";
+    $from = "FROM $FOF_FEED_TABLE f, $FOF_ITEM_TABLE i, $FOF_SUBSCRIPTION_TABLE s ";
+    $where = sprintf("WHERE s.user_id = %d AND s.feed_id = f.feed_id AND f.feed_id = i.feed_id ", $user_id);
+
+    if(!is_null($feed) && $feed != "")
+    {
+        $where .= sprintf("AND f.feed_id = %d ", $feed);
+    }
+
+    if($what != "all")
+    {
+        $tags = split(" ", $what);
+        $in = implode(", ", array_fill(0, count($tags), "'%s'"));
+        $from .= ", $FOF_TAG_TABLE t, $FOF_ITEM_TAG_TABLE it ";
+        $where .= sprintf("AND it.user_id = %d ", $user_id);
+        $where .= "AND it.tag_id = t.tag_id AND ( t.tag_name IN ( $in ) ) AND i.item_id = it.item_id ";
+        $group = sprintf("GROUP BY i.item_id HAVING COUNT( i.item_id ) = %d ", count($tags));
+        $args = $tags;
+    }
+
+    if(!is_null($search) && $search != "")
+    {
+        $where .= "AND (i.item_title like '%%%s%%' or i.item_content like '%%%s%%' )";
+        $args[] = $search;
+        $args[] = $search;
+    }
+
+    $query = $select . $from . $where . $group;
+
+    $result = fof_safe_query($query, $args);
+
+    if(mysql_num_rows($result) == 0)
+    {
+        return 0;
+    }
+    else
+    {
+        $row = mysql_fetch_assoc($result);
+
+        return $row [ 'itemcount' ];
+    }
+}
+
 function fof_db_get_items($user_id=1, $feed=NULL, $what="unread", $when=NULL, $start=NULL, $limit=NULL, $order="desc", $search=NULL)
 {
     global $FOF_SUBSCRIPTION_TABLE, $FOF_FEED_TABLE, $FOF_ITEM_TABLE, $FOF_ITEM_TAG_TABLE, $FOF_TAG_TABLE;
@@ -360,7 +410,7 @@ function fof_db_get_items($user_id=1, $feed=NULL, $what="unread", $when=NULL, $s
 
     if(!is_null($search) && $search != "")
     {
-        $where .= "AND (i.item_title like '%%%s%%'  or i.item_content like '%%%s%%' )";
+        $where .= "AND (i.item_title like '%%%s%%' or i.item_content like '%%%s%%' )";
         $args[] = $search;
         $args[] = $search;
     }

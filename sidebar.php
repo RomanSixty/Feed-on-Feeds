@@ -70,8 +70,8 @@ echo "<script>starred = $starred;</script>";
 
 ?>
 
-<li <?php if($what == "unread") echo "style='background: #ddd'" ?> ><a href=".?what=unread"><font color=red><b>Unread <?php if($unread) echo "($unread)" ?></b></font></a></li>
-<li <?php if($what == "star") echo "style='background: #ddd'" ?> ><a href=".?what=star"><img src="image/star-on.gif" border="0" height="10" width="10"> Starred <span id="starredcount"><?php if($starred) echo "($starred)" ?></span></a></li>
+<li <?php if($what == "unread") echo "style='background: #ddd'" ?> ><a href=".?what=unread&how=paged"><font color=red><b>Unread <?php if($unread) echo "($unread)" ?></b></font></a> [<a href=".?what=unread">unpaged</a>]</li>
+<li <?php if($what == "star") echo "style='background: #ddd'" ?> ><a href=".?what=star&how=paged"><img src="image/star-on.gif" border="0" height="10" width="10"> Starred <span id="starredcount"><?php if($starred) echo "($starred)" ?></span></a> [<a href=".?what=star">unpaged</a>]</li>
 <li <?php if($what == "all" && isset($when)) echo "style='background: #ddd'" ?> ><a href=".?what=all&when=today">&lt; Today</a></li>
 <li <?php if($what == "all" && !isset($when)) echo "style='background: #ddd'" ?> ><a href=".?what=all&how=paged">All Items <?php if($total) echo "($total)" ?></a></li>
 <li <?php if(isset($search)) echo "style='background: #ddd'" ?> ><a href="javascript:Element.toggle('search'); Field.focus('searchfield');void(0);">Search</a>
@@ -135,14 +135,14 @@ foreach($tags as $tag)
    }
 
    print "<td>";
-   if($unread) print "<a class='unread' href='.?what=$tag_name+unread'>$unread</a>/";
-   print "<a href='.?what=$tag_name'>$count</a></td>";
-   print "<td><b><a href='.?what=$tag_name'>$tag_name</a></b></td>";
+   if($unread) print "<a class='unread' href='.?what=$tag_name+unread&how=paged'>$unread</a>/";
+   print "<a href='.?what=$tag_name&how=paged'>$count</a></td>";
+   print "<td><b><a href='.?what=$tag_name&how=paged'>$tag_name</a></b></td>";
    print "<td><a href=\"#\" title=\"untag all items\" onclick=\"if(confirm('Untag all [$tag_name] items --are you SURE?')) { delete_tag('$tag_name'); return false; }  else { return false; }\">[x]</a></td>";
 
    if ($sharing == 'all_tagged')
    {
-      print "<td><a href=\"./shared.php?user=$fof_user_id&which=$tag_name\">[$tag_name]</a>";
+      print "<td><a href=\"./shared.php?user=$fof_user_id&which=$tag_name&how=paged\">[$tag_name]</a>";
    }
 
    print "</tr>";

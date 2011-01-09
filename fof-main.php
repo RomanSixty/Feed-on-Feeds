@@ -489,7 +489,7 @@ function fof_delete_subscription($user_id, $feed_id)
     }
 }
 
-function fof_get_nav_links($feed=NULL, $what="new", $when=NULL, $start=NULL, $limit=NULL)
+function fof_get_nav_links($feed=NULL, $what="new", $when=NULL, $start=NULL, $limit=NULL, $itemcount=9999)
 {
     $prefs = fof_prefs();
     $string = "";
@@ -518,6 +518,8 @@ function fof_get_nav_links($feed=NULL, $what="new", $when=NULL, $start=NULL, $li
     if(is_numeric($start))
     {
         if(!is_numeric($limit)) $limit = $prefs["howmany"];
+
+        if ($itemcount <= $limit) return '';
         
         $earlier = $start + $limit;
         $later = $start - $limit;
