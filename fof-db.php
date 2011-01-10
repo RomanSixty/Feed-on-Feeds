@@ -318,11 +318,10 @@ function fof_db_get_item_count($user_id=1, $feed=NULL, $what="unread", $search=N
     if($what != "all")
     {
         $tags = split(" ", $what);
-        $in = implode(", ", array_fill(0, count($tags), "'%s'"));
+        $in = '"' . implode('","', $tags) . '"';
         $from .= ", $FOF_TAG_TABLE t, $FOF_ITEM_TAG_TABLE it ";
         $where .= sprintf("AND it.user_id = %d ", $user_id);
         $where .= "AND it.tag_id = t.tag_id AND ( t.tag_name IN ( $in ) ) AND i.item_id = it.item_id ";
-        $group = sprintf("GROUP BY i.item_id HAVING COUNT( i.item_id ) = %d ", count($tags));
         $args = $tags;
     }
 
@@ -333,7 +332,7 @@ function fof_db_get_item_count($user_id=1, $feed=NULL, $what="unread", $search=N
         $args[] = $search;
     }
 
-    $query = $select . $from . $where . $group;
+    $query = $select . $from . $where;
 
     $result = fof_safe_query($query, $args);
 
@@ -400,7 +399,7 @@ function fof_db_get_items($user_id=1, $feed=NULL, $what="unread", $when=NULL, $s
     if($what != "all")
     {
         $tags = split(" ", $what);
-        $in = implode(", ", array_fill(0, count($tags), "'%s'"));
+        $in = '"' . implode('","', $tags) . '"';
         $from .= ", $FOF_TAG_TABLE t, $FOF_ITEM_TAG_TABLE it ";
         $where .= sprintf("AND it.user_id = %d ", $user_id);
         $where .= "AND it.tag_id = t.tag_id AND ( t.tag_name IN ( $in ) ) AND i.item_id = it.item_id ";
