@@ -188,6 +188,8 @@ function fof_update_feed_prefs($feed_id, $title, $alt_image)
 {
     global $FOF_FEED_TABLE;
 
+    $title = mysql_real_escape_string ( $title );
+
     $sql = "UPDATE $FOF_FEED_TABLE SET feed_title='$title', alt_image='$alt_image', feed_image_cache_date=1 WHERE feed_id=$feed_id";
     fof_db_query($sql);
 
