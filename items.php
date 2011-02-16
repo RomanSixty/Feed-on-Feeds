@@ -98,7 +98,9 @@ $noedit = $_GET['noedit'];
 		<input type="hidden" name="return" />
 
 <?php
-	$links = fof_get_nav_links($_GET['feed'], $what, $_GET['when'], $which, $_GET['howmany']);
+	$itemcount = fof_db_get_item_count(fof_current_user(), $_GET['feed'], $what, $_GET['search']);
+
+	$links = fof_get_nav_links($_GET['feed'], $what, $_GET['when'], $which, $_GET['howmany'], $itemcount);
 
 	if($links)
 	{
@@ -108,7 +110,6 @@ $noedit = $_GET['noedit'];
 <?php
 	}
 
-
 $result = fof_get_items(fof_current_user(), $_GET['feed'], $what, $_GET['when'], $which, $_GET['howmany'], $order, $_GET['search']);
 
 $first = true;
@@ -116,9 +117,10 @@ $first = true;
 foreach($result as $row)
 {
 	$item_id = $row['item_id'];
+	$visibility = in_array("folded", $row['tags']) ? "hidden" : "shown";
 	if($first) print "<script>firstItem = 'i$item_id'; </script>";
 	$first = false;
-	print '<div class="item shown" id="i' . $item_id . '"  onclick="return itemClicked(event)">';
+	print '<div class="item ' . $visibility . '" id="i' . $item_id . '"  onclick="return itemClicked(event)">';
 	fof_render_item($row);
 	print '</div>';
 }
@@ -132,5 +134,15 @@ if(count($result) == 0)
 		</form>
         
         <div id="end-of-items"></div>
+
+<?php
+        if($links)
+        {
+?>
+                <center><?php echo $links ?></center>
+
+<?php
+        }
+?>
 
 <script>itemElements = $$('.item');</script>

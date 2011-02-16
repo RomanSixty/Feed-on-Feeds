@@ -188,6 +188,8 @@ function fof_update_feed_prefs($feed_id, $title, $alt_image)
 {
     global $FOF_FEED_TABLE;
 
+    $title = mysql_real_escape_string ( $title );
+
     $sql = "UPDATE $FOF_FEED_TABLE SET feed_title='$title', alt_image='$alt_image', feed_image_cache_date=1 WHERE feed_id=$feed_id";
     fof_db_query($sql);
 
@@ -349,10 +351,17 @@ function fof_get_feeds($user_id, $order = 'feed_title', $direction = 'asc')
       $feeds[$i]['prefs'] = unserialize($row['subscription_prefs']);
       $feeds[$i]['feed_age'] = $age;
 
-	  list($agestr, $agestrabbr) = fof_nice_time_stamp($age);
+      list($agestr, $agestrabbr) = fof_nice_time_stamp($age);
 	  
       $feeds[$i]['agestr'] = $agestr;
       $feeds[$i]['agestrabbr'] = $agestrabbr;
+
+      $feeds[$i]['feed_items'] = $row['itemcount'];
+      $feeds[$i]['feed_read'] = $row['itemcount'];
+      $feeds[$i]['feed_unread'] = $row['unreadcount'];
+
+      $feeds[$i]['feed_starred'] = $row['starredcount'];
+      $feeds[$i]['feed_tagged'] = $row['taggedcount'];
 
       $i++;
    }
@@ -370,53 +379,7 @@ function fof_get_feeds($user_id, $order = 'feed_title', $direction = 'asc')
            }
        }
    }
-     
-   $result = fof_db_get_item_count($user_id);
 
-   while($row = fof_db_get_row($result))
-   {
-     for($i=0; $i<count($feeds); $i++)
-     {
-      if($feeds[$i]['feed_id'] == $row['id'])
-      {
-         $feeds[$i]['feed_items'] = $row['count'];
-         $feeds[$i]['feed_read'] = $row['count'];
-         $feeds[$i]['feed_unread'] = 0;
-      }
-     }
-   }
-
-   $result = fof_db_get_unread_item_count($user_id);
-
-   while($row = fof_db_get_row($result))
-   {
-     for($i=0; $i<count($feeds); $i++)
-     {
-      if($feeds[$i]['feed_id'] == $row['id'])
-      {
-         $feeds[$i]['feed_unread'] = $row['count'];
-      }
-     }
-   }
-
-   foreach($feeds as $feed)
-   {
-      $feed['feed_starred'] = 0;
-   }
-   
-   $result = fof_db_get_starred_item_count($user_id);
-
-   while($row = fof_db_get_row($result))
-   {
-     for($i=0; $i<count($feeds); $i++)
-     {
-      if($feeds[$i]['feed_id'] == $row['id'])
-      {
-         $feeds[$i]['feed_starred'] = $row['count'];
-      }
-     }
-   }
-   
    $result = fof_db_get_latest_item_age($user_id);
 
    while($row = fof_db_get_row($result))
@@ -528,7 +491,7 @@ function fof_delete_subscription($user_id, $feed_id)
     }
 }
 
-function fof_get_nav_links($feed=NULL, $what="new", $when=NULL, $start=NULL, $limit=NULL)
+function fof_get_nav_links($feed=NULL, $what="new", $when=NULL, $start=NULL, $limit=NULL, $itemcount=9999)
 {
     $prefs = fof_prefs();
     $string = "";
@@ -557,11 +520,13 @@ function fof_get_nav_links($feed=NULL, $what="new", $when=NULL, $start=NULL, $li
     if(is_numeric($start))
     {
         if(!is_numeric($limit)) $limit = $prefs["howmany"];
+
+        if ($itemcount <= $limit) return '';
         
         $earlier = $start + $limit;
         $later = $start - $limit;
         
-        $string .= "<a href=\".?feed=$feed&amp;what=$what&amp;when=$when&amp;how=paged&amp;which=$earlier&amp;howmany=$limit\">[&laquo; previous $limit]</a> ";
+        if($itemcount > $earlier) $string .= "<a href=\".?feed=$feed&amp;what=$what&amp;when=$when&amp;how=paged&amp;which=$earlier&amp;howmany=$limit\">[&laquo; previous $limit]</a> ";
         if($later >= 0) $string .= "<a href=\".?feed=$feed&amp;what=$what&amp;when=$when&amp;how=paged&amp;howmany=$limit\">[current items]</a> ";
         if($later >= 0) $string .= "<a href=\".?feed=$feed&amp;what=$what&amp;when=$when&amp;how=paged&amp;which=$later&amp;howmany=$limit\">[next $limit &raquo;]</a> ";
     }
