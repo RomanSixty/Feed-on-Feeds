@@ -71,6 +71,7 @@ if(isset($_GET['untagfeed']))
 
 if(isset($_POST['prefs']))
 {
+	$prefs->set('simple_sidebar', isset($_POST['simple_sidebar']));
 	$prefs->set('favicons', isset($_POST['favicons']));
 	$prefs->set('keyboard', isset($_POST['keyboard']));
 	$prefs->set('tzoffset', intval($_POST['tzoffset']));
@@ -175,6 +176,7 @@ include("header.php");
 Default display order: <select name="order"><option value=desc>new to old</option><option value=asc <?php if($prefs->get('order') == "asc") echo "selected";?>>old to new</option></select><br><br>
 Number of items in paged displays: <input type="string" name="howmany" value="<?php echo $prefs->get('howmany') ?>"><br><br>
 Display custom feed favicons? <input type="checkbox" name="favicons" <?php if($prefs->get('favicons')) echo "checked=true";?> ><br><br>
+Display simple sidebar? <input type="checkbox" name="simple_sidebar" <?php if($prefs->get('simple_sidebar')) echo "checked=true";?> ><br><br>
 Use keyboard shortcuts? <input type="checkbox" name="keyboard" <?php if($prefs->get('keyboard')) echo "checked=true";?> ><br><br>
 Time offset in hours: <input size=3 type="text" name=tzoffset value="<?php echo $prefs->get('tzoffset')?>"> (UTC time: <?php echo gmdate("Y-n-d g:ia") ?>, local time: <?php echo gmdate("Y-n-d g:ia", time() + $prefs->get("tzoffset")*60*60) ?>)<br><br>
 <table border=0 cellspacing=0 cellpadding=2><tr><td>New password:</td><td><input type=password name=password> (leave blank to not change)</td></tr>
