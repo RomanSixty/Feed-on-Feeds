@@ -130,7 +130,9 @@ p
     font-family: georgia;
 }
 
-.item .body img { max-width: 100%; }
+.item .body { -moz-column-width: 400px; }
+.item .body img { max-width: 400px; }
+.item .body img:hover { max-width: 1000% !important; }
 
 .highlight-on .highlight
 {
