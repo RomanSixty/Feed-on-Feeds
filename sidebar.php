@@ -182,7 +182,18 @@ $name["feed_unread"] = "#";
 $name["feed_url"] = "feed";
 $name["feed_title"] = "title";
 
-foreach (array("feed_age", "max_date", "feed_unread", "feed_url", "feed_title") as $col)
+$simple_sidebar = $fof_prefs_obj->get('simple_sidebar');
+
+if($simple_sidebar)
+{
+    $columns = array("feed_unread", "feed_title");
+}
+else
+{
+    $columns = array("feed_age", "max_date", "feed_unread", "feed_url", "feed_title");
+}
+
+foreach ($columns as $col)
 {
     if($col == $order)
     {
@@ -254,60 +265,71 @@ foreach($feeds as $row)
    $u = ".?feed=$id&amp;how=paged";
    $u2 = ".?feed=$id&amp;what=all&amp;how=paged";
 
-   if( $fof_prefs_obj->get('simple_sidebar') ) {
-	print "<td align='center'>";
-	if($row['feed_image'] && $fof_prefs_obj->get('favicons'))
-	{
-	   print "<a href=\"$url\" title=\"feed\"><img src='" . $row['feed_image'] . "' width='16' height='16' border='0' /></a>";
-	}
-	else
-	{
-	   print "<a href=\"$url\" title=\"feed\"><img src='image/feed-icon.png' width='16' height='16' border='0' /></a>";
-	}
-	print "</td>";
-      print '<td colspan="4">';
-      if($unread) {
-          print "<a href=\"$u\">$title</a> ($unread)";
-      } else {
-          print "<a href=\"$u2\">$title</a>";
+   if($simple_sidebar)
+   {
+      print "<td align='center'>";
+      if($row['feed_image'] && $fof_prefs_obj->get('favicons'))
+      {
+         print "<a href=\"$url\" title=\"feed\"><img src='" . $row['feed_image'] . "' width='16' height='16' border='0' /></a>";
+      }
+      else
+      {
+         print "<a href=\"$url\" title=\"feed\"><img src='image/feed-icon.png' width='16' height='16' border='0' /></a>";
+      }
+      print "</td>";
+      print '<td>';
+      if($unread)
+      {
+        print "<a href=\"$u\">$title</a> ($unread)";
+      }
+      else
+      {
+        print "<a href=\"$u2\">$title</a>";
       }
       print '</td>';
-   } else {
-   print "<td style=\"text-align: right\"><span title=\"$agestr\" id=\"${id}-agestr\">$agestrabbr</span></td>";
 
-   print "<td style=\"text-align: right\"><span title=\"$lateststr\" id=\"${id}-lateststr\">$lateststrabbr</span></td>";
-
-   print "<td style=\"text-align: right\" class=\"nowrap\" id=\"${id}-items\">";
-
-   if($unread)
-   {
-      print "<a class=\"unread\" title=\"new items\" href=\"$u\">$unread</a>/";
+      $stitle = htmlspecialchars(addslashes($title));
+      print '<td>';
+      print " <a href=\"delete.php?feed=$id\" title=\"delete\" onclick=\"return confirm('Unsubscribe [$stitle] --are you SURE?')\">[x]</a>";
+      print '</td>';
    }
+   else
+   {
+      print "<td style=\"text-align: right\"><span title=\"$agestr\" id=\"${id}-agestr\">$agestrabbr</span></td>";
 
-   print "<a href=\"$u2\" title=\"all items, $starred starred, $tagged tagged\">$items</a>";
+      print "<td style=\"text-align: right\"><span title=\"$lateststr\" id=\"${id}-lateststr\">$lateststrabbr</span></td>";
 
-   print "</td>";
+      print "<td style=\"text-align: right\" class=\"nowrap\" id=\"${id}-items\">";
 
-	print "<td align='center'>";
-	if($row['feed_image'] && $fof_prefs_obj->get('favicons'))
-	{
-	   print "<a href=\"$url\" title=\"feed\"><img src='" . $row['feed_image'] . "' width='16' height='16' border='0' /></a>";
-	}
-	else
-	{
-	   print "<a href=\"$url\" title=\"feed\"><img src='image/feed-icon.png' width='16' height='16' border='0' /></a>";
-	}
-	print "</td>";
+      if($unread)
+      {
+         print "<a class=\"unread\" title=\"new items\" href=\"$u\">$unread</a>/";
+      }
 
-   print "<td>";
-   print "<a href=\"$link\" title=\"home page\"><b>$title</b></a></td>";
+      print "<a href=\"$u2\" title=\"all items, $starred starred, $tagged tagged\">$items</a>";
 
-   print "<td><nobr>";
+      print "</td>";
 
-   print "<a href=\"update.php?feed=$id\" title=\"update\">u</a>";
-   $stitle = htmlspecialchars(addslashes($title));
-   print " <a href=\"#\" title=\"mark all read\" onclick=\"if(confirm('Mark all [$stitle] items as read --are you SURE?')) { mark_feed_read($id); return false; }  else { return false; }\">m</a>";
-   print " <a href=\"delete.php?feed=$id\" title=\"delete\" onclick=\"return confirm('Unsubscribe [$stitle] --are you SURE?')\">d</a>";
+      print "<td align='center'>";
+      if($row['feed_image'] && $fof_prefs_obj->get('favicons'))
+      {
+         print "<a href=\"$url\" title=\"feed\"><img src='" . $row['feed_image'] . "' width='16' height='16' border='0' /></a>";
+      }
+      else
+      {
+         print "<a href=\"$url\" title=\"feed\"><img src='image/feed-icon.png' width='16' height='16' border='0' /></a>";
+      }
+      print "</td>";
+
+      print "<td>";
+      print "<a href=\"$link\" title=\"home page\"><b>$title</b></a></td>";
+
+      print "<td><nobr>";
+
+      print "<a href=\"update.php?feed=$id\" title=\"update\">u</a>";
+      $stitle = htmlspecialchars(addslashes($title));
+      print " <a href=\"#\" title=\"mark all read\" onclick=\"if(confirm('Mark all [$stitle] items as read --are you SURE?')) { mark_feed_read($id); return false; }  else { return false; }\">m</a>";
+      print " <a href=\"delete.php?feed=$id\" title=\"delete\" onclick=\"return confirm('Unsubscribe [$stitle] --are you SURE?')\">d</a>";
    }
 
    print "</nobr></td>";
