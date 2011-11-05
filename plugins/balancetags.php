@@ -1,6 +1,6 @@
 <?php
 
-fof_add_item_filter('fof_balancetags');
+fof_add_item_filter('fof_balancetags',100);
 
 /*
  balanceTags
