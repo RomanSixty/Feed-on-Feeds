@@ -716,6 +716,17 @@ function fof_update_feed($id)
 {
     if(!$id) return 0;
 
+    static $blacklist = null;
+    static $admin_prefs = null;
+
+    if($blacklist === null)
+    {
+        $p =& FoF_Prefs::instance();
+        $admin_prefs = $p->admin_prefs;
+
+        $blacklist = preg_split('/(\r\n|\r|\n)/', $admin_prefs['blacklist'], -1, PREG_SPLIT_NO_EMPTY);
+    }
+
     $feed = fof_db_get_feed_by_id($id);
     $url = $feed['feed_url'];
     fof_log("Updating $url");
@@ -745,7 +756,7 @@ function fof_update_feed($id)
         $image_cache_date = time();
     }
 
-	$title =  $rss->get_title();
+	$title = $rss->get_title();
 	if($title == "") $title = "[no title]";
 
     fof_db_feed_update_metadata($id, $sub, $title, $rss->get_link(), $rss->get_description(), $image, $image_cache_date );
@@ -757,8 +768,13 @@ function fof_update_feed($id)
     {
         foreach($rss->get_items() as $item)
         {
-            $link = $item->get_permalink();
             $title = $item->get_title();
+
+            foreach($blacklist as $bl)
+                if(stristr($title, $bl) !== false)
+                    continue 2;
+
+            $link = $item->get_permalink();
             $content = $item->get_content();
             $date = $item->get_date('U');
             if(!$date) $date = time();
@@ -801,9 +817,6 @@ function fof_update_feed($id)
     // optionally purge old items -  if 'purge' is set we delete items that are not
     // unread or starred, not currently in the feed or within sizeof(feed) items
     // of being in the feed, and are over 'purge' many days old
-
-    $p =& FoF_Prefs::instance();
-    $admin_prefs = $p->admin_prefs;
 
     if($admin_prefs['purge'] != "")
     {

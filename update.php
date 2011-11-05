@@ -43,7 +43,7 @@ else
         {
             $title = $feed['feed_title'];
             list($timestamp, ) = fof_nice_time_stamp($feed['feed_cache_date']);
-            
+
             print "$title was just updated $timestamp!<br>";
         }
         else
@@ -56,12 +56,12 @@ else
 $feeds = fof_multi_sort($feeds, 'feed_cache_attempt_date', false);
 
 print("<script>\nwindow.onload = ajaxupdate;\nfeedslist = [");
-    
+
 foreach($feeds as $feed)
 {
 	$title = $feed['feed_title'];
 	$id = $feed['feed_id'];
-    
+
     $feedjson[] = "{'id': $id, 'title': '" . addslashes($title) . "'}";
 }
 
