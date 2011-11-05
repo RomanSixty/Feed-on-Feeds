@@ -22,6 +22,7 @@ if(isset($_POST['adminprefs']))
 	$prefs->set('manualtimeout', $_POST['manualtimeout']);
 	$prefs->set('autotimeout', $_POST['autotimeout']);
 	$prefs->set('logging', $_POST['logging']);
+	$prefs->set('blacklist', $_POST['blacklist']);
 
 	$prefs->save();
 
@@ -173,16 +174,20 @@ include("header.php");
 
 <br><h1>Feed on Feeds - Preferences</h1>
 <form method="post" action="prefs.php" style="border: 1px solid black; margin: 10px; padding: 10px;">
+
+<fieldset>
+<legend><b>Basic Settings</b></legend>
 Default display order: <select name="order"><option value=desc>new to old</option><option value=asc <?php if($prefs->get('order') == "asc") echo "selected";?>>old to new</option></select><br><br>
-Number of items in paged displays: <input type="string" name="howmany" value="<?php echo $prefs->get('howmany') ?>"><br><br>
+Number of items in paged displays: <input type="string" size="3" name="howmany" value="<?php echo $prefs->get('howmany') ?>"><br><br>
 Display custom feed favicons? <input type="checkbox" name="favicons" <?php if($prefs->get('favicons')) echo "checked=true";?> ><br><br>
 Display simple sidebar? <input type="checkbox" name="simple_sidebar" <?php if($prefs->get('simple_sidebar')) echo "checked=true";?> ><br><br>
 Use keyboard shortcuts? <input type="checkbox" name="keyboard" <?php if($prefs->get('keyboard')) echo "checked=true";?> ><br><br>
-Time offset in hours: <input size=3 type="text" name=tzoffset value="<?php echo $prefs->get('tzoffset')?>"> (UTC time: <?php echo gmdate("Y-n-d g:ia") ?>, local time: <?php echo gmdate("Y-n-d g:ia", time() + $prefs->get("tzoffset")*60*60) ?>)<br><br>
-<table border=0 cellspacing=0 cellpadding=2><tr><td>New password:</td><td><input type=password name=password> (leave blank to not change)</td></tr>
-<tr><td>Repeat new password:</td><td><input type=password name=password2></td></tr></table>
+Time offset in hours: <input size="3" type="text" name=tzoffset value="<?php echo $prefs->get('tzoffset')?>"> (UTC time: <?php echo gmdate("Y-n-d g:ia") ?>, local time: <?php echo gmdate("Y-n-d g:ia", time() + $prefs->get("tzoffset")*60*60) ?>)
+</fieldset>
 <br>
 
+<fieldset>
+<legend><b>Sharing</b></legend>
 Share
 <select name="sharing">
 <option value="no"">no</option>
@@ -194,7 +199,15 @@ items.
 <?php if($prefs->get('sharing') != "no") echo " <small><i>(your default shared page is <a href='./shared.php?user=$fof_user_id'>here</a>)</i></small>";?><br><br>
 Name to be shown on shared page: <input type="text" name="sharedname" value="<?php echo $prefs->get('sharedname')?>"><br><br>
 URL to be linked on shared page: <input type="text" name="sharedurl" value="<?php echo $prefs->get('sharedurl')?>">
-<br><br>
+</fieldset>
+<br>
+
+<fieldset>
+<legend><b>Password</b></legend>
+<table border=0 cellspacing=0 cellpadding=2><tr><td>New password:</td><td><input type=password name=password> (leave blank to not change)</td></tr>
+<tr><td>Repeat new password:</td><td><input type=password name=password2></td></tr></table>
+</fieldset>
+<br>
 
 <input type=submit name=prefs value="Save Preferences">
 </form>
@@ -315,11 +328,19 @@ foreach($feeds as $row)
 
 <br><h1>Feed on Feeds - Admin Options</h1>
 <form method="post" action="prefs.php" style="border: 1px solid black; margin: 10px; padding: 10px;">
-Enable logging? <input type=checkbox name=logging <?php if($prefs->get('logging')) echo "checked" ?>><br><br>
-Purge read items after <input size=4 type="text" name=purge value="<?php echo $prefs->get('purge')?>"> days (leave blank to never purge)<br><br>
-Allow automatic feed updates every <input size=4 type="text" name=autotimeout value="<?php echo $prefs->get('autotimeout')?>"> minutes<br><br>
-Allow manual feed updates every <input size=4 type="text" name=manualtimeout value="<?php echo $prefs->get('manualtimeout')?>"> minutes<br><br>
-<input type=submit name=adminprefs value="Save Options">
+Enable logging? <input type=checkbox name="logging" <?php if($prefs->get('logging')) echo "checked" ?>><br><br>
+Purge read items after <input size="4" type="text" name=purge value="<?php echo $prefs->get('purge')?>"> days (leave blank to never purge)<br><br>
+Allow automatic feed updates every <input size="4" type="text" name=autotimeout value="<?php echo $prefs->get('autotimeout')?>"> minutes<br><br>
+Allow manual feed updates every <input size="4" type="text" name=manualtimeout value="<?php echo $prefs->get('manualtimeout')?>"> minutes<br><br>
+
+<fieldset>
+<legend><b>Feed Item Title Blacklist</b></legend>
+Feed items with titles containing one of the following terms (one per line) will be discarded immediately. The matching is not case sensitive.<br>
+<textarea name="blacklist" cols="100" rows="10"><?php echo $prefs->get('blacklist')?></textarea>
+</fieldset>
+<br>
+
+<input type=submit name=adminprefs value="Save Admin Options">
 </form>
 
 <br><h1>Add User</h1>
