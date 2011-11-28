@@ -684,10 +684,9 @@ function fof_parse($url)
     $pie->set_cache_duration($admin_prefs["manualtimeout"] * 60);
     $pie->set_favicon_handler("favicon.php");
 	$pie->set_feed_url($url);
-//	$pie->set_javascript(false);
-//	$pie->remove_div(false);
+	$pie->set_javascript(false);
+	$pie->remove_div(false);
 	$pie->init();
-	var_dump($pie);
 
 	return $pie;
 }
