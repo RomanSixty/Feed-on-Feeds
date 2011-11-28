@@ -63,7 +63,7 @@ $iconv_ok = extension_loaded('iconv');
             font-family: georgia;
             font-size: 16px;
         }
-        
+
         div
         {
             background: #eee;
@@ -72,20 +72,20 @@ $iconv_ok = extension_loaded('iconv');
             margin: 5em auto;
             padding: 1.5em;
         }
-        
+
         hr
         {
             height:0;
             border:0;
             border-top:1px solid #999;
         }
-        
+
         .fail { color: red; }
-        
+
         .pass { color: green; }
 
         .warn { color: #a60; }
-        
+
         </style>
 
 	</head>
@@ -94,15 +94,16 @@ $iconv_ok = extension_loaded('iconv');
 
 
 <?php
-if($_GET['password'] && $_GET['password'] == $_GET['password2'] )
+if(!empty($_GET['password']) && $_GET['password'] == $_GET['password2'] )
 {
 	$password_hash = md5($_GET['password'] . 'admin');
 	fof_safe_query("insert into $FOF_USER_TABLE (user_id, user_name, user_password_hash, user_level) values (1, 'admin', '%s', 'admin')", $password_hash);
-	
+
 	echo '<center><b>OK!  Setup complete! <a href=".">Login as admin</a>, and start subscribing!</center></b></div></body></html>';
 }
 else
 {
+  if (isset($_GET['password']) && isset($_GET['password2']))
     if($_GET['password'] != $_GET['password2'] )
     {
         echo '<center><font color="red">Passwords do not match!</font></center><br><br>';

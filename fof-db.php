@@ -12,6 +12,8 @@
  *
  */
 
+error_reporting(E_ALL ^ E_NOTICE);
+
 $FOF_FEED_TABLE = FOF_FEED_TABLE;
 $FOF_ITEM_TABLE = FOF_ITEM_TABLE;
 $FOF_ITEM_TAG_TABLE = FOF_ITEM_TAG_TABLE;
@@ -62,6 +64,7 @@ function fof_db_query($sql, $live=0)
 
     $result = mysql_query($sql, $fof_connection);
 
+    $num = $affected = 0;
     if(is_resource($result)) $num = mysql_num_rows($result);
     if($result) $affected = mysql_affected_rows();
 
@@ -317,7 +320,7 @@ function fof_db_get_item_count($user_id=1, $feed=NULL, $what="unread", $search=N
 
     if($what != "all")
     {
-        $tags = split(" ", $what);
+        $tags = explode(" ", $what);
         $in = '"' . implode('","', $tags) . '"';
         $from .= ", $FOF_TAG_TABLE t, $FOF_ITEM_TAG_TABLE it ";
         $where .= sprintf("AND it.user_id = %d ", $user_id);
@@ -398,7 +401,7 @@ function fof_db_get_items($user_id=1, $feed=NULL, $what="unread", $when=NULL, $s
 
     if($what != "all")
     {
-        $tags = split(" ", $what);
+        $tags = explode(" ", $what);
         $in = '"' . implode('","', $tags) . '"';
         $from .= ", $FOF_TAG_TABLE t, $FOF_ITEM_TAG_TABLE it ";
         $where .= sprintf("AND it.user_id = %d ", $user_id);
