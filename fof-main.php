@@ -26,9 +26,9 @@ require_once("classes/fof-prefs.php");
 
 fof_db_connect();
 
-if(!$fof_installer)
+if(empty($fof_installer))
 {
-    if(!$fof_no_login)
+    if(empty($fof_no_login))
     {
         require_user();
         $fof_prefs_obj =& FoF_Prefs::instance();
@@ -44,7 +44,7 @@ if(!$fof_installer)
     ob_end_clean();
 }
 
-require_once('simplepie/simplepie.inc');
+require_once('/usr/sites/common/simplepie.inc');
 
 function fof_set_content_type()
 {
@@ -684,9 +684,10 @@ function fof_parse($url)
     $pie->set_cache_duration($admin_prefs["manualtimeout"] * 60);
     $pie->set_favicon_handler("favicon.php");
 	$pie->set_feed_url($url);
-	$pie->set_javascript(false);
-	$pie->remove_div(false);
+//	$pie->set_javascript(false);
+//	$pie->remove_div(false);
 	$pie->init();
+	var_dump($pie);
 
 	return $pie;
 }

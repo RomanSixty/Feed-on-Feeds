@@ -12,7 +12,7 @@
  *
  */
 
-error_reporting(E_ALL ^ E_NOTICE);
+error_reporting(E_ALL ^ E_NOTICE ^ E_DEPRECATED);
 
 $FOF_FEED_TABLE = FOF_FEED_TABLE;
 $FOF_ITEM_TABLE = FOF_ITEM_TABLE;
@@ -48,8 +48,9 @@ function fof_safe_query(/* $query, [$args...]*/)
 {
     $args  = func_get_args();
     $query = array_shift($args);
-    if(is_array($args[0])) $args = $args[0];
-    $args  = array_map('mysql_real_escape_string', $args);
+    if(!empty($args[0]) && is_array($args[0])) $args = $args[0];
+    // @ suppresses valid errors, $args is a string at this point!
+    $args  = @array_map('mysql_real_escape_string', $args);
     $query = vsprintf($query, $args);
 
     return fof_db_query($query);

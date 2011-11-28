@@ -40,9 +40,9 @@ else
     $what = $_GET['what'];
 }
 
-$when = $_GET['when'];
+$when = empty($_GET['when']) ? '' : $_GET['when'];
 
-$search = $_GET['search'];
+$search = empty($_GET['search']) ? '' : $_GET['search'];
 
 echo "<script>what='$what'; when='$when';</script>";
 
@@ -57,7 +57,7 @@ foreach($feeds as $row)
     $total += $row['feed_items'];
 }
 
-if($unread)
+if(!empty($unread))
 {
     echo "<script>document.title = 'Feed on Feeds ($unread)';</script>";
 }
@@ -66,14 +66,16 @@ else
     echo "<script>document.title = 'Feed on Feeds';</script>";
 }
 
+
+if (!empty($starred))
 echo "<script>starred = $starred;</script>";
 
 ?>
 
-<li <?php if($what == "unread") echo "style='background: #ddd'" ?> ><a href=".?what=unread&how=paged"><font color=red><b>Unread <?php if($unread) echo "($unread)" ?></b></font></a> [<a href=".?what=unread">unpaged</a>]</li>
-<li <?php if($what == "star") echo "style='background: #ddd'" ?> ><a href=".?what=star&how=paged"><img src="image/star-on.gif" border="0" height="10" width="10"> Starred <span id="starredcount"><?php if($starred) echo "($starred)" ?></span></a> [<a href=".?what=star">unpaged</a>]</li>
+<li <?php if($what == "unread") echo "style='background: #ddd'" ?> ><a href=".?what=unread&how=paged"><font color=red><b>Unread <?php if(!empty($unread)) echo "($unread)" ?></b></font></a> [<a href=".?what=unread">unpaged</a>]</li>
+<li <?php if($what == "star") echo "style='background: #ddd'" ?> ><a href=".?what=star&how=paged"><img src="image/star-on.gif" border="0" height="10" width="10"> Starred <span id="starredcount"><?php if(!empty($starred)) echo "($starred)" ?></span></a> [<a href=".?what=star">unpaged</a>]</li>
 <li <?php if($what == "all" && isset($when)) echo "style='background: #ddd'" ?> ><a href=".?what=all&when=today">&lt; Today</a></li>
-<li <?php if($what == "all" && !isset($when)) echo "style='background: #ddd'" ?> ><a href=".?what=all&how=paged">All Items <?php if($total) echo "($total)" ?></a></li>
+<li <?php if($what == "all" && !isset($when)) echo "style='background: #ddd'" ?> ><a href=".?what=all&how=paged">All Items <?php if(!empty($total)) echo "($total)" ?></a></li>
 <li <?php if(isset($search)) echo "style='background: #ddd'" ?> ><a href="javascript:Element.toggle('search'); Field.focus('searchfield');void(0);">Search</a>
 <form action="." id="search" <?php if(!isset($search)) echo 'style="display: none"' ?>>
 <input id="searchfield" name="search" value="<?php echo $search?>">
@@ -348,8 +350,8 @@ foreach($feeds as $row)
 
 <?php
 
-$order = $_GET['order'];
-$direction = $_GET['direction'];
+$order = empty($_GET['order']) ? '' : $_GET['order'];
+$direction = empty($_GET['direction']) ? '' : $_GET['direction'];
 
 if(!isset($order))
 {
