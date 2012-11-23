@@ -90,7 +90,7 @@ function fof_db_query($sql, $live=0)
 
 function fof_db_get_row($result)
 {
-    return mysql_fetch_array($result);
+    return mysql_fetch_assoc($result);
 }
 
 
@@ -152,7 +152,7 @@ function fof_db_get_subscriptions($user_id)
 
     $folded_id = fof_db_get_tag_by_name($user_id, "folded");
 
-    return(fof_safe_query("select *,
+    return(fof_safe_query("select feed.*, subscription.subscription_prefs,
                                 count($FOF_ITEM_TABLE.item_id) as itemcount,
                                 count(tag_unread.item_id) as unreadcount,
                                 count(tag_starred.item_id) as starredcount,
