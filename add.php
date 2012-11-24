@@ -14,11 +14,11 @@
 
 include("header.php");
 
-$url = $_POST['rss_url'];
-if(!$url) $url = $_GET['rss_url'];
-$opml = $_POST['opml_url'];
-$file = $_POST['opml_file'];
-$unread = $_POST['unread'];
+$url = empty($_POST['rss_url']) ? '' : $_POST['rss_url'];
+if(!$url) $url = empty( $_GET['rss_url'] ) ? '' : $_GET['rss_url'];
+$opml = empty($_POST['opml_url']) ? '': $_POST['opml_url'];
+$file = empty($_POST['opml_file']) ? '' : $_POST['opml_file'];
+$unread = empty($_POST['unread']) ? '' : $_POST['unread'];
 
 $feeds = array();
 
@@ -27,7 +27,7 @@ if($url) $feeds[] = $url;
 if($opml)
 {
 	$sfile = new SimplePie_File($opml);
-	
+
 	if(!$sfile->success)
 	{
 		echo "Cannot open $opml<br>";
@@ -39,7 +39,7 @@ if($opml)
 	$feeds = fof_opml_to_array($content);
 }
 
-if($_FILES['opml_file']['tmp_name'])
+if(!empty($_FILES['opml_file']['tmp_name']))
 {
 	if(!$content_array = file($_FILES['opml_file']['tmp_name']))
 	{
@@ -53,7 +53,7 @@ if($_FILES['opml_file']['tmp_name'])
 }
 
 $add_feed_url = "http";
-if($_SERVER["HTTPS"] == "on")
+if(!empty($_SERVER["HTTPS"]) && $_SERVER["HTTPS"] == "on")
 {
   $add_feed_url = "https";
 }
@@ -88,7 +88,7 @@ OPML filename: <input type="file" name="opml_file" size="40" value="<?php echo $
 if(count($feeds))
 {
 print("<script>\nwindow.onload = ajaxadd;\nfeedslist = [");
-    
+
 foreach($feeds as $feed)
 {
     $feedjson[] = "{'url': '" . addslashes($feed) . "'}";

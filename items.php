@@ -24,7 +24,7 @@ else
 	$which = $_GET['which'];
 }
 
-$order = $_GET['order'];
+$order = empty($_GET['order']) ? '' : $_GET['order'];
 
 if(!isset($_GET['what']))
 {
@@ -72,12 +72,12 @@ $noedit = $_GET['noedit'];
 	<li class="orderby"><?php
 
 	echo ($order == "desc") ? '[new to old]' : "<a href=\".?feed=$feed&amp;what=$what&amp;when=$when&amp;how=$how&amp;howmany=$howmany&amp;order=desc\">[new to old]</a>" ;
-	
+
 	?></li>
 	<li class="orderby"><?php
 
 	echo ($order == "asc") ? '[old to new]' : "<a href=\".?feed=$feed&amp;what=$what&amp;when=$when&amp;how=$how&amp;howmany=$howmany&amp;order=asc\">[old to new]</a>" ;
-	
+
 	?></li>
 	<li><a href="javascript:flag_all();mark_read()"><strong>Mark all read</strong></a></li>
 	<li><a href="javascript:flag_all()">Flag all</a></li>
@@ -132,7 +132,7 @@ if(count($result) == 0)
 
 ?>
 		</form>
-        
+
         <div id="end-of-items"></div>
 
 <?php

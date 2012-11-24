@@ -53,6 +53,7 @@ else
     }
 }
 
+var_dump($feeds);
 $feeds = fof_multi_sort($feeds, 'feed_cache_attempt_date', false);
 
 print("<script>\nwindow.onload = ajaxupdate;\nfeedslist = [");
