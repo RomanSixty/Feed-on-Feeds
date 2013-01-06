@@ -44,8 +44,6 @@ if(!$fof_installer)
     ob_end_clean();
 }
 
-require_once('simplepie/simplepie.inc');
-
 function fof_set_content_type()
 {
     static $set;
@@ -677,18 +675,20 @@ function fof_mark_item_unread($feed_id, $id)
 
 function fof_parse($url)
 {
+    require_once('autoloader.php');
+    require_once('simplepie/SimplePie.php');
+
     $p =& FoF_Prefs::instance();
     $admin_prefs = $p->admin_prefs;
 
     $pie = new SimplePie();
+    $pie->set_cache_location(dirname(__FILE__).'/cache');
     $pie->set_cache_duration($admin_prefs["manualtimeout"] * 60);
-    $pie->set_favicon_handler("favicon.php");
-	$pie->set_feed_url($url);
-	$pie->set_javascript(false);
-	$pie->remove_div(false);
-	$pie->init();
+    $pie->set_feed_url($url);
+    $pie->remove_div(false);
+    $pie->init();
 
-	return $pie;
+    return $pie;
 }
 
 function fof_apply_tags($feed_id, $item_id)
@@ -927,28 +927,26 @@ function fof_apply_plugin_tags($feed_id, $item_id = NULL, $user_id = NULL)
 
 function fof_item_has_tags($item_id)
 {
-	return fof_db_item_has_tags($item_id);
+    return fof_db_item_has_tags($item_id);
 }
 
 function fof_init_plugins()
 {
-	global $fof_item_filters, $fof_item_prefilters, $fof_tag_prefilters, $fof_plugin_prefs;
+    global $fof_item_filters, $fof_item_prefilters, $fof_tag_prefilters, $fof_plugin_prefs;
 
     $fof_item_filters = array();
     $fof_item_prefilters = array();
     $fof_plugin_prefs = array();
-	$fof_tag_prefilters = array();
+    $fof_tag_prefilters = array();
 
     $p =& FoF_Prefs::instance();
 
     $dirlist = opendir(FOF_DIR . "/plugins");
     while($file=readdir($dirlist))
     {
-    	fof_log("considering " . $file);
         if(ereg('\.php$',$file) && !$p->get('plugin_' . substr($file, 0, -4)))
         {
-        	fof_log("including " . $file);
-
+            fof_log("including " . $file);
             include(FOF_DIR . "/plugins/" . $file);
         }
     }
