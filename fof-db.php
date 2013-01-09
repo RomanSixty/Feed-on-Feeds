@@ -112,12 +112,12 @@ function fof_db_feed_mark_attempted_cache($feed_id)
 	$result = fof_safe_query("update $FOF_FEED_TABLE set feed_cache_attempt_date = %d where feed_id = %d", time(), $feed_id);
 }
 
-function fof_db_feed_update_metadata($feed_id, $url, $title, $link, $description, $image, $image_cache_date)
+function fof_db_feed_update_metadata($feed_id, $title, $link, $description, $image, $image_cache_date)
 {
     global $FOF_FEED_TABLE;
 
-    $sql = "update $FOF_FEED_TABLE set feed_url = '%s', feed_link = '%s', feed_description = '%s'";
-    $args = array($url, $link, $description);
+    $sql = "update $FOF_FEED_TABLE set feed_link = '%s', feed_description = '%s'";
+    $args = array($link, $description);
 
 	if($image)
 	{
