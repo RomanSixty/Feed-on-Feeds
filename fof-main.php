@@ -741,12 +741,6 @@ function fof_update_feed($id)
         return array(0, "Error: <b>" . $rss->error() . "</b> <a href=\"http://feedvalidator.org/check?url=$url\">try to validate it?</a>");
     }
 
-    $sub = html_entity_decode($rss->subscribe_url(), ENT_QUOTES);
-    $self_link = $rss->get_link(0, 'self');
-    if($self_link) $sub = html_entity_decode($self_link, ENT_QUOTES);
-
-    fof_log("subscription url is $sub");
-
     if ( !empty ( $feed [ 'alt_image' ] ) )
     {
         $image = $feed [ 'alt_image' ];
@@ -767,7 +761,7 @@ function fof_update_feed($id)
     $title = $rss->get_title();
     if($title == "") $title = "[no title]";
 
-    fof_db_feed_update_metadata($id, $sub, $title, $rss->get_link(), $rss->get_description(), $image, $image_cache_date );
+    fof_db_feed_update_metadata($id, $title, $rss->get_link(), $rss->get_description(), $image, $image_cache_date );
 
     $feed_id = $feed['feed_id'];
     $n = 0;
