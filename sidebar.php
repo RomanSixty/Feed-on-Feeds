@@ -240,6 +240,7 @@ foreach($feeds as $row)
    $id = $row['feed_id'];
    $url = $row['feed_url'];
    $title = $row['feed_title'];
+   $image = $row['feed_image'];
    $link = $row['feed_link'];
    $description = $row['feed_description'];
    $age = $row['feed_age'];
@@ -268,9 +269,9 @@ foreach($feeds as $row)
    if($simple_sidebar)
    {
       print "<td align='center'>";
-      if($row['feed_image'] && $fof_prefs_obj->get('favicons'))
+      if($image && $fof_prefs_obj->get('favicons'))
       {
-         print "<a href=\"$url\" title=\"feed\"><img src='" . $row['feed_image'] . "' width='16' height='16' border='0' /></a>";
+         print "<a href=\"$url\" title=\"feed\"><img src='" . $image . "' width='16' height='16' border='0' /></a>";
       }
       else
       {
@@ -311,9 +312,9 @@ foreach($feeds as $row)
       print "</td>";
 
       print "<td align='center'>";
-      if($row['feed_image'] && $fof_prefs_obj->get('favicons'))
+      if($image && $fof_prefs_obj->get('favicons'))
       {
-         print "<a href=\"$url\" title=\"feed\"><img src='" . $row['feed_image'] . "' width='16' height='16' border='0' /></a>";
+         print "<a href=\"$url\" title=\"feed\"><img src='" . $image . "' width='16' height='16' border='0' /></a>";
       }
       else
       {

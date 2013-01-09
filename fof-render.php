@@ -23,8 +23,8 @@ function do_highlight($full_body, $q, $class){
 	for ($i=0; $i< count($tag_matches[0]); $i++) {
 		/* ignore all text within these tags */
 		if (
-			(preg_match('/<!/i', $tag_matches[0][$i])) or 
-			(preg_match('/<textarea/i', $tag_matches[2][$i])) or 
+			(preg_match('/<!/i', $tag_matches[0][$i])) or
+			(preg_match('/<textarea/i', $tag_matches[2][$i])) or
 			(preg_match('/<script/i', $tag_matches[2][$i]))
 		){
 			/* array[0] is everything the REGEX found */
@@ -50,7 +50,10 @@ function fof_render_item($item)
 
 	$feed_link = $item['feed_link'];
 	$feed_title = $item['feed_title'];
-	$feed_image = $item['feed_image'];
+	$feed_image = empty ( $item [ 'alt_image' ] )
+	            ? $item [ 'feed_image' ]
+	            : $item [ 'alt_image' ];
+
 	$feed_description = $item['feed_description'];
 
 	$item_link = $item['item_link'];
@@ -73,12 +76,12 @@ function fof_render_item($item)
 		$item_content = do_highlight("<span>$item_content</span>", $_GET['search'], "highlight");
 		$item_title = do_highlight("<span>$item_title</span>", $_GET['search'], "highlight");
 	}
-	    
+
     $tags = $item['tags'];
 
 	$star = in_array("star", $tags) ? true : false;
 	$star_image = $star ? "image/star-on.gif" : "image/star-off.gif";
-		
+
 	$unread = in_array("unread", $tags) ? true : false;
 ?>
 
@@ -94,7 +97,7 @@ function fof_render_item($item)
 			mark read
 		</a>
 	</span>
-	
+
 	<h1 <?php if($unread) echo "class='unread-item'" ?> >
 		<input
 			type="checkbox"
@@ -120,7 +123,7 @@ function fof_render_item($item)
 			<?php echo $item_title ?>
 		</a>
 	</h1>
-	
+
 	<span class="tags">
 
 <?php
@@ -131,7 +134,7 @@ function fof_render_item($item)
 			if($tag == "unread" || $tag == "star" || $tag == "folded") continue;
 ?>
 		<a href='?what=<?php echo $tag ?>'><?php echo $tag ?></a>
-		
+
 		<a href='<?php echo $tag ?>' onclick='return remove_tag("<?php echo $item_id ?>", "<?php echo $tag ?>");'>[x]</a>
 <?php
 		}
@@ -164,9 +167,9 @@ function fof_render_item($item)
 		</div>
 
     </span>
-    
+
     <span class='dash'> - </span>
-    
+
     <h2>
 
     <?php $prefs = fof_prefs(); if($feed_image && $prefs['favicons']) { ?>
@@ -186,7 +189,7 @@ function fof_render_item($item)
     $widgets = fof_get_widgets($item);
 
     $widgets[] = '<a href="" onclick="ajax_mark_read('.$item_id.'); return false;">mark read</a>';
-    
+
     if($widgets) {
 ?>
 
