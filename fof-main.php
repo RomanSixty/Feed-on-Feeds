@@ -44,6 +44,9 @@ if(!$fof_installer)
     ob_end_clean();
 }
 
+require_once('autoloader.php');
+require_once('simplepie/SimplePie.php');
+
 function fof_set_content_type()
 {
     static $set;
@@ -344,7 +347,7 @@ function fof_get_feeds($user_id, $order = 'feed_title', $direction = 'asc')
       $feeds[$i]['feed_title'] = $row['feed_title'];
       $feeds[$i]['feed_link'] = $row['feed_link'];
       $feeds[$i]['feed_description'] = $row['feed_description'];
-      $feeds[$i]['feed_image'] = $row['feed_image'];
+      $feeds[$i]['feed_image'] = empty($row['alt_image']) ? $row['feed_image'] : $row['alt_image'];
       $feeds[$i]['alt_image'] = $row['alt_image'];
       $feeds[$i]['prefs'] = unserialize($row['subscription_prefs']);
       $feeds[$i]['feed_age'] = $age;
@@ -675,9 +678,6 @@ function fof_mark_item_unread($feed_id, $id)
 
 function fof_parse($url)
 {
-    require_once('autoloader.php');
-    require_once('simplepie/SimplePie.php');
-
     $p =& FoF_Prefs::instance();
     $admin_prefs = $p->admin_prefs;
 
@@ -747,17 +747,25 @@ function fof_update_feed($id)
 
     fof_log("subscription url is $sub");
 
-    $image = $feed['feed_image'];
-    $image_cache_date = $feed['feed_image_cache_date'];
-
-    if($feed['feed_image_cache_date'] < (time() - (7*24*60*60)))
+    if ( !empty ( $feed [ 'alt_image' ] ) )
     {
-        $image = $rss->get_favicon($feed['alt_image']);
-        $image_cache_date = time();
+        $image = $feed [ 'alt_image' ];
+    }
+    else
+    {
+        $image = $feed [ 'feed_image' ];
+        $image_cache_date = $feed['feed_image_cache_date'];
+
+        // cached favicon older than a week?
+        if ( $feed [ 'feed_image_cache_date' ] < time() - ( 7*24*60*60 ) )
+        {
+            $image = fof_get_favicon ( $feed [ 'feed_link' ] );
+            $image_cache_date = time();
+        }
     }
 
-	$title = $rss->get_title();
-	if($title == "") $title = "[no title]";
+    $title = $rss->get_title();
+    if($title == "") $title = "[no title]";
 
     fof_db_feed_update_metadata($id, $sub, $title, $rss->get_link(), $rss->get_description(), $image, $image_cache_date );
 
@@ -1070,14 +1078,25 @@ function fof_repair_drain_bamage()
     }
 }
 
-// for PHP 4 compatibility
-
-if(!function_exists('str_ireplace'))
+// grab a favicon from $url and cache it
+function fof_get_favicon ( $url )
 {
-    function str_ireplace($search,$replace,$subject)
-    {
-        $search = preg_quote($search, "/");
-        return preg_replace("/".$search."/i", $replace, $subject);
-    }
+	$request = 'http://fvicon.com/' . $url . '?format=gif&width=16&height=16&defaultIcon=image/feed-icon.png';
+
+	$reflector = new ReflectionClass('SimplePie_File');
+	$sp = $reflector->newInstanceArgs(array($request));
+
+	if ( $sp -> success )
+	{
+		$data = $sp -> body;
+
+		$path = 'cache/' . md5 ( $data ) . '.png';
+
+		file_put_contents ( dirname(__FILE__) . '/' . $path, $data );
+
+		return $path;
+	}
+	else
+		return 'image/feed-icon.png';
 }
 ?>
