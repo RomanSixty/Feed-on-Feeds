@@ -822,39 +822,27 @@ function fof_update_feed($id)
 
     if($admin_prefs['purge'] != "")
     {
-        fof_log('purge is ' . $admin_prefs['purge']);
-        $count = count($ids);
-        fof_log('items in feed: ' . $count);
+        global $FOF_ITEM_TABLE, $FOF_ITEM_TAG_TABLE;
 
-        if(count($ids) != 0)
-        {
-            $in = implode ( ", ", $ids );
+        $purge = $admin_prefs [ 'purge' ];
 
-            global $FOF_ITEM_TABLE, $FOF_ITEM_TAG_TABLE;
+        fof_log('purge is ' . $purge);
 
-            // LX: purge only untagged items
-            $sql = "select i.item_id, item_cached, tag_id from $FOF_ITEM_TABLE i left join $FOF_ITEM_TAG_TABLE t on i.item_id=t.item_id where tag_id is null and feed_id = $feed_id and i.item_id not in ($in) order by item_cached desc limit $count, 1000000000";
-            $result = fof_db_query($sql);
+        $sql = "SELECT i.item_id FROM $FOF_ITEM_TABLE i
+            LEFT JOIN $FOF_ITEM_TAG_TABLE t ON i.item_id=t.item_id
+            WHERE tag_id IS NULL
+                AND feed_id = $feed_id
+                AND i.item_cached <= (UNIX_TIMESTAMP() - $purge*24*60*60)";
 
-            while($row = fof_db_get_row($result))
-            {
-                if($row['item_cached'] < (time() - ($admin_prefs['purge'] * 24 * 60 * 60)))
-                {
-                    if(!fof_item_has_tags($row['item_id']))
-                    {
-                        $delete[] = $row['item_id'];
-                    }
-                }
-            }
+        $result = fof_db_query($sql);
 
-            $ndelete = count($delete);
-            if(count($delete) != 0)
-            {
-                $in = implode(", ", $delete);
-                fof_db_query( "delete from $FOF_ITEM_TABLE where item_id in ($in)" );
-                fof_db_query( "delete from $FOF_ITEM_TAG_TABLE where item_id in ($in)" );
-            }
-        }
+        $delete = array();
+
+        while($row = fof_db_get_row($result))
+        	$delete[] = $row['item_id'];
+
+        if ( count ( $delete ) )
+	        fof_db_query( "DELETE FROM $FOF_ITEM_TABLE WHERE item_id IN (" . implode ( ',', $delete ) . ")" );
     }
 
     unset($rss);
