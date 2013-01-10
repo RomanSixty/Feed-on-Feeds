@@ -779,7 +779,13 @@ function fof_update_feed($id)
             $link = $item->get_permalink();
             $content = $item->get_content();
             $date = $item->get_date('U');
-            if(!$date) $date = time();
+
+            // don't fetch entries older than the purge limit
+            if ( !$date )
+                $date = time();
+            elseif ( !empty ( $admin_prefs [ 'purge' ] ) && $date <= $admin_prefs [ 'purge' ] )
+                continue;
+
             $item_id = $item->get_id();
 
             if(!$item_id)
@@ -820,7 +826,7 @@ function fof_update_feed($id)
     // unread or starred, not currently in the feed or within sizeof(feed) items
     // of being in the feed, and are over 'purge' many days old
 
-    if($admin_prefs['purge'] != "")
+    if ( !empty ( $admin_prefs [ 'purge' ] ) )
     {
         global $FOF_ITEM_TABLE, $FOF_ITEM_TAG_TABLE;
 
