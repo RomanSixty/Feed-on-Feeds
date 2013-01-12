@@ -90,32 +90,23 @@ function fof_render_item($item)
 	<span class="controls">
 		<a class='uparrow' href='javascript:hide_body("<?php echo $item_id ?>")'>fold &uarr;</a>
 		<a class='downarrow' href='javascript:show_body("<?php echo $item_id ?>")'>unfold &darr;</a>
-		<a
-			href=""
-			onclick="ajax_mark_read(<?php echo $item_id ?>);
-				 return false;">
-			mark read
-		</a>
+		<a href="" onclick="ajax_mark_read(<?php echo $item_id ?>); return false;">mark read</a>
 	</span>
 
-	<h1 <?php if($unread) echo "class='unread-item'" ?> >
-		<input
-			type="checkbox"
-			name="c<?php echo $item_id ?>"
-			id="c<?php echo $item_id ?>"
-			value="checked"
-			ondblclick='flag_upto("c<?php echo $item_id?>");'
-			onclick='return checkbox(event);'
-			title='shift-click or double-click to flag all items up to this one'
-		/>
-		<img
-			height="16"
-			width="16"
-                        class="<?php if (!$star) echo 'un'; ?>starred"
-			src="<?php echo $star_image ?>"
-			id="fav<?php echo $item_id ?>"
-			onclick="return toggle_favorite('<?php echo $item_id ?>')"
-		/>
+	<h1 <?php if($unread) echo "class='unread-item'" ?>>
+		<input type="checkbox"
+			   name="c<?php echo $item_id ?>"
+			   id="c<?php echo $item_id ?>"
+			   value="checked"
+			   ondblclick="flag_upto('c<?php echo $item_id?>');"
+			   onclick="return checkbox(event);"
+			   title="shift-click or double-click to flag all items up to this one" />
+		<img height="16"
+			 width="16"
+             class="<?php if (!$star) echo 'un'; ?>starred"
+			 src="<?php echo $star_image ?>"
+			 id="fav<?php echo $item_id ?>"
+			 onclick="return toggle_favorite('<?php echo $item_id ?>')" />
 		<script>
 			document.getElementById('fav<?php echo $item_id ?>').star = <?php if($star) echo 'true'; else echo 'false'; ?>;
 		</script>
@@ -141,41 +132,34 @@ function fof_render_item($item)
     }
 ?>
 
-		<a
-			href=""
-			onclick="document.getElementById('addtag<?php echo $item_id ?>').style.display = '';
-					 this.style.display = 'none';
-					 return false;">
-			add tag
-		</a>
+		<a href="" onclick="document.getElementById('addtag<?php echo $item_id ?>').style.display = ''; this.style.display = 'none'; return false;">add tag</a>
 
 		<div id="addtag<?php echo $item_id ?>" style="display: none !important">
-			<input
-				onfocus="this.value=''"
-				onkeypress="if(event.keyCode == 13) add_tag('<?php echo $item_id ?>', document.getElementById('tag<?php echo $item_id ?>').value);"
-				type="text"
-				id="tag<?php echo $item_id ?>"
-				size="12"
-				value="enter tag here"
-			>
-			<input
-				type="button"
-				name="add tag"
-				value="tag"
-				onclick="add_tag('<?php echo $item_id ?>', document.getElementById('tag<?php echo $item_id ?>').value);"
-			>
+			<input onfocus="this.value=''"
+				   onkeypress="if(event.keyCode == 13) add_tag('<?php echo $item_id ?>', document.getElementById('tag<?php echo $item_id ?>').value);"
+				   type="text"
+				   id="tag<?php echo $item_id ?>"
+				   size="12"
+				   value="enter tag here" />
+			<input type="button"
+				   name="add tag"
+				   value="tag"
+				   onclick="add_tag('<?php echo $item_id ?>', document.getElementById('tag<?php echo $item_id ?>').value);" />
 		</div>
 
     </span>
 
-    <span class='dash'> - </span>
+    <span class="dash"> - </span>
 
     <h2>
+    	<?php
+	    	$prefs = fof_prefs();
 
-    <?php $prefs = fof_prefs(); if($feed_image && $prefs['favicons']) { ?>
-    <a href="<?php echo $feed_link ?>" title='<?php echo $feed_description ?>'><img src="<?php echo $feed_image ?>" height="16" width="16" border="0" /></a>
-    <?php } ?>
-    <a href="<?php echo $feed_link ?>" title='<?php echo $feed_description ?>'><?php echo $feed_title ?></a>
+	    	if ( $feed_image && $prefs [ 'favicons' ] )
+	    		echo '<img src="'.$feed_image.'" height="16" width="16" border="0" />';
+   		?>
+    	<a href="<?php echo $feed_link ?>" title="<?php echo htmlspecialchars ( $feed_description ); ?>"><?php echo $feed_title ?>
+    	</a>
     </h2>
 
 	<span class="meta">on <?php echo $item_published ?></span>
