@@ -685,7 +685,7 @@ function fof_parse($url)
     $pie->set_cache_location(dirname(__FILE__).'/cache');
     $pie->set_cache_duration($admin_prefs["manualtimeout"] * 60);
     $pie->set_feed_url($url);
-    $pie->remove_div(false);
+    $pie->remove_div(true);
     $pie->init();
 
     return $pie;
