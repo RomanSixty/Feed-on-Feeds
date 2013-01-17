@@ -783,7 +783,7 @@ function fof_update_feed($id)
             // don't fetch entries older than the purge limit
             if ( !$date )
                 $date = time();
-            elseif ( !empty ( $admin_prefs [ 'purge' ] ) && $date <= $admin_prefs [ 'purge' ] )
+            elseif ( !empty ( $admin_prefs [ 'purge' ] ) && $date <= ( time() - $admin_prefs [ 'purge' ] * 24 * 3600 ) )
                 continue;
 
             $item_id = $item->get_id();
