@@ -228,7 +228,6 @@ URL to be linked on shared page: <input type="text" name="sharedurl" value="<?ph
     }
 
     closedir();
-
 ?>
 
 <?php foreach($plugins as $plugin) { ?>
@@ -245,14 +244,30 @@ URL to be linked on shared page: <input type="text" name="sharedurl" value="<?ph
 <input name="<?php echo $key ?>" value="<?php echo $prefs->get($key)?>"><br>
 <?php } } ?>
 <br>
-<input type=submit name=plugins value="Save Plugin Preferences">
+<input type="submit" name="plugins" value="Save Plugin Preferences">
 </form>
 
+<?php
+// advanced plugin preferences
+foreach ( $plugins as $plugin )
+{
+	// save preferences
+	$funcname = 'save_prefs_' . $plugin;
 
+	if ( function_exists ( $funcname ) )
+		$funcname ( $_POST );
+
+	// view and edit preferences
+	$funcname = 'edit_prefs_' . $plugin;
+
+	if ( function_exists ( $funcname ) )
+		$funcname ( $prefs );
+}
+?>
 
 <br><h1>Feed on Feeds - Feeds and Tags</h1>
 <div style="border: 1px solid black; margin: 10px; padding: 10px; font-size: 12px; font-family: verdana, arial;">
-<table cellpadding=3 cellspacing=0>
+<table cellpadding="3" cellspacing="0">
 <?php
 foreach($feeds as $row)
 {
