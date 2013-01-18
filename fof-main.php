@@ -243,6 +243,13 @@ function fof_tag_item($user_id, $item_id, $tag)
 
 	foreach($tags as $tag)
 	{
+		// remove tag, if it starts with '-'
+		if ( $tag{0} == '-' )
+		{
+			fof_untag_item($user_id, $item_id, substr($tag, 1));
+			continue;
+		}
+
 		$tag_id = fof_db_get_tag_by_name($user_id, $tag);
 		if($tag_id == NULL)
 		{
