@@ -1,15 +1,15 @@
 <?php
 
-fof_add_tag_prefilter('fof_adv_autotag', 'fof_adv_autotag');
+fof_add_tag_prefilter ( 'fof_adv_autotag', 'fof_adv_autotag' );
 
-function fof_adv_autotag($link, $title, $content)
+function fof_adv_autotag ( $link, $title, $content )
 {
 	$tags = array();
 
     $prefs = fof_prefs();
-    $autotag = $prefs['adv_autotag'];
+    $autotag = $prefs [ 'adv_autotag' ];
 
-	if($autotag)
+	if ( $autotag )
 	{
 		foreach ( $autotag as $pref )
 		{
@@ -51,7 +51,7 @@ function fof_adv_autotag($link, $title, $content)
 
 function save_prefs_adv_autotag ( $post )
 {
-	if ( !isset ( $post [ 'aa_autotag' ] ) )
+	if ( !isset ( $post [ 'aa_autotag' ] ) && !isset ( $post [ 'aa_apply' ] ) )
 		return;
 
 	global $prefs;
@@ -62,6 +62,20 @@ function save_prefs_adv_autotag ( $post )
 
 	$prefs -> set ( 'adv_autotag', array_values ( $post [ 'aa_pref' ] ) );
 	$prefs -> save();
+
+	// apply?
+	if ( isset ( $post [ 'aa_apply' ] ) )
+	{
+		$items = fof_get_items ( fof_current_user() );
+
+		foreach ( $items as $item )
+		{
+			$tags = fof_adv_autotag ( null, $item [ 'item_title' ], $item [ 'item_content' ] );
+
+			if ( count ( $tags ) )
+				fof_tag_item ( fof_current_user(), $item [ 'item_id' ], $tags );
+		}
+	}
 }
 
 function edit_prefs_adv_autotag ( $prefs )
@@ -132,7 +146,8 @@ function edit_prefs_adv_autotag ( $prefs )
 		</tr>
 	</table>
 	<br>
-	<input type="submit" name="aa_autotag" value="Save Advanced Autotagging Preferences">
+	<input type="submit" name="aa_autotag" value="Save Advanced Autotagging Preferences" />
+	<input type="submit" name="aa_apply"   value="Apply Settings on Unread Posts" />
 	</form>
 	</div>';
 }
