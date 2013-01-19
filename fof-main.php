@@ -884,7 +884,10 @@ function fof_update_feed($id)
     }
 
     if ( count ( $delete ) )
-        fof_db_query( "DELETE FROM $FOF_ITEM_TABLE WHERE item_id IN (" . implode ( ',', $delete ) . ")" );
+    {
+        fof_db_query( "DELETE FROM $FOF_ITEM_TABLE     WHERE item_id IN (" . implode ( ',', $delete ) . ")" );
+        fof_db_query( "DELETE FROM $FOF_ITEM_TAG_TABLE WHERE item_id IN (" . implode ( ',', $delete ) . ")" );
+    }
 
     $ndelete += count ( $delete );
 
