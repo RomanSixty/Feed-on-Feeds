@@ -60,6 +60,8 @@ function save_prefs_adv_autotag ( $post )
 		if ( empty ( $val [ 'filter' ] ) || empty ( $val [ 'tag' ] ) )
 			unset ( $post [ 'aa_pref' ][ $key ] );
 
+	usort ( $post [ 'aa_pref' ], '_cb_prefsort' );
+
 	$prefs -> set ( 'adv_autotag', array_values ( $post [ 'aa_pref' ] ) );
 	$prefs -> save();
 
@@ -150,4 +152,13 @@ function edit_prefs_adv_autotag ( $prefs )
 	<input type="submit" name="aa_apply"   value="Apply Settings on Unread Posts" />
 	</form>
 	</div>';
+}
+
+
+function _cb_prefsort ( $a, $b )
+{
+	if ( $a [ 'tag' ] == $b [ 'tag' ] )
+		return strcmp ( $a [ 'filter' ], $b [ 'filter' ] );
+
+	return strcmp ( $a [ 'tag' ], $b [ 'tag' ] );
 }
