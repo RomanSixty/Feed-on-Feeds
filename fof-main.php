@@ -695,6 +695,25 @@ function fof_parse($url)
     $pie->remove_div(true);
     $pie->init();
 
+    if ( $pie -> error() )
+    {
+	    $data = file_get_contents ( $url );
+
+	    $data = preg_replace ( '~.*<\?xml~sim', '<?xml', $data );
+
+	    #file_put_contents ('/tmp/text.xml',$data);
+
+	    unset ( $pie );
+
+	    $pie = new SimplePie();
+	    $pie->set_cache_location(dirname(__FILE__).'/cache');
+	    $pie->set_cache_duration($admin_prefs["manualtimeout"] * 60);
+	    $pie->remove_div(true);
+
+	    $pie -> set_raw_data ( $data );
+	    $pie -> init();
+    }
+
     return $pie;
 }
 
