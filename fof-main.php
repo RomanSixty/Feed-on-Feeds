@@ -879,7 +879,7 @@ function fof_update_feed($id)
 
     	similar_text ( $row [ 'c1' ], $row [ 'c2' ], $similarity );
 
-    	if ( $similarity > 95 )
+    	if ( $similarity > 90 )
 	    	$delete[] = $row [ 'item_id' ];
     }
 
