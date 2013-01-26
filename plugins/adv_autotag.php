@@ -51,7 +51,7 @@ function fof_adv_autotag ( $link, $title, $content )
 
 function save_prefs_adv_autotag ( $post )
 {
-	if ( !isset ( $post [ 'aa_autotag' ] ) && !isset ( $post [ 'aa_apply' ] ) )
+	if ( !isset ( $post [ 'aa_autotag' ] ) && !isset ( $post [ 'aa_apply_u' ] ) && !isset ( $post [ 'aa_apply_a' ] ) )
 		return;
 
 	global $prefs;
@@ -66,9 +66,12 @@ function save_prefs_adv_autotag ( $post )
 	$prefs -> save();
 
 	// apply?
-	if ( isset ( $post [ 'aa_apply' ] ) )
+	if ( isset ( $post [ 'aa_apply_u' ] ) || isset ( $post [ 'aa_apply_a' ] ) )
 	{
-		$items = fof_get_items ( fof_current_user() );
+		if ( isset ( $post [ 'aa_apply_u' ] ) )
+			$items = fof_get_items ( fof_current_user() );
+		else
+			$items = fof_get_items ( fof_current_user(), null, 'all' );
 
 		foreach ( $items as $item )
 		{
@@ -149,7 +152,8 @@ function edit_prefs_adv_autotag ( $prefs )
 	</table>
 	<br>
 	<input type="submit" name="aa_autotag" value="Save Advanced Autotagging Preferences" />
-	<input type="submit" name="aa_apply"   value="Apply Settings on Unread Posts" />
+	<input type="submit" name="aa_apply_u"   value="Apply Settings on Unread Posts" />
+	<input type="submit" name="aa_apply_a"   value="Apply Settings on All Posts" />
 	</form>
 	</div>';
 }
