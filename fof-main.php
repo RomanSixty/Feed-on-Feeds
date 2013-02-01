@@ -364,13 +364,6 @@ function fof_get_feeds($user_id, $order = 'feed_title', $direction = 'asc')
       $feeds[$i]['agestr'] = $agestr;
       $feeds[$i]['agestrabbr'] = $agestrabbr;
 
-      $feeds[$i]['feed_items'] = $row['itemcount'];
-      $feeds[$i]['feed_read'] = $row['itemcount'];
-      $feeds[$i]['feed_unread'] = $row['unreadcount'];
-
-      $feeds[$i]['feed_starred'] = $row['starredcount'];
-      $feeds[$i]['feed_tagged'] = $row['taggedcount'];
-
       $i++;
    }
 
@@ -386,6 +379,66 @@ function fof_get_feeds($user_id, $order = 'feed_title', $direction = 'asc')
                $feeds[$i]['tags'][] = $tags[$tag];
            }
        }
+   }
+
+   $result = fof_db_get_item_count($user_id);
+
+   while($row = fof_db_get_row($result))
+   {
+     for($i=0; $i<count($feeds); $i++)
+     {
+      if($feeds[$i]['feed_id'] == $row['id'])
+      {
+         $feeds[$i]['feed_items'] = $row['count'];
+         $feeds[$i]['feed_read'] = $row['count'];
+         $feeds[$i]['feed_unread'] = 0;
+      }
+     }
+   }
+
+   $result = fof_db_get_unread_item_count($user_id);
+
+   while($row = fof_db_get_row($result))
+   {
+     for($i=0; $i<count($feeds); $i++)
+     {
+      if($feeds[$i]['feed_id'] == $row['id'])
+      {
+         $feeds[$i]['feed_unread'] = $row['count'];
+      }
+     }
+   }
+
+   foreach($feeds as &$feed)
+   {
+      $feed['feed_starred'] = 0;
+      $feed['feed_tagged']  = 0;
+   }
+
+   $result = fof_db_get_starred_item_count($user_id);
+
+   while($row = fof_db_get_row($result))
+   {
+     for($i=0; $i<count($feeds); $i++)
+     {
+      if($feeds[$i]['feed_id'] == $row['id'])
+      {
+         $feeds[$i]['feed_starred'] = $row['count'];
+      }
+     }
+   }
+
+   $result = fof_db_get_tagged_item_count($user_id);
+
+   while($row = fof_db_get_row($result))
+   {
+     for($i=0; $i<count($feeds); $i++)
+     {
+      if($feeds[$i]['feed_id'] == $row['id'])
+      {
+         $feeds[$i]['feed_tagged'] = $row['count'];
+      }
+     }
    }
 
    $result = fof_db_get_latest_item_age($user_id);
