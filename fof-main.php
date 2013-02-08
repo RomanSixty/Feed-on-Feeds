@@ -465,7 +465,7 @@ function fof_get_feeds($user_id, $order = 'feed_title', $direction = 'asc')
    return $feeds;
 }
 
-function fof_view_title($feed=NULL, $what="new", $when=NULL, $start=NULL, $limit=NULL, $search=NULL)
+function fof_view_title($feed=NULL, $what="new", $when=NULL, $start=NULL, $limit=NULL, $search=NULL, $itemcount = 0)
 {
     $prefs = fof_prefs();
     $title = "feed on feeds";
@@ -484,14 +484,8 @@ function fof_view_title($feed=NULL, $what="new", $when=NULL, $start=NULL, $limit
         if(!is_numeric($limit)) $limit = $prefs["howmany"];
         $title .= " - items $start to " . ($start + $limit);
     }
-    if($what != "all")
-    {
-        $title .=' - new items';
-    }
-    else
-    {
-        $title .= ' - all items';
-    }
+
+    $title .= " of $itemcount items";
 
     if(isset($search))
     {
@@ -552,7 +546,7 @@ function fof_delete_subscription($user_id, $feed_id)
     }
 }
 
-function fof_get_nav_links($feed=NULL, $what="new", $when=NULL, $start=NULL, $limit=NULL, $itemcount=9999)
+function fof_get_nav_links($feed=NULL, $what="new", $when=NULL, $start=NULL, $limit=NULL, $search=NULL, $itemcount=9999)
 {
     $prefs = fof_prefs();
     $string = "";
@@ -587,9 +581,9 @@ function fof_get_nav_links($feed=NULL, $what="new", $when=NULL, $start=NULL, $li
         $earlier = $start + $limit;
         $later = $start - $limit;
 
-        if($itemcount > $earlier) $string .= "<a href=\".?feed=$feed&amp;what=$what&amp;when=$when&amp;how=paged&amp;which=$earlier&amp;howmany=$limit\">[&laquo; previous $limit]</a> ";
-        if($later >= 0) $string .= "<a href=\".?feed=$feed&amp;what=$what&amp;when=$when&amp;how=paged&amp;howmany=$limit\">[current items]</a> ";
-        if($later >= 0) $string .= "<a href=\".?feed=$feed&amp;what=$what&amp;when=$when&amp;how=paged&amp;which=$later&amp;howmany=$limit\">[next $limit &raquo;]</a> ";
+        if($itemcount > $earlier) $string .= "<a href=\".?feed=$feed&amp;what=$what&amp;when=$when&amp;how=paged&amp;which=$earlier&amp;howmany=$limit&amp;search=$search\">[&laquo; previous $limit]</a> ";
+        if($later >= 0) $string .= "<a href=\".?feed=$feed&amp;what=$what&amp;when=$when&amp;how=paged&amp;howmany=$limit&amp;search=$search\">[current items]</a> ";
+        if($later >= 0) $string .= "<a href=\".?feed=$feed&amp;what=$what&amp;when=$when&amp;how=paged&amp;which=$later&amp;howmany=$limit&amp;search=$search\">[next $limit &raquo;]</a> ";
     }
 
     return $string;

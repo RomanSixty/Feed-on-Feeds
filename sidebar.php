@@ -76,14 +76,15 @@ echo "<script>starred = $starred;</script>";
 <li <?php if($what == "all" && !isset($when)) echo "style='background: #ddd'" ?> ><a href=".?what=all&how=paged">All Items <?php if($total) echo "($total)" ?></a></li>
 <li <?php if(isset($search)) echo "style='background: #ddd'" ?> ><a href="javascript:Element.toggle('search'); Field.focus('searchfield');void(0);">Search</a>
 <form action="." id="search" <?php if(!isset($search)) echo 'style="display: none"' ?>>
+<input type="hidden" name="how" value="paged">
 <input id="searchfield" name="search" value="<?php echo $search?>">
 <?php
-	if($what == "unread")
+	if($what == "unread" || empty ($what))
 		echo "<input type='hidden' name='what' value='all'>";
 	else
 		echo "<input type='hidden' name='what' value='$what'>";
 ?>
-<?php if(isset($_GET['when'])) echo "<input type='hidden' name='what' value='${_GET['when']}'>" ?>
+<?php if(!empty($_GET['when'])) echo "<input type='hidden' name='what' value='${_GET['when']}'>" ?>
 </form>
 </li>
 </ul>
