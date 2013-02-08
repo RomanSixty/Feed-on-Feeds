@@ -16,7 +16,7 @@
 
 function do_highlight($full_body, $q, $class){
 	/* seperate tags and data from the HTML file INCLUDING comments, avoiding HTML in the comments */
-	$pat = '/((<[^!][\/]*?[^<>]*?>)([^<]*))|((<!--[ \r\n\t]*)(.*)[ \r\n\t]*-->([^<]*))/si';
+	$pat = '/((<[^!][\/]*?[^<>]*?>)([^<]*))|<!---->|<!--(.*?)-->|((<!--[ \r\n\t]*?)(.*?)[ \r\n\t]*?-->([^<]*))/si';
 	preg_match_all($pat,$full_body,$tag_matches);
 
 	/* loop through and highlight $q value in data and recombine with tags */
@@ -32,10 +32,8 @@ function do_highlight($full_body, $q, $class){
 		} else {
 			$full_body_hl .= $tag_matches[2][$i];
 
-			/* the slash-i is for case-insensitive and the slash-b's are for word boundries */
-
 			/* this one ALMOST works, except if the string is at the start or end of a string*/
-			$holder = preg_replace('/(.*?)(\W)('.preg_quote($q).')(\W)(.*?)/iu',"\$1\$2<span class=\"$class\">\$3</span>\$4\$5",' '.$tag_matches[3][$i].' ');
+			$holder = preg_replace('/(.*?)('.preg_quote($q,'/').')(.*?)/iu',"\$1<span class=\"$class\">\$2</span>\$3",' '.$tag_matches[3][$i].' ');
 			$full_body_hl .= substr($holder,1,(strlen($holder)-2));
 		}
 	}
