@@ -45,7 +45,14 @@ $feed = $_GET['feed'];
 $when = $_GET['when'];
 $howmany = $_GET['howmany'];
 
-$title = fof_view_title($_GET['feed'], $what, $_GET['when'], $which, $_GET['howmany'], $_GET['search']);
+$result = fof_db_get_item_count(fof_current_user(), $what, $_GET['feed'], $_GET['search']);
+
+$itemcount = 0;
+
+while ($cnt = fof_db_get_row($result, 'count'))
+	$itemcount += $cnt;
+
+$title = fof_view_title($_GET['feed'], $what, $_GET['when'], $which, $_GET['howmany'], $_GET['search'], $itemcount);
 $noedit = $_GET['noedit'];
 
 ?>
@@ -72,12 +79,12 @@ $noedit = $_GET['noedit'];
 	<li class="orderby"><?php
 
 	echo ($order == "desc") ? '[new to old]' : "<a href=\".?feed=$feed&amp;what=$what&amp;when=$when&amp;how=$how&amp;howmany=$howmany&amp;order=desc\">[new to old]</a>" ;
-	
+
 	?></li>
 	<li class="orderby"><?php
 
 	echo ($order == "asc") ? '[old to new]' : "<a href=\".?feed=$feed&amp;what=$what&amp;when=$when&amp;how=$how&amp;howmany=$howmany&amp;order=asc\">[old to new]</a>" ;
-	
+
 	?></li>
 	<li><a href="javascript:flag_all();mark_read()"><strong>Mark all read</strong></a></li>
 	<li><a href="javascript:flag_all()">Flag all</a></li>
@@ -98,16 +105,11 @@ $noedit = $_GET['noedit'];
 		<input type="hidden" name="return" />
 
 <?php
-	$itemcount = fof_db_get_item_count(fof_current_user(), $_GET['feed'], $what, $_GET['search']);
-
-	$links = fof_get_nav_links($_GET['feed'], $what, $_GET['when'], $which, $_GET['howmany'], $itemcount);
+	$links = fof_get_nav_links($_GET['feed'], $what, $_GET['when'], $which, $_GET['howmany'], $_GET['search'], $itemcount);
 
 	if($links)
 	{
-?>
-		<center><?php echo $links ?></center>
-
-<?php
+		echo "<center>$links</center>";
 	}
 
 $result = fof_get_items(fof_current_user(), $_GET['feed'], $what, $_GET['when'], $which, $_GET['howmany'], $order, $_GET['search']);
@@ -132,16 +134,13 @@ if(count($result) == 0)
 
 ?>
 		</form>
-        
+
         <div id="end-of-items"></div>
 
 <?php
         if($links)
         {
-?>
-                <center><?php echo $links ?></center>
-
-<?php
+            echo "<center>$links</center>";
         }
 ?>
 
