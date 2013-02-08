@@ -396,7 +396,7 @@ function fof_get_feeds($user_id, $order = 'feed_title', $direction = 'asc')
      }
    }
 
-   $result = fof_db_get_unread_item_count($user_id);
+   $result = fof_db_get_item_count($user_id, 'unread');
 
    while($row = fof_db_get_row($result))
    {
@@ -415,7 +415,7 @@ function fof_get_feeds($user_id, $order = 'feed_title', $direction = 'asc')
       $feed['feed_tagged']  = 0;
    }
 
-   $result = fof_db_get_starred_item_count($user_id);
+   $result = fof_db_get_item_count($user_id, 'starred');
 
    while($row = fof_db_get_row($result))
    {
@@ -428,7 +428,7 @@ function fof_get_feeds($user_id, $order = 'feed_title', $direction = 'asc')
      }
    }
 
-   $result = fof_db_get_tagged_item_count($user_id);
+   $result = fof_db_get_item_count($user_id, 'tagged');
 
    while($row = fof_db_get_row($result))
    {
