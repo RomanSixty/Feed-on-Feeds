@@ -89,7 +89,7 @@ foreach($result as $item)
 	$item_link = htmlspecialchars($item['item_link']);
 
     $item_guid = $item['item_guid'];
-    if(!ereg("^[a-z0-9\.\+\-]+:", $item_guid))
+    if(!preg_match("/^[a-z0-9\.\+\-]+:/", $item_guid))
     {
         $item_guid = $feed_link . '#' . $item_guid;
     }

@@ -110,7 +110,7 @@ if(isset($_POST['plugins']))
     $dirlist = opendir(FOF_DIR . "/plugins");
     while($file=readdir($dirlist))
     {
-        if(ereg('\.php$',$file))
+        if(preg_match('/\.php$/',$file))
         {
            $plugins[] = substr($file, 0, -4);
         }
@@ -221,7 +221,7 @@ URL to be linked on shared page: <input type="text" name="sharedurl" value="<?ph
     while($file=readdir($dirlist))
     {
     	fof_log("considering " . $file);
-        if(ereg('\.php$',$file))
+        if(preg_match('/\.php$/',$file))
         {
            $plugins[] = substr($file, 0, -4);
         }

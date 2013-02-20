@@ -1044,7 +1044,7 @@ function fof_init_plugins()
     $dirlist = opendir(FOF_DIR . "/plugins");
     while($file=readdir($dirlist))
     {
-        if(ereg('\.php$',$file) && !$p->get('plugin_' . substr($file, 0, -4)))
+        if(preg_match('/\.php$/',$file) && !$p->get('plugin_' . substr($file, 0, -4)))
         {
             fof_log("including " . $file);
             include(FOF_DIR . "/plugins/" . $file);
