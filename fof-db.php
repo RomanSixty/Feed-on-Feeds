@@ -396,7 +396,7 @@ function fof_db_get_items($user_id=1, $feed=NULL, $what="unread", $when=NULL, $s
 
     if($what != "all")
     {
-        $tags = split(" ", $what);
+        $tags = preg_split("/ /", $what);
         $in = '"' . implode('","', $tags) . '"';
         $from .= ", $FOF_TAG_TABLE t, $FOF_ITEM_TAG_TABLE it ";
         $where .= sprintf("AND it.user_id = %d ", $user_id);
