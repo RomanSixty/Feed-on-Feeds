@@ -16,7 +16,7 @@ include_once("fof-main.php");
 
 $prefs =& FoF_Prefs::instance();
 
-if(isset($_POST['adminprefs']))
+if(fof_is_admin() && isset($_POST['adminprefs']))
 {
 	$prefs->set('purge', $_POST['purge']);
 	$prefs->set('manualtimeout', $_POST['manualtimeout']);
@@ -132,7 +132,7 @@ if(isset($_POST['changepassword']))
     }
 }
 
-if(isset($_POST['adduser']) && $_POST['username'] && $_POST['password']) 
+if(fof_is_admin() && isset($_POST['adduser']) && $_POST['username'] && $_POST['password']) 
 {
     $username = $_POST['username'];
     $password = $_POST['password'];
@@ -142,7 +142,7 @@ if(isset($_POST['adduser']) && $_POST['username'] && $_POST['password'])
 }
 
 
-if(isset($_POST['deleteuser']) && $_POST['username'])
+if(fof_is_admin() && isset($_POST['deleteuser']) && $_POST['username'])
 {
 	$username = $_POST['username'];
 	
