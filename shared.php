@@ -89,7 +89,7 @@ foreach($result as $item)
 	$item_link = htmlspecialchars($item['item_link']);
 
     $item_guid = $item['item_guid'];
-    if(!ereg("^[a-z0-9\.\+\-]+:", $item_guid))
+    if(!preg_match("/^[a-z0-9\.\+\-]+:/", $item_guid))
     {
         $item_guid = $feed_link . '#' . $item_guid;
     }
@@ -127,8 +127,8 @@ else
 {
 header("Content-Type: text/html; charset=utf-8");
 ?>
-<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
-<html xmlns="http://www.w3.org/1999/xhtml">
+<!DOCTYPE html>
+<html>
 
    <head>
       <link rel="alternate" href="<?php echo $shared_feed?>" type="application/atom+xml"/>

@@ -130,7 +130,7 @@ p
     font-family: georgia;
 }
 
-.item .body { -moz-column-width: 400px; }
+/*.item .body { -moz-column-width: 400px; }
 .item .body img { max-width: 400px; }
 
 .item .body img:hover {
@@ -138,7 +138,7 @@ p
 	position: relative;
 	z-index: 5;
 	outline: 10px solid #000;
-}
+}*/
 
 .highlight-on .highlight
 {
