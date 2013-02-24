@@ -35,7 +35,7 @@ else
     }
     else
     {
-        $result = fof_db_get_subscriptions(fof_current_user());
+        $result = fof_db_get_subscriptions(fof_current_user(),true);
     }
     while($feed = fof_db_get_row($result))
     {
@@ -46,7 +46,7 @@ else
 
             print "$title was just updated $timestamp!<br>";
         } else if (time() < $feed["feed_cache_next_attempt"]) {
-		print "$title isn't due for an update for " . fof_nice_time_stamp($feed["feed_cache_next_attempt"]) . "<br>";
+	    print "$title isn't due for an update for " . fof_nice_time_stamp($feed['feed_cache_next_attempt'])[0] . "<br>";
 	}
         else
         {
