@@ -203,13 +203,13 @@ function fof_db_get_item_count ( $user_id, $what = 'all', $feed = null, $search 
 
 	    		$query .= " AND $FOF_ITEM_TAG_TABLE.tag_id != 1
 	    		            AND $FOF_ITEM_TAG_TABLE.tag_id != 2
-	    		            AND $FOF_ITEM_TAG_TABLE.tag_id != $folded_id";
+	    		            AND $FOF_ITEM_TAG_TABLE.tag_id = $folded_id";
 	    		break;
 
 	    	default:
-	    		$tag_id = fof_db_get_tag_by_name($user_id, $what);
+	    		$tag_ids = fof_db_get_tag_by_name($user_id, $what);
 
-	    		$query .= " AND $FOF_ITEM_TAG_TABLE.tag_id = $tag_id";
+	    		$query .= " AND $FOF_ITEM_TAG_TABLE.tag_id IN ($tag_ids)";
 	    }
 
     if(!is_null($search) && $search != '')
@@ -617,14 +617,19 @@ function fof_db_get_tag_by_name($user_id, $tag)
 {
     global $FOF_TAG_TABLE, $FOF_ITEM_TABLE, $FOF_ITEM_TAG_TABLE, $fof_connection;
 
-    $result = fof_safe_query("select $FOF_TAG_TABLE.tag_id from $FOF_TAG_TABLE where $FOF_TAG_TABLE.tag_name = '%s'", $tag);
+    $tags = explode ( ' ', $tag );
+
+    $result = fof_db_query("select distinct $FOF_TAG_TABLE.tag_id from $FOF_TAG_TABLE where $FOF_TAG_TABLE.tag_name IN ('" . implode ( "','", $tags ) . "')" );
 
     if(mysql_num_rows($result) == 0)
     {
         return NULL;
     }
 
-    return fof_db_get_row ( $result, 'tag_id' );
+    while ( $tag_id = fof_db_get_row ( $result, 'tag_id' ) )
+    	$return[] = $tag_id;
+
+    return implode ( ',', $return );
 }
 
 function fof_db_mark_unread($user_id, $items)
