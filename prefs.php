@@ -23,6 +23,7 @@ if(fof_is_admin() && isset($_POST['adminprefs']))
 	$prefs->set('autotimeout', $_POST['autotimeout']);
 	$prefs->set('logging', $_POST['logging']);
 	$prefs->set('blacklist', $_POST['blacklist']);
+	$prefs->set('dynupdates', $_POST['dynupdates']);
 
 	$prefs->save();
 
@@ -144,7 +145,7 @@ if(isset($_POST['changepassword']))
     }
 }
 
-if(fof_is_admin() && isset($_POST['adduser']) && $_POST['username'] && $_POST['password']) 
+if(fof_is_admin() && isset($_POST['adduser']) && $_POST['username'] && $_POST['password'])
 {
     $username = $_POST['username'];
     $password = $_POST['password'];
@@ -347,6 +348,7 @@ Enable logging? <input type=checkbox name="logging" <?php if($prefs->get('loggin
 Purge read items after <input size="4" type="text" name=purge value="<?php echo $prefs->get('purge')?>"> days (leave blank to never purge)<br><br>
 Allow automatic feed updates every <input size="4" type="text" name=autotimeout value="<?php echo $prefs->get('autotimeout')?>"> minutes<br><br>
 Allow manual feed updates every <input size="4" type="text" name=manualtimeout value="<?php echo $prefs->get('manualtimeout')?>"> minutes<br><br>
+Use dynamic update intervals based on each feed's own update rate <input type="checkbox" name="dynupdates" value="1" <?php if ($prefs->get('dynupdates')) echo "checked" ?>><br><br>
 
 <fieldset>
 <legend><b>Feed Item Title Blacklist</b></legend>

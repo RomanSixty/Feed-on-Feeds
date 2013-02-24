@@ -173,16 +173,16 @@ function fof_get_tags($user_id)
 
 function fof_get_item_tags($user_id, $item_id)
 {
-	$result = fof_db_get_item_tags($user_id, $item_id);
+    $result = fof_db_get_item_tags($user_id, $item_id);
 
-	$tags = array();
+    $tags = array();
 
-	while($row = fof_db_get_row($result))
-	{
-    	$tags[] = $row['tag_name'];
+    while($row = fof_db_get_row($result))
+    {
+        $tags[] = $row['tag_name'];
     }
 
-	return $tags;
+    return $tags;
 }
 
 function fof_update_feed_prefs($feed_id, $title, $alt_image)
@@ -239,25 +239,25 @@ function fof_untag_feed($user_id, $feed_id, $tag)
 
 function fof_tag_item($user_id, $item_id, $tag)
 {
-	if(is_array($tag)) $tags = $tag; else $tags[] = $tag;
+    if(is_array($tag)) $tags = $tag; else $tags[] = $tag;
 
-	foreach($tags as $tag)
-	{
-		// remove tag, if it starts with '-'
-		if ( $tag{0} == '-' )
-		{
-			fof_untag_item($user_id, $item_id, substr($tag, 1));
-			continue;
-		}
+    foreach($tags as $tag)
+    {
+        // remove tag, if it starts with '-'
+        if ( $tag{0} == '-' )
+        {
+            fof_untag_item($user_id, $item_id, substr($tag, 1));
+            continue;
+        }
 
-		$tag_id = fof_db_get_tag_by_name($user_id, $tag);
-		if($tag_id == NULL)
-		{
-			$tag_id = fof_db_create_tag($user_id, $tag);
-		}
+        $tag_id = fof_db_get_tag_by_name($user_id, $tag);
+        if($tag_id == NULL)
+        {
+            $tag_id = fof_db_create_tag($user_id, $tag);
+        }
 
-		fof_db_tag_items($user_id, $tag_id, $item_id);
-	}
+        fof_db_tag_items($user_id, $tag_id, $item_id);
+    }
 }
 
 function fof_untag_item($user_id, $item_id, $tag)
@@ -450,10 +450,10 @@ function fof_get_feeds($user_id, $order = 'feed_title', $direction = 'asc')
       if($feeds[$i]['feed_id'] == $row['id'])
       {
          $feeds[$i]['max_date'] = $row['max_date'];
-		  list($agestr, $agestrabbr) = fof_nice_time_stamp($row['max_date']);
+          list($agestr, $agestrabbr) = fof_nice_time_stamp($row['max_date']);
 
-    	  $feeds[$i]['lateststr'] = $agestr;
-      	$feeds[$i]['lateststrabbr'] = $agestrabbr;
+          $feeds[$i]['lateststr'] = $agestr;
+          $feeds[$i]['lateststrabbr'] = $agestrabbr;
 
       }
      }
@@ -503,9 +503,9 @@ function fof_get_items($user_id, $feed=NULL, $what="unread", $when=NULL, $start=
 
    for($i=0; $i<count($items); $i++)
    {
-   	  foreach($fof_item_filters as $filter)
-   	  {
-		  $items[$i]['item_content'] = $filter($items[$i]['item_content']);
+         foreach($fof_item_filters as $filter)
+         {
+          $items[$i]['item_content'] = $filter($items[$i]['item_content']);
       }
    }
 
@@ -542,7 +542,7 @@ function fof_delete_subscription($user_id, $feed_id)
 
     if(mysql_num_rows(fof_get_subscribed_users($feed_id)) == 0)
     {
-    	fof_db_delete_feed($feed_id);
+        fof_db_delete_feed($feed_id);
     }
 }
 
@@ -744,21 +744,21 @@ function fof_parse($url)
 
     if ( $pie -> error() )
     {
-	    $data = file_get_contents ( $url );
+        $data = file_get_contents ( $url );
 
-	    $data = preg_replace ( '~.*<\?xml~sim', '<?xml', $data );
+        $data = preg_replace ( '~.*<\?xml~sim', '<?xml', $data );
 
-	    #file_put_contents ('/tmp/text.xml',$data);
+        #file_put_contents ('/tmp/text.xml',$data);
 
-	    unset ( $pie );
+        unset ( $pie );
 
-	    $pie = new SimplePie();
-	    $pie->set_cache_location(dirname(__FILE__).'/cache');
-	    $pie->set_cache_duration($admin_prefs["manualtimeout"] * 60);
-	    $pie->remove_div(true);
+        $pie = new SimplePie();
+        $pie->set_cache_location(dirname(__FILE__).'/cache');
+        $pie->set_cache_duration($admin_prefs["manualtimeout"] * 60);
+        $pie->remove_div(true);
 
-	    $pie -> set_raw_data ( $data );
-	    $pie -> init();
+        $pie -> set_raw_data ( $data );
+        $pie -> init();
     }
 
     return $pie;
@@ -890,7 +890,7 @@ function fof_update_feed($id)
                     fof_mark_item_unread($feed_id, $id);
                 }
 
-				fof_apply_plugin_tags($feed_id, $id, NULL);
+                fof_apply_plugin_tags($feed_id, $id, NULL);
             }
 
             $ids[] = $id;
@@ -899,50 +899,53 @@ function fof_update_feed($id)
 
     unset($rss);
 
-    // Determine the average time between items, to determine the next update time
-    $result = fof_safe_query("SELECT item_updated FROM $FOF_ITEM_TABLE WHERE feed_id = %d ORDER BY item_updated ASC", $feed_id);
-    if ($row = fof_db_get_row($result)) {
-        $count = 1.0;
-    	$totalDelta = 0.0;
-	$totalDeltaSquare = 0.0;
-        $lastTime = $row['item_updated'];
-	while ($row = fof_db_get_row($result)) {
-    	      $delta = (float)($row['item_updated'] - $lastTime);
-	      if ($delta > 0.0) {
-	      	      $totalDelta += $delta;
-	      	      $totalDeltaSquare += $delta*$delta;
-		      $count++;
-		      $lastTime = $row['item_updated'];
-	      }
-	}
-	$delta = (float)(time() - $lastTime);
-	if ($delta > 0) {
-	    	$totalDelta += $delta;
-    		$totalDeltaSquare += $delta*$delta;
-		$count++;
-	}
+    if ( $admin_prefs [ 'dynupdates' ] )
+    {
+        // Determine the average time between items, to determine the next update time
+        $result = fof_safe_query("SELECT item_updated FROM $FOF_ITEM_TABLE WHERE feed_id = %d ORDER BY item_updated ASC", $feed_id);
+        if ($row = fof_db_get_row($result)) {
+            $count = 1.0;
+            $totalDelta = 0.0;
+            $totalDeltaSquare = 0.0;
+            $lastTime = $row['item_updated'];
+            while ($row = fof_db_get_row($result)) {
+                $delta = (float)($row['item_updated'] - $lastTime);
+                if ($delta > 0.0) {
+                    $totalDelta += $delta;
+                    $totalDeltaSquare += $delta*$delta;
+                    $count++;
+                    $lastTime = $row['item_updated'];
+                }
+            }
+            $delta = (float)(time() - $lastTime);
+            if ($delta > 0) {
+                $totalDelta += $delta;
+                $totalDeltaSquare += $delta*$delta;
+                $count++;
+            }
 
-	// Next update should be now + mean - stdeviation
-	$mean = 0;
-	if ($count > 0) {
-		$mean = $totalDelta/$count;
-	}
-	$stdev = 0;
-	if ($count > 1) {
-	   $stdev = sqrt(($count*$totalDeltaSquare - $totalDelta*$totalDelta)
-	   		 /($count * ($count - 1)));
+            // Next update should be now + mean - stdeviation
+            $mean = 0;
+            if ($count > 0) {
+                $mean = $totalDelta/$count;
+            }
+            $stdev = 0;
+            if ($count > 1) {
+               $stdev = sqrt(($count*$totalDeltaSquare - $totalDelta*$totalDelta)
+                    /($count * ($count - 1)));
+            }
+
+            // Cap the maximum update interval to 3 days for now
+            $nextInterval = min($mean - min($stdev,$mean/2), 86400*3);
+
+            fof_log($feed['feed_title'] . ": Next feed update in "
+                . $nextInterval . " seconds;"
+                . " count=$count t=$totalDelta t2=$totalDeltaSquare"
+                . " mean=$mean stdev=$stdev");
+            fof_safe_query("UPDATE $FOF_FEED_TABLE SET feed_cache_next_attempt=%d"
+                . " WHERE feed_id = %d",
+                (int)round(time() + $nextInterval), $feed_id);
         }
-
-	// Cap the maximum update interval to 3 days for now
-	$nextInterval = min($mean - min($stdev,$mean/2), 86400*3);
-
-        fof_log($feed['feed_title'] . ": Next feed update in "
-		. $nextInterval . " seconds;"
-		. " count=$count t=$totalDelta t2=$totalDeltaSquare"
-		. " mean=$mean stdev=$stdev");
-	fof_safe_query("UPDATE $FOF_FEED_TABLE SET feed_cache_next_attempt=%d"
-			  . " WHERE feed_id = %d",
-			  (int)round(time() + $nextInterval), $feed_id);
     }
 
     // optionally purge old items -  if 'purge' is set we delete items that are not
@@ -953,7 +956,6 @@ function fof_update_feed($id)
 
     if ( !empty ( $admin_prefs [ 'purge' ] ) )
     {
-
         $purge = $admin_prefs [ 'purge' ];
 
         fof_log('purge is ' . $purge);
@@ -969,31 +971,31 @@ function fof_update_feed($id)
         $delete = array();
 
         while($row = fof_db_get_row($result))
-        	$delete[] = $row['item_id'];
+            $delete[] = $row['item_id'];
 
         if ( count ( $delete ) )
-	        fof_db_query( "DELETE FROM $FOF_ITEM_TABLE WHERE item_id IN (" . implode ( ',', $delete ) . ")" );
+            fof_db_query( "DELETE FROM $FOF_ITEM_TABLE WHERE item_id IN (" . implode ( ',', $delete ) . ")" );
 
-	    $ndelete += count ( $delete );
+        $ndelete += count ( $delete );
     }
 
     // also purge duplicate items (based on title and content comparison)
 
     $sql = "SELECT i2.item_id, i1.item_content AS c1, i2.item_content AS c2 FROM $FOF_ITEM_TABLE i1
-    	LEFT JOIN $FOF_ITEM_TABLE i2
-    		ON i1.item_title = i2.item_title AND i1.feed_id = i2.feed_id
-    	WHERE i1.item_id < i2.item_id";
+        LEFT JOIN $FOF_ITEM_TABLE i2
+            ON i1.item_title = i2.item_title AND i1.feed_id = i2.feed_id
+        WHERE i1.item_id < i2.item_id";
 
     $result = fof_db_query ( $sql );
 
     while ( $row = fof_db_get_row ( $result ) )
     {
-    	$similarity = 0;
+        $similarity = 0;
 
-    	similar_text ( $row [ 'c1' ], $row [ 'c2' ], $similarity );
+        similar_text ( $row [ 'c1' ], $row [ 'c2' ], $similarity );
 
-    	if ( $similarity > 90 )
-	    	$delete[] = $row [ 'item_id' ];
+        if ( $similarity > 90 )
+            $delete[] = $row [ 'item_id' ];
     }
 
     if ( count ( $delete ) )
@@ -1147,8 +1149,8 @@ function fof_get_widgets($item)
 
     if (!is_array($fof_item_widgets))
     {
-		return false;
-	}
+        return false;
+    }
 
     foreach($fof_item_widgets as $widget)
     {
@@ -1220,22 +1222,22 @@ function fof_repair_drain_bamage()
 // grab a favicon from $url and cache it
 function fof_get_favicon ( $url )
 {
-	$request = 'http://fvicon.com/' . $url . '?format=gif&width=16&height=16&defaultIcon=image/feed-icon.png';
+    $request = 'http://fvicon.com/' . $url . '?format=gif&width=16&height=16&defaultIcon=image/feed-icon.png';
 
-	$reflector = new ReflectionClass('SimplePie_File');
-	$sp = $reflector->newInstanceArgs(array($request));
+    $reflector = new ReflectionClass('SimplePie_File');
+    $sp = $reflector->newInstanceArgs(array($request));
 
-	if ( $sp -> success )
-	{
-		$data = $sp -> body;
+    if ( $sp -> success )
+    {
+        $data = $sp -> body;
 
-		$path = 'cache/' . md5 ( $data ) . '.png';
+        $path = 'cache/' . md5 ( $data ) . '.png';
 
-		file_put_contents ( dirname(__FILE__) . '/' . $path, $data );
+        file_put_contents ( dirname(__FILE__) . '/' . $path, $data );
 
-		return $path;
-	}
-	else
-		return 'image/feed-icon.png';
+        return $path;
+    }
+    else
+        return 'image/feed-icon.png';
 }
 ?>
