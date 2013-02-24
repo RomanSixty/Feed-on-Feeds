@@ -923,7 +923,7 @@ function fof_update_feed($id)
                 $totalDeltaSquare += $delta*$delta;
                 $count++;
             }
-        
+
             // Next update should be now + mean - stdeviation
             $mean = 0;
             if ($count > 0) {
@@ -934,10 +934,10 @@ function fof_update_feed($id)
                 $stdev = sqrt(($count*$totalDeltaSquare - $totalDelta*$totalDelta)
                               /($count * ($count - 1)));
             }
-        
+
             // Cap the maximum update interval to 3 days for now
             $nextInterval = min($mean - min($stdev,$mean/2), 86400*3);
-        
+
             fof_log($feed['feed_title'] . ": Next feed update in "
                     . $nextInterval . " seconds;"
                     . " count=$count t=$totalDelta t2=$totalDeltaSquare"
@@ -1224,7 +1224,7 @@ function fof_repair_drain_bamage()
 // grab a favicon from $url and cache it
 function fof_get_favicon ( $url )
 {
-    $request = 'http://fvicon.com/' . $url . '?format=gif&width=16&height=16&defaultIcon=image/feed-icon.png';
+    $request = 'http://fvicon.com/' . $url . '?format=gif&width=16&height=16&canAudit=false';
 
     $reflector = new ReflectionClass('SimplePie_File');
     $sp = $reflector->newInstanceArgs(array($request));
