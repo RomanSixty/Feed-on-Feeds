@@ -1,0 +1,9 @@
+.item .body { -moz-column-width: 400px; }
+.item .body img { max-width: 400px; }
+
+.item .body img:hover {
+	max-width: 1000% !important;
+	position: relative;
+	z-index: 5;
+	outline: 10px solid #000;
+}
