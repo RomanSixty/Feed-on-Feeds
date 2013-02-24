@@ -986,14 +986,14 @@ function fof_update_feed($id)
 	if ($count > 0) {
 		$mean = $totalDelta/$count;
 	}
-	$variance = 0;
+	$stdev = 0;
 	if ($count > 1) {
-	   $stdev = sqrt()($count*$totalDeltaSquare - $totalDelta*$totalDelta)
+	   $stdev = sqrt(($count*$totalDeltaSquare - $totalDelta*$totalDelta)
 	   		 /($count * ($count - 1)));
         }
 
-	// Cap the maximum update interval to 2 days for now
-	$nextInterval = min($mean - $stdev/5, 86400*2);
+	// Cap the maximum update interval to 3 days for now
+	$nextInterval = min($mean - min($stdev,$mean/2), 86400*3);
 
         fof_log($feed['feed_title'] . ": Next feed update in "
 		. $nextInterval . " seconds;"

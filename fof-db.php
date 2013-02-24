@@ -162,7 +162,7 @@ function fof_db_get_feeds($where='')
 {
     global $FOF_FEED_TABLE, $FOF_ITEM_TABLE, $FOF_SUBSCRIPTION_TABLE, $FOF_ITEM_TAG_TABLE;
 
-    return(fof_db_query("select * from $FOF_FEED_TABLE order by feed_title $where"));
+    return(fof_db_query("select * from $FOF_FEED_TABLE $where order by feed_title"));
 }
 
 function fof_db_get_item_count ( $user_id, $what = 'all', $feed = null, $search = null )
