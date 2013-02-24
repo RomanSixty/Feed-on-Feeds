@@ -16,7 +16,7 @@ include_once("fof-main.php");
 
 $prefs =& FoF_Prefs::instance();
 
-if(isset($_POST['adminprefs']))
+if(fof_is_admin() && isset($_POST['adminprefs']))
 {
 	$prefs->set('purge', $_POST['purge']);
 	$prefs->set('manualtimeout', $_POST['manualtimeout']);
@@ -110,7 +110,7 @@ if(isset($_POST['plugins']))
     $dirlist = opendir(FOF_DIR . "/plugins");
     while($file=readdir($dirlist))
     {
-        if(ereg('\.php$',$file))
+        if(preg_match('/\.php$/',$file))
         {
            $plugins[] = substr($file, 0, -4);
         }
@@ -144,7 +144,7 @@ if(isset($_POST['changepassword']))
     }
 }
 
-if(isset($_POST['adduser']) && $_POST['username'] && $_POST['password'])
+if(fof_is_admin() && isset($_POST['adduser']) && $_POST['username'] && $_POST['password']) 
 {
     $username = $_POST['username'];
     $password = $_POST['password'];
@@ -154,7 +154,7 @@ if(isset($_POST['adduser']) && $_POST['username'] && $_POST['password'])
 }
 
 
-if(isset($_POST['deleteuser']) && $_POST['username'])
+if(fof_is_admin() && isset($_POST['deleteuser']) && $_POST['username'])
 {
 	$username = $_POST['username'];
 
@@ -221,7 +221,7 @@ URL to be linked on shared page: <input type="text" name="sharedurl" value="<?ph
     while($file=readdir($dirlist))
     {
     	fof_log("considering " . $file);
-        if(ereg('\.php$',$file))
+        if(preg_match('/\.php$/',$file))
         {
            $plugins[] = substr($file, 0, -4);
         }

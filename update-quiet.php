@@ -25,13 +25,14 @@ $fof_admin_prefs = $p->prefs;
 
 fof_log("=== update started, timeout = $fof_admin_prefs[autotimeout], purge = $fof_admin_prefs[purge] ===", "update");
 
-$result = fof_db_get_feeds();
+$result = fof_db_get_feeds('WHERE feed_cache_next_attempt < UNIX_TIMESTAMP()');
 
 $feeds = array();
 
 while($feed = fof_db_get_row($result))
 {
-    if((time() - $feed["feed_cache_date"]) > ($fof_admin_prefs["autotimeout"] * 60))
+    if((time() - $feed["feed_cache_date"]) > ($fof_admin_prefs["autotimeout"] * 60)
+	&& (time() > $feed["feed_cache_next_attempt"]))
     {
         $feeds[] = $feed;
     }

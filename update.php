@@ -31,7 +31,7 @@ else
 {
     if($fof_user_id == 1)
     {
-        $result = fof_db_get_feeds();
+        $result = fof_db_get_feeds('WHERE feed_cache_next_attempt < UNIX_TIMESTAMP()');
     }
     else
     {
@@ -45,7 +45,9 @@ else
             list($timestamp, ) = fof_nice_time_stamp($feed['feed_cache_date']);
 
             print "$title was just updated $timestamp!<br>";
-        }
+        } else if (time() < $feed["feed_cache_next_attempt"]) {
+		print "$title isn't due for an update for " . fof_nice_time_stamp($feed["feed_cache_next_attempt"]) . "<br>";
+	}
         else
         {
             $feeds[] = $feed;
