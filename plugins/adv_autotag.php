@@ -85,10 +85,10 @@ function save_prefs_adv_autotag ( $post )
 
 function edit_prefs_adv_autotag ( $prefs )
 {
-	echo '<br><h1>Advanced Autotagging</h1>
+	echo '<br><h1 id="adv_autotagging">Advanced Autotagging</h1>
 		<div style="border: 1px solid black; margin: 10px; padding: 10px; font-size: 12px; font-family: verdana, arial;">
 		<p><strong>Note:</strong> Instead of adding you can also remove a tag by using a dash as first character, use e.g. \'-unread\' to automatically mark items as read.</p>
-		<form method="post" action="prefs.php">
+		<form method="post" action="prefs.php#adv_autotagging">
 		<table cellpadding=3 cellspacing=0>
 		<tr>
 			<th>What</th>
