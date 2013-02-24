@@ -158,11 +158,11 @@ function fof_db_get_subscriptions($user_id)
     return(fof_safe_query("select * from $FOF_FEED_TABLE, $FOF_SUBSCRIPTION_TABLE where $FOF_SUBSCRIPTION_TABLE.user_id = %d and $FOF_FEED_TABLE.feed_id = $FOF_SUBSCRIPTION_TABLE.feed_id order by feed_title", $user_id));
 }
 
-function fof_db_get_feeds()
+function fof_db_get_feeds($where='')
 {
     global $FOF_FEED_TABLE, $FOF_ITEM_TABLE, $FOF_SUBSCRIPTION_TABLE, $FOF_ITEM_TAG_TABLE;
 
-    return(fof_db_query("select * from $FOF_FEED_TABLE order by feed_title"));
+    return(fof_db_query("select * from $FOF_FEED_TABLE $where order by feed_title"));
 }
 
 function fof_db_get_item_count ( $user_id, $what = 'all', $feed = null, $search = null )
@@ -396,7 +396,7 @@ function fof_db_get_items($user_id=1, $feed=NULL, $what="unread", $when=NULL, $s
 
     if($what != "all")
     {
-        $tags = split(" ", $what);
+        $tags = preg_split("/ /", $what);
         $in = '"' . implode('","', $tags) . '"';
         $from .= ", $FOF_TAG_TABLE t, $FOF_ITEM_TAG_TABLE it ";
         $where .= sprintf("AND it.user_id = %d ", $user_id);
