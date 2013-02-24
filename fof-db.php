@@ -151,11 +151,11 @@ function fof_db_get_latest_item_age($user_id)
     return $result;
 }
 
-function fof_db_get_subscriptions($user_id)
+function fof_db_get_subscriptions($user_id,$dueOnly=false)
 {
     global $FOF_FEED_TABLE, $FOF_ITEM_TABLE, $FOF_SUBSCRIPTION_TABLE, $FOF_ITEM_TAG_TABLE;
 
-    return(fof_safe_query("select * from $FOF_FEED_TABLE, $FOF_SUBSCRIPTION_TABLE where $FOF_SUBSCRIPTION_TABLE.user_id = %d and $FOF_FEED_TABLE.feed_id = $FOF_SUBSCRIPTION_TABLE.feed_id order by feed_title", $user_id));
+    return(fof_safe_query("select * from $FOF_FEED_TABLE, $FOF_SUBSCRIPTION_TABLE where $FOF_SUBSCRIPTION_TABLE.user_id = %d and $FOF_FEED_TABLE.feed_id = $FOF_SUBSCRIPTION_TABLE.feed_id" . ($dueOnly?" AND feed_cache_next_attempt < UNIX_TIMESTAMP()":" ORDER BY feed_title"), $user_id));
 }
 
 function fof_db_get_feeds($where='')
