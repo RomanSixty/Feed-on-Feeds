@@ -901,51 +901,51 @@ function fof_update_feed($id)
 
     if ( $admin_prefs [ 'dynupdates' ] )
     {
-    // Determine the average time between items, to determine the next update time
-    $result = fof_safe_query("SELECT item_updated FROM $FOF_ITEM_TABLE WHERE feed_id = %d ORDER BY item_updated ASC", $feed_id);
-    if ($row = fof_db_get_row($result)) {
-        $count = 1.0;
-        $totalDelta = 0.0;
-        $totalDeltaSquare = 0.0;
-        $lastTime = $row['item_updated'];
-        while ($row = fof_db_get_row($result)) {
-            $delta = (float)($row['item_updated'] - $lastTime);
-            if ($delta > 0.0) {
-                $totalDelta += $delta;
-                $totalDeltaSquare += $delta*$delta;
-                $count++;
-                $lastTime = $row['item_updated'];
-            }
-        }
-        $delta = (float)(time() - $lastTime);
-        if ($delta > 0) {
-            $totalDelta += $delta;
-            $totalDeltaSquare += $delta*$delta;
-            $count++;
-        }
+	// Determine the average time between items, to determine the next update time
+	$result = fof_safe_query("SELECT item_updated FROM $FOF_ITEM_TABLE WHERE feed_id = %d ORDER BY item_updated ASC", $feed_id);
+	if ($row = fof_db_get_row($result)) {
+	    $count = 1.0;
+	    $totalDelta = 0.0;
+	    $totalDeltaSquare = 0.0;
+	    $lastTime = $row['item_updated'];
+	    while ($row = fof_db_get_row($result)) {
+		$delta = (float)($row['item_updated'] - $lastTime);
+		if ($delta > 0.0) {
+		    $totalDelta += $delta;
+		    $totalDeltaSquare += $delta*$delta;
+		    $count++;
+		    $lastTime = $row['item_updated'];
+		}
+	    }
+	    $delta = (float)(time() - $lastTime);
+	    if ($delta > 0) {
+		$totalDelta += $delta;
+		$totalDeltaSquare += $delta*$delta;
+		$count++;
+	    }
         
-        // Next update should be now + mean - stdeviation
-        $mean = 0;
-        if ($count > 0) {
-            $mean = $totalDelta/$count;
-        }
-        $stdev = 0;
-        if ($count > 1) {
-            $stdev = sqrt(($count*$totalDeltaSquare - $totalDelta*$totalDelta)
-                          /($count * ($count - 1)));
-        }
+	    // Next update should be now + mean - stdeviation
+	    $mean = 0;
+	    if ($count > 0) {
+		$mean = $totalDelta/$count;
+	    }
+	    $stdev = 0;
+	    if ($count > 1) {
+		$stdev = sqrt(($count*$totalDeltaSquare - $totalDelta*$totalDelta)
+			      /($count * ($count - 1)));
+	    }
         
-        // Cap the maximum update interval to 3 days for now
-        $nextInterval = min($mean - min($stdev,$mean/2), 86400*3);
+	    // Cap the maximum update interval to 3 days for now
+	    $nextInterval = min($mean - min($stdev,$mean/2), 86400*3);
         
-        fof_log($feed['feed_title'] . ": Next feed update in "
-                . $nextInterval . " seconds;"
-                . " count=$count t=$totalDelta t2=$totalDeltaSquare"
-                . " mean=$mean stdev=$stdev");
-        fof_safe_query("UPDATE $FOF_FEED_TABLE SET feed_cache_next_attempt=%d"
-                       . " WHERE feed_id = %d",
-                       (int)round(time() + $nextInterval), $feed_id);
-        }
+	    fof_log($feed['feed_title'] . ": Next feed update in "
+		    . $nextInterval . " seconds;"
+		    . " count=$count t=$totalDelta t2=$totalDeltaSquare"
+		    . " mean=$mean stdev=$stdev");
+	    fof_safe_query("UPDATE $FOF_FEED_TABLE SET feed_cache_next_attempt=%d"
+			   . " WHERE feed_id = %d",
+			   (int)round(time() + $nextInterval), $feed_id);
+	}
     }
 
     // optionally purge old items -  if 'purge' is set we delete items that are not
