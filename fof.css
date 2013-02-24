@@ -339,7 +339,7 @@ margin: 0;
 padding: 0 5px;
 background: #ddd;
 border-bottom: 1px solid #666;
-z-index: 1;
+z-index: 101;
 }
 
 #item-display-controls li

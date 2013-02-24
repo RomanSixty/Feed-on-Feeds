@@ -35,6 +35,7 @@ $unread_count = fof_get_unread_count(fof_current_user());
       <title>Feed on Feeds<?php if($unread_count) echo " ($unread_count)";?></title>
       
       <link rel="stylesheet" href="fof.css" media="screen" />
+      <?php if (is_readable('./fof-custom.css')) { ?><link rel="stylesheet" href="fof-custom.css" media="screen" /><?php } ?>
 
       <link rel="microsummary" href="microsummary.php" />
       

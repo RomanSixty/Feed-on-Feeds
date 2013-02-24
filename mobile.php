@@ -27,6 +27,7 @@ header("Content-Type: text/html; charset=utf-8");
 	<meta name = "viewport" content = "width=700">
 
       <link rel="stylesheet" href="fof.css" media="screen" />
+      <?php if (is_readable('./fof-custom.css')) { ?><link rel="stylesheet" href="fof-custom.css" media="screen" /><?php } ?>
       <style>
       .box
       {

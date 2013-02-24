@@ -899,6 +899,8 @@ function fof_update_feed($id)
 
     unset($rss);
 
+    if ( $admin_prefs [ 'dynupdates' ] )
+    {
     // Determine the average time between items, to determine the next update time
     $result = fof_safe_query("SELECT item_updated FROM $FOF_ITEM_TABLE WHERE feed_id = %d ORDER BY item_updated ASC", $feed_id);
     if ($row = fof_db_get_row($result)) {
@@ -943,6 +945,7 @@ function fof_update_feed($id)
         fof_safe_query("UPDATE $FOF_FEED_TABLE SET feed_cache_next_attempt=%d"
                        . " WHERE feed_id = %d",
                        (int)round(time() + $nextInterval), $feed_id);
+        }
     }
 
     // optionally purge old items -  if 'purge' is set we delete items that are not
@@ -953,7 +956,6 @@ function fof_update_feed($id)
 
     if ( !empty ( $admin_prefs [ 'purge' ] ) )
     {
-
         $purge = $admin_prefs [ 'purge' ];
 
         fof_log('purge is ' . $purge);
@@ -968,11 +970,13 @@ function fof_update_feed($id)
 
         $delete = array();
 
-        while($row = fof_db_get_row($result))
-          $delete[] = $row['item_id'];
+        while($row = fof_db_get_row($result)) {
+	    $delete[] = $row['item_id'];
+	}
 
-        if ( count ( $delete ) )
-          fof_db_query( "DELETE FROM $FOF_ITEM_TABLE WHERE item_id IN (" . implode ( ',', $delete ) . ")" );
+        if ( count ( $delete ) ) {
+	    fof_db_query( "DELETE FROM $FOF_ITEM_TABLE WHERE item_id IN (" . implode ( ',', $delete ) . ")" );
+	}
 
         $ndelete += count ( $delete );
     }
@@ -980,9 +984,9 @@ function fof_update_feed($id)
     // also purge duplicate items (based on title and content comparison)
 
     $sql = "SELECT i2.item_id, i1.item_content AS c1, i2.item_content AS c2 FROM $FOF_ITEM_TABLE i1
-            LEFT JOIN $FOF_ITEM_TABLE i2
-                    ON i1.item_title = i2.item_title AND i1.feed_id = i2.feed_id
-            WHERE i1.item_id < i2.item_id";
+        LEFT JOIN $FOF_ITEM_TABLE i2
+            ON i1.item_title = i2.item_title AND i1.feed_id = i2.feed_id
+        WHERE i1.item_id < i2.item_id";
 
     $result = fof_db_query ( $sql );
 
@@ -993,7 +997,7 @@ function fof_update_feed($id)
         similar_text ( $row [ 'c1' ], $row [ 'c2' ], $similarity );
 
         if ( $similarity > 90 )
-          $delete[] = $row [ 'item_id' ];
+            $delete[] = $row [ 'item_id' ];
     }
 
     if ( count ( $delete ) )
@@ -1236,6 +1240,6 @@ function fof_get_favicon ( $url )
         return $path;
     }
     else
-      return 'image/feed-icon.png';
+        return 'image/feed-icon.png';
 }
 ?>

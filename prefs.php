@@ -23,6 +23,7 @@ if(fof_is_admin() && isset($_POST['adminprefs']))
 	$prefs->set('autotimeout', $_POST['autotimeout']);
 	$prefs->set('logging', $_POST['logging']);
 	$prefs->set('blacklist', $_POST['blacklist']);
+	$prefs->set('dynupdates', $_POST['dynupdates']);
 
 	$prefs->save();
 
@@ -144,7 +145,7 @@ if(isset($_POST['changepassword']))
     }
 }
 
-if(fof_is_admin() && isset($_POST['adduser']) && $_POST['username'] && $_POST['password']) 
+if(fof_is_admin() && isset($_POST['adduser']) && $_POST['username'] && $_POST['password'])
 {
     $username = $_POST['username'];
     $password = $_POST['password'];
@@ -172,8 +173,8 @@ include("header.php");
 
 <?php } ?>
 
-<br><h1>Feed on Feeds - Preferences</h1>
-<form method="post" action="prefs.php" style="border: 1px solid black; margin: 10px; padding: 10px;">
+<br><h1 id="basic">Feed on Feeds - Preferences</h1>
+<form method="post" action="prefs.php#basic" style="border: 1px solid black; margin: 10px; padding: 10px;">
 
 <fieldset>
 <legend><b>Basic Settings</b></legend>
@@ -212,8 +213,8 @@ URL to be linked on shared page: <input type="text" name="sharedurl" value="<?ph
 <input type=submit name=prefs value="Save Preferences">
 </form>
 
-<br><h1>Feed on Feeds - Plugin Preferences</h1>
-<form method="post" action="prefs.php" style="border: 1px solid black; margin: 10px; padding: 10px;">
+<br><h1 id="plugins">Feed on Feeds - Plugin Preferences</h1>
+<form method="post" action="prefs.php#plugins" style="border: 1px solid black; margin: 10px; padding: 10px;">
 
 <?php
     $plugins = array();
@@ -265,7 +266,7 @@ foreach ( $plugins as $plugin )
 }
 ?>
 
-<br><h1>Feed on Feeds - Feeds and Tags</h1>
+<br><h1 id="feedsntags">Feed on Feeds - Feeds and Tags</h1>
 <div style="border: 1px solid black; margin: 10px; padding: 10px; font-size: 12px; font-family: verdana, arial;">
 <table cellpadding="3" cellspacing="0">
 <?php
@@ -306,7 +307,7 @@ foreach($feeds as $row)
    }
 
    print "<td>
-            <form method=\"post\" action=\"prefs.php\">
+            <form method=\"post\" action=\"prefs.php#feedsntags\">
             <input type=\"hidden\" name=\"changed\" value=\"$id\"/>
             <input type=\"text\" name=\"title\" value=\"$title\" size=\"50\"/>
             <input type=\"text\" name=\"alt_image\" value=\"$alt_image\" size=\"50\"/>
@@ -323,7 +324,7 @@ foreach($feeds as $row)
        {
            $utag = urlencode($tag);
            $utitle = urlencode($title);
-           print "$tag <a href='prefs.php?untagfeed=$id&tag=$utag&title=$utitle'>[x]</a> ";
+           print "$tag <a href='prefs.php?untagfeed=$id&tag=$utag&title=$utitle#feedsntags'>[x]</a> ";
        }
    }
    else
@@ -332,7 +333,7 @@ foreach($feeds as $row)
 
    print "</td>";
    $title = htmlspecialchars($title);
-   print "<td><form method=\"post\" action=\"prefs.php\"><input type=\"hidden\" name=\"title\" value=\"$title\"><input type=\"hidden\" name=\"feed_id\" value=\"$id\"><input type=\"text\" name=\"tag\"> <input type=\"submit\" name=\"tagfeed\" value=\"Tag Feed\"> <small><i>(separate tags with spaces)</i></small></form></td></tr>";
+   print "<td><form method=\"post\" action=\"prefs.php#feedsntags\"><input type=\"hidden\" name=\"title\" value=\"$title\"><input type=\"hidden\" name=\"feed_id\" value=\"$id\"><input type=\"text\" name=\"tag\"> <input type=\"submit\" name=\"tagfeed\" value=\"Tag Feed\"> <small><i>(separate tags with spaces)</i></small></form></td></tr>";
 }
 ?>
 </table>
@@ -341,12 +342,13 @@ foreach($feeds as $row)
 
 <?php if(fof_is_admin()) { ?>
 
-<br><h1>Feed on Feeds - Admin Options</h1>
-<form method="post" action="prefs.php" style="border: 1px solid black; margin: 10px; padding: 10px;">
+<br><h1 id="adminprefs">Feed on Feeds - Admin Options</h1>
+<form method="post" action="prefs.php#adminprefs" style="border: 1px solid black; margin: 10px; padding: 10px;">
 Enable logging? <input type=checkbox name="logging" <?php if($prefs->get('logging')) echo "checked" ?>><br><br>
 Purge read items after <input size="4" type="text" name=purge value="<?php echo $prefs->get('purge')?>"> days (leave blank to never purge)<br><br>
 Allow automatic feed updates every <input size="4" type="text" name=autotimeout value="<?php echo $prefs->get('autotimeout')?>"> minutes<br><br>
 Allow manual feed updates every <input size="4" type="text" name=manualtimeout value="<?php echo $prefs->get('manualtimeout')?>"> minutes<br><br>
+Use dynamic update intervals based on each feed's own update rate <input type="checkbox" name="dynupdates" value="1" <?php if ($prefs->get('dynupdates')) echo "checked" ?>><br><br>
 
 <fieldset>
 <legend><b>Feed Item Title Blacklist</b></legend>
@@ -358,8 +360,8 @@ Feed items with titles containing one of the following terms (one per line) will
 <input type=submit name=adminprefs value="Save Admin Options">
 </form>
 
-<br><h1>Add User</h1>
-<form method="post" action="prefs.php" style="border: 1px solid black; margin: 10px; padding: 10px;">
+<br><h1 id="adduser">Add User</h1>
+<form method="post" action="prefs.php#adduser" style="border: 1px solid black; margin: 10px; padding: 10px;">
 Username: <input type="text" name=username> Password: <input type="text" name=password> <input type=submit name=adduser value="Add user">
 </form>
 
@@ -376,8 +378,8 @@ Username: <input type="text" name=username> Password: <input type="text" name=pa
     {
 ?>
 
-<br><h1>Delete User</h1>
-<form method="post" action="prefs.php" style="border: 1px solid black; margin: 10px; padding: 10px;" onsubmit="return confirm('Delete User - Are you sure?')">
+<br><h1 id="deluser">Delete User</h1>
+<form method="post" action="prefs.php#deluser" style="border: 1px solid black; margin: 10px; padding: 10px;" onsubmit="return confirm('Delete User - Are you sure?')">
 <select name=username><?php echo $delete_options ?></select>
 <input type=submit name=deleteuser value="Delete user"><br>
 </form>

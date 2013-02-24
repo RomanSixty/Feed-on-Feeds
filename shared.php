@@ -134,6 +134,7 @@ header("Content-Type: text/html; charset=utf-8");
       <link rel="alternate" href="<?php echo $shared_feed?>" type="application/atom+xml"/>
       <title>Feed on Feeds - Shared Items<?php if($name) echo " from $name"; if($extratitle) echo " " . strip_tags($extratitle) ?></title>
       <link rel="stylesheet" href="fof.css" media="screen" />
+      <?php if (is_readable('./fof-custom.css')) { ?><link rel="stylesheet" href="fof-custom.css" media="screen" /><?php } ?>
       <style>
       .box
       {
