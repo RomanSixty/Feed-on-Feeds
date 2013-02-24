@@ -266,20 +266,21 @@ $result = fof_db_query("show columns from $FOF_FEED_TABLE like 'feed_image_cache
 
 if(mysql_num_rows($result) == 0)
 {
-
-print "Upgrading schema...";
-
-fof_db_query("ALTER TABLE $FOF_FEED_TABLE ADD `feed_image_cache_date` INT( 11 ) DEFAULT '0' AFTER `feed_image` ;");
-
-print "Done.<hr>";
+    
+    print "Upgrading schema...";
+    
+    fof_db_query("ALTER TABLE $FOF_FEED_TABLE ADD `feed_image_cache_date` INT( 11 ) DEFAULT '0' AFTER `feed_image` ;");
+    
+    print "Done.<hr>";
+}
 
 $result = fof_db_query("show columns from $FOF_FEED_TABLE like 'feed_cache_next_attempt'");
 if (mysql_num_rows($result) == 0) {
-	print "Upgrading schema...";
-	fof_db_query("ALTER TABLE $FOF_FEED_TABLE ADD `feed_cache_next_attempt` INT(11) DEFAULT '0';");
-	fof_db_query("ALTER TABLE $FOF_FEED_TABLE ADD KEY `feed_cache_next_attempt` (`feed_cache_next_attempt`)");
-
-print "Done.<hr>";
+    print "Upgrading schema...";
+    fof_db_query("ALTER TABLE $FOF_FEED_TABLE ADD `feed_cache_next_attempt` INT(11) DEFAULT '0';");
+    fof_db_query("ALTER TABLE $FOF_FEED_TABLE ADD KEY `feed_cache_next_attempt` (`feed_cache_next_attempt`)");
+    
+    print "Done.<hr>";
 }
 ?>
 
@@ -290,12 +291,12 @@ $result = fof_db_query("show columns from $FOF_USER_TABLE like 'user_password_ha
 if(mysql_num_rows($result) == 0)
 {
 
-print "Upgrading schema...";
+    print "Upgrading schema...";
 
-fof_db_query("ALTER TABLE $FOF_USER_TABLE CHANGE `user_password` `user_password_hash` VARCHAR( 32 ) NOT NULL");
-fof_db_query("update $FOF_USER_TABLE set user_password_hash = md5(concat(user_password_hash, user_name))");
-
-print "Done.<hr>";
+    fof_db_query("ALTER TABLE $FOF_USER_TABLE CHANGE `user_password` `user_password_hash` VARCHAR( 32 ) NOT NULL");
+    fof_db_query("update $FOF_USER_TABLE set user_password_hash = md5(concat(user_password_hash, user_name))");
+    
+    print "Done.<hr>";
 }
 ?>
 
