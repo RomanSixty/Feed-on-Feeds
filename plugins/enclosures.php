@@ -7,7 +7,7 @@ function fof_enclosures ( $item, $link, $title, $content )
 	$html = '';
 
 	for ( $i = 0; $i <= 5; $i++ )
-		if ( $enclosure = $item -> get_enclosure ( $i ) && $enclosure -> get_link() )
+		if ( ( $enclosure = $item -> get_enclosure ( $i ) ) && $enclosure -> get_link() )
 		{
 			switch ( $enclosure -> get_type() )
 			{
