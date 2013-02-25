@@ -55,25 +55,25 @@ while ($cnt = fof_db_get_row($result, 'count'))
 $title = fof_view_title($_GET['feed'], $what, $_GET['when'], $which, $_GET['howmany'], $_GET['search'], $itemcount);
 $noedit = $_GET['noedit'];
 
+// Placeholder to push content down:
 ?>
-
 <ul id="item-display-controls-spacer" class="inline-list">
 	<li class="orderby">[new to old]</li>
 	<li class="orderby">[old to new]</li>
-	<li><a href="javascript:flag_all();mark_read()"><strong>Mark all read</strong></a></li>
-	<li><a href="javascript:flag_all()">Flag all</a></li>
-	<li><a href="javascript:unflag_all()">Unflag all</a></li>
-	<li><a href="javascript:toggle_all()">Toggle all</a></li>
-	<li><a href="javascript:mark_read()"><strong>Mark flagged read</strong></a></li>
-	<li><a href="javascript:mark_unread()">Mark flagged unread</a></li>
-	<li><a href="javascript:show_all()">Show all</a></li>
-	<li><a href="javascript:hide_all()">Hide all</a></li>
+	<li><strong>Mark all read</strong></li>
+	<li>Flag all</li>
+	<li>Unflag all</li>
+	<li>Toggle all</li>
+	<li><strong>Mark flagged read</strong></li>
+	<li>Mark flagged unread</li>
+	<li>Show all</li>
+	<li>Hide all</li>
+	<li>Untag all</li>
 </ul>
 
 <br style="clear: both"><br>
 
 <p><?php echo $title?></p>
-
 
 <ul id="item-display-controls" class="inline-list">
 	<li class="orderby"><?php
@@ -94,6 +94,7 @@ $noedit = $_GET['noedit'];
 	<li><a href="javascript:mark_unread()">Mark flagged unread</a></li>
 	<li><a href="javascript:show_all()">Show all</a></li>
 	<li><a href="javascript:hide_all()">Hide all</a></li>
+	<li><a href="javascript:untag_all()">Untag all</a></li>
 </ul>
 
 
