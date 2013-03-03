@@ -935,8 +935,8 @@ function fof_update_feed($id)
                               /($count * ($count - 1)));
             }
         
-            // Cap the maximum update interval to 3 days for now
-            $nextInterval = min($mean - min($stdev,$mean/2), 86400*3);
+            // Cap the maximum update interval to 2 days for now (TODO make configurable)
+            $nextInterval = min($mean - min($stdev,$mean/2), 86400*2);
         
             fof_log($feed['feed_title'] . ": Next feed update in "
                     . $nextInterval . " seconds;"
@@ -944,7 +944,7 @@ function fof_update_feed($id)
                     . " mean=$mean stdev=$stdev");
             fof_safe_query("UPDATE $FOF_FEED_TABLE SET feed_cache_next_attempt=%d"
                            . " WHERE feed_id = %d",
-                           (int)round(time() + $nextInterval), $feed_id);
+                           (int)round($lastTime + $nextInterval), $feed_id);
         }
     }
 
