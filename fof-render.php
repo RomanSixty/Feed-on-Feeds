@@ -122,9 +122,9 @@ function fof_render_item($item)
 		{
 			if($tag == "unread" || $tag == "star" || $tag == "folded") continue;
 ?>
-		<a href='?what=<?php echo $tag ?>'><?php echo $tag ?></a>
+    		<a href="?what=<?php echo $tag ?>"><?php echo $tag ?></a>
 
-		<a href='<?php echo $tag ?>' onclick='return remove_tag("<?php echo $item_id ?>", "<?php echo $tag ?>");'>[x]</a>
+    		<a href="<?php echo $tag ?>" class="untag" onclick="return remove_tag('<?php echo $item_id ?>', '<?php echo $tag ?>');">[x]</a>
 <?php
 		}
     }

@@ -923,7 +923,7 @@ function fof_update_feed($id)
                 $totalDeltaSquare += $delta*$delta;
                 $count++;
             }
-        
+
             // Next update should be now + mean - stdeviation
             $mean = 0;
             if ($count > 0) {
@@ -1224,7 +1224,7 @@ function fof_repair_drain_bamage()
 // grab a favicon from $url and cache it
 function fof_get_favicon ( $url )
 {
-    $request = 'http://fvicon.com/' . $url . '?format=gif&width=16&height=16&defaultIcon=image/feed-icon.png';
+    $request = 'http://fvicon.com/' . $url . '?format=gif&width=16&height=16&canAudit=false';
 
     $reflector = new ReflectionClass('SimplePie_File');
     $sp = $reflector->newInstanceArgs(array($request));

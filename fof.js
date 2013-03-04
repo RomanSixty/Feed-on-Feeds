@@ -685,7 +685,6 @@ function unflag_all()
     elements.each( function(e) { e.checked = false; });
 }
 
-
 function mark_read()
 {
     document.items['action'].value = 'read';
@@ -744,6 +743,12 @@ function mark_feed_read(id)
     new Ajax.Request(url, options);
 
     return false;
+}
+
+function untag_all()
+{
+    items = $$('.untag');
+    items.each( function(e) { e.onclick(); });
 }
 
 function add_tag(id, tag)
