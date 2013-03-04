@@ -944,7 +944,7 @@ function fof_update_feed($id)
                     . " mean=$mean stdev=$stdev");
             fof_safe_query("UPDATE $FOF_FEED_TABLE SET feed_cache_next_attempt=%d"
                            . " WHERE feed_id = %d",
-                           (int)round($lastTime + $nextInterval), $feed_id);
+                           (int)round(time() + $nextInterval), $feed_id);
         }
     }
 
