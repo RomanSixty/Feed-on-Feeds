@@ -24,6 +24,7 @@ if(fof_is_admin() && isset($_POST['adminprefs']))
 	$prefs->set('logging', $_POST['logging']);
 	$prefs->set('blacklist', $_POST['blacklist']);
 	$prefs->set('dynupdates', $_POST['dynupdates']);
+	$prefs->set('match_similarity', $_POST['match_similarity']);
 
 	$prefs->save();
 
@@ -344,11 +345,12 @@ foreach($feeds as $row)
 
 <br><h1 id="adminprefs">Feed on Feeds - Admin Options</h1>
 <form method="post" action="prefs.php#adminprefs" style="border: 1px solid black; margin: 10px; padding: 10px;">
-Enable logging? <input type=checkbox name="logging" <?php if($prefs->get('logging')) echo "checked" ?>><br><br>
-Purge read items after <input size="4" type="text" name=purge value="<?php echo $prefs->get('purge')?>"> days (leave blank to never purge)<br><br>
-Allow automatic feed updates every <input size="4" type="text" name=autotimeout value="<?php echo $prefs->get('autotimeout')?>"> minutes<br><br>
-Allow manual feed updates every <input size="4" type="text" name=manualtimeout value="<?php echo $prefs->get('manualtimeout')?>"> minutes<br><br>
-Use dynamic update intervals based on each feed's own update rate <input type="checkbox" name="dynupdates" value="1" <?php if ($prefs->get('dynupdates')) echo "checked" ?>><br><br>
+Enable logging? <input type=checkbox name="logging" <?=$prefs->get('logging')?"checked":'' ?>><br><br>
+Purge read items after <input size="4" type="text" name=purge value="<?=$prefs->get('purge')?>"> days (leave blank to never purge)<br><br>
+Allow automatic feed updates every <input size="4" type="text" name=autotimeout value="<?=$prefs->get('autotimeout')?>"> minutes<br><br>
+Allow manual feed updates every <input size="4" type="text" name=manualtimeout value="<?=$prefs->get('manualtimeout')?>"> minutes<br><br>
+Use dynamic update intervals based on each feed's own update rate <input type="checkbox" name="dynupdates" value="1" <?=$prefs->get('dynupdates')?'checked':''?>><br><br>
+Remove duplicate entries based on similarity <input size="4" type="text" name="match_similarity" value="<?=$prefs->get('match_similarity')?>">% (leave blank to disable)<br><br>
 
 <fieldset>
 <legend><b>Feed Item Title Blacklist</b></legend>

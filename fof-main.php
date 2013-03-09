@@ -934,10 +934,10 @@ function fof_update_feed($id)
                 $stdev = sqrt(($count*$totalDeltaSquare - $totalDelta*$totalDelta)
                               /($count * ($count - 1)));
             }
-
-            // Cap the maximum update interval to 3 days for now
-            $nextInterval = min($mean - min($stdev,$mean/2), 86400*3);
-
+        
+            // Cap the maximum update interval to 2 days for now (TODO make configurable)
+            $nextInterval = min($mean - min($stdev,$mean/2), 86400*2);
+        
             fof_log($feed['feed_title'] . ": Next feed update in "
                     . $nextInterval . " seconds;"
                     . " count=$count t=$totalDelta t2=$totalDeltaSquare"
@@ -979,34 +979,36 @@ function fof_update_feed($id)
         }
 
         $ndelete += count ( $delete );
+
+	// also purge duplicate items (based on title and content comparison)
+	if ( !empty ( $admin_prefs['match_similarity'] ) ) {
+	    $threshold = $admin_prefs['match_similarity'];
+	    $sql = "SELECT i2.item_id, i1.item_content AS c1, i2.item_content AS c2 FROM $FOF_ITEM_TABLE i1
+                LEFT JOIN $FOF_ITEM_TABLE i2
+                    ON i1.item_title = i2.item_title AND i1.feed_id = i2.feed_id
+                WHERE i1.item_id < i2.item_id";
+	    
+	    $result = fof_db_query ( $sql );
+	    
+	    while ( $row = fof_db_get_row ( $result ) )
+	    {
+		$similarity = 0;
+		
+		similar_text ( $row [ 'c1' ], $row [ 'c2' ], $similarity );
+		
+		if ( $similarity > $threshold )
+			$delete[] = $row [ 'item_id' ];
+	    }
+	}
+
+	if ( count ( $delete ) )
+	{
+	    fof_db_query( "DELETE FROM $FOF_ITEM_TABLE     WHERE item_id IN (" . implode ( ',', $delete ) . ")" );
+	    fof_db_query( "DELETE FROM $FOF_ITEM_TAG_TABLE WHERE item_id IN (" . implode ( ',', $delete ) . ")" );
+	}
+
+	$ndelete += count ( $delete );
     }
-
-    // also purge duplicate items (based on title and content comparison)
-
-    $sql = "SELECT i2.item_id, i1.item_content AS c1, i2.item_content AS c2 FROM $FOF_ITEM_TABLE i1
-        LEFT JOIN $FOF_ITEM_TABLE i2
-            ON i1.item_title = i2.item_title AND i1.feed_id = i2.feed_id
-        WHERE i1.item_id < i2.item_id";
-
-    $result = fof_db_query ( $sql );
-
-    while ( $row = fof_db_get_row ( $result ) )
-    {
-        $similarity = 0;
-
-        similar_text ( $row [ 'c1' ], $row [ 'c2' ], $similarity );
-
-        if ( $similarity > 90 )
-            $delete[] = $row [ 'item_id' ];
-    }
-
-    if ( count ( $delete ) )
-    {
-        fof_db_query( "DELETE FROM $FOF_ITEM_TABLE     WHERE item_id IN (" . implode ( ',', $delete ) . ")" );
-        fof_db_query( "DELETE FROM $FOF_ITEM_TAG_TABLE WHERE item_id IN (" . implode ( ',', $delete ) . ")" );
-    }
-
-    $ndelete += count ( $delete );
 
     fof_db_feed_mark_cached($feed_id);
 
