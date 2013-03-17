@@ -25,7 +25,7 @@ $fof_admin_prefs = $p->prefs;
 
 fof_log("=== update started, timeout = $fof_admin_prefs[autotimeout], purge = $fof_admin_prefs[purge] ===", "update");
 
-$result = fof_db_get_feeds('WHERE feed_cache_next_attempt < UNIX_TIMESTAMP()');
+$result = fof_db_get_feeds_needing_attempt();
 
 $feeds = array();
 

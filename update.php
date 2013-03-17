@@ -16,7 +16,7 @@ include("header.php");
 
 print("<br>");
 
-$feed = $_GET['feed'];
+$feed = isset($_GET['feed']) ? $_GET['feed'] : NULL;
 $feeds = array();
 
 $p =& FoF_Prefs::instance();
@@ -31,7 +31,7 @@ else
 {
     if($fof_user_id == 1)
     {
-        $result = fof_db_get_feeds('WHERE feed_cache_next_attempt < UNIX_TIMESTAMP()');
+        $result = fof_db_get_feeds_needing_attempt();
     }
     else
     {

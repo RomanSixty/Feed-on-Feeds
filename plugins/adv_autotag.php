@@ -98,6 +98,8 @@ function edit_prefs_adv_autotag ( $prefs )
 		</tr>';
 
 	$aa_prefs = $prefs -> get ( 'adv_autotag' );
+	if (empty($aa_prefs))
+	    $aa_prefs = array();
 
 	$count = 0;
 

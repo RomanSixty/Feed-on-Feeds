@@ -14,49 +14,40 @@
 
 include("header.php");
 
-$url = $_POST['rss_url'];
-if(!$url) $url = $_GET['rss_url'];
-$opml = $_POST['opml_url'];
-$file = $_POST['opml_file'];
-$unread = $_POST['unread'];
+$url = isset($_POST['rss_url']) ? $_POST['rss_url'] : NULL;
+if (! isset($url)) {
+    $url = isset($_GET['rss_url']) ? $_GET['rss_url'] : NULL;
+}
+
+$opml = isset($_POST['opml_url']) ? $_POST['opml_url'] : NULL;
+$file = isset($_POST['opml_file']) ? $_POST['opml_file'] : NULL;
+$unread = isset($_POST['unread']) ? $_POST['unread'] : NULL;
 
 $feeds = array();
 
-if($url) $feeds[] = $url;
+if ($url)
+    $feeds[] = $url;
 
-if($opml)
-{
-	$sfile = new SimplePie_File($opml);
-	
-	if(!$sfile->success)
-	{
-		echo "Cannot open " . htmlentities($opml) . "<br>";
-		return false;
-	}
+if ($opml) {
+    $sfile = new SimplePie_File($opml);
+    if (!$sfile->success) {
+        echo "Cannot open " . htmlentities($opml) . "<br>";
+        return false;
+    }
 
-	$content = $sfile->body;
-
-	$feeds = fof_opml_to_array($content);
+    $content = $sfile->body;
+    $feeds = fof_opml_to_array($content);
 }
 
-if($_FILES['opml_file']['tmp_name'])
-{
-	if(!$content_array = file($_FILES['opml_file']['tmp_name']))
-	{
-		echo "Cannot open uploaded file<br>";
-	}
-    else
-    {
-        $content = implode("", $content_array);
+if (isset($_FILES['opml_file'])) {
+    if (($content = file_get_contents($_FILES['opml_file']['tmp_name'])) === false) {
+        echo "Cannot open uploaded file '" . htmlentities($_FILES['opml_file']['name']) . "'<br>";
+    } else {
         $feeds = fof_opml_to_array($content);
     }
 }
 
-$add_feed_url = "http";
-if($_SERVER["HTTPS"] == "on")
-{
-  $add_feed_url = "https";
-}
+$add_feed_url = (isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] == 'on') ? 'https' : 'http';
 $add_feed_url .= "://" . $_SERVER["HTTP_HOST"] . $_SERVER["SCRIPT_NAME"];
 ?>
 

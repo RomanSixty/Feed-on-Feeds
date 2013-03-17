@@ -31,24 +31,18 @@ $order = $fof_prefs_obj->get('feed_order');
 $direction = $fof_prefs_obj->get('feed_direction');
 $sharing = $fof_prefs_obj->get('sharing');
 
-if(!isset($_GET['what']))
-{
-    $what = "unread";
-}
-else
-{
-    $what = $_GET['what'];
-}
-
-$when = $_GET['when'];
-
-$search = $_GET['search'];
+$what = isset($_GET['what']) ? $_GET['what'] : 'unread';
+$when = isset($_GET['when']) ? $_GET['when'] : NULL;
+$search = isset($_GET['search']) ? $_GET['search'] : NULL;
 
 echo "<script>what='$what'; when='$when';</script>";
 
-
 $feeds = fof_get_feeds(fof_current_user(), $order, $direction);
 
+$unread = 0;
+$starred = 0;
+$total = 0;
+$n = 0;
 foreach($feeds as $row)
 {
     $n++;
@@ -57,34 +51,29 @@ foreach($feeds as $row)
     $total += $row['feed_items'];
 }
 
-if($unread)
-{
-    echo "<script>document.title = 'Feed on Feeds ($unread)';</script>";
+$page_title_js = 'Feed on Feeds';
+if ( ! empty($unread)) {
+    $page_title_js .= " ($unread)";
 }
-else
-{
-    echo "<script>document.title = 'Feed on Feeds';</script>";
-}
-
+echo "<script>document.title = '$page_title_js';</script>";
 echo "<script>starred = $starred;</script>";
-
 ?>
 
-<li <?php if($what == "unread") echo "style='background: #ddd'" ?> ><a href=".?what=unread&how=paged"><font color=red><b>Unread <?php if($unread) echo "($unread)" ?></b></font></a> [<a href=".?what=unread">unpaged</a>]</li>
-<li <?php if($what == "star") echo "style='background: #ddd'" ?> ><a href=".?what=star&how=paged"><img src="image/star-on.gif" border="0" height="10" width="10"> Starred <span id="starredcount"><?php if($starred) echo "($starred)" ?></span></a> [<a href=".?what=star">unpaged</a>]</li>
+<li <?php if($what == "unread") echo "style='background: #ddd'" ?> ><a href=".?what=unread&how=paged"><font color=red><b>Unread <?php if ($unread) echo "($unread)" ?></b></font></a> [<a href=".?what=unread">unpaged</a>]</li>
+<li <?php if($what == "star") echo "style='background: #ddd'" ?> ><a href=".?what=star&how=paged"><img src="image/star-on.gif" border="0" height="10" width="10"> Starred <span id="starredcount"><?php if ($starred) echo "($starred)" ?></span></a> [<a href=".?what=star">unpaged</a>]</li>
 <li <?php if($what == "all" && isset($when)) echo "style='background: #ddd'" ?> ><a href=".?what=all&when=today">&lt; Today</a></li>
-<li <?php if($what == "all" && !isset($when)) echo "style='background: #ddd'" ?> ><a href=".?what=all&how=paged">All Items <?php if($total) echo "($total)" ?></a></li>
+<li <?php if($what == "all" && !isset($when)) echo "style='background: #ddd'" ?> ><a href=".?what=all&how=paged">All Items <?php if ($total) echo "($total)" ?></a></li>
 <li <?php if(isset($search)) echo "style='background: #ddd'" ?> ><a href="javascript:Element.toggle('search'); Field.focus('searchfield');void(0);">Search</a>
 <form action="." id="search" <?php if(!isset($search)) echo 'style="display: none"' ?>>
 <input type="hidden" name="how" value="paged">
 <input id="searchfield" name="search" value="<?php echo $search?>">
 <?php
-	if($what == "unread" || empty ($what))
-		echo "<input type='hidden' name='what' value='all'>";
-	else
-		echo "<input type='hidden' name='what' value='$what'>";
+if($what == "unread" || empty ($what))
+    echo "<input type='hidden' name='what' value='all'>";
+else
+    echo "<input type='hidden' name='what' value='$what'>";
 ?>
-<?php if(!empty($_GET['when'])) echo "<input type='hidden' name='what' value='${_GET['when']}'>" ?>
+<?php if(!empty($when)) echo "<input type='hidden' name='what' value='$when'>" ?>
 </form>
 </li>
 </ul>
@@ -94,7 +83,6 @@ echo "<script>starred = $starred;</script>";
 $tags = fof_get_tags(fof_current_user());
 
 $n = 0;
-
 foreach($tags as $tag)
 {
     $tag_id = $tag['tag_id'];
@@ -117,6 +105,7 @@ if($n)
 </tr>
 
 <?php
+$t = 0;
 foreach($tags as $tag)
 {
    $tag_name = $tag['tag_name'];
@@ -236,6 +225,7 @@ foreach ($columns as $col)
 
 <?php
 
+$t = 0;
 foreach($feeds as $row)
 {
    $id = $row['feed_id'];
@@ -350,18 +340,8 @@ foreach($feeds as $row)
 
 <?php
 
-$order = $_GET['order'];
-$direction = $_GET['direction'];
-
-if(!isset($order))
-{
-   $order = "title";
-}
-
-if(!isset($direction))
-{
-   $direction = "asc";
-}
+$order = isset($_GET['order']) ? $_GET['order'] : 'title';
+$direction = isset($_GET['direction']) ? $_GET['direction'] : 'asc';
 
 ?>
 

@@ -20,6 +20,9 @@ define('FOF_DB_USER', "username");
 define('FOF_DB_PASS', "password");
 define('FOF_DB_DBNAME', "database");
 
+// define('USE_MYSQL', 1);
+// define('USE_SQLITE', 1);
+// define('FOF_DB_SQLITE_PATH', '../db/');
 
 // The rest you should not need to change
 

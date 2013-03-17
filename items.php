@@ -15,45 +15,27 @@
 include_once("fof-main.php");
 include_once("fof-render.php");
 
-if($_GET['how'] == 'paged' && !isset($_GET['which']))
-{
-	$which = 0;
+$how = (isset($_GET['how'])) ? $_GET['how'] : NULL;
+$which = (isset($_GET['which'])) ? $_GET['which'] : NULL;
+if (isset($how) && $how == 'paged' && ! isset($which)) {
+    $which = 0;
 }
-else
-{
-	$which = $_GET['which'];
-}
+$order = (isset($_GET['order'])) ? $_GET['order'] : $fof_prefs_obj->get('order');
+$what = (isset($_GET['what'])) ? $_GET['what'] : 'unread';
+$feed = (isset($_GET['feed'])) ? $_GET['feed'] : NULL;
+$when = (isset($_GET['when'])) ? $_GET['when'] : NULL;
+$howmany = (isset($_GET['howmany'])) ? $_GET['howmany'] : NULL;
+$search = (isset($_GET['search'])) ? $_GET['search'] : NULL;
+$noedit = (isset($_GET['noedit'])) ? $_GET['noedit'] : NULL;
 
-$order = $_GET['order'];
-
-if(!isset($_GET['what']))
-{
-    $what = "unread";
-}
-else
-{
-    $what = $_GET['what'];
-}
-
-if(!isset($_GET['order']))
-{
-	$order = $fof_prefs_obj->get("order");
-}
-
-$how = $_GET['how'];
-$feed = $_GET['feed'];
-$when = $_GET['when'];
-$howmany = $_GET['howmany'];
-
-$result = fof_db_get_item_count(fof_current_user(), $what, $_GET['feed'], $_GET['search']);
+$result = fof_db_get_item_count(fof_current_user(), $what, $feed, $search);
 
 $itemcount = 0;
 
 while ($cnt = fof_db_get_row($result, 'count'))
-	$itemcount += $cnt;
+    $itemcount += $cnt;
 
-$title = fof_view_title($_GET['feed'], $what, $_GET['when'], $which, $_GET['howmany'], $_GET['search'], $itemcount);
-$noedit = $_GET['noedit'];
+$title = fof_view_title($feed, $what, $when, $which, $howmany, $search, $itemcount);
 
 // Placeholder to push content down:
 ?>
@@ -106,26 +88,27 @@ $noedit = $_GET['noedit'];
 		<input type="hidden" name="return" />
 
 <?php
-	$links = fof_get_nav_links($_GET['feed'], $what, $_GET['when'], $which, $_GET['howmany'], $_GET['search'], $itemcount);
+	$links = fof_get_nav_links($feed, $what, $when, $which, $howmany, $search, $itemcount);
 
 	if($links)
 	{
 		echo "<center>$links</center>";
 	}
 
-$result = fof_get_items(fof_current_user(), $_GET['feed'], $what, $_GET['when'], $which, $_GET['howmany'], $order, $_GET['search']);
+$items = fof_get_items(fof_current_user(), $feed, $what, $when, $which, $howmany, $order, $search);
 
 $first = true;
 
-foreach($result as $row)
-{
-	$item_id = $row['item_id'];
-	$visibility = in_array("folded", $row['tags']) ? "hidden" : "shown";
-	if($first) print "<script>firstItem = 'i$item_id'; </script>";
-	$first = false;
-	print '<div class="item ' . $visibility . '" id="i' . $item_id . '"  onclick="return itemClicked(event)">';
-	fof_render_item($row);
-	print '</div>';
+foreach ($items as $item) {
+    $item_id = $item['item_id'];
+    $visibility = in_array("folded", $item['tags']) ? "hidden" : "shown";
+    if ($first) {
+        print "<script>firstItem = 'i$item_id'; </script>";
+        $first = false;
+    }
+    print '<div class="item ' . $visibility . '" id="i' . $item_id . '"  onclick="return itemClicked(event)">';
+    fof_render_item($item);
+    print '</div>';
 }
 
 if(count($result) == 0)

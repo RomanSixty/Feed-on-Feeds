@@ -18,16 +18,16 @@ $prefs =& FoF_Prefs::instance();
 
 if(fof_is_admin() && isset($_POST['adminprefs']))
 {
-	$prefs->set('purge', $_POST['purge']);
-	$prefs->set('manualtimeout', $_POST['manualtimeout']);
-	$prefs->set('autotimeout', $_POST['autotimeout']);
-	$prefs->set('logging', $_POST['logging']);
-	$prefs->set('blacklist', $_POST['blacklist']);
-	$prefs->set('dynupdates', $_POST['dynupdates']);
+    $prefs->set('purge', $_POST['purge']);
+    $prefs->set('manualtimeout', $_POST['manualtimeout']);
+    $prefs->set('autotimeout', $_POST['autotimeout']);
+    $prefs->set('logging', $_POST['logging']);
+    $prefs->set('blacklist', $_POST['blacklist']);
+    $prefs->set('dynupdates', $_POST['dynupdates']);
 
-	$prefs->save();
+    $prefs->save();
 
-	$message .= ' Saved admin prefs.';
+    $message .= ' Saved admin prefs.';
 
     if($prefs->get('logging') && !@fopen("fof.log", 'a'))
     {
@@ -73,22 +73,23 @@ if(isset($_GET['untagfeed']))
 
 if(isset($_POST['prefs']))
 {
-	$prefs->set('simple_sidebar', isset($_POST['simple_sidebar']));
-	$prefs->set('favicons', isset($_POST['favicons']));
-	$prefs->set('keyboard', isset($_POST['keyboard']));
-	$prefs->set('tzoffset', intval($_POST['tzoffset']));
-	$prefs->set('howmany', intval($_POST['howmany']));
-	$prefs->set('order', $_POST['order']);
-	$prefs->set('sharing', $_POST['sharing']);
-	$prefs->set('sharedname', $_POST['sharedname']);
-	$prefs->set('sharedurl', $_POST['sharedurl']);
+    $prefs->set('simple_sidebar', isset($_POST['simple_sidebar']));
+    $prefs->set('favicons', isset($_POST['favicons']));
+    $prefs->set('keyboard', isset($_POST['keyboard']));
+    $prefs->set('tzoffset', intval($_POST['tzoffset']));
+    $prefs->set('howmany', intval($_POST['howmany']));
+    $prefs->set('order', $_POST['order']);
+    $prefs->set('sharing', $_POST['sharing']);
+    $prefs->set('sharedname', $_POST['sharedname']);
+    $prefs->set('sharedurl', $_POST['sharedurl']);
 
-	$prefs->save(fof_current_user());
+    $prefs->save(fof_current_user());
 
     if($_POST['password'] && ($_POST['password'] == $_POST['password2']))
     {
         fof_db_change_password($fof_user_name, $_POST['password']);
-        setcookie ( "user_password_hash",  md5($_POST['password'] . $fof_user_name), time()+60*60*24*365*10 );
+        $user_password_hash = fof_db_user_password_hash($_POST['password'], $fof_user_name);
+        setcookie ( "user_password_hash",  $user_password_hash, time()+60*60*24*365*10 );
         $message = "Updated password.";
     }
     else if($_POST['password'] || $_POST['password2'])
@@ -96,7 +97,7 @@ if(isset($_POST['prefs']))
         $message = "Passwords do not match!";
     }
 
-	$message .= ' Saved prefs.';
+    $message .= ' Saved prefs.';
 }
 
 if(isset($_POST['plugins']))
@@ -124,9 +125,9 @@ if(isset($_POST['plugins']))
         $prefs->set("plugin_" . $plugin, $_POST[$plugin] != "on");
     }
 
-	$prefs->save(fof_current_user());
+    $prefs->save(fof_current_user());
 
-	$message .= ' Saved plugin prefs.';
+    $message .= ' Saved plugin prefs.';
 }
 
 if(isset($_POST['changepassword']))
@@ -150,17 +151,17 @@ if(fof_is_admin() && isset($_POST['adduser']) && $_POST['username'] && $_POST['p
     $username = $_POST['username'];
     $password = $_POST['password'];
 
-	fof_db_add_user($username, $password);
-	$message = "User '$username' added.";
+    fof_db_add_user($username, $password);
+    $message = "User '$username' added.";
 }
 
 
 if(fof_is_admin() && isset($_POST['deleteuser']) && $_POST['username'])
 {
-	$username = $_POST['username'];
+    $username = $_POST['username'];
 
-	fof_db_delete_user($username);
-	$message = "User '$username' deleted.";
+    fof_db_delete_user($username);
+    $message = "User '$username' deleted.";
 }
 
 include("header.php");
@@ -191,7 +192,7 @@ Time offset in hours: <input size="3" type="text" name=tzoffset value="<?php ech
 <legend><b>Sharing</b></legend>
 Share
 <select name="sharing">
-<option value="no"">no</option>
+<option value="no">no</option>
 <option value="all" <?php if($prefs->get('sharing') == "all") echo "selected";?>>all</option>
 <option value="tagged" <?php if($prefs->get('sharing') == "tagged") echo "selected";?>>tagged as "shared"</option>
 <option value="all_tagged" <?php if($prefs->get('sharing') == "all_tagged") echo "selected";?>>all tagged items</option>
@@ -221,7 +222,7 @@ URL to be linked on shared page: <input type="text" name="sharedurl" value="<?ph
     $dirlist = opendir(FOF_DIR . "/plugins");
     while($file=readdir($dirlist))
     {
-    	fof_log("considering " . $file);
+        fof_log("considering " . $file);
         if(preg_match('/\.php$/',$file))
         {
            $plugins[] = substr($file, 0, -4);
@@ -252,17 +253,17 @@ URL to be linked on shared page: <input type="text" name="sharedurl" value="<?ph
 // advanced plugin preferences
 foreach ( $plugins as $plugin )
 {
-	// save preferences
-	$funcname = 'save_prefs_' . $plugin;
+    // save preferences
+    $funcname = 'save_prefs_' . $plugin;
 
-	if ( function_exists ( $funcname ) )
-		$funcname ( $_POST );
+    if ( function_exists ( $funcname ) )
+        $funcname ( $_POST );
 
-	// view and edit preferences
-	$funcname = 'edit_prefs_' . $plugin;
+    // view and edit preferences
+    $funcname = 'edit_prefs_' . $plugin;
 
-	if ( function_exists ( $funcname ) )
-		$funcname ( $prefs );
+    if ( function_exists ( $funcname ) )
+        $funcname ( $prefs );
 }
 ?>
 
@@ -272,68 +273,68 @@ foreach ( $plugins as $plugin )
 <?php
 foreach($feeds as $row)
 {
-   $id = $row['feed_id'];
-   $url = $row['feed_url'];
-   $title = $row['feed_title'];
-   $alt_image = $row['alt_image'];
-   $link = $row['feed_link'];
-   $description = $row['feed_description'];
-   $age = $row['feed_age'];
-   $unread = $row['feed_unread'];
-   $starred = $row['feed_starred'];
-   $items = $row['feed_items'];
-   $agestr = $row['agestr'];
-   $agestrabbr = $row['agestrabbr'];
-   $lateststr = $row['lateststr'];
-   $lateststrabbr = $row['lateststrabbr'];
-   $tags = $row['tags'];
+    $id = $row['feed_id'];
+    $url = $row['feed_url'];
+    $title = $row['feed_title'];
+    $alt_image = $row['alt_image'];
+    $link = $row['feed_link'];
+    $description = $row['feed_description'];
+    $age = $row['feed_age'];
+    $unread = $row['feed_unread'];
+    $starred = $row['feed_starred'];
+    $items = $row['feed_items'];
+    $agestr = $row['agestr'];
+    $agestrabbr = $row['agestrabbr'];
+    $lateststr = $row['lateststr'];
+    $lateststrabbr = $row['lateststrabbr'];
+    $tags = $row['tags'];
 
-   if(++$t % 2)
-   {
-      print "<tr class=\"odd-row\">";
-   }
-   else
-   {
-      print "<tr>";
-   }
+    if(++$t % 2)
+    {
+        print "<tr class=\"odd-row\">";
+    }
+    else
+    {
+        print "<tr>";
+    }
 
-   if($row['feed_image'] && $prefs->get('favicons'))
-   {
-	   print "<td><a href=\"$url\" title=\"feed\"><img src='" . $row['feed_image'] . "' width='16' height='16' border='0' /></a></td>";
-   }
-   else
-   {
-	   print "<td><a href=\"$url\" title=\"feed\"><img src='image/feed-icon.png' width='16' height='16' border='0' /></a></td>";
-   }
+    if($row['feed_image'] && $prefs->get('favicons'))
+    {
+        print "<td><a href=\"$url\" title=\"feed\"><img src='" . $row['feed_image'] . "' width='16' height='16' border='0' /></a></td>";
+    }
+    else
+    {
+        print "<td><a href=\"$url\" title=\"feed\"><img src='image/feed-icon.png' width='16' height='16' border='0' /></a></td>";
+    }
 
-   print "<td>
-            <form method=\"post\" action=\"prefs.php#feedsntags\">
-            <input type=\"hidden\" name=\"changed\" value=\"$id\"/>
-            <input type=\"text\" name=\"title\" value=\"$title\" size=\"50\"/>
-            <input type=\"text\" name=\"alt_image\" value=\"$alt_image\" size=\"50\"/>
-            <input type=\"submit\" value=\"submit\"/>
-            </form>
-          </td>";
+    print "<td>
+    <form method=\"post\" action=\"prefs.php#feedsntags\">
+    <input type=\"hidden\" name=\"changed\" value=\"$id\"/>
+    <input type=\"text\" name=\"title\" value=\"$title\" size=\"50\"/>
+    <input type=\"text\" name=\"alt_image\" value=\"$alt_image\" size=\"50\"/>
+    <input type=\"submit\" value=\"submit\"/>
+    </form>
+</td>";
 
 
-   print "<td align=right>";
+    print "<td align=right>";
 
-   if($tags)
-   {
-       foreach($tags as $tag)
-       {
-           $utag = urlencode($tag);
-           $utitle = urlencode($title);
-           print "$tag <a href='prefs.php?untagfeed=$id&tag=$utag&title=$utitle#feedsntags'>[x]</a> ";
-       }
-   }
-   else
-   {
-   }
+    if($tags)
+    {
+        foreach($tags as $tag)
+        {
+            $utag = urlencode($tag);
+            $utitle = urlencode($title);
+            print "$tag <a href='prefs.php?untagfeed=$id&tag=$utag&title=$utitle#feedsntags'>[x]</a> ";
+        }
+    }
+    else
+    {
+    }
 
-   print "</td>";
-   $title = htmlspecialchars($title);
-   print "<td><form method=\"post\" action=\"prefs.php#feedsntags\"><input type=\"hidden\" name=\"title\" value=\"$title\"><input type=\"hidden\" name=\"feed_id\" value=\"$id\"><input type=\"text\" name=\"tag\"> <input type=\"submit\" name=\"tagfeed\" value=\"Tag Feed\"> <small><i>(separate tags with spaces)</i></small></form></td></tr>";
+    print "</td>";
+    $title = htmlspecialchars($title);
+    print "<td><form method=\"post\" action=\"prefs.php#feedsntags\"><input type=\"hidden\" name=\"title\" value=\"$title\"><input type=\"hidden\" name=\"feed_id\" value=\"$id\"><input type=\"text\" name=\"tag\"> <input type=\"submit\" name=\"tagfeed\" value=\"Tag Feed\"> <small><i>(separate tags with spaces)</i></small></form></td></tr>";
 }
 ?>
 </table>
@@ -366,13 +367,13 @@ Username: <input type="text" name=username> Password: <input type="text" name=pa
 </form>
 
 <?php
-	$result = fof_db_query("select user_name from $FOF_USER_TABLE where user_id > 1");
+    $result = fof_db_get_nonadmin_usernames();
 
-	while($row = fof_db_get_row($result))
-	{
-		$username = $row['user_name'];
-		$delete_options .= "<option value=$username>$username</option>";
-	}
+    while($row = fof_db_get_row($result))
+    {
+        $username = $row['user_name'];
+        $delete_options .= "<option value=$username>$username</option>";
+    }
 
     if(isset($delete_options))
     {

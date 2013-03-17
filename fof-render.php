@@ -41,41 +41,40 @@ function do_highlight($full_body, $q, $class){
 	return $full_body_hl;
 }
 
+/* quell warnings */
+function set_key_($array, $key, $default=NULL) {
+	return (empty($array[$key]) ? $default : $array[$key]);
+}
 
 function fof_render_item($item)
 {
     $items = true;
 
-	$feed_link = $item['feed_link'];
-	$feed_title = $item['feed_title'];
-	$feed_image = empty ( $item [ 'alt_image' ] )
-	            ? $item [ 'feed_image' ]
-	            : $item [ 'alt_image' ];
+	$feed_link = set_key_($item, 'feed_link');
+	$feed_title = set_key_($item, 'feed_title');
+	$feed_image = set_key_($item, 'alt_image', set_key_($item, 'feed_image'));
+	$feed_description = set_key_($item, 'feed_description');
 
-	$feed_description = $item['feed_description'];
-
-	$item_link = $item['item_link'];
-	$item_id = $item['item_id'];
-	$item_title = $item['item_title'];
-	$item_content = $item['item_content'];
-	$item_read = $item['item_read'];
+	$item_link = set_key_($item, 'item_link');
+	$item_id = set_key_($item, 'item_id');
+	$item_title = set_key_($item, 'item_title', '[no title]');
+	$item_content = set_key_($item, 'item_content');
+	$item_read = set_key_($item, 'item_read');
 
 	$prefs = fof_prefs();
-	$offset = $prefs['tzoffset'];
+	$offset = set_key_($prefs, 'tzoffset');
 
 	$item_published = gmdate("Y-n-d g:ia", $item['item_published'] + $offset*60*60);
 	$item_cached = gmdate("Y-n-d g:ia", $item['item_cached'] + $offset*60*60);
 	$item_updated = gmdate("Y-n-d g:ia", $item['item_updated'] + $offset*60*60);
 
-	if(!$item_title) $item_title = "[no title]";
-
-	if($_GET['search'])
+	if ( ! empty($_GET['search']))
 	{
 		$item_content = do_highlight("<span>$item_content</span>", $_GET['search'], "highlight");
 		$item_title = do_highlight("<span>$item_title</span>", $_GET['search'], "highlight");
 	}
 
-    $tags = $item['tags'];
+    $tags = set_key_($item, 'tags', array());
 
 	$star = in_array("star", $tags) ? true : false;
 	$star_image = $star ? "image/star-on.gif" : "image/star-off.gif";
@@ -122,12 +121,12 @@ function fof_render_item($item)
 		{
 			if($tag == "unread" || $tag == "star" || $tag == "folded") continue;
 ?>
-    		<a href="?what=<?php echo $tag ?>"><?php echo $tag ?></a>
+			<a href="?what=<?php echo $tag ?>"><?php echo $tag ?></a>
 
-    		<a href="<?php echo $tag ?>" class="untag" onclick="return remove_tag('<?php echo $item_id ?>', '<?php echo $tag ?>');">[x]</a>
+			<a href="<?php echo $tag ?>" class="untag" onclick="return remove_tag('<?php echo $item_id ?>', '<?php echo $tag ?>');">[x]</a>
 <?php
 		}
-    }
+	}
 ?>
 
 		<a href="" onclick="document.getElementById('addtag<?php echo $item_id ?>').style.display = ''; this.style.display = 'none'; return false;">add tag</a>
@@ -150,15 +149,15 @@ function fof_render_item($item)
     <span class="dash"> - </span>
 
     <h2>
-    	<?php
-	    	$prefs = fof_prefs();
+		<?php
+		$prefs = fof_prefs();
 
-	    	if ( $feed_image && $prefs [ 'favicons' ] )
-	    		echo '<img src="'.$feed_image.'" height="16" width="16" border="0" />';
-   		?>
-    	<a href="<?php echo $feed_link ?>" title="<?php echo htmlspecialchars ( $feed_description ); ?>"><?php echo $feed_title ?>
-    	</a>
-    </h2>
+		if ( $feed_image && $prefs [ 'favicons' ] )
+			echo '<img src="'.$feed_image.'" height="16" width="16" border="0" />';
+		?>
+		<a href="<?php echo $feed_link ?>" title="<?php echo htmlspecialchars ( $feed_description ); ?>"><?php echo $feed_title ?>
+		</a>
+	</h2>
 
 	<span class="meta">on <?php echo $item_published ?></span>
 
