@@ -924,7 +924,6 @@ function fof_update_feed($id)
                 $count++;
             }
 
-            // Next update should be now + mean - stdeviation
             $mean = 0;
             if ($count > 0) {
                 $mean = $totalDelta/$count;
@@ -935,8 +934,8 @@ function fof_update_feed($id)
                               /($count * ($count - 1)));
             }
         
-            // Cap the maximum update interval to 2 days for now (TODO make configurable)
-            $nextInterval = min($mean - min($stdev,$mean/2), 86400*2);
+            // Next update is mean + stdev fudge factor to prevent checking just before an update goes out; capped at 2 days for now (TODO: make configurable)
+            $nextInterval = min($mean + min($stdev/2,$mean/2), 86400*2);
         
             fof_log($feed['feed_title'] . ": Next feed update in "
                     . $nextInterval . " seconds;"
