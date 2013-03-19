@@ -967,10 +967,12 @@ function fof_update_feed($id)
         fof_log($feed['feed_title'] . ": Next feed update in "
                 . ($nextTime - $now) . " seconds;"
                 . " count=$count t=$totalDelta t2=$totalDeltaSquare"
-                . " mean=$mean stdev=$stdev');
+                . " mean=$mean stdev=$stdev");
         if ($count_Added > 0) {
                 // In a perfect world, we want both of these numbers to be low
-                fof_log("DYNUPDATE_PROFILE count $count_Added overstep $lastInterval");
+                fof_log("DYNUPDATE_ADD $feed_id count $count_Added overstep $lastInterval");
+        } else {
+                fof_log("DYNUPDATE_NONE $feed_id");
         }
         fof_safe_query("UPDATE $FOF_FEED_TABLE SET feed_cache_next_attempt=%d"
                        . " WHERE feed_id = %d",
