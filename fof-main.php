@@ -962,8 +962,8 @@ function fof_update_feed($id)
                               /($count * ($count - 1)));
             }
 
-            // Cap the maximum update interval to 3 days for now
-            $nextInterval = min($mean - min($stdev,$mean/2), 86400*3);
+            // Cap the maximum update interval to 2 days for now (TODO make configurable)
+            $nextInterval = min($mean - min($stdev,$mean/2), 86400*2);
 
             fof_log($feed['feed_title'] . ": Next feed update in "
                     . $nextInterval . " seconds;"
@@ -995,26 +995,25 @@ function fof_update_feed($id)
         }
 
         fof_db_items_delete($delete);
-
-        $ndelete += count ( $delete );
     }
 
-    // also purge duplicate items (based on title and content comparison)
+    if ( ! empty($admin_prefs['match_similarity'])) {
+        $threshold = $admin_prefs['match_similarity'];
 
-    $result = fof_db_items_duplicate_list();
+        $result = fof_db_items_duplicate_list();
 
-    while ( $row = fof_db_get_row ( $result ) )
-    {
-        $similarity = 0;
+        while ( $row = fof_db_get_row ( $result ) )
+        {
+            $similarity = 0;
 
-        similar_text ( $row [ 'c1' ], $row [ 'c2' ], $similarity );
+            similar_text ( $row [ 'c1' ], $row [ 'c2' ], $similarity );
 
-        if ( $similarity > 90 )
-            $delete[] = $row [ 'item_id' ];
+            if ( $similarity > $threshold )
+                $delete[] = $row [ 'item_id' ];
+        }
     }
 
-    if ( count ( $delete ) )
-    {
+    if (count( $delete )) {
         fof_db_items_delete($delete);
         fof_db_tag_delete($delete);
     }

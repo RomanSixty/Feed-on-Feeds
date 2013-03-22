@@ -304,15 +304,22 @@ function fof_db_get_latest_item_age($user_id)
     return $statement;
 }
 
-function fof_db_get_subscriptions($user_id)
+function fof_db_get_subscriptions($user_id,$dueOnly=false)
 {
     global $FOF_FEED_TABLE, $FOF_SUBSCRIPTION_TABLE;
     global $fof_connection;
 
-    $query = "SELECT * FROM $FOF_FEED_TABLE, $FOF_SUBSCRIPTION_TABLE WHERE $FOF_SUBSCRIPTION_TABLE.user_id = :user_id AND $FOF_FEED_TABLE.feed_id = $FOF_SUBSCRIPTION_TABLE.feed_id ORDER BY feed_title";
+    $query = "SELECT * FROM $FOF_FEED_TABLE, $FOF_SUBSCRIPTION_TABLE WHERE $FOF_SUBSCRIPTION_TABLE.user_id = :user_id AND $FOF_FEED_TABLE.feed_id = $FOF_SUBSCRIPTION_TABLE.feed_id";
+    if ($dueOnly) {
+        $query .= " AND feed_cache_next_attempt < :now";
+    }
+    $query .= " ORDER BY feed_title";
     try {
         $statement = $fof_connection->prepare($query);
         $statement->bindValue(':user_id', $user_id);
+        if ($dueOnly) {
+            $statement->bindValue(':now', time());
+        }
         $result = fof_db_statement_execute($query, $statement);
     } catch(PDOException $e) {
         fof_pdoexception_log_(__FUNCTION__, $e, "could not get subscriptions (user_id='$user_id')");

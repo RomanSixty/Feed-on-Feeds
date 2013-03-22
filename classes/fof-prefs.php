@@ -43,7 +43,7 @@ class FoF_Prefs
 
         if($user_id == 1)
         {
-           $this->prefs = array_merge($this->prefs, $this->admin_prefs);
+            $this->prefs = array_merge($this->prefs, $this->admin_prefs);
         }
     }
 
@@ -72,7 +72,9 @@ class FoF_Prefs
             "autotimeout" => 30,
             "manualtimeout" => 15,
             "logging" => false,
-             );
+            "match_similarity" => 90,
+            "dynupdates" => true,
+        );
 
         $this->stuff_array($this->prefs, $defaults);
         $this->stuff_array($this->admin_prefs, $admin_defaults);
