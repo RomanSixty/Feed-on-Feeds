@@ -62,7 +62,11 @@ $add_feed_url .= "://" . $_SERVER["HTTP_HOST"] . $_SERVER["SCRIPT_NAME"];
 
 <form method="post" name="addform" action="add.php" enctype="multipart/form-data">
 
-When adding feeds, mark <select name="unread"><option value=today <?php if($unread == "today") echo "selected" ?> >today's</option><option value=all <?php if($unread == "all") echo "selected" ?> >all</option><option value=no <?php if($unread == "no") echo "selected" ?> >no</option></select> items as unread<br><br>
+When adding feeds, mark <select name="unread">
+    <option value=all <?php if($unread == "all") echo "selected" ?> >all</option>
+    <option value=today <?php if($unread == "today") echo "selected" ?> >today's</option>
+    <option value=no <?php if($unread == "no") echo "selected" ?> >no</option>
+</select> items as unread<br><br>
 
 RSS or weblog URL: <input type="text" name="rss_url" size="40" value="<?php echo htmlentities($url) ?>"><input type="Submit" value="Add a feed"><br><br>
 

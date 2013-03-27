@@ -154,12 +154,12 @@ function fof_install_schema() {
     } else if (defined('USE_SQLITE')) {
         $tables[FOF_ITEM_TABLE][] = "item_id $driver_int_type PRIMARY KEY AUTOINCREMENT NOT NULL";
     }
-    $tables[FOF_ITEM_TABLE][] = "feed_id $driver_int_type NOT NULL DEFAULT '0'";
+    $tables[FOF_ITEM_TABLE][] = "feed_id $driver_int_type NOT NULL DEFAULT '0' REFERENCES " . FOF_FEED_TABLE . " ( feed_id ) ON UPDATE CASCADE ON DELETE CASCADE";
     $tables[FOF_ITEM_TABLE][] = "item_guid TEXT NOT NULL";
     $tables[FOF_ITEM_TABLE][] = "item_link TEXT NOT NULL";
     $tables[FOF_ITEM_TABLE][] = "item_cached $driver_int_type NOT NULL DEFAULT '0'";
     $tables[FOF_ITEM_TABLE][] = "item_published $driver_int_type NOT NULL DEFAULT '0'";
-    $tables[FOF_ITEM_TABLE][] = "item_updated INT NOT NULL DEFAULT '0'";
+    $tables[FOF_ITEM_TABLE][] = "item_updated $driver_int_type NOT NULL DEFAULT '0'";
     $tables[FOF_ITEM_TABLE][] = "item_title TEXT NOT NULL";
     $tables[FOF_ITEM_TABLE][] = "item_content TEXT NOT NULL";
     if (defined('USE_MYSQL')) {
@@ -181,16 +181,16 @@ function fof_install_schema() {
 
     /* FOF_ITEM_TAG_TABLE */
     /* columns */
-    $tables[FOF_ITEM_TAG_TABLE][] = "user_id $driver_int_type NOT NULL DEFAULT '0'";
-    $tables[FOF_ITEM_TAG_TABLE][] = "item_id $driver_int_type NOT NULL DEFAULT '0'";
-    $tables[FOF_ITEM_TAG_TABLE][] = "tag_id $driver_int_type NOT NULL DEFAULT '0'";
+    $tables[FOF_ITEM_TAG_TABLE][] = "user_id $driver_int_type NOT NULL DEFAULT '0' REFERENCES " . FOF_USER_TABLE . " ( user_id ) ON UPDATE CASCADE ON DELETE CASCADE";
+    $tables[FOF_ITEM_TAG_TABLE][] = "item_id $driver_int_type NOT NULL DEFAULT '0' REFERENCES " . FOF_ITEM_TABLE . " ( item_id ) ON UPDATE CASCADE ON DELETE CASCADE";
+    $tables[FOF_ITEM_TAG_TABLE][] = "tag_id $driver_int_type NOT NULL DEFAULT '0' REFERENCES " . FOF_TAG_TABLE . " ( tag_id ) ON UPDATE CASCADE ON DELETE CASCADE";
     $tables[FOF_ITEM_TAG_TABLE][] = "PRIMARY KEY ( user_id, item_id, tag_id )";
 
 
     /* FOF_SUBSCRIPTION_TABLE */
     /* columns */
-    $tables[FOF_SUBSCRIPTION_TABLE][] = "feed_id $driver_int_type NOT NULL DEFAULT '0'";
-    $tables[FOF_SUBSCRIPTION_TABLE][] = "user_id $driver_int_type NOT NULL DEFAULT '0'";
+    $tables[FOF_SUBSCRIPTION_TABLE][] = "feed_id $driver_int_type NOT NULL DEFAULT '0' REFERENCES " . FOF_FEED_TABLE . " ( feed_id ) ON UPDATE CASCADE ON DELETE CASCADE";
+    $tables[FOF_SUBSCRIPTION_TABLE][] = "user_id $driver_int_type NOT NULL DEFAULT '0' REFERENCES " . FOF_USER_TABLE . " ( user_id ) ON UPDATE CASCADE ON DELETE CASCADE";
     $tables[FOF_SUBSCRIPTION_TABLE][] = "subscription_prefs TEXT";
     $tables[FOF_SUBSCRIPTION_TABLE][] = "PRIMARY KEY ( feed_id, user_id )";
 
@@ -214,7 +214,7 @@ function fof_install_schema() {
     }
 
 
-    /* FOF_USER_LEVEL_TABLE */
+    /* FOF_USER_LEVELS_TABLE */
     /* SQLite doesn't support ENUM, so it gets another table.. */
     /* columns */
     if (defined('USE_SQLITE')) {
@@ -236,7 +236,7 @@ function fof_install_schema() {
     if (defined('USE_MYSQL')) {
         $tables[FOF_USER_TABLE][] = "user_level ENUM ( 'user', 'admin' ) NOT NULL DEFAULT 'user'";
     } else if (defined('USE_SQLITE')) {
-        $tables[FOF_USER_TABLE][] = "user_level TEXT NOT NULL DEFAULT 'user' REFERENCES " . FOF_USER_LEVELS_TABLE . " ( level )";
+        $tables[FOF_USER_TABLE][] = "user_level TEXT NOT NULL DEFAULT 'user' REFERENCES " . FOF_USER_LEVELS_TABLE . " ( level ) ON UPDATE CASCADE";
     }
     $tables[FOF_USER_TABLE][] = "user_prefs TEXT";
     if (defined('USE_MYSQL')) {

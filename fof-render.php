@@ -15,6 +15,8 @@
 // From Brian Suda @ http://suda.co.uk/projects/SEHL/
 
 function do_highlight($full_body, $q, $class){
+    $full_body_hl = "";
+
 	/* seperate tags and data from the HTML file INCLUDING comments, avoiding HTML in the comments */
 	$pat = '/((<[^!][\/]*?[^<>]*?>)([^<]*))|<!---->|<!--(.*?)-->|((<!--[ \r\n\t]*?)(.*?)[ \r\n\t]*?-->([^<]*))/si';
 	preg_match_all($pat,$full_body,$tag_matches);

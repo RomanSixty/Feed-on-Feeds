@@ -7,7 +7,7 @@ function fof_adv_autotag ( $link, $title, $content )
 	$tags = array();
 
     $prefs = fof_prefs();
-    $autotag = $prefs [ 'adv_autotag' ];
+    $autotag = empty($prefs['adv_autotag']) ? NULL : $prefs['adv_autotag'];
 
 	if ( $autotag )
 	{

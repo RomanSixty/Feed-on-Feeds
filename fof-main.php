@@ -15,6 +15,9 @@
 /*  globals controlling behavior:
     $fof_no_login -- does not force auth if true
     $fof_installer -- forces auth to admin, changes log file
+
+    $fof_logall -- forces logging on
+    $fof_tracelog -- enables ridiculous logging for debugging
 */
 
 /* quiet warnings, default to UTC */
@@ -22,13 +25,11 @@ date_default_timezone_set('UTC');
 
 fof_repair_drain_bamage();
 
-if ( !file_exists( dirname(__FILE__) . '/fof-config.php') )
-{
-    echo "You will first need to create a fof-config.php file.  Please copy fof-config-sample.php to fof-config.php and then update the values to match your database settings.";
+if ( (@include_once("fof-config.php")) === false ) {
+    echo "You will first need to create a fof-config.php file.  Please copy fof-config-sample.php to fof-config.php and then update the values to match your database settings.\n";
     die();
 }
 
-require_once("fof-config.php");
 require_once("fof-db.php");
 require_once("classes/fof-prefs.php");
 
@@ -68,26 +69,46 @@ function fof_log($message, $topic="debug")
     global $fof_logall;
     static $log;
 
-    if ( ! empty($fof_installer)) {
-        if ( ! isset($log)) {
-            $log = @fopen("fof-install.log", 'a');
-        }
-    } else {
-        if ( empty($fof_logall) && ( ! $fof_prefs_obj || ! $fof_prefs_obj->admin_prefs['logging'] ) )
-            return;
-        if ( ! isset($log)) {
-            $log = @fopen("fof.log", 'a');
-        }
+    if ( (empty($fof_prefs_obj) || empty($fof_prefs_obj->admin_prefs['logging']))
+    &&  empty($fof_logall)
+    &&  empty($fof_installer) )
+        return;
+
+    if ( ! isset($log)) {
+        $log_path = (defined('FOF_DATA_PATH') ? FOF_DATA_PATH : '.');
+        $log_file = (empty($fof_installer) ? 'fof.log' : 'fof-install.log');
+        $log = @fopen(implode(DIRECTORY_SEPARATOR, array($log_path, $log_file)), 'a');
     }
 
-    if ( ! $log) {
+    if ( ! $log)
         return;
-    }
 
     $message = str_replace ("\n", "\\n", $message);
     $message = str_replace ("\r", "\\r", $message);
 
     fwrite($log, date('r') . " [$topic] $message\n");
+}
+
+/* deeper log, for debugging */
+function fof_trace($message=NULL) {
+    global $fof_tracelog;
+
+    if (empty($fof_tracelog))
+        return;
+
+    $bt = debug_backtrace();
+    $frame = $bt[1];
+    $first_frame = end($bt);
+
+    $args = array();
+    foreach ($frame['args'] as $k=>$v)
+        $args[] = var_export($v,true);
+
+    $where = basename($first_frame['file']) . '>' . basename($frame['file']) . ':' . $frame['line'] . ':' . $frame['function'] . '(' . implode(', ', $args) . ')';
+
+    if (isset($message))
+        $where .= ': ' . $message;
+    fof_log($where, 'trace');
 }
 
 function fof_authenticate($user_name, $user_password_hash)
@@ -97,8 +118,8 @@ function fof_authenticate($user_name, $user_password_hash)
     if (fof_db_authenticate_hash($user_name, $user_password_hash))
     {
         $user_login_expire_time = time() + (60 * 60 * 24 * 365 * 10);
-        setcookie("user_name", $fof_user_name, $user_login_expire_time);
-        setcookie("user_password_hash", $user_password_hash, $user_login_expire_time);
+        setcookie('user_name', $fof_user_name, $user_login_expire_time);
+        setcookie('user_password_hash', $user_password_hash, $user_login_expire_time);
         return true;
     }
 
@@ -107,26 +128,26 @@ function fof_authenticate($user_name, $user_password_hash)
 
 function require_user()
 {
-    if ( ! isset($_COOKIE["user_name"]) || ! isset($_COOKIE["user_password_hash"]))
+    if ( ! isset($_COOKIE['user_name']) || ! isset($_COOKIE['user_password_hash']))
     {
-        header("Location: login.php");
+        header('Location: login.php');
         exit();
     }
 
-    $user_name = $_COOKIE["user_name"];
-    $user_password_hash = $_COOKIE["user_password_hash"];
+    $user_name = $_COOKIE['user_name'];
+    $user_password_hash = $_COOKIE['user_password_hash'];
 
     if ( ! fof_authenticate($user_name, $user_password_hash))
     {
-        header("Location: login.php");
+        header('Location: login.php');
         exit();
     }
 }
 
 function fof_logout()
 {
-    setcookie ( "user_name", "", time() );
-    setcookie ( "user_password_hash", "", time() );
+    setcookie('user_name', '', time());
+    setcookie('user_password_hash', '', time());
 }
 
 function fof_current_user()
@@ -638,6 +659,8 @@ function fof_prepare_url($url)
 
 function fof_subscribe($user_id, $url, $unread="today")
 {
+    fof_trace();
+
     if (empty($url))
         return false;
 
@@ -653,7 +676,7 @@ function fof_subscribe($user_id, $url, $unread="today")
     if(fof_feed_exists($url))
     {
         fof_db_add_subscription($user_id, $feed['feed_id']);
-        fof_apply_plugin_tags($id, NULL, $user_id);
+        fof_apply_plugin_tags($feed['feed_id'], NULL, $user_id);
         fof_update_feed($feed['feed_id']);
 
         if($unread != "no") fof_db_mark_feed_unread($user_id, $feed['feed_id'], $unread);
@@ -791,12 +814,16 @@ function fof_apply_tags($feed_id, $item_id)
         $fof_subscription_to_tags = fof_db_get_subscription_to_tags();
     }
 
-    $feed_subs = $fof_subscription_to_tags[$feed_id];
-    if (is_array($feed_subs) ) {
-        foreach ($feed_subs as $user_id => $tags) {
-            if (is_arary($tags)) {
-                foreach ($tags as $tag) {
-                    fof_db_tag_items($user_id, $tag, $item_id);
+    fof_trace("subs_to_tags:" . var_export($fof_subscription_to_tags, TRUE));
+
+    if (isset($fof_subscription_to_tags[$feed_id])) {
+        $feed_subs = $fof_subscription_to_tags[$feed_id];
+        if (is_array($feed_subs) ) {
+            foreach ($feed_subs as $user_id => $tags) {
+                if (is_array($tags)) {
+                    foreach ($tags as $tag) {
+                        fof_db_tag_items($user_id, $tag, $item_id);
+                    }
                 }
             }
         }

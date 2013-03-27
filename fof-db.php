@@ -26,28 +26,22 @@ if (defined('USE_SQLITE')) {
 }
 
 /*
-    Non-local function dependencies:
-    fof_prefs();
-    fof_log();
-    fof_todays_date();
-    fof_multi_sort();
+Non-local function dependencies:
+    fof_prefs()
+    fof_log()
+    fof_todays_date()
+    fof_multi_sort()
 
-    Non-local variable dependencies:
-    $fof_connection;
-    $fof_user_id;
-    $fof_user_name;
-    $fof_user_level;
+Non-local variable dependencies:
+    $fof_connection
+    $fof_user_id
+    $fof_user_name
+    $fof_user_level
 */
 
 ////////////////////////////////////////////////////////////////////////////////
 // Utilities
 ////////////////////////////////////////////////////////////////////////////////
-
-/* yeah, I dunno, just throwing some logging in here */
-function fof_pdoexception_log_($f, $e, $msg) {
-    fof_log($f . ': ' . $msg . ': ' . $e->GetMessage(), 'error');
-    throw new Exception($msg, 0, $previous=$e);
-}
 
 /* set up a db connection, creating the db if it doesn't exist */
 function fof_db_connect()
@@ -57,32 +51,30 @@ function fof_db_connect()
 
     $pdo_options = array( PDO::ATTR_EMULATE_PREPARES => false,
                           PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION );
-    try {
-        if (defined('USE_MYSQL')) {
-            $dsn = "mysql:host=$FOF_DB_HOST;charset=utf8";
-        } else if (defined('USE_SQLITE')) {
-            global $FOF_DB_SQLITE_PATH;
-
-            $sqlite_db = FOF_DB_SQLITE_PATH . DIRECTORY_SEPARATOR . FOF_DB_DBNAME;
-            $dsn = "sqlite:$sqlite_db";
+    if (defined('USE_MYSQL')) {
+        $dsn = "mysql:host=$FOF_DB_HOST;charset=utf8";
+    } else if (defined('USE_SQLITE')) {
+        if (! defined('FOF_DATA_PATH') || ! defined('FOF_DB_DBNAME') ) {
+            throw new Exception('vital configuration is not set');
         }
-        else
-        {
-            die('missing implementation for this driver');
-        }
+        $sqlite_db = FOF_DATA_PATH . DIRECTORY_SEPARATOR . FOF_DB_DBNAME;
+        $dsn = "sqlite:$sqlite_db";
+    } else {
+        throw new Exception('missing implementation for pdo driver');
+    }
 
-        fof_log("Connecting to '$dsn'...");
+    fof_log("Connecting to '$dsn'...");
 
-        $fof_connection = new PDO($dsn, $FOF_DB_USER, $FOF_DB_PASS, $pdo_options);
+    $fof_connection = new PDO($dsn, $FOF_DB_USER, $FOF_DB_PASS, $pdo_options);
 
-        if (defined('USE_MYSQL'))
-        {
+    if (defined('USE_MYSQL')) {
+        if ($fof_connection) {
             $fof_connection->exec("CREATE DATABASE IF NOT EXISTS $FOF_DB_DBNAME");
             $fof_connection->exec("USE $FOF_DB_DBNAME");
         }
-    } catch (PDOException $e) {
-        fof_pdoexception_log_(__FUNCTION__, $e, "could not establish database connection");
     }
+
+    return $fof_connection;
 }
 
 function fof_db_get_row($statement, $key=NULL, $nomore=FALSE)
@@ -125,7 +117,7 @@ function fof_db_log_query_caller_($caller_frame, $query, $elapsed, $rows=null)
         $msg .= sprintf(" (%d rows affected)", $rows);
     }
 
-    fof_log($msg, "query");
+    fof_log($msg, 'query');
 }
 
 /* Wraps a prepared statement execution to gather elapsed query time, and log such.
@@ -194,11 +186,9 @@ function fof_db_optimize()
         throw new Exception("missing implementation");
     }
 
-    try {
-        $result = fof_db_exec($query);
-    } catch (PDOException $e) {
-        fof_pdoexception_log_(__FUNCTION__, $e, "could not optimize database");
-    }
+    $result = fof_db_exec($query);
+
+    return $result;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -210,18 +200,16 @@ function fof_db_feed_update_prefs($feed_id, $title, $alt_image)
     global $FOF_FEED_TABLE;
     global $fof_connection;
 
+    fof_trace();
+
     $query = "UPDATE $FOF_FEED_TABLE SET feed_title = :title, alt_image = :alt_image, feed_image_cache_date = :cache_date WHERE feed_id = :feed_id";
-    try {
-        $statement = $fof_connection->prepare($query);
-        $statement->bindValue(':title', $title);
-        $statement->bindValue(':alt_image', $alt_image);
-        $statement->bindValue(':cache_date', 1);
-        $statement->bindValue(':feed_id', $feed_id);
-        $result = fof_db_statement_execute($query, $statement);
-        $statement->closeCursor();
-    } catch (PDOException $e) {
-        fof_pdoexception_log_(__FUNCTION__, $e, "could not update feed (feed_id='$feed_id'");
-    }
+    $statement = $fof_connection->prepare($query);
+    $statement->bindValue(':title', empty($title) ? "[no title]" : $title);
+    $statement->bindValue(':alt_image', $alt_image);
+    $statement->bindValue(':cache_date', 1);
+    $statement->bindValue(':feed_id', $feed_id);
+    $result = fof_db_statement_execute($query, $statement);
+    $statement->closeCursor();
 
     return $result;
 }
@@ -231,16 +219,14 @@ function fof_db_feed_mark_cached($feed_id)
     global $FOF_FEED_TABLE;
     global $fof_connection;
 
+    fof_trace();
+
     $query = "UPDATE $FOF_FEED_TABLE SET feed_cache_date = :cache_date WHERE feed_id = :feed_id";
-    try {
-        $statement = $fof_connection->prepare($query);
-        $statement->bindValue(':cache_date', time());
-        $statement->bindValue(':feed_id', $feed_id);
-        $result = fof_db_statement_execute($query, $statement);
-        $statement->closeCursor();
-    } catch(PDOException $e) {
-        fof_pdoexception_log_(__FUNCTION__, $e, "could not mark feed as cached (feed_id='$feed_id')");
-    }
+    $statement = $fof_connection->prepare($query);
+    $statement->bindValue(':cache_date', time());
+    $statement->bindValue(':feed_id', $feed_id);
+    $result = fof_db_statement_execute($query, $statement);
+    $statement->closeCursor();
 
     return $result;
 }
@@ -250,42 +236,41 @@ function fof_db_feed_mark_attempted_cache($feed_id)
     global $FOF_FEED_TABLE;
     global $fof_connection;
 
+    fof_trace();
+
     $query = "UPDATE $FOF_FEED_TABLE SET feed_cache_attempt_date = :cache_date WHERE feed_id = :feed_id";
-    try {
-        $statement = $fof_connection->prepare($query);
-        $statement->bindValue(':cache_date', time());
-        $statement->bindValue(':feed_id', $feed_id);
-        $result = fof_db_statement_execute($query, $statement);
-        $statement->closeCursor();
-    } catch(PDOException $e) {
-        fof_pdoexception_log_(__FUNCTION__, $e, "could not mark feed as attempted-to-be-cached (feed_id='$feed_id')");
-    }
+    $statement = $fof_connection->prepare($query);
+    $statement->bindValue(':cache_date', time());
+    $statement->bindValue(':feed_id', $feed_id);
+    $result = fof_db_statement_execute($query, $statement);
+    $statement->closeCursor();
 
     return $result;
 }
 
+/* XXX: title is unused */
 function fof_db_feed_update_metadata($feed_id, $title, $link, $description, $image, $image_cache_date)
 {
     global $FOF_FEED_TABLE;
     global $fof_connection;
 
+    fof_trace();
+
     $query = "UPDATE $FOF_FEED_TABLE SET feed_link = :link, feed_description = :description, feed_image = :image, feed_image_cache_date = :image_cache_date WHERE feed_id = :id";
-    try {
-        $statement = $fof_connection->prepare($query);
-        $statement->bindValue(':link', $link);
-        $statement->bindValue(':description', $description);
-        if ( ! empty($image)) {
-            $statement->bindValue(':image', $image);
-        } else {
-            $statement->bindValue(':image', null, PDO::PARAM_NULL);
-        }
-        $statement->bindValue(':image_cache_date', time());
-        $statement->bindValue(':id', $feed_id);
-        $result = fof_db_statement_execute($query, $statement);
-        $statement->closeCursor();
-    } catch(PDOException $e) {
-        fof_pdoexception_log_(__FUNCTION__, $e, "could not set feed metadata (feed_id='$feed_id')");
+    $statement = $fof_connection->prepare($query);
+    $statement->bindValue(':link', empty($link) ? "[no link]" : $link);
+    $statement->bindValue(':description', empty($description) ? "[no description]" : $description);
+    if ( ! empty($image)) {
+        $statement->bindValue(':image', $image);
+    } else {
+        $statement->bindValue(':image', null, PDO::PARAM_NULL);
     }
+    $statement->bindValue(':image_cache_date', empty($image_cache_date) ? time() : $image_cache_date);
+    $statement->bindValue(':id', $feed_id);
+    $result = fof_db_statement_execute($query, $statement);
+    $statement->closeCursor();
+
+    return $result;
 }
 
 /* XXX: user_id is unused */
@@ -294,36 +279,32 @@ function fof_db_get_latest_item_age($user_id)
     global $FOF_ITEM_TABLE;
     global $fof_connection;
 
-    $query = "SELECT max(item_cached) AS max_date, $FOF_ITEM_TABLE.feed_id as id FROM $FOF_ITEM_TABLE GROUP BY $FOF_ITEM_TABLE.feed_id";
-    try {
-        $statement = fof_db_query($query);
-    } catch(PDOException $e) {
-        fof_pdoexception_log_(__FUNCTION__, $e, "could not get latest item age");
-    }
+    fof_trace();
+
+    $query = "SELECT max(item_cached) AS max_date, $FOF_ITEM_TABLE.feed_id AS id FROM $FOF_ITEM_TABLE GROUP BY $FOF_ITEM_TABLE.feed_id";
+    $statement = fof_db_query($query);
 
     return $statement;
 }
 
-function fof_db_get_subscriptions($user_id,$dueOnly=false)
+function fof_db_get_subscriptions($user_id, $dueOnly=false)
 {
     global $FOF_FEED_TABLE, $FOF_SUBSCRIPTION_TABLE;
     global $fof_connection;
 
-    $query = "SELECT * FROM $FOF_FEED_TABLE, $FOF_SUBSCRIPTION_TABLE WHERE $FOF_SUBSCRIPTION_TABLE.user_id = :user_id AND $FOF_FEED_TABLE.feed_id = $FOF_SUBSCRIPTION_TABLE.feed_id";
+    fof_trace();
+
+    $query = "SELECT * FROM $FOF_FEED_TABLE f, $FOF_SUBSCRIPTION_TABLE s WHERE s.user_id = :user_id AND f.feed_id = s.feed_id";
     if ($dueOnly) {
         $query .= " AND feed_cache_next_attempt < :now";
     }
     $query .= " ORDER BY feed_title";
-    try {
-        $statement = $fof_connection->prepare($query);
-        $statement->bindValue(':user_id', $user_id);
-        if ($dueOnly) {
-            $statement->bindValue(':now', time());
-        }
-        $result = fof_db_statement_execute($query, $statement);
-    } catch(PDOException $e) {
-        fof_pdoexception_log_(__FUNCTION__, $e, "could not get subscriptions (user_id='$user_id')");
+    $statement = $fof_connection->prepare($query);
+    $statement->bindValue(':user_id', $user_id);
+    if ($dueOnly) {
+        $statement->bindValue(':now', time());
     }
+    $result = fof_db_statement_execute($query, $statement);
 
     return $statement;
 }
@@ -333,39 +314,40 @@ function fof_db_get_feeds_needing_attempt()
     global $FOF_FEED_TABLE;
     global $fof_connection;
 
+    fof_trace();
+
     $query = "SELECT * FROM $FOF_FEED_TABLE WHERE feed_cache_next_attempt < :now ORDER BY feed_title";
-    try {
-        $statement = $fof_connection->prepare($query);
-        $statement->bindValue(':now', time());
-        $result = fof_db_statement_execute($query, $statement);
-    } catch (PDOException $e) {
-        fof_pdoexception_log_(__FUNCTION__, $e, "cannot get feeds needing cache attempts");
-    }
+    $statement = $fof_connection->prepare($query);
+    $statement->bindValue(':now', time());
+    $result = fof_db_statement_execute($query, $statement);
 
     return $statement;
 }
 
+/* N.B. confusing: 'starred' selects 'star' tag */
 function fof_db_get_item_count ( $user_id, $what = 'all', $feed = null, $search = null )
 {
     global $FOF_FEED_TABLE, $FOF_ITEM_TABLE, $FOF_SUBSCRIPTION_TABLE, $FOF_ITEM_TAG_TABLE;
     global $fof_connection;
 
+    fof_trace();
+
     $query = "SELECT COUNT(*) AS count," .
-                   " $FOF_ITEM_TABLE.feed_id AS id" .
-                   " FROM $FOF_ITEM_TABLE, $FOF_SUBSCRIPTION_TABLE, $FOF_FEED_TABLE";
+                   " i.feed_id AS id" .
+                   " FROM $FOF_ITEM_TABLE i, $FOF_SUBSCRIPTION_TABLE s, $FOF_FEED_TABLE f";
 
     if ($what != 'all') {
-        $query .= ", $FOF_ITEM_TAG_TABLE";
+        $query .= ", $FOF_ITEM_TAG_TABLE it";
     }
 
-    $query .= " WHERE $FOF_SUBSCRIPTION_TABLE.user_id = :user_id" .
-                    " AND $FOF_ITEM_TABLE.feed_id = $FOF_SUBSCRIPTION_TABLE.feed_id" .
-                    " AND $FOF_FEED_TABLE.feed_id = $FOF_ITEM_TABLE.feed_id";
+    $query .= " WHERE s.user_id = :user_id" .
+                    " AND i.feed_id = s.feed_id" .
+                    " AND f.feed_id = i.feed_id";
 
     if ($what != 'all') {
-        $query .= " AND $FOF_ITEM_TABLE.item_id = $FOF_ITEM_TAG_TABLE.item_id" .
-                  " AND $FOF_ITEM_TAG_TABLE.user_id = :user_id" .
-                  " AND $FOF_FEED_TABLE.feed_id = $FOF_SUBSCRIPTION_TABLE.feed_id";
+        $query .= " AND i.item_id = it.item_id" .
+                  " AND it.user_id = :user_id" .
+                  " AND f.feed_id = s.feed_id";
     }
 
     switch ($what)
@@ -374,29 +356,29 @@ function fof_db_get_item_count ( $user_id, $what = 'all', $feed = null, $search 
         break;
 
         case 'unread':
-        $query .= " AND $FOF_ITEM_TAG_TABLE.tag_id = 1";
+        $query .= " AND it.tag_id = :unread_id";
         break;
 
         case 'starred':
-        $query .= " AND $FOF_ITEM_TAG_TABLE.tag_id = 2";
+        $query .= " AND it.tag_id = :star_id";
         break;
 
         case 'tagged':
-        $query .= " AND $FOF_ITEM_TAG_TABLE.tag_id != 1" .
-                  " AND $FOF_ITEM_TAG_TABLE.tag_id != 2" .
-                  " AND $FOF_ITEM_TAG_TABLE.tag_id = :folded_id";
+        $query .= " AND it.tag_id != :unread_id" .
+                  " AND it.tag_id != :star_id" .
+                  " AND it.tag_id = :folded_id";
         break;
 
         default:
-        $tag_ids_a = array();
+        $tag_ids_q = array();
         foreach(explode(',', fof_db_get_tag_by_name($user_id, $what)) as $t) {
             $tag_ids_a[] = $fof_connection->quote($t);
         }
-        $query .= " AND $FOF_ITEM_TAG_TABLE.tag_id IN (" . implode(', ', $tag_ids_a) . ")";
+        $query .= " AND it.tag_id IN ( " . implode(', ', $tag_ids_q) . " )";
     }
 
     if ( ! empty($search)) {
-        $query .= " AND ($FOF_ITEM_TABLE.item_title LIKE :search OR $FOF_ITEM_TABLE.item_content LIKE :search )";
+        $query .= " AND (i.item_title LIKE :search OR i.item_content LIKE :search )";
     }
 
     $query .= " GROUP BY id";
@@ -405,31 +387,35 @@ function fof_db_get_item_count ( $user_id, $what = 'all', $feed = null, $search 
         $query .= " HAVING id = :feed";
     }
 
-    try {
-        $statement = $fof_connection->prepare($query);
-        $statement->bindValue(':user_id', $user_id);
-        if ( ! empty($search)) {
-            $statement->bindValue(':search', '%' . $search . '%');
-        }
-        if ( ! empty($feed)) {
-            $statement->bindValue(':feed', $feed);
-        }
-        switch ($what) {
-            case 'all':
-            case 'unread':
-            case 'starred':
-            break;
-
-            case 'tagged':
-            $statement->bindValue(':folded_id', fof_db_get_tag_by_name($user_id, 'folded'));
-            break;
-
-            default:
-        }
-        $result = fof_db_statement_execute($query, $statement);
-    } catch (PDOException $e) {
-        fof_pdoexception_log_(__FUNCTION__, $e, "cannot get feeds (user_id='$user_id')");
+    $statement = $fof_connection->prepare($query);
+    $statement->bindValue(':user_id', $user_id);
+    if ( ! empty($search)) {
+        $statement->bindValue(':search', '%' . $search . '%');
     }
+    if ( ! empty($feed)) {
+        $statement->bindValue(':feed', $feed);
+    }
+    switch ($what) {
+        case 'all':
+        break;
+
+        case 'unread':
+        $statement->bindValue(':unread_id', fof_db_get_tag_by_name($user_id, 'unread'));
+        break;
+
+        case 'starred':
+        $statement->bindValue(':star_id', fof_db_get_tag_by_name($user_id, 'star'));
+        break;
+
+        case 'tagged':
+        $statement->bindValue(':unread_id', fof_db_get_tag_by_name($user_id, 'unread'));
+        $statement->bindValue(':star_id', fof_db_get_tag_by_name($user_id, 'star'));
+        $statement->bindValue(':folded_id', fof_db_get_tag_by_name($user_id, 'folded'));
+        break;
+
+        default:
+    }
+    $result = fof_db_statement_execute($query, $statement);
 
     return $statement;
 }
@@ -439,20 +425,23 @@ function fof_db_get_subscribed_users($feed_id)
     global $FOF_SUBSCRIPTION_TABLE;
     global $fof_connection;
 
-    $query = "SELECT user_id FROM $FOF_SUBSCRIPTION_TABLE WHERE $FOF_SUBSCRIPTION_TABLE.feed_id = :feed_id";
-    try {
-        $statement = $fof_connection->prepare($query);
-        $statement->bindValue(':feed_id', $feed_id);
-        $result = fof_db_statement_execute($query, $statement);
-    } catch (PDOException $e) {
-        fof_pdoexception_log_(__FUNCTION__, $e, "cannot get subscribed users for feed (feed_id='$feed_id')");
-    }
+    fof_trace();
+
+    $query = "SELECT user_id FROM $FOF_SUBSCRIPTION_TABLE WHERE feed_id = :feed_id";
+    $statement = $fof_connection->prepare($query);
+    $statement->bindValue(':feed_id', $feed_id);
+    $result = fof_db_statement_execute($query, $statement);
+
     return $statement;
 }
 
 function fof_db_get_subscribed_users_count($feed_id)
 {
-    $subscribed_users = fof_db_get_subscribed_users($feed_id)->fetchAll();
+    fof_trace();
+
+    $sub_statement = fof_db_get_subscribed_users($feed_id);
+    $subscribed_users = $sub_statement->fetchAll();
+
     return count($subscribed_users);
 }
 
@@ -461,15 +450,17 @@ function fof_db_is_subscribed($user_id, $feed_url)
     global $FOF_FEED_TABLE, $FOF_SUBSCRIPTION_TABLE;
     global $fof_connection;
 
-    $query = "SELECT $FOF_SUBSCRIPTION_TABLE.feed_id FROM $FOF_FEED_TABLE, $FOF_SUBSCRIPTION_TABLE WHERE feed_url = :feed_url AND $FOF_SUBSCRIPTION_TABLE.feed_id = $FOF_FEED_TABLE.feed_id AND $FOF_SUBSCRIPTION_TABLE.user_id = :user_id;";
-    try {
-        $statement = $fof_connection->prepare($query);
-        $statement->bindValue(':feed_url', $feed_url);
-        $statement->bindValue(':user_id', $user_id);
-        $result = fof_db_statement_execute($query, $statement);
-    } catch (PDOException $e) {
-        fof_pdoexception_log_(__FUNCTION__, $e, "cannot correlate user-to-feed (user_id='$user_id' feed_url='$feed_url')");
-    }
+    fof_trace();
+
+    $query = "SELECT s.feed_id" .
+                " FROM $FOF_FEED_TABLE f, $FOF_SUBSCRIPTION_TABLE s" .
+                " WHERE feed_url = :feed_url" .
+                    " AND s.feed_id = f.feed_id" .
+                    " AND s.user_id = :user_id;";
+    $statement = $fof_connection->prepare($query);
+    $statement->bindValue(':feed_url', $feed_url);
+    $statement->bindValue(':user_id', $user_id);
+    $result = fof_db_statement_execute($query, $statement);
     $row = fof_db_get_row($statement, NULL, TRUE);
     if ( ! empty($row)) {
         return true;
@@ -483,14 +474,12 @@ function fof_db_get_feed_by_url($feed_url)
     global $FOF_FEED_TABLE;
     global $fof_connection;
 
+    fof_trace();
+
     $query = "SELECT * FROM $FOF_FEED_TABLE WHERE feed_url = :feed_url";
-    try {
-        $statement = $fof_connection->prepare($query);
-        $statement->bindValue(':feed_url', $feed_url);
-        $result = fof_db_statement_execute($query, $statement);
-    } catch (PDOException $e) {
-        fof_pdoexception_log_(__FUNCTION__, $e, "cannot get feed (feed_url='$feed_url')");
-    }
+    $statement = $fof_connection->prepare($query);
+    $statement->bindValue(':feed_url', $feed_url);
+    $result = fof_db_statement_execute($query, $statement);
 
     return fof_db_get_row($statement, NULL, TRUE);
 }
@@ -500,14 +489,12 @@ function fof_db_get_feed_by_id($feed_id)
     global $FOF_FEED_TABLE;
     global $fof_connection;
 
+    fof_trace();
+
     $query = "SELECT * FROM $FOF_FEED_TABLE WHERE feed_id = :feed_id";
-    try {
-        $statement = $fof_connection->prepare($query);
-        $statement->bindValue(':feed_id', $feed_id);
-        $result = fof_db_statement_execute($query, $statement);
-    } catch (PDOException $e) {
-        fof_pdoexception_log_(__FUNCTION__, $e, "cannot get feed (feed_id='$feed_id')");
-    }
+    $statement = $fof_connection->prepare($query);
+    $statement->bindValue(':feed_id', $feed_id);
+    $result = fof_db_statement_execute($query, $statement);
 
     return fof_db_get_row($statement, NULL, TRUE);
 }
@@ -517,29 +504,38 @@ function fof_db_add_feed($url, $title, $link, $description)
     global $FOF_FEED_TABLE;
     global $fof_connection;
 
-    $query = "INSERT INTO $FOF_FEED_TABLE (feed_url, feed_title, feed_link, feed_description) values (:url, :title, :link, :description)";
-    try {
-        $statement = $fof_connection->prepare($query);
-        $statement->bindValue(':url', $url);
-        $statement->bindValue(':title', $title);
-        $statement->bindValue(':link', $link);
-        $statement->bindValue(':description', $description);
-        $result = fof_db_statement_execute($query, $statement);
-        $statement->closeCursor();
-    } catch (PDOException $e) {
-        fof_pdoexception_log_(__FUNCTION__, $e, "cannot add feed (feed_url='$url')");
-    }
+    fof_trace();
+
+    if (empty($title)) $title = "[no title]";
+    if (empty($link)) $link = "[no link]";
+    if (empty($description)) $description = "[no description]";
+
+    $query = "INSERT INTO $FOF_FEED_TABLE (feed_url, feed_title, feed_link, feed_description) VALUES (:url, :title, :link, :description)";
+    $statement = $fof_connection->prepare($query);
+    $statement->bindValue(':url', $url);
+    $statement->bindValue(':title', $title);
+    $statement->bindValue(':link', $link);
+    $statement->bindValue(':description', $description);
+    $result = fof_db_statement_execute($query, $statement);
+    $statement->closeCursor();
+
+    /*
+        It would be nice to use:
+            return $fof_connection->lastInsertId();
+        But it has problems:
+            not reliable between pdo drivers
+            is a race condition
+        So just grab the id of what we put in..
+        FIXME: I bet there's a sane way of doing this in one transaction.
+    */
+
     $query = "SELECT feed_id FROM $FOF_FEED_TABLE WHERE feed_url = :url AND feed_title = :title AND feed_link = :link AND feed_description = :description";
-    try {
-        $statement = $fof_connection->prepare($query);
-        $statement->bindValue(':url', $url);
-        $statement->bindValue(':title', $title);
-        $statement->bindValue(':link', $link);
-        $statement->bindValue(':description', $description);
-        $result = fof_db_statement_execute($query, $statement);
-    } catch (PDOException $e) {
-        fof_pdoexception_log_(__FUNCTION__, $e, "cannot get new feed id (feed_url='$url')");
-    }
+    $statement = $fof_connection->prepare($query);
+    $statement->bindValue(':url', $url);
+    $statement->bindValue(':title', $title);
+    $statement->bindValue(':link', $link);
+    $statement->bindValue(':description', $description);
+    $result = fof_db_statement_execute($query, $statement);
 
     return fof_db_get_row($statement, 'feed_id', TRUE);
 }
@@ -549,16 +545,14 @@ function fof_db_add_subscription($user_id, $feed_id)
     global $FOF_SUBSCRIPTION_TABLE;
     global $fof_connection;
 
-    $query = "INSERT INTO $FOF_SUBSCRIPTION_TABLE (feed_id, user_id) values (:feed_id, :user_id)";
-    try {
-        $statement = $fof_connection->prepare($query);
-        $statement->bindValue(':feed_id', $feed_id);
-        $statement->bindValue(':user_id', $user_id);
-        $result = fof_db_statement_execute($query, $statement);
-        $statement->closeCursor();
-    } catch (PDOException $e) {
-        fof_pdoexception_log_(__FUNCTION__, $e, "cannot add subscription (user_id='$user_id' feed_id='$feed_id')");
-    }
+    fof_trace();
+
+    $query = "INSERT INTO $FOF_SUBSCRIPTION_TABLE ( feed_id, user_id ) VALUES ( :feed_id, :user_id )";
+    $statement = $fof_connection->prepare($query);
+    $statement->bindValue(':feed_id', $feed_id);
+    $statement->bindValue(':user_id', $user_id);
+    $result = fof_db_statement_execute($query, $statement);
+    $statement->closeCursor();
 }
 
 function fof_db_delete_subscription($user_id, $feed_id)
@@ -566,34 +560,28 @@ function fof_db_delete_subscription($user_id, $feed_id)
     global $FOF_SUBSCRIPTION_TABLE, $FOF_ITEM_TAG_TABLE;
     global $fof_connection;
 
+    fof_trace();
+
     $all_items = fof_db_get_items($user_id, $feed_id, "all");
-    $items = array();
+    $items_q = array();
     foreach($all_items as $i) {
-        $items[] = $fof_connection->quote($i['item_id']);
+        $items_q[] = $fof_connection->quote($i['item_id']);
     }
 
-    if (count($items) > 0) {
-        $query = "DELETE FROM $FOF_ITEM_TAG_TABLE WHERE user_id = :user_id AND item_id IN (" . implode(', ', $items) . ")";
-        try {
-            $statement = $fof_connection->prepare($query);
-            $statement->bindValue(':user_id', $user_id);
-            $result = fof_db_statement_execute($query, $statement);
-            $statement->closeCursor();
-        } catch (PDOException $e) {
-            fof_pdoexception_log_(__FUNCTION__, $e, "cannot delete items for feed (user_id='$user_id' feed_id='$feed_id')");
-        }
+    if (count($items_q) > 0) {
+        $query = "DELETE FROM $FOF_ITEM_TAG_TABLE WHERE user_id = :user_id AND item_id IN ( " . implode(', ', $items_q) . " )";
+        $statement = $fof_connection->prepare($query);
+        $statement->bindValue(':user_id', $user_id);
+        $result = fof_db_statement_execute($query, $statement);
+        $statement->closeCursor();
     }
 
     $query = "DELETE FROM $FOF_SUBSCRIPTION_TABLE WHERE feed_id = :feed_id and user_id = :user_id";
-    try {
-        $statement = $fof_connection->prepare($query);
-        $statement->bindValue(':user_id', $user_id);
-        $statement->bindValue(':feed_id', $feed_id);
-        $result = fof_db_statement_execute($query, $statement);
-        $statement->closeCursor();
-    } catch (PDOException $e) {
-        fof_pdoexception_log_(__FUNCTION__, $e, "cannot delete subscriptions for feed (user_id='$user_id' feed_id='$feed_id')");
-    }
+    $statement = $fof_connection->prepare($query);
+    $statement->bindValue(':user_id', $user_id);
+    $statement->bindValue(':feed_id', $feed_id);
+    $result = fof_db_statement_execute($query, $statement);
+    $statement->closeCursor();
 }
 
 function fof_db_delete_feed($feed_id)
@@ -601,25 +589,19 @@ function fof_db_delete_feed($feed_id)
     global $FOF_FEED_TABLE, $FOF_ITEM_TABLE;
     global $fof_connection;
 
+    fof_trace();
+
     $query = "DELETE FROM $FOF_FEED_TABLE WHERE feed_id = :feed_id";
-    try {
-        $statement = $fof_connection->prepare($query);
-        $statement->bindValue(':feed_id', $feed_id);
-        $result = fof_db_statement_execute($query, $statement);
-        $statement->closeCursor();
-    } catch (PDOException $e) {
-        fof_pdoexception_log_(__FUNCTION__, $e, "cannot delete feed (feed_id='$feed_id')");
-    }
+    $statement = $fof_connection->prepare($query);
+    $statement->bindValue(':feed_id', $feed_id);
+    $result = fof_db_statement_execute($query, $statement);
+    $statement->closeCursor();
 
     $query = "DELETE FROM $FOF_ITEM_TABLE WHERE feed_id = :feed_id";
-    try {
-        $statement = $fof_connection->prepare($query);
-        $statement->bindValue(':feed_id', $feed_id);
-        $result = fof_db_statement_execute($query, $statement);
-        $statement->closeCursor();
-    } catch (PDOException $e) {
-        fof_pdoexception_log_(__FUNCTION__, $e, "cannot delete items for feed (feed_id='$feed_id')");
-    }
+    $statement = $fof_connection->prepare($query);
+    $statement->bindValue(':feed_id', $feed_id);
+    $result = fof_db_statement_execute($query, $statement);
+    $statement->closeCursor();
 }
 
 function fof_db_feed_cache_set($feed_id, $next_attempt)
@@ -627,16 +609,14 @@ function fof_db_feed_cache_set($feed_id, $next_attempt)
     global $FOF_FEED_TABLE;
     global $fof_connection;
 
-    $query = "UPDATE $FOF_FEED_TABLE SET feed_cache_next_attempt = :next_attempt WHERE feed_id = :id";
-    try {
-        $statement = $fof_connection->prepare($query);
-        $statement->bindValue(":feed_id", $feed_id);
-        $statement->bindValue(":next_attempt", $next_attempt);
-        $result = fof_db_statement_execute($query, $statement);
-        $statement->closeCursor();
-    } catch (PDOException $e) {
-        fof_pdoexception_log_(__FUNCTION__, $e, "cannot set feed cache next attempt (feed_id='$feed_id')");
-    }
+    fof_trace();
+
+    $query = "UPDATE $FOF_FEED_TABLE SET feed_cache_next_attempt = :next_attempt WHERE feed_id = :feed_id";
+    $statement = $fof_connection->prepare($query);
+    $statement->bindValue(":feed_id", $feed_id);
+    $statement->bindValue(":next_attempt", $next_attempt);
+    $result = fof_db_statement_execute($query, $statement);
+    $statement->closeCursor();
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -648,15 +628,13 @@ function fof_db_find_item($feed_id, $item_guid)
     global $FOF_ITEM_TABLE;
     global $fof_connection;
 
+    fof_trace();
+
     $query = "SELECT item_id FROM $FOF_ITEM_TABLE WHERE feed_id = :feed_id and item_guid = :item_guid";
-    try {
-        $statement = $fof_connection->prepare($query);
-        $statement->bindValue(":feed_id", $feed_id);
-        $statement->bindValue(":item_guid", $item_guid);
-        $result = fof_db_statement_execute($query, $statement);
-    } catch (PDOException $e) {
-        fof_pdoexception_log_(__FUNCTION__, $e, "cannot get item id (feed_id='$feed_id' item_guid='$item_guid')");
-    }
+    $statement = $fof_connection->prepare($query);
+    $statement->bindValue(":feed_id", $feed_id);
+    $statement->bindValue(":item_guid", $item_guid);
+    $result = fof_db_statement_execute($query, $statement);
 
     return fof_db_get_row($statement, 'item_id', TRUE);
 }
@@ -666,145 +644,132 @@ function fof_db_add_item($feed_id, $guid, $link, $title, $content, $cached, $pub
     global $FOF_ITEM_TABLE;
     global $fof_connection;
 
+    fof_trace();
+
     $query = "INSERT INTO $FOF_ITEM_TABLE (feed_id, item_link, item_guid, item_title, item_content, item_cached, item_published, item_updated) VALUES (:feed_id, :link, :guid, :title, :content, :cached, :published, :updated)";
-    try {
-        $statement = $fof_connection->prepare($query);
-        $statement->bindValue(':feed_id', $feed_id);
-        $statement->bindValue(':link', $link);
-        $statement->bindValue(':guid', $guid);
-        $statement->bindValue(':title', $title);
-        $statement->bindValue(':content', $content);
-        $statement->bindValue(':cached', $cached);
-        $statement->bindValue(':published', $published);
-        $statement->bindValue(':updated', $updated);
-        $result = fof_db_statement_execute($query, $statement);
-        $statement->closeCursor();
-    } catch (PDOException $e) {
-        fof_pdoexception_log_(__FUNCTION__, $e, "cannot add item (feed_id='$feed_id' item_guid='$guid)");
-    }
+    $statement = $fof_connection->prepare($query);
+    $statement->bindValue(':feed_id', $feed_id);
+    $statement->bindValue(':link', $link);
+    $statement->bindValue(':guid', $guid);
+    $statement->bindValue(':title', $title);
+    $statement->bindValue(':content', $content);
+    $statement->bindValue(':cached', $cached);
+    $statement->bindValue(':published', $published);
+    $statement->bindValue(':updated', $updated);
+    $result = fof_db_statement_execute($query, $statement);
+    $statement->closeCursor();
+
+    /* FIXME: see comments elsewhere about lastInsertId */
 
     $query = "SELECT item_id FROM $FOF_ITEM_TABLE WHERE feed_id = :feed_id AND item_link = :link AND item_guid = :guid AND item_title = :title AND item_content = :content AND item_cached = :cached AND item_published = :published AND item_updated = :updated";
-    try {
-        $statement = $fof_connection->prepare($query);
-        $statement->bindValue(':feed_id', $feed_id);
-        $statement->bindValue(':link', $link);
-        $statement->bindValue(':guid', $guid);
-        $statement->bindValue(':title', $title);
-        $statement->bindValue(':content', $content);
-        $statement->bindValue(':cached', $cached);
-        $statement->bindValue(':published', $published);
-        $statement->bindValue(':updated', $updated);
-        $result = fof_db_statement_execute($query, $statement);
-    } catch (PDOException $e) {
-        fof_pdoexception_log_(__FUNCTION__, $e, "cannot get added item id (feed_id='$feed_id' item_guid='$guid')");
-    }
+    $statement = $fof_connection->prepare($query);
+    $statement->bindValue(':feed_id', $feed_id);
+    $statement->bindValue(':link', $link);
+    $statement->bindValue(':guid', $guid);
+    $statement->bindValue(':title', $title);
+    $statement->bindValue(':content', $content);
+    $statement->bindValue(':cached', $cached);
+    $statement->bindValue(':published', $published);
+    $statement->bindValue(':updated', $updated);
+    $result = fof_db_statement_execute($query, $statement);
 
     return fof_db_get_row($statement, 'item_id', TRUE);
 }
 
-function fof_db_get_items($user_id=1, $feed=NULL, $what="unread", $when=NULL, $start=NULL, $limit=NULL, $order="desc", $search=NULL)
-{
+
+/* when: Y/m/d or 'today' */
+function fof_db_get_items($user_id=1, $feed=NULL, $what='unread', $when=NULL, $start=NULL, $limit=NULL, $order='desc', $search=NULL) {
     global $FOF_SUBSCRIPTION_TABLE, $FOF_FEED_TABLE, $FOF_ITEM_TABLE, $FOF_ITEM_TAG_TABLE, $FOF_TAG_TABLE;
     global $fof_connection;
     $all_items = array();
 
+    fof_trace();
+
     $prefs = fof_prefs();
-    $offset = isset($prefs['tzoffset']) ? $prefs['tzoffest'] : NULL;
 
-    if ( ! empty($when))
-    {
-        $whendate = explode("/", ($when == 'today') ? fof_todays_date() : $when);
-        $begin = gmmktime(0, 0, 0, $whendate[1], $whendate[2], $whendate[0]) - ($offset * 60 * 60);
-        $end = $begin + (24 * 60 * 60);
+    $select = "SELECT i.*, f.*";
+
+    $from = " FROM $FOF_FEED_TABLE f, $FOF_ITEM_TABLE i, $FOF_SUBSCRIPTION_TABLE s";
+    if ($what != 'all') {
+        $from .= ", $FOF_TAG_TABLE t, $FOF_ITEM_TAG_TABLE it";
     }
 
-    $select = "SELECT i.* , f.* ";
-    $from = "FROM $FOF_FEED_TABLE f, $FOF_ITEM_TABLE i, $FOF_SUBSCRIPTION_TABLE s ";
-    $where = "WHERE s.user_id = :user_id AND s.feed_id = f.feed_id AND f.feed_id = i.feed_id ";
-    $group = "";
-
-    if ( ! empty($feed)) {
-        $where .= "AND f.feed_id = :feed_id ";
+    $where = " WHERE s.user_id = " . $fof_connection->quote($user_id) . " AND s.feed_id = f.feed_id AND f.feed_id = i.feed_id";
+    if (! empty($feed)) {
+        $where .= " AND f.feed_id = " . $fof_connection->quote($feed);
     }
-
-    if ( ! empty($when)) {
-        $where .= "AND i.item_published > :begin AND i.item_published < :end ";
+    if (! empty($when)) {
+        $tzoffset = isset($prefs['tzoffset']) ? $prefs['tzoffset'] : 0;
+        $whendate = explode('/', ($when == 'today') ? fof_todays_date() : $when);
+        $when_begin = gmmktime(0, 0, 0, $whendate[1], $whendate[2], $whendate[0]) - ($tzoffset * 60 * 60);
+        $when_end = $when_begin + (24 * 60 * 60);
+        $where .= " AND i.item_published > " . $fof_connection->quote($when_begin) . " AND i.item_published < " . $fof_connection->quote($when_end);
     }
-
-    if ($what != 'all')
-    {
+    if ($what != 'all') {
         $tags_q = array();
-        foreach(explode(' ', $what) as $t) {
-            $tags_q[] = $fof_connection->quote($t);
+        foreach (explode(' ', $what) as $tag) {
+            $tags_q[] = $fof_connection->quote($tag);
         }
+        $where .= " AND it.user_id = s.user_id AND it.tag_id = t.tag_id AND i.item_id = it.item_id AND t.tag_name IN (" . implode(', ', $tags_q) . ")";
+    }
 
-        $from .= ", $FOF_TAG_TABLE t, $FOF_ITEM_TAG_TABLE it ";
-        $where .= "AND it.user_id = :user_id ";
-        $where .= "AND it.tag_id = t.tag_id AND ( t.tag_name IN ( " . implode(', ', $tags_q) . " ) ) AND i.item_id = it.item_id ";
-        $group = "GROUP BY i.item_id HAVING COUNT( i.item_id ) = :tag_count ";
+    if ($what == 'all') {
+        $group = "";
+    } else {
+        $group = " GROUP BY i.item_id HAVING COUNT ( i.item_id ) = " . count($tags_q);
     }
 
     if ( ! empty($search)) {
-        $where .= "AND (i.item_title LIKE :search OR i.item_content LIKE :search )";
+        $search_q = $fof_connection->quote('%' . $search . '%');
+        $where .= " AND (i.item_title LIKE $search_q OR i.item_content LIKE $search_q )";
     }
 
-    $order_by = "ORDER BY i.item_published DESC ";
+    $order_by = " ORDER BY i.item_published DESC";
     if (is_numeric($start)) {
-        $order_by .= " LIMIT $start, " . (is_numeric($limit)) ? $limit : $prefs['howmany'];
+        $order_by .= " LIMIT " . $start . ", " . ((is_numeric($limit)) ? $limit : $prefs['howmany']);
     }
 
     $query = $select . $from . $where . $group . $order_by;
 
-    try {
-        $statement = $fof_connection->prepare($query);
-        $statement->bindValue(':user_id', $user_id);
-        if ( ! empty($feed)) {
-            $statement->bindValue(':feed_id', $feed);
-        }
-        if ( ! empty($when)) {
-            $statement->bindValue(':begin', $begin);
-            $statement->bindValue(':end', $end);
-        }
-        if ($what != 'all') {
-            $statement->bindValue(':tag_count', count($tags_q));
-        }
-        if ( ! empty($search)) {
-            $statement->bindValue(':search', $search);
-        }
-        $result = fof_db_statement_execute($query, $statement);
-        $all_items = fof_multi_sort($statement->fetchAll(), 'item_published', $order != "asc");
-    } catch (PDOException $e) {
-        fof_pdoexception_log_(__FUNCTION__, $e, "cannot get items (user_id='$user_id' feed_id='$feed_id')");
-    }
+    fof_log(__FUNCTION__ . " first query: " . $query);
 
-    $ids_q = array();
+    $statement = fof_db_statement_prepare($query);
+    $result = fof_db_statement_execute($query, $statement);
+
+    $item_ids_q = array();
+    $lookup = array(); /* remember item_id->all_rows mapping, for populating tags */
     $idx = 0;
-    foreach($all_items as $item)
-    {
-        $ids_q[] = $fof_connection->quote($item['item_id']);
-        $lookup[$item['item_id']] = $idx;
+    while ( ($row = fof_db_get_row($statement)) !== FALSE ) {
+        fof_log(__FUNCTION__ . " collecting item_id:" . $row['item_id'] . " idx:$idx");
+        $item_ids_q[] = $fof_connection->quote($row['item_id']);
+        $lookup[$row['item_id']] = $idx;
+        $all_items[$idx] = $row;
         $all_items[$idx]['tags'] = array();
         $idx += 1;
     }
 
-    $query = "SELECT $FOF_TAG_TABLE.tag_name, $FOF_ITEM_TAG_TABLE.item_id" .
-            " FROM $FOF_TAG_TABLE, $FOF_ITEM_TAG_TABLE" .
-            " WHERE $FOF_TAG_TABLE.tag_id = $FOF_ITEM_TAG_TABLE.tag_id " .
-                " AND $FOF_ITEM_TAG_TABLE.item_id IN ( " . implode(', ', $ids_q) . " )" .
-                " AND $FOF_ITEM_TAG_TABLE.user_id = :user_id";
-    try {
-        $statement = $fof_connection->prepare($query);
-        $statement->bindValue(':user_id', $user_id);
-        $result = fof_db_statement_execute($query, $statement);
-        while (($row = fof_db_get_row($statement)) !== false) {
-            $all_items[$lookup[$row['item_id']]]['tags'][] = $row['tag_name'];
-        }
-    } catch (PDOException $e) {
-        fof_pdoexception_log_(__FUNCTION__, $e, "cannot get item tags feed (user_id='$user_id' item_ids:" . implode(',', $ids_q). ")");
+    $all_items = fof_multi_sort($all_items, 'item_published', $order != "asc");
+
+    $query = "SELECT t.tag_name, it.item_id" .
+            " FROM $FOF_TAG_TABLE t, $FOF_ITEM_TAG_TABLE it" .
+            " WHERE t.tag_id = it.tag_id" .
+                " AND it.item_id IN ( " . implode(', ', $item_ids_q) . " )" .
+                " AND it.user_id = " . $fof_connection->quote($user_id);
+
+    fof_log(__FUNCTION__ . " second query: " . $query);
+
+    $statement = fof_db_statement_prepare($query);
+    $result = fof_db_statement_execute($query, $statement);
+    while ( ($row = fof_db_get_row($statement)) !== FALSE ) {
+        $idx = $lookup[$row['item_id']];
+        $all_items[$idx]['tags'][] = $row['tag_name'];
     }
+
+    fof_log(__FUNCTION__ . " all_items:" . var_export($all_items,true));
 
     return $all_items;
 }
+
 
 function fof_db_get_item($user_id, $item_id)
 {
@@ -812,47 +777,41 @@ function fof_db_get_item($user_id, $item_id)
     global $fof_connection;
     $item = array();
 
-    $query = "SELECT $FOF_FEED_TABLE.feed_image AS feed_image," .
-                   " $FOF_FEED_TABLE.feed_title AS feed_title," .
-                   " $FOF_FEED_TABLE.feed_link AS feed_link," .
-                   " $FOF_FEED_TABLE.feed_description AS feed_description," .
-                   " $FOF_ITEM_TABLE.item_id AS item_id," .
-                   " $FOF_ITEM_TABLE.item_link AS item_link," .
-                   " $FOF_ITEM_TABLE.item_title AS item_title," .
-                   " $FOF_ITEM_TABLE.item_cached," .
-                   " $FOF_ITEM_TABLE.item_published," .
-                   " $FOF_ITEM_TABLE.item_updated," .
-                   " $FOF_ITEM_TABLE.item_content AS item_content" .
-            " FROM $FOF_FEED_TABLE, $FOF_ITEM_TABLE" .
-            " WHERE $FOF_ITEM_TABLE.feed_id = $FOF_FEED_TABLE.feed_id" .
-                " AND $FOF_ITEM_TABLE.item_id = :item_id";
-    try {
-        $statement = $fof_connection->prepare($query);
-        $statement->bindValue(':item_id', $item_id);
-        $result = fof_db_statement_execute($query, $statement);
-        $item = fof_db_get_row($statement, NULL, TRUE);
-    } catch (PDOException $e) {
-        fof_pdoexception_log_(__FUNCTION__, $e, "cannot get item (item_id='$item_id')");
-    }
+    fof_trace();
+
+    $query = "SELECT f.feed_image AS feed_image," .
+                   " f.feed_title AS feed_title," .
+                   " f.feed_link AS feed_link," .
+                   " f.feed_description AS feed_description," .
+                   " i.item_id AS item_id," .
+                   " i.item_link AS item_link," .
+                   " i.item_title AS item_title," .
+                   " i.item_cached," .
+                   " i.item_published," .
+                   " i.item_updated," .
+                   " i.item_content AS item_content" .
+            " FROM $FOF_FEED_TABLE f, $FOF_ITEM_TABLE i" .
+            " WHERE i.feed_id = f.feed_id" .
+                " AND i.item_id = :item_id";
+    $statement = $fof_connection->prepare($query);
+    $statement->bindValue(':item_id', $item_id);
+    $result = fof_db_statement_execute($query, $statement);
+    $item = fof_db_get_row($statement, NULL, TRUE);
 
     $item['tags'] = array();
 
     if ($user_id) {
-        $query = "SELECT $FOF_TAG_TABLE.tag_name".
-                " FROM $FOF_TAG_TABLE, $FOF_ITEM_TAG_TABLE" .
-                " WHERE $FOF_TAG_TABLE.tag_id = $FOF_ITEM_TAG_TABLE.tag_id" .
-                    " AND $FOF_ITEM_TAG_TABLE.item_id = :item_id" .
-                    " AND $FOF_ITEM_TAG_TABLE.user_id = :user_id";
-        try {
-            $statement = $fof_connection->prepare($query);
-            $statement->bindValue(':item_id', $item_id);
-            $statement->bindValue(':user_id', $user_id);
-            $result = fof_db_statement_execute($query, $statement);
-            while (($row = fof_db_get_row($statement)) !== false) {
-                $item['tags'][] = $row['tag_name'];
-            }
-        } catch (PDOException $e) {
-            fof_pdoexception_log_(__FUNCTION__, $e, "cannot get item tags for user (item_id='$item_id' user_id='$user_id)");
+        $query = "SELECT t.tag_name".
+                " FROM $FOF_TAG_TABLE t, $FOF_ITEM_TAG_TABLE it" .
+                " WHERE t.tag_id = it.tag_id" .
+                    " AND it.item_id = :item_id" .
+                    " AND it.user_id = :user_id";
+        $statement = $fof_connection->prepare($query);
+        $statement->bindValue(':item_id', $item_id);
+        $statement->bindValue(':user_id', $user_id);
+        $result = fof_db_statement_execute($query, $statement);
+        while (($row = fof_db_get_row($statement)) !== false) {
+            $item['tags'][] = $row['tag_name'];
         }
     }
 
@@ -864,20 +823,19 @@ function fof_db_items_purge_list($feed_id, $purge_days)
     global $FOF_ITEM_TABLE, $FOF_ITEM_TAG_TABLE;
     global $fof_connection;
 
+    fof_trace();
+
     $purge_secs = $purge_days * 24 * 60 * 60;
     $query = "SELECT i.item_id FROM $FOF_ITEM_TABLE i" .
-            " LEFT JOIN $FOF_ITEM_TAG_TABLE t ON i.item_id=t.item_id" .
+            " LEFT JOIN $FOF_ITEM_TAG_TABLE t ON i.item_id = t.item_id" .
             " WHERE tag_id IS NULL" .
                 " AND feed_id = :feed_id" .
                 " AND i.item_cached <= :purge_time";
-    try {
-        $statement = $fof_connection->prepare($query);
-        $statement->bindValue(":feed_id", $feed_id);
-        $statement->bindValue(":purge_time", time() - $purge_secs);
-        $result = fof_db_statement_execute($query, $statement);
-    } catch (PDOException $e) {
-        fof_pdoexception_log_(__FUNCTION__, $e, "cannot get purge list (feed_id='$feed_id')");
-    }
+    $statement = $fof_connection->prepare($query);
+    $statement->bindValue(":feed_id", $feed_id);
+    $statement->bindValue(":purge_time", time() - $purge_secs);
+    $result = fof_db_statement_execute($query, $statement);
+
     return $statement;
 }
 
@@ -885,6 +843,8 @@ function fof_db_items_delete($items)
 {
     global $FOF_ITEM_TABLE;
     global $fof_connection;
+
+    fof_trace();
 
     if ( ! $items)
         return;
@@ -898,13 +858,9 @@ function fof_db_items_delete($items)
     }
 
     $query = "DELETE FROM $FOF_ITEM_TABLE WHERE item_id IN (" . implode(', ', $items_q) . ")";
-    try {
-        $statement = $fof_connection->prepare($query);
-        $result = fof_db_statement_execute($query, $statement);
-        $statement->closeCursor();
-    } catch (PDOException $e) {
-        fof_pdoexception_log_(__FUNCTION__, $e, "cannot delete items (items=" . implode(',', $items_q). ")");
-    }
+    $statement = $fof_connection->prepare($query);
+    $result = fof_db_statement_execute($query, $statement);
+    $statement->closeCursor();
 }
 
 function fof_db_items_duplicate_list()
@@ -912,17 +868,15 @@ function fof_db_items_duplicate_list()
     global $FOF_ITEM_TABLE;
     global $fof_connection;
 
+    fof_trace();
+
     $query = "SELECT i2.item_id, i1.item_content AS c1," .
                    " i2.item_content AS c2" .
                    " FROM $FOF_ITEM_TABLE i1" .
             " LEFT JOIN $FOF_ITEM_TABLE i2" .
             " ON i1.item_title=i2.item_title AND i1.feed_id=i2.feed_id" .
             " WHERE i1.item_id < i2.item_id";
-    try {
-        $statement = fof_db_query($query);
-    } catch (PDOException $e) {
-        fof_pdoexception_log_(__FUNCTION__, $e, "cannot get duplicate items");
-    }
+    $statement = fof_db_query($query);
 
     return $statement;
 }
@@ -932,14 +886,12 @@ function fof_db_items_updated_list($feed_id)
     global $FOF_ITEM_TABLE;
     global $fof_connection;
 
+    fof_trace();
+
     $query = "SELECT item_updated FROM $FOF_ITEM_TABLE WHERE feed_id = :id ORDER BY item_updated ASC";
-    try {
-        $statement = $fof_connection->prepare($query);
-        $statement->bindValue(':id', $feed_id);
-        $result = fof_db_statement_execute($query, $statement);
-    } catch (PDOException $e) {
-        fof_pdoexception_log_(__FUNCTION__, $e, "cannot get updated items (feed_id='$feed_id')");
-    }
+    $statement = $fof_connection->prepare($query);
+    $statement->bindValue(':id', $feed_id);
+    $result = fof_db_statement_execute($query, $statement);
 
     return $statement;
 }
@@ -953,22 +905,21 @@ function fof_db_tag_delete($items)
     global $FOF_ITEM_TAG_TABLE;
     global $fof_connection;
 
+    fof_trace();
+
     if ( ! $items)
         return;
 
     if ( ! is_array($items))
         $items = array($items);
 
+    $items_q = array();
     foreach($items as $item) {
         $items_q[] = $fof_connection->quote($item);
     }
 
     $query = "DELETE FROM $FOF_ITEM_TAG_TABLE WHERE item_id IN (" . implode(', ', $items_q) . ")";
-    try {
-        fof_db_exec($query);
-    } catch (PDOException $e) {
-        fof_pdoexception_log_(__FUNCTION__, $e, "cannot delete tags (items=" . implode(',', $items_q). ")");
-    }
+    $result = fof_db_exec($query);
 }
 
 function fof_db_get_subscription_to_tags()
@@ -977,20 +928,18 @@ function fof_db_get_subscription_to_tags()
     global $fof_connection;
     $r = array();
 
+    fof_trace();
+
     $query = "SELECT * FROM $FOF_SUBSCRIPTION_TABLE";
-    try {
-        $statement = fof_db_query($query);
-        while(($row = fof_db_get_row($statement)) !== false) {
-            $feed_id = $row['feed_id'];
-            $user_id = $row['user_id'];
-            $prefs = unserialize($row['subscription_prefs']);
-            if ( ! is_array($r[$feed_id])) {
-                $r[$feed_id] = array();
-            }
-            $r[$feed_id][$user_id] = $prefs['tags'];
+    $statement = fof_db_query($query);
+    while(($row = fof_db_get_row($statement)) !== false) {
+        $feed_id = $row['feed_id'];
+        $user_id = $row['user_id'];
+        $prefs = unserialize($row['subscription_prefs']);
+        if ( ! is_array($r[$feed_id])) {
+            $r[$feed_id] = array();
         }
-    } catch (PDOException $e) {
-        fof_pdoexception_log_(__FUNCTION__, $e, "cannot get subscriptions)");
+        $r[$feed_id][$user_id] = $prefs['tags'];
     }
 
     return $r;
@@ -1001,32 +950,26 @@ function fof_db_tag_feed($user_id, $feed_id, $tag_id)
     global $FOF_SUBSCRIPTION_TABLE;
     global $fof_connection;
 
+    fof_trace();
+
     $query = "SELECT subscription_prefs FROM $FOF_SUBSCRIPTION_TABLE WHERE feed_id = :feed_id AND user_id = :user_id";
-    try {
-        $statement = $fof_connection->prepare($query);
-        $statement->bindValue(':feed_id', $feed_id);
-        $statement->bindValue(':user_id', $user_id);
-        $result = fof_db_statement_execute($query, $statement);
-        $prefs = unserialize(fof_db_get_row($statement, 'subscription_prefs', TRUE));
-    } catch (PDOException $e) {
-        fof_pdoexception_log_(__FUNCTION__, $e, "cannot get subscription prefs (feed_id='$feed_id' user_id='$user_id')");
-    }
+    $statement = $fof_connection->prepare($query);
+    $statement->bindValue(':feed_id', $feed_id);
+    $statement->bindValue(':user_id', $user_id);
+    $result = fof_db_statement_execute($query, $statement);
+    $prefs = unserialize(fof_db_get_row($statement, 'subscription_prefs', TRUE));
 
     if ( ! is_array($prefs['tags']) || ! in_array($tag_id, $prefs['tags'])) {
         $prefs['tags'][] = $tag_id;
     }
 
     $query = "UPDATE $FOF_SUBSCRIPTION_TABLE SET subscription_prefs = :prefs WHERE feed_id = :feed_id AND user_id = :user_id";
-    try {
-        $statement = $fof_connection->prepare($query);
-        $statement->bindValue(':prefs', serialize($prefs));
-        $statement->bindValue(':user_id', $user_id);
-        $statement->bindValue(':feed_id', $feed_id);
-        $result = fof_db_statement_execute($query, $statement);
-        $statement->closeCursor();
-    } catch (PDOException $e) {
-        fof_pdoexception_log_(__FUNCTION__, $e, "cannot set subscription prefs (feed_id='$feed_id' user_id='$user_id')");
-    }
+    $statement = $fof_connection->prepare($query);
+    $statement->bindValue(':prefs', serialize($prefs));
+    $statement->bindValue(':user_id', $user_id);
+    $statement->bindValue(':feed_id', $feed_id);
+    $result = fof_db_statement_execute($query, $statement);
+    $statement->closeCursor();
 }
 
 function fof_db_untag_feed($user_id, $feed_id, $tag_id)
@@ -1034,32 +977,26 @@ function fof_db_untag_feed($user_id, $feed_id, $tag_id)
     global $FOF_SUBSCRIPTION_TABLE;
     global $fof_connection;
 
+    fof_trace();
+
     $query = "SELECT subscription_prefs FROM $FOF_SUBSCRIPTION_TABLE WHERE feed_id = :feed_id AND user_id = :user_id";
-    try {
-        $statement = $fof_connection->prepare($query);
-        $statement->bindValue(':feed_id', $feed_id);
-        $statement->bindValue(':user_id', $user_id);
-        $result = fof_db_statement_execute($query, $statement);
-        $prefs = unserialize(fof_db_get_row($statement, 'subscription_prefs', TRUE));
-    } catch (PDOException $e) {
-        fof_pdoexception_log_(__FUNCTION__, $e, "cannot get subscription prefs (feed_id='$feed_id' user_id='$user_id')");
-    }
+    $statement = $fof_connection->prepare($query);
+    $statement->bindValue(':feed_id', $feed_id);
+    $statement->bindValue(':user_id', $user_id);
+    $result = fof_db_statement_execute($query, $statement);
+    $prefs = unserialize(fof_db_get_row($statement, 'subscription_prefs', TRUE));
 
     if (is_array($prefs['tags'])) {
         $prefs['tags'] = array_diff($prefs['tags'], array($tag_id));
     }
 
     $query = "UPDATE $FOF_SUBSCRIPTION_TABLE SET subscription_prefs = :prefs WHERE feed_id = :feed_id AND user_id = :user_id";
-    try {
-        $statement = $fof_connection->prepare($query);
-        $statement->bindValue(':prefs', serialize($prefs));
-        $statement->bindValue(':feed_id', $feed_id);
-        $statement->bindValue(':user_id', $user_id);
-        $result = fof_db_statement_execute($query, $statement);
-        $statement->closeCursor();
-    } catch (PDOException $e) {
-        fof_pdoexception_log_(__FUNCTION__, $e, "cannot set subscription prefs (feed_id='$feed_id' user_id='$user_id)");
-    }
+    $statement = $fof_connection->prepare($query);
+    $statement->bindValue(':prefs', serialize($prefs));
+    $statement->bindValue(':feed_id', $feed_id);
+    $statement->bindValue(':user_id', $user_id);
+    $result = fof_db_statement_execute($query, $statement);
+    $statement->closeCursor();
 }
 
 function fof_db_get_item_tags($user_id, $item_id)
@@ -1067,19 +1004,17 @@ function fof_db_get_item_tags($user_id, $item_id)
     global $FOF_TAG_TABLE, $FOF_ITEM_TAG_TABLE;
     global $fof_connection;
 
-    $query = "SELECT $FOF_TAG_TABLE.tag_name" .
-            " FROM $FOF_TAG_TABLE, $FOF_ITEM_TAG_TABLE" .
-            " WHERE $FOF_TAG_TABLE.tag_id = $FOF_ITEM_TAG_TABLE.tag_id" .
-                " AND $FOF_ITEM_TAG_TABLE.item_id = :item_id" .
-                " AND $FOF_ITEM_TAG_TABLE.user_id = :user_id";
-    try {
-        $statement = $fof_connection->prepare($query);
-        $statement->bindValue(':item_id', $item_id);
-        $statement->bindValue(':user_id', $user_id);
-        $result = fof_db_statement_execute($query, $statement);
-    } catch (PDOException $e) {
-        fof_pdoexception_log_(__FUNCTION__, $e, "cannot get tags for item (item_id='$item_id' user_id='$user_id')");
-    }
+    fof_trace();
+
+    $query = "SELECT t.tag_name" .
+            " FROM $FOF_TAG_TABLE t, $FOF_ITEM_TAG_TABLE it" .
+            " WHERE t.tag_id = it.tag_id" .
+                " AND it.item_id = :item_id" .
+                " AND it.user_id = :user_id";
+    $statement = $fof_connection->prepare($query);
+    $statement->bindValue(':item_id', $item_id);
+    $statement->bindValue(':user_id', $user_id);
+    $result = fof_db_statement_execute($query, $statement);
 
     return $statement;
 }
@@ -1089,17 +1024,15 @@ function fof_db_item_has_tags($item_id)
     global $FOF_ITEM_TAG_TABLE;
     global $fof_connection;
 
+    fof_trace();
+
     $query = "SELECT count(*) AS tag_count" .
             " FROM $FOF_ITEM_TAG_TABLE" .
             " WHERE item_id = :item_id" .
                 " AND tag_id <= 2";
-    try {
-        $statement = $fof_connection->prepare($query);
-        $statement->bindValue(':item_id', $item_id);
-        $result = fof_db_statement_execute($query, $statement);
-    } catch (PDOException $e) {
-        fof_pdoexception_log_(__FUNCTION__, $e, "cannot get tag count (item_id='$item_id')");
-    }
+    $statement = $fof_connection->prepare($query);
+    $statement->bindValue(':item_id', $item_id);
+    $result = fof_db_statement_execute($query, $statement);
 
     return fof_db_get_row($statement, 'tag_count', TRUE);
 }
@@ -1109,17 +1042,15 @@ function fof_db_get_unread_count($user_id)
     global $FOF_ITEM_TAG_TABLE;
     global $fof_connection;
 
+    fof_trace();
+
     $query = "SELECT count(*) AS tag_count" .
             " FROM $FOF_ITEM_TAG_TABLE" .
             " WHERE tag_id = 1" .
                 " AND user_id = :user_id";
-    try {
-        $statement = $fof_connection->prepare($query);
-        $statement->bindValue(':user_id', $user_id);
-        $result = fof_db_statement_execute($query, $statement);
-    } catch (PDOException $e) {
-        fof_pdoexception_log_(__FUNCTION__, $e, "cannot get unread tag count (user_id='$user_id')");
-    }
+    $statement = $fof_connection->prepare($query);
+    $statement->bindValue(':user_id', $user_id);
+    $result = fof_db_statement_execute($query, $statement);
 
     return fof_db_get_row($statement, 'tag_count', TRUE);
 }
@@ -1130,6 +1061,8 @@ function fof_db_get_tag_unread($user_id)
     global $fof_connection;
     $counts = array();
 
+    fof_trace();
+
     $query = "SELECT count(*) AS tag_count, it2.tag_id" .
             " FROM $FOF_ITEM_TABLE i, $FOF_ITEM_TAG_TABLE it , $FOF_ITEM_TAG_TABLE it2" .
             " WHERE it.item_id = it2.item_id" .
@@ -1139,15 +1072,11 @@ function fof_db_get_tag_unread($user_id)
                 " AND it.user_id = :user_id" .
                 " AND it2.user_id = :user_id" .
             " GROUP BY it2.tag_id";
-    try {
-        $statement = $fof_connection->prepare($query);
-        $statement->bindValue(':user_id', $user_id);
-        $result = fof_db_statement_execute($query, $statement);
-        while (($row = fof_db_get_row($statement)) !== false) {
-            $counts[$row['tag_id']] = $row['tag_count'];
-        }
-    } catch (PDOException $e) {
-        fof_pdoexception_log_(__FUNCTION__, $e, "cannot get unread tags (user_id='$user_id')");
+    $statement = $fof_connection->prepare($query);
+    $statement->bindValue(':user_id', $user_id);
+    $result = fof_db_statement_execute($query, $statement);
+    while (($row = fof_db_get_row($statement)) !== false) {
+        $counts[$row['tag_id']] = $row['tag_count'];
     }
 
     return $counts;
@@ -1158,18 +1087,16 @@ function fof_db_get_tags($user_id)
     global $FOF_TAG_TABLE, $FOF_ITEM_TAG_TABLE;
     global $fof_connection;
 
+    fof_trace();
+
     $query = "SELECT $FOF_TAG_TABLE.tag_id, $FOF_TAG_TABLE.tag_name, count( $FOF_ITEM_TAG_TABLE.item_id ) AS count" .
             " FROM $FOF_TAG_TABLE" .
             " LEFT JOIN $FOF_ITEM_TAG_TABLE ON $FOF_TAG_TABLE.tag_id = $FOF_ITEM_TAG_TABLE.tag_id" .
             " WHERE $FOF_ITEM_TAG_TABLE.user_id = :user_id" .
             " GROUP BY $FOF_TAG_TABLE.tag_id ORDER BY $FOF_TAG_TABLE.tag_name";
-    try {
-        $statement = $fof_connection->prepare($query);
-        $statement->bindValue(':user_id', $user_id);
-        $result = fof_db_statement_execute($query, $statement);
-    } catch (PDOException $e) {
-        fof_pdoexception_log_(__FUNCTION__, $e, "cannot get tags (user_id='$user_id')");
-    }
+    $statement = $fof_connection->prepare($query);
+    $statement->bindValue(':user_id', $user_id);
+    $result = fof_db_statement_execute($query, $statement);
 
     return $statement;
 }
@@ -1180,69 +1107,61 @@ function fof_db_get_tag_id_map()
     global $fof_connection;
     $tags = array();
 
+    fof_trace();
+
     $query = "SELECT * FROM $FOF_TAG_TABLE";
-    try {
-        $statement = fof_db_query($query);
-        while (($row = fof_db_get_row($statement)) !== false) {
-            $tags[$row['tag_id']] = $row['tag_name'];
-        }
-    } catch (PDOException $e) {
-        fof_pdoexception_log_(__FUNCTION__, $e, "cannot get tags");
+    $statement = fof_db_query($query);
+    while (($row = fof_db_get_row($statement)) !== false) {
+        $tags[$row['tag_id']] = $row['tag_name'];
     }
 
     return $tags;
 }
 
 /* XXX: user_id unused */
-function fof_db_create_tag($user_id, $tag)
+function fof_db_create_tag($user_id, $tag_name)
 {
     global $FOF_TAG_TABLE;
     global $fof_connection;
 
+    fof_trace();
+
     $query = "INSERT INTO $FOF_TAG_TABLE (tag_name) VALUES (:tag_name)";
-    try {
-        $statement = $fof_connection->prepare($query);
-        $statement->bindValue(':tag_name', $tag);
-        $result = fof_db_statement_execute($query, $statement);
-    } catch (PDOException $e) {
-        fof_pdoexception_log_(__FUNCTION__, $e, "cannot add tag (tag_name='$tag')");
-    }
+    $statement = $fof_connection->prepare($query);
+    $statement->bindValue(':tag_name', $tag_name);
+    $result = fof_db_statement_execute($query, $statement);
+
+    /* FIXME: see comments elsewhere about lastInsertId */
 
     $query = "SELECT tag_id FROM $FOF_TAG_TABLE WHERE tag_name = :tag_name";
-    try {
-        $statement = $fof_connection->prepare($query);
-        $statement->bindValue(':tag_name', $tag);
-        $result = fof_db_statement_execute($query, $statement);
-    } catch (PDOException $e) {
-        fof_pdoexception_log_(__FUNCTION__, $e, "cannot get new tag id (tag_name='$tag')");
-    }
+    $statement = $fof_connection->prepare($query);
+    $statement->bindValue(':tag_name', $tag_name);
+    $result = fof_db_statement_execute($query, $statement);
 
     return fof_db_get_row($statement, 'tag_id', TRUE);
 }
 
 /* XXX: user_id unused */
-/* XXX: also why doesn't this just return an array */
-function fof_db_get_tag_by_name($user_id, $tag)
+/* XXX: also why doesn't this just return (or take) an array */
+function fof_db_get_tag_by_name($user_id, $tags)
 {
     global $FOF_TAG_TABLE;
     global $fof_connection;
     $return = array();
 
+    fof_trace();
+
     $tags_q = array();
-    foreach(explode(' ', $tag) as $t) {
+    foreach(explode(' ', $tags) as $t) {
         $tags_q[] = $fof_connection->quote($t);
     }
 
-    $query = "SELECT DISTINCT $FOF_TAG_TABLE.tag_id" .
+    $query = "SELECT DISTINCT tag_id" .
             " FROM $FOF_TAG_TABLE" .
-            " WHERE $FOF_TAG_TABLE.tag_name IN ( " . implode (', ', $tags_q) . " )";
-    try {
-        $statement = fof_db_query($query);
-        while (($row = fof_db_get_row($statement)) !== false) {
-            $return[] = $row['tag_id'];
-        }
-    } catch (PDOException $e) {
-        fof_pdoexception_log_(__FUNCTION__, $e, "cannot get tags (user_id='$user_id' tags=" . implode(',', $tags_q) . ")");
+            " WHERE tag_name IN ( " . implode (', ', $tags_q) . " )";
+    $statement = fof_db_query($query);
+    while (($row = fof_db_get_row($statement)) !== false) {
+        $return[] = $row['tag_id'];
     }
 
     if (count($return))
@@ -1253,50 +1172,61 @@ function fof_db_get_tag_by_name($user_id, $tag)
 
 function fof_db_mark_unread($user_id, $items)
 {
-    fof_db_tag_items($user_id, 1, $items);
+    fof_trace();
+
+    $tag_id = fof_db_get_tag_by_name($user_id, 'unread');
+    return fof_db_tag_items($user_id, $tag_id, $items);
 }
 
 function fof_db_mark_read($user_id, $items)
 {
-    fof_db_untag_items($user_id, 1, $items);
+    fof_trace();
+
+    $tag_id = fof_db_get_tag_by_name($user_id, 'unread');
+    return fof_db_untag_items($user_id, $tag_id, $items);
 }
 
 function fof_db_fold($user_id, $items)
 {
-    $tag_id = fof_db_get_tag_by_name($user_id, "folded");
+    fof_trace();
 
-    fof_db_tag_items($user_id, $tag_id, $items);
+    $tag_id = fof_db_get_tag_by_name($user_id, 'folded');
+    return fof_db_tag_items($user_id, $tag_id, $items);
 }
 
 function fof_db_unfold($user_id, $items)
 {
-    $tag_id = fof_db_get_tag_by_name($user_id, "folded");
+    fof_trace();
 
-    fof_db_untag_items($user_id, $tag_id, $items);
+    $tag_id = fof_db_get_tag_by_name($user_id, 'folded');
+    return fof_db_untag_items($user_id, $tag_id, $items);
 }
 
 function fof_db_mark_feed_read($user_id, $feed_id)
 {
+    fof_trace();
+
     $result = fof_db_get_items($user_id, $feed_id, $what="all");
 
     foreach($result as $r) {
         $items[] = $r['item_id'];
     }
 
-    fof_db_untag_items($user_id, 1, $items);
+    $tag_id = fof_db_get_tag_by_name($user_id, 'unread');
+    fof_db_untag_items($user_id, $tag_id, $items);
 }
 
-function fof_db_mark_feed_unread($user_id, $feed, $what)
+function fof_db_mark_feed_unread($user_id, $feed_id, $what)
 {
-    fof_log("fof_db_mark_feed_unread($user_id, $feed, $what)");
+    fof_trace();
 
-    if($what == "all")
+    if($what == 'all')
     {
-        $result = fof_db_get_items($user_id, $feed, "all");
+        $result = fof_db_get_items($user_id, $feed_id, 'all');
     }
-    if($what == "today")
+    if($what == 'today')
     {
-        $result = fof_db_get_items($user_id, $feed, "all", "today");
+        $result = fof_db_get_items($user_id, $feed_id, 'all', 'today');
     }
 
     $items = array();
@@ -1305,47 +1235,48 @@ function fof_db_mark_feed_unread($user_id, $feed, $what)
         $items[] = $r['item_id'];
     }
 
-    fof_db_tag_items($user_id, 1, $items);
+    $tag_id = fof_db_get_tag_by_name($user_id, 'unread');
+
+    fof_db_tag_items($user_id, $tag_id, $items);
 }
 
-function fof_db_mark_item_unread($users, $id)
+function fof_db_mark_item_unread($users, $item_id)
 {
     global $FOF_ITEM_TAG_TABLE;
     global $fof_connection;
+
+    fof_trace();
 
     if (count($users) == 0)
         return;
 
+    $bvars = array();
     $values = array();
     $idx = 0;
     foreach($users as $user)
     {
-        $values[] = "(:user_id_$idx, :tag_id, :item_id)";
+        $values[] = "(:user_id_$idx, :tag_id_$idx, :item_id)";
+        $bvars["user_id_$idx"] = $user;
+        $bvars["tag_id_$idx"] = fof_db_get_tag_by_name($user, 'unread');
         $idx += 1;
     }
 
+    $tag_id = fof_db_get_tag_by_name($user);
+
     $query = "INSERT INTO $FOF_ITEM_TAG_TABLE (user_id, tag_id, item_id) VALUES " . implode(', ', $values);
-    try {
-        $statement = $fof_connection->prepare($query);
-        $statement->bindValue(":item_id", $id);
-        $statement->bindValue(":tag_id", 1);
-        $idx = 0;
-        foreach($users as $user)
-        {
-            $statement->bindValue(":user_id_$idx", $user);
-            $idx += 1;
-        }
-        $result = fof_db_statement_execute($query, $statement);
-        $statement->closeCursor();
-    } catch (PDOException $e) {
-        fof_pdoexception_log_(__FUNCTION__, $e, "cannot mark item unread (item_id='$item_id' users='" . implode(',', $users) . "')");
-    }
+    $statement = $fof_connection->prepare($query);
+    $statement->bindValue(":item_id", $item_id);
+    $result = fof_db_statement_execute($query, $statement, $bvars);
+    $statement->closeCursor();
 }
 
+/* sets (user_id, tag_id, item_id) for each item_id in items array */
 function fof_db_tag_items($user_id, $tag_id, $items)
 {
     global $FOF_ITEM_TAG_TABLE;
     global $fof_connection;
+
+    fof_trace();
 
     if (! $items)
         return;
@@ -1353,34 +1284,29 @@ function fof_db_tag_items($user_id, $tag_id, $items)
     if (! is_array($items))
         $items = array($items);
 
-    $values = array();
-    $idx = 0;
+    $items_q = array();
+    $tag_q = $fof_connection->quote($tag_id);
+    $user_q = $fof_connection->quote($user_id);
     foreach($items as $item) {
-        $values[] = "(:user_id, :tag_id, :item_id_$idx)";
-        $idx += 1;
+        $i_q = $fof_connection->quote($item);
+        $items_q[] = "( $user_q, $tag_q, $i_q )";
     }
 
-    $query = "INSERT INTO $FOF_ITEM_TAG_TABLE (user_id, tag_id, item_id) VALUES " . implode(', ', $values);
-    try {
-        $statement = $fof_connection->prepare($query);
-        $statement->bindValue(":user_id", $user_id);
-        $statement->bindValue(":tag_id", $tag_id);
-        $idx = 0;
-        foreach($items as $item) {
-            $statement->bindValue(":item_id_$idx", $item);
-            $idx += 1;
-        }
-        $result = fof_db_statement_execute($query, $statement);
-        $statement->closeCursor();
-    } catch (PDOException $e) {
-        fof_pdoexception_log_(__FUNCTION__, $e, "cannot tag items (user_id='$user_id' tag_id='$tag_id' items='" . implode(',', $items) . "')");
-    }
+    $query = "INSERT INTO $FOF_ITEM_TAG_TABLE (user_id, tag_id, item_id) VALUES " . implode(', ', $items_q);
+
+    fof_log(__FUNCTION__ . ": query:'$query'");
+
+    $statement = $fof_connection->prepare($query);
+    $result = fof_db_statement_execute($query, $statement);
+    $statement->closeCursor();
 }
 
 function fof_db_untag_items($user_id, $tag_id, $items)
 {
     global $FOF_ITEM_TAG_TABLE;
     global $fof_connection;
+
+    fof_trace();
 
     if (! $items)
         return;
@@ -1390,19 +1316,15 @@ function fof_db_untag_items($user_id, $tag_id, $items)
 
     $items_q = array();
     foreach($items as $item) {
-        $items_q = $fof_connection->quote($item);
+        $items_q[] = $fof_connection->quote($item);
     }
 
     $query = "DELETE FROM $FOF_ITEM_TAG_TABLE WHERE user_id = :user_id AND tag_id = :tag_id AND item_id IN ( " . implode(', ', $items_q) . " )";
-    try {
-        $statement = $fof_connection->prepare($query);
-        $statement->bindValue(':user_id', $user_id);
-        $statement->bindValue(':tag_id', $tag_id);
-        $result = fof_db_statement_execute($query, $statement);
-        $statement->closeCursor();
-    } catch (PDOException $e) {
-        fof_pdoexception_log_(__FUNCTION__, $e, "cannot untag items (user_id='$user_id' tag_id='$tag_id' items='" . implode(',', $items) . "')");
-    }
+    $statement = $fof_connection->prepare($query);
+    $statement->bindValue(':user_id', $user_id);
+    $statement->bindValue(':tag_id', $tag_id);
+    $result = fof_db_statement_execute($query, $statement);
+    $statement->closeCursor();
 }
 
 
@@ -1415,21 +1337,20 @@ function fof_db_user_password_hash($password, $user)
     return md5($password . $user);
 }
 
+/* returns array of user info, keyed by user_id */
 function fof_db_get_users()
 {
     global $FOF_USER_TABLE;
     global $fof_connection;
     $users = array();
 
+    fof_trace();
+
     $query = "SELECT user_name, user_id, user_prefs FROM $FOF_USER_TABLE";
-    try {
-        $statement = fof_db_query($query);
-        while (($row = fof_db_get_row($statement)) !== false) {
-            $users[$row['user_id']]['user_name'] = $row['user_name'];
-            $users[$row['user_id']]['user_prefs'] = unserialize($row['user_prefs']);
-        }
-    } catch (PDOException $e) {
-        fof_pdoexception_log_(__FUNCTION__, $e, "cannot get users");
+    $statement = fof_db_query($query);
+    while (($row = fof_db_get_row($statement)) !== false) {
+        $users[$row['user_id']]['user_name'] = $row['user_name'];
+        $users[$row['user_id']]['user_prefs'] = unserialize($row['user_prefs']);
     }
 
     return $users;
@@ -1440,12 +1361,10 @@ function fof_db_get_nonadmin_usernames()
     global $FOF_USER_TABLE;
     global $fof_connection;
 
+    fof_trace();
+
     $query = "SELECT user_name FROM $FOF_USER_TABLE WHERE user_id > 1";
-    try {
-        $statement = fof_db_query($query);
-    } catch (PDOException $e) {
-        fof_pdoexception_log_(__FUNCTION__, $e, "cannot get users");
-    }
+    $statement = fof_db_query($query);
 
     return $statement;
 }
@@ -1456,18 +1375,18 @@ function fof_db_add_user_all($user_id, $user_name, $user_password, $user_level)
     global $FOF_USER_TABLE;
     global $fof_connection;
 
+    fof_trace();
+
     $query = "INSERT INTO $FOF_USER_TABLE (user_id, user_name, user_password_hash, user_level) VALUES (:id, :name, :password_hash, :level)";
-    try {
-        $statement = $fof_connection->prepare($query);
-        $statement->bindValue(':id', $user_id);
-        $statement->bindValue(':name', $user_name);
-        $statement->bindValue(':password_hash', fof_db_user_password_hash($user_password, $user_name));
-        $statement->bindValue(':level', $user_level);
-        $result = fof_db_statement_execute($query, $statement);
-        $statement->closeCursor();
-    } catch(PDOException $e) {
-        fof_pdoexception_log_(__FUNCTION__, $e, "cannot add user (user_id='$user_id')");
-    }
+    $statement = $fof_connection->prepare($query);
+    $statement->bindValue(':id', $user_id);
+    $statement->bindValue(':name', $user_name);
+    $statement->bindValue(':password_hash', fof_db_user_password_hash($user_password, $user_name));
+    $statement->bindValue(':level', $user_level);
+    $result = fof_db_statement_execute($query, $statement);
+    $statement->closeCursor();
+
+    return $result;
 }
 
 function fof_db_add_user($username, $password)
@@ -1475,16 +1394,16 @@ function fof_db_add_user($username, $password)
     global $FOF_USER_TABLE;
     global $fof_connection;
 
+    fof_trace();
+
     $query = "INSERT INTO $FOF_USER_TABLE (user_name, user_password_hash) VALUES (:name, :password_hash)";
-    try {
-        $statement = $fof_connection->prepare($query);
-        $statement->bindValue(':password_hash', fof_db_user_password_hash($password, $username));
-        $statement->bindValue(':name', $username);
-        $result = fof_db_statement_execute($query, $statement);
-        $statement->closeCursor();
-    } catch (PDOException $e) {
-        fof_pdoexception_log_(__FUNCTION__, $e, "cannot add user (user_name='$username')");
-    }
+    $statement = $fof_connection->prepare($query);
+    $statement->bindValue(':password_hash', fof_db_user_password_hash($password, $username));
+    $statement->bindValue(':name', $username);
+    $result = fof_db_statement_execute($query, $statement);
+    $statement->closeCursor();
+
+    return $result;
 }
 
 function fof_db_change_password($username, $password)
@@ -1493,15 +1412,13 @@ function fof_db_change_password($username, $password)
     global $fof_connection;
 
     $query = "UPDATE $FOF_USER_TABLE SET user_password_hash = :password_hash WHERE user_name = :name";
-    try {
-        $statement = $fof_connection->prepare($query);
-        $statement->bindValue(':password_hash', fof_db_user_password_hash($password, $username));
-        $statement->bindValue(':name', $username);
-        $result = fof_db_statement_execute($query, $statement);
-        $statement->closeCursor();
-    } catch (PDOException $e) {
-        fof_pdoexception_log_(__FUNCTION__, $e, "cannot set password (user_name='$username')");
-    }
+    $statement = $fof_connection->prepare($query);
+    $statement->bindValue(':password_hash', fof_db_user_password_hash($password, $username));
+    $statement->bindValue(':name', $username);
+    $result = fof_db_statement_execute($query, $statement);
+    $statement->closeCursor();
+
+    return $result;
 }
 
 function fof_db_get_user_id($username)
@@ -1509,17 +1426,14 @@ function fof_db_get_user_id($username)
     global $FOF_USER_TABLE;
     global $fof_connection;
 
-    $query = "SELECT user_id FROM $FOF_USER_TABLE WHERE user_name = :name";
-    try {
-        $statement = $fof_connection->prepare($query);
-        $statement->bindValue(':name', $username);
-        $result = fof_db_statement_execute($query, $statement);
-        $row = fof_db_get_row($statement, NULL, TRUE);
-    } catch (PDOException $e) {
-        fof_pdoexception_log_(__FUNCTION__, $e, "cannot get user id (user_name='$username')");
-    }
+    fof_trace();
 
-    return $row['user_id'];
+    $query = "SELECT user_id FROM $FOF_USER_TABLE WHERE user_name = :name";
+    $statement = $fof_connection->prepare($query);
+    $statement->bindValue(':name', $username);
+    $result = fof_db_statement_execute($query, $statement);
+
+    return fof_db_get_row($statement, 'user_id', TRUE);
 }
 
 function fof_db_delete_user($username)
@@ -1527,20 +1441,18 @@ function fof_db_delete_user($username)
     global $FOF_USER_TABLE, $FOF_ITEM_TAG_TABLE, $FOF_SUBSCRIPTION_TABLE;
     global $fof_connection;
 
+    fof_trace();
+
     $user_id = fof_db_get_user_id($username);
 
     $tables = array($FOF_SUBSCRIPTION_TABLE, $FOF_ITEM_TAG_TABLE, $FOF_USER_TABLE);
     foreach($tables as $table)
     {
         $query = "DELETE FROM $table WHERE user_id = :id";
-        try {
-            $statement = $fof_connection->prepare($query);
-            $statement->bindValue(':id', $user_id);
-            $result = fof_db_statement_execute($query, $statement);
-            $statement->closeCursor();
-        } catch (PDOException $e) {
-            fof_pdoexception_log_(__FUNCTION__, $e, "cannot delete user from (table='$table' user_name='$username' user_id='$user_id')");
-        }
+        $statement = $fof_connection->prepare($query);
+        $statement->bindValue(':id', $user_id);
+        $result = fof_db_statement_execute($query, $statement);
+        $statement->closeCursor();
     }
 }
 
@@ -1549,15 +1461,13 @@ function fof_db_prefs_get($user_id)
     global $FOF_USER_TABLE;
     global $fof_connection;
 
+    fof_trace();
+
     $query = "SELECT user_prefs FROM $FOF_USER_TABLE WHERE user_id = :user_id";
-    try {
-        $statement = $fof_connection->prepare($query);
-        $statement->bindValue(':user_id', $user_id);
-        $result = fof_db_statement_execute($query, $statement);
-        $prefs = fof_db_get_row($statement, 'user_prefs', TRUE);
-    } catch (PDOException $e) {
-        fof_pdoexception_log_(__FUNCTION__, $e, "cannot get user prefs (user_id='$user_id')");
-    }
+    $statement = $fof_connection->prepare($query);
+    $statement->bindValue(':user_id', $user_id);
+    $result = fof_db_statement_execute($query, $statement);
+    $prefs = fof_db_get_row($statement, 'user_prefs', TRUE);
 
     return unserialize($prefs);
 }
@@ -1567,16 +1477,14 @@ function fof_db_save_prefs($user_id, $prefs)
     global $FOF_USER_TABLE;
     global $fof_connection;
 
+    fof_trace();
+
     $query = "UPDATE $FOF_USER_TABLE SET user_prefs = :prefs WHERE user_id = :id";
-    try {
-        $statement = $fof_connection->prepare($query);
-        $statement->bindValue(':id', $user_id);
-        $statement->bindValue(':prefs', serialize($prefs));
-        $result = fof_db_statement_execute($query, $statement);
-        $statement->closeCursor();
-    } catch (PDOException $e) {
-        fof_pdoexception_log_(__FUNCTION__, $e, "cannot set user prefs (user_id='$user_id')");
-    }
+    $statement = $fof_connection->prepare($query);
+    $statement->bindValue(':id', $user_id);
+    $statement->bindValue(':prefs', serialize($prefs));
+    $result = fof_db_statement_execute($query, $statement);
+    $statement->closeCursor();
 }
 
 /* check user and password hash, set global user info if matching record found */
@@ -1585,16 +1493,14 @@ function fof_db_authenticate_hash($user_name, $user_password_hash)
     global $FOF_USER_TABLE;
     global $fof_connection, $fof_user_id, $fof_user_name, $fof_user_level;
 
+    fof_trace();
+
     $query = "SELECT * FROM $FOF_USER_TABLE WHERE user_name = :name AND user_password_hash = :password_hash";
-    try {
-        $statement = $fof_connection->prepare($query);
-        $statement->bindValue(':name', $user_name);
-        $statement->bindValue(':password_hash', $user_password_hash);
-        $result = fof_db_statement_execute($query, $statement);
-        $row = fof_db_get_row($statement, NULL, TRUE);
-    } catch (PDOException $e) {
-        fof_pdoexception_log_(__FUNCTION__, $e, "cannot check user authentication (user_name='$user_name')");
-    }
+    $statement = $fof_connection->prepare($query);
+    $statement->bindValue(':name', $user_name);
+    $statement->bindValue(':password_hash', $user_password_hash);
+    $result = fof_db_statement_execute($query, $statement);
+    $row = fof_db_get_row($statement, NULL, TRUE);
 
     if ( ! $row) {
         $fof_user_id = NULL;

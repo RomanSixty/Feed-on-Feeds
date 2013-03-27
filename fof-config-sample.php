@@ -13,6 +13,12 @@
  */
 
 
+/* FOF_DATA_PATH
+    Controls where various data will be written.
+    Currently this includes log files and the SQLite database (if being used)
+*/
+define('FOF_DATA_PATH', '/var/fof-data/');
+
 // Database connection information.  Host, username, password, database name.
 
 define('FOF_DB_HOST', "host.example.com");
@@ -22,7 +28,6 @@ define('FOF_DB_DBNAME', "database");
 
 // define('USE_MYSQL', 1);
 // define('USE_SQLITE', 1);
-// define('FOF_DB_SQLITE_PATH', '../db/');
 
 // The rest you should not need to change
 
