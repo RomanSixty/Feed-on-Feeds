@@ -12,24 +12,23 @@
  *
  */
 
-include_once("fof-main.php");
+include_once('fof-main.php');
 
-$feed = $_GET['feed'];
+$feed_id = $_GET['feed'];
+list ($count, $error) = fof_update_feed($feed_id);
 
-list ($count, $error) = fof_update_feed($feed);
-	
-if($count)
-{
-    print "<b><font color=red>$count new items</font></b>";
+print "<span id=\"update_result_f$feed_id\">";
+
+if ($count) {
+    print "<span style=\"color:green\">$count new items.</span>";
+} else {
+    print "No new items.";
 }
 
-if($error)
-{
-    print " $error <br>";
+if ($error) {
+    print " <span style=\"color:red\">$error</span>";
 }
-else
-{
-    print " Done.<br>";
-}
+
+print "</span><br>\n";
 
 ?>

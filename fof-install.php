@@ -378,7 +378,7 @@ function fof_install_database_populate() {
         foreach ($entries as $entry) {
             try {
                 echo "<br><span>" . $entry['level'];
-                $result_check = fof_db_statement_execute($query_check, $statement_check, $entry);
+                $result_check = fof_db_statement_execute($statement_check, $entry);
                 $rows_check = $statement_check->fetchAll();
             } catch (PDOException $e) {
                 echo "Cannot check " . $entry['level'] . " [<code>$query_check</code>] <pre>" . $e->GetMessage() . "</pre>\n";
@@ -388,7 +388,7 @@ function fof_install_database_populate() {
                 echo " <span class='pass'>exists</span>";
             } else {
                 try {
-                    if (($result_insert = fof_db_statement_execute($query_insert, $statement_insert, $entry)) !== false) {
+                    if (($result_insert = fof_db_statement_execute($statement_insert, $entry)) !== false) {
                         echo " <span class='pass'>added</span>";
                     } else {
                         echo " <span class='fail'>failed</span>";
@@ -420,7 +420,7 @@ function fof_install_database_populate() {
     foreach ($entries as $entry) {
         try {
             echo "<br><span>" . $entry['tag_name'];
-            $result_check = fof_db_statement_execute($query_check, $statement_check, $entry);
+            $result_check = fof_db_statement_execute($statement_check, $entry);
             $rows_check = $statement_check->fetchAll();
         } catch (PDOException $e) {
             echo "Cannot check " . $entry['tag_name'] . " [<code>$query_check</code>] <pre>" . $e->GetMessage() . "</pre>\n";
@@ -430,7 +430,7 @@ function fof_install_database_populate() {
             echo " <span class='pass'>exists</span>";
         } else {
             try {
-                if (($result_insert = fof_db_statement_execute($query_insert, $statement_insert, $entry)) !== false) {
+                if (($result_insert = fof_db_statement_execute($statement_insert, $entry)) !== false) {
                     echo " <span class='pass'>added</span>";
                 } else {
                     echo " <span class='fail'>failed</span>";

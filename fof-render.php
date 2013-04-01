@@ -44,7 +44,7 @@ function do_highlight($full_body, $q, $class){
 }
 
 /* quell warnings */
-function set_key_($array, $key, $default=NULL) {
+function fof_render_get_key_($array, $key, $default=NULL) {
 	return (empty($array[$key]) ? $default : $array[$key]);
 }
 
@@ -52,19 +52,23 @@ function fof_render_item($item)
 {
     $items = true;
 
-	$feed_link = set_key_($item, 'feed_link');
-	$feed_title = set_key_($item, 'feed_title');
-	$feed_image = set_key_($item, 'alt_image', set_key_($item, 'feed_image'));
-	$feed_description = set_key_($item, 'feed_description');
+	$feed_link = fof_render_get_key_($item, 'feed_link');
+	if ($feed_link == "[no link]")
+	    $feed_link = $item['feed_url'];
+	$feed_title = fof_render_get_key_($item, 'feed_title');
+	if ($feed_title == "[no title]")
+	    $feed_title = $feed_link;
+	$feed_image = fof_render_get_key_($item, 'alt_image', fof_render_get_key_($item, 'feed_image'));
+	$feed_description = fof_render_get_key_($item, 'feed_description');
 
-	$item_link = set_key_($item, 'item_link');
-	$item_id = set_key_($item, 'item_id');
-	$item_title = set_key_($item, 'item_title', '[no title]');
-	$item_content = set_key_($item, 'item_content');
-	$item_read = set_key_($item, 'item_read');
+	$item_link = fof_render_get_key_($item, 'item_link');
+	$item_id = fof_render_get_key_($item, 'item_id');
+	$item_title = fof_render_get_key_($item, 'item_title', '[no title]');
+	$item_content = fof_render_get_key_($item, 'item_content');
+	$item_read = fof_render_get_key_($item, 'item_read');
 
 	$prefs = fof_prefs();
-	$offset = set_key_($prefs, 'tzoffset');
+	$offset = fof_render_get_key_($prefs, 'tzoffset');
 
 	$item_published = gmdate("Y-n-d g:ia", $item['item_published'] + $offset*60*60);
 	$item_cached = gmdate("Y-n-d g:ia", $item['item_cached'] + $offset*60*60);
@@ -76,7 +80,7 @@ function fof_render_item($item)
 		$item_title = do_highlight("<span>$item_title</span>", $_GET['search'], "highlight");
 	}
 
-    $tags = set_key_($item, 'tags', array());
+    $tags = fof_render_get_key_($item, 'tags', array());
 
 	$star = in_array("star", $tags) ? true : false;
 	$star_image = $star ? "image/star-on.gif" : "image/star-off.gif";

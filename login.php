@@ -66,7 +66,13 @@ if (isset($_POST["user_name"]) && isset($_POST["user_password"]))
             User name:<br><input type=string name=user_name style='font-size: 16px'><br><br>
             Password:<br><input type=password name=user_password style='font-size: 16px'><br><br>
             <input type=submit value="Log on!" style='font-size: 16px; float: right;'><br>
-            <?php if ($failed) echo "<br><center><font color=red><b>Incorrect user name or password</b></font></center>"; ?>
+<?php
+    if ($failed) {
+?>
+<br><center><span style="color:red"><b>Incorrect user name or password</b></span></center>
+<?php
+}
+?>
         </form>
     </div>
 </body>

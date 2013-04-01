@@ -12,7 +12,7 @@
  *
  */
 
-include("header.php");
+include('header.php');
 
 $url = isset($_POST['rss_url']) ? $_POST['rss_url'] : NULL;
 if (! isset($url)) {
@@ -30,7 +30,7 @@ if ($url)
 
 if ($opml) {
     $sfile = new SimplePie_File($opml);
-    if (!$sfile->success) {
+    if ( ! $sfile->success) {
         echo "Cannot open " . htmlentities($opml) . "<br>";
         return false;
     }
@@ -39,7 +39,7 @@ if ($opml) {
     $feeds = fof_opml_to_array($content);
 }
 
-if (isset($_FILES['opml_file'])) {
+if ( ! empty($_FILES['opml_file']) && ! empty($_FILES['opml_file']['tmp_name'])) {
     if (($content = file_get_contents($_FILES['opml_file']['tmp_name'])) === false) {
         echo "Cannot open uploaded file '" . htmlentities($_FILES['opml_file']['name']) . "'<br>";
     } else {
@@ -63,9 +63,9 @@ $add_feed_url .= "://" . $_SERVER["HTTP_HOST"] . $_SERVER["SCRIPT_NAME"];
 <form method="post" name="addform" action="add.php" enctype="multipart/form-data">
 
 When adding feeds, mark <select name="unread">
-    <option value=all <?php if($unread == "all") echo "selected" ?> >all</option>
-    <option value=today <?php if($unread == "today") echo "selected" ?> >today's</option>
-    <option value=no <?php if($unread == "no") echo "selected" ?> >no</option>
+    <option value=all<?php if ($unread == "all") echo " selected" ?>>all</option>
+    <option value=today<?php if ($unread == "today") echo " selected" ?>>today's</option>
+    <option value=no<?php if ($unread == "no") echo " selected" ?>>no</option>
 </select> items as unread<br><br>
 
 RSS or weblog URL: <input type="text" name="rss_url" size="40" value="<?php echo htmlentities($url) ?>"><input type="Submit" value="Add a feed"><br><br>
@@ -80,19 +80,21 @@ OPML filename: <input type="file" name="opml_file" size="40" value="<?php echo h
 </form>
 
 <?php
-if(count($feeds))
-{
-print("<script>\nwindow.onload = ajaxadd;\nfeedslist = [");
-    
-foreach($feeds as $feed)
-{
-    $feedjson[] = "{'url': '" . addslashes($feed) . "'}";
-}
+if (count($feeds)) {
+    $idx = 0;
+    $feedjson = array();
+    foreach ($feeds as $feed) {
+        $feedjson[] = json_encode(array('url' => $feed));
+        echo "<div id=\"f_idx_" . $idx . "\">";
+        echo "<span id=\"feed_title\">[$idx] (<a href=\"$feed\">feed URL</a>)</span> ";
+        echo "<span id=\"feed_status\">waiting to add...</span>";
+        echo "</div>\n";
+        $idx++;
+    }
 
-print(join($feedjson, ", "));
-print("];\n</script>");
+    echo "<script>\nwindow.onload = ajaxadd;\nfeedslist = [" . implode(', ', $feedjson) . "];\n</script>\n";
 }
-print("<br>");
+echo '<br>';
 
-include("footer.php");
+include('footer.php');
 ?>

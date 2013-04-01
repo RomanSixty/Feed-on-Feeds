@@ -120,18 +120,17 @@ function fof_db_log_query_caller_($caller_frame, $query, $elapsed, $rows=null)
     fof_log($msg, 'query');
 }
 
-/* Wraps a prepared statement execution to gather elapsed query time, and log such.
-   It'd be nicer if we could get the query from the statement, rather
-   than having to pass it along for logging here
- */
-function fof_db_statement_execute($query, $statement, $input_parameters = NULL)
+/*
+    Wraps a prepared statement execution to gather elapsed query time, and log such.
+*/
+function fof_db_statement_execute($statement, $input_parameters = NULL)
 {
     $bt = debug_backtrace();
 
     $callable = array($statement, 'execute');
     list($result, $elapsed) = fof_db_wrap_elapsed_($callable, $input_parameters);
 
-    fof_db_log_query_caller_($bt[1], $query, $elapsed, $statement->rowCount());
+    fof_db_log_query_caller_($bt[1], $statement->queryString, $elapsed, $statement->rowCount());
 
     return $result;
 }
@@ -208,7 +207,7 @@ function fof_db_feed_update_prefs($feed_id, $title, $alt_image)
     $statement->bindValue(':alt_image', $alt_image);
     $statement->bindValue(':cache_date', 1);
     $statement->bindValue(':feed_id', $feed_id);
-    $result = fof_db_statement_execute($query, $statement);
+    $result = fof_db_statement_execute($statement);
     $statement->closeCursor();
 
     return $result;
@@ -225,7 +224,7 @@ function fof_db_feed_mark_cached($feed_id)
     $statement = $fof_connection->prepare($query);
     $statement->bindValue(':cache_date', time());
     $statement->bindValue(':feed_id', $feed_id);
-    $result = fof_db_statement_execute($query, $statement);
+    $result = fof_db_statement_execute($statement);
     $statement->closeCursor();
 
     return $result;
@@ -242,13 +241,12 @@ function fof_db_feed_mark_attempted_cache($feed_id)
     $statement = $fof_connection->prepare($query);
     $statement->bindValue(':cache_date', time());
     $statement->bindValue(':feed_id', $feed_id);
-    $result = fof_db_statement_execute($query, $statement);
+    $result = fof_db_statement_execute($statement);
     $statement->closeCursor();
 
     return $result;
 }
 
-/* XXX: title is unused */
 function fof_db_feed_update_metadata($feed_id, $title, $link, $description, $image, $image_cache_date)
 {
     global $FOF_FEED_TABLE;
@@ -256,8 +254,9 @@ function fof_db_feed_update_metadata($feed_id, $title, $link, $description, $ima
 
     fof_trace();
 
-    $query = "UPDATE $FOF_FEED_TABLE SET feed_link = :link, feed_description = :description, feed_image = :image, feed_image_cache_date = :image_cache_date WHERE feed_id = :id";
+    $query = "UPDATE $FOF_FEED_TABLE SET feed_title = :title, feed_link = :link, feed_description = :description, feed_image = :image, feed_image_cache_date = :image_cache_date WHERE feed_id = :id";
     $statement = $fof_connection->prepare($query);
+    $statement->bindValue(':title', empty($title) ? "[no title]" : $title);
     $statement->bindValue(':link', empty($link) ? "[no link]" : $link);
     $statement->bindValue(':description', empty($description) ? "[no description]" : $description);
     if ( ! empty($image)) {
@@ -267,7 +266,7 @@ function fof_db_feed_update_metadata($feed_id, $title, $link, $description, $ima
     }
     $statement->bindValue(':image_cache_date', empty($image_cache_date) ? time() : $image_cache_date);
     $statement->bindValue(':id', $feed_id);
-    $result = fof_db_statement_execute($query, $statement);
+    $result = fof_db_statement_execute($statement);
     $statement->closeCursor();
 
     return $result;
@@ -304,7 +303,7 @@ function fof_db_get_subscriptions($user_id, $dueOnly=false)
     if ($dueOnly) {
         $statement->bindValue(':now', time());
     }
-    $result = fof_db_statement_execute($query, $statement);
+    $result = fof_db_statement_execute($statement);
 
     return $statement;
 }
@@ -319,7 +318,7 @@ function fof_db_get_feeds_needing_attempt()
     $query = "SELECT * FROM $FOF_FEED_TABLE WHERE feed_cache_next_attempt < :now ORDER BY feed_title";
     $statement = $fof_connection->prepare($query);
     $statement->bindValue(':now', time());
-    $result = fof_db_statement_execute($query, $statement);
+    $result = fof_db_statement_execute($statement);
 
     return $statement;
 }
@@ -350,28 +349,27 @@ function fof_db_get_item_count ( $user_id, $what = 'all', $feed = null, $search 
                   " AND f.feed_id = s.feed_id";
     }
 
-    switch ($what)
-    {
-        case 'all':
+    switch ($what) {
+    case 'all':
         break;
 
-        case 'unread':
+    case 'unread':
         $query .= " AND it.tag_id = :unread_id";
         break;
 
-        case 'starred':
+    case 'starred':
         $query .= " AND it.tag_id = :star_id";
         break;
 
-        case 'tagged':
+    case 'tagged':
         $query .= " AND it.tag_id != :unread_id" .
                   " AND it.tag_id != :star_id" .
                   " AND it.tag_id = :folded_id";
         break;
 
-        default:
+    default:
         $tag_ids_q = array();
-        foreach(explode(',', fof_db_get_tag_by_name($user_id, $what)) as $t) {
+        foreach(explode(',', fof_db_get_tag_by_name($what)) as $t) {
             $tag_ids_a[] = $fof_connection->quote($t);
         }
         $query .= " AND it.tag_id IN ( " . implode(', ', $tag_ids_q) . " )";
@@ -396,26 +394,26 @@ function fof_db_get_item_count ( $user_id, $what = 'all', $feed = null, $search 
         $statement->bindValue(':feed', $feed);
     }
     switch ($what) {
-        case 'all':
+    case 'all':
         break;
 
-        case 'unread':
-        $statement->bindValue(':unread_id', fof_db_get_tag_by_name($user_id, 'unread'));
+    case 'unread':
+        $statement->bindValue(':unread_id', fof_db_get_tag_by_name('unread'));
         break;
 
-        case 'starred':
-        $statement->bindValue(':star_id', fof_db_get_tag_by_name($user_id, 'star'));
+    case 'starred':
+        $statement->bindValue(':star_id', fof_db_get_tag_by_name('star'));
         break;
 
-        case 'tagged':
-        $statement->bindValue(':unread_id', fof_db_get_tag_by_name($user_id, 'unread'));
-        $statement->bindValue(':star_id', fof_db_get_tag_by_name($user_id, 'star'));
-        $statement->bindValue(':folded_id', fof_db_get_tag_by_name($user_id, 'folded'));
+    case 'tagged':
+        $statement->bindValue(':unread_id', fof_db_get_tag_by_name('unread'));
+        $statement->bindValue(':star_id', fof_db_get_tag_by_name('star'));
+        $statement->bindValue(':folded_id', fof_db_get_tag_by_name('folded'));
         break;
 
-        default:
+    default:
     }
-    $result = fof_db_statement_execute($query, $statement);
+    $result = fof_db_statement_execute($statement);
 
     return $statement;
 }
@@ -430,7 +428,7 @@ function fof_db_get_subscribed_users($feed_id)
     $query = "SELECT user_id FROM $FOF_SUBSCRIPTION_TABLE WHERE feed_id = :feed_id";
     $statement = $fof_connection->prepare($query);
     $statement->bindValue(':feed_id', $feed_id);
-    $result = fof_db_statement_execute($query, $statement);
+    $result = fof_db_statement_execute($statement);
 
     return $statement;
 }
@@ -460,7 +458,7 @@ function fof_db_is_subscribed($user_id, $feed_url)
     $statement = $fof_connection->prepare($query);
     $statement->bindValue(':feed_url', $feed_url);
     $statement->bindValue(':user_id', $user_id);
-    $result = fof_db_statement_execute($query, $statement);
+    $result = fof_db_statement_execute($statement);
     $row = fof_db_get_row($statement, NULL, TRUE);
     if ( ! empty($row)) {
         return true;
@@ -479,7 +477,7 @@ function fof_db_get_feed_by_url($feed_url)
     $query = "SELECT * FROM $FOF_FEED_TABLE WHERE feed_url = :feed_url";
     $statement = $fof_connection->prepare($query);
     $statement->bindValue(':feed_url', $feed_url);
-    $result = fof_db_statement_execute($query, $statement);
+    $result = fof_db_statement_execute($statement);
 
     return fof_db_get_row($statement, NULL, TRUE);
 }
@@ -494,7 +492,7 @@ function fof_db_get_feed_by_id($feed_id)
     $query = "SELECT * FROM $FOF_FEED_TABLE WHERE feed_id = :feed_id";
     $statement = $fof_connection->prepare($query);
     $statement->bindValue(':feed_id', $feed_id);
-    $result = fof_db_statement_execute($query, $statement);
+    $result = fof_db_statement_execute($statement);
 
     return fof_db_get_row($statement, NULL, TRUE);
 }
@@ -506,6 +504,7 @@ function fof_db_add_feed($url, $title, $link, $description)
 
     fof_trace();
 
+    /* XXX: not sure why these weren't implemented as default values in feed table */
     if (empty($title)) $title = "[no title]";
     if (empty($link)) $link = "[no link]";
     if (empty($description)) $description = "[no description]";
@@ -516,7 +515,7 @@ function fof_db_add_feed($url, $title, $link, $description)
     $statement->bindValue(':title', $title);
     $statement->bindValue(':link', $link);
     $statement->bindValue(':description', $description);
-    $result = fof_db_statement_execute($query, $statement);
+    $result = fof_db_statement_execute($statement);
     $statement->closeCursor();
 
     /*
@@ -535,7 +534,7 @@ function fof_db_add_feed($url, $title, $link, $description)
     $statement->bindValue(':title', $title);
     $statement->bindValue(':link', $link);
     $statement->bindValue(':description', $description);
-    $result = fof_db_statement_execute($query, $statement);
+    $result = fof_db_statement_execute($statement);
 
     return fof_db_get_row($statement, 'feed_id', TRUE);
 }
@@ -551,7 +550,7 @@ function fof_db_add_subscription($user_id, $feed_id)
     $statement = $fof_connection->prepare($query);
     $statement->bindValue(':feed_id', $feed_id);
     $statement->bindValue(':user_id', $user_id);
-    $result = fof_db_statement_execute($query, $statement);
+    $result = fof_db_statement_execute($statement);
     $statement->closeCursor();
 }
 
@@ -572,7 +571,7 @@ function fof_db_delete_subscription($user_id, $feed_id)
         $query = "DELETE FROM $FOF_ITEM_TAG_TABLE WHERE user_id = :user_id AND item_id IN ( " . implode(', ', $items_q) . " )";
         $statement = $fof_connection->prepare($query);
         $statement->bindValue(':user_id', $user_id);
-        $result = fof_db_statement_execute($query, $statement);
+        $result = fof_db_statement_execute($statement);
         $statement->closeCursor();
     }
 
@@ -580,7 +579,7 @@ function fof_db_delete_subscription($user_id, $feed_id)
     $statement = $fof_connection->prepare($query);
     $statement->bindValue(':user_id', $user_id);
     $statement->bindValue(':feed_id', $feed_id);
-    $result = fof_db_statement_execute($query, $statement);
+    $result = fof_db_statement_execute($statement);
     $statement->closeCursor();
 }
 
@@ -594,13 +593,13 @@ function fof_db_delete_feed($feed_id)
     $query = "DELETE FROM $FOF_FEED_TABLE WHERE feed_id = :feed_id";
     $statement = $fof_connection->prepare($query);
     $statement->bindValue(':feed_id', $feed_id);
-    $result = fof_db_statement_execute($query, $statement);
+    $result = fof_db_statement_execute($statement);
     $statement->closeCursor();
 
     $query = "DELETE FROM $FOF_ITEM_TABLE WHERE feed_id = :feed_id";
     $statement = $fof_connection->prepare($query);
     $statement->bindValue(':feed_id', $feed_id);
-    $result = fof_db_statement_execute($query, $statement);
+    $result = fof_db_statement_execute($statement);
     $statement->closeCursor();
 }
 
@@ -615,7 +614,7 @@ function fof_db_feed_cache_set($feed_id, $next_attempt)
     $statement = $fof_connection->prepare($query);
     $statement->bindValue(":feed_id", $feed_id);
     $statement->bindValue(":next_attempt", $next_attempt);
-    $result = fof_db_statement_execute($query, $statement);
+    $result = fof_db_statement_execute($statement);
     $statement->closeCursor();
 }
 
@@ -634,7 +633,7 @@ function fof_db_find_item($feed_id, $item_guid)
     $statement = $fof_connection->prepare($query);
     $statement->bindValue(":feed_id", $feed_id);
     $statement->bindValue(":item_guid", $item_guid);
-    $result = fof_db_statement_execute($query, $statement);
+    $result = fof_db_statement_execute($statement);
 
     return fof_db_get_row($statement, 'item_id', TRUE);
 }
@@ -656,7 +655,7 @@ function fof_db_add_item($feed_id, $guid, $link, $title, $content, $cached, $pub
     $statement->bindValue(':cached', $cached);
     $statement->bindValue(':published', $published);
     $statement->bindValue(':updated', $updated);
-    $result = fof_db_statement_execute($query, $statement);
+    $result = fof_db_statement_execute($statement);
     $statement->closeCursor();
 
     /* FIXME: see comments elsewhere about lastInsertId */
@@ -671,7 +670,7 @@ function fof_db_add_item($feed_id, $guid, $link, $title, $content, $cached, $pub
     $statement->bindValue(':cached', $cached);
     $statement->bindValue(':published', $published);
     $statement->bindValue(':updated', $updated);
-    $result = fof_db_statement_execute($query, $statement);
+    $result = fof_db_statement_execute($statement);
 
     return fof_db_get_row($statement, 'item_id', TRUE);
 }
@@ -734,7 +733,7 @@ function fof_db_get_items($user_id=1, $feed=NULL, $what='unread', $when=NULL, $s
     fof_log(__FUNCTION__ . " first query: " . $query);
 
     $statement = fof_db_statement_prepare($query);
-    $result = fof_db_statement_execute($query, $statement);
+    $result = fof_db_statement_execute($statement);
 
     $item_ids_q = array();
     $lookup = array(); /* remember item_id->all_rows mapping, for populating tags */
@@ -759,7 +758,7 @@ function fof_db_get_items($user_id=1, $feed=NULL, $what='unread', $when=NULL, $s
     fof_log(__FUNCTION__ . " second query: " . $query);
 
     $statement = fof_db_statement_prepare($query);
-    $result = fof_db_statement_execute($query, $statement);
+    $result = fof_db_statement_execute($statement);
     while ( ($row = fof_db_get_row($statement)) !== FALSE ) {
         $idx = $lookup[$row['item_id']];
         $all_items[$idx]['tags'][] = $row['tag_name'];
@@ -795,7 +794,7 @@ function fof_db_get_item($user_id, $item_id)
                 " AND i.item_id = :item_id";
     $statement = $fof_connection->prepare($query);
     $statement->bindValue(':item_id', $item_id);
-    $result = fof_db_statement_execute($query, $statement);
+    $result = fof_db_statement_execute($statement);
     $item = fof_db_get_row($statement, NULL, TRUE);
 
     $item['tags'] = array();
@@ -809,7 +808,7 @@ function fof_db_get_item($user_id, $item_id)
         $statement = $fof_connection->prepare($query);
         $statement->bindValue(':item_id', $item_id);
         $statement->bindValue(':user_id', $user_id);
-        $result = fof_db_statement_execute($query, $statement);
+        $result = fof_db_statement_execute($statement);
         while (($row = fof_db_get_row($statement)) !== false) {
             $item['tags'][] = $row['tag_name'];
         }
@@ -834,7 +833,7 @@ function fof_db_items_purge_list($feed_id, $purge_days)
     $statement = $fof_connection->prepare($query);
     $statement->bindValue(":feed_id", $feed_id);
     $statement->bindValue(":purge_time", time() - $purge_secs);
-    $result = fof_db_statement_execute($query, $statement);
+    $result = fof_db_statement_execute($statement);
 
     return $statement;
 }
@@ -859,7 +858,7 @@ function fof_db_items_delete($items)
 
     $query = "DELETE FROM $FOF_ITEM_TABLE WHERE item_id IN (" . implode(', ', $items_q) . ")";
     $statement = $fof_connection->prepare($query);
-    $result = fof_db_statement_execute($query, $statement);
+    $result = fof_db_statement_execute($statement);
     $statement->closeCursor();
 }
 
@@ -891,7 +890,7 @@ function fof_db_items_updated_list($feed_id)
     $query = "SELECT item_updated FROM $FOF_ITEM_TABLE WHERE feed_id = :id ORDER BY item_updated ASC";
     $statement = $fof_connection->prepare($query);
     $statement->bindValue(':id', $feed_id);
-    $result = fof_db_statement_execute($query, $statement);
+    $result = fof_db_statement_execute($statement);
 
     return $statement;
 }
@@ -936,7 +935,7 @@ function fof_db_get_subscription_to_tags()
         $feed_id = $row['feed_id'];
         $user_id = $row['user_id'];
         $prefs = unserialize($row['subscription_prefs']);
-        if ( ! is_array($r[$feed_id])) {
+        if ( ! isset($r[$feed_id])) {
             $r[$feed_id] = array();
         }
         $r[$feed_id][$user_id] = $prefs['tags'];
@@ -956,7 +955,7 @@ function fof_db_tag_feed($user_id, $feed_id, $tag_id)
     $statement = $fof_connection->prepare($query);
     $statement->bindValue(':feed_id', $feed_id);
     $statement->bindValue(':user_id', $user_id);
-    $result = fof_db_statement_execute($query, $statement);
+    $result = fof_db_statement_execute($statement);
     $prefs = unserialize(fof_db_get_row($statement, 'subscription_prefs', TRUE));
 
     if ( ! is_array($prefs['tags']) || ! in_array($tag_id, $prefs['tags'])) {
@@ -968,7 +967,7 @@ function fof_db_tag_feed($user_id, $feed_id, $tag_id)
     $statement->bindValue(':prefs', serialize($prefs));
     $statement->bindValue(':user_id', $user_id);
     $statement->bindValue(':feed_id', $feed_id);
-    $result = fof_db_statement_execute($query, $statement);
+    $result = fof_db_statement_execute($statement);
     $statement->closeCursor();
 }
 
@@ -983,7 +982,7 @@ function fof_db_untag_feed($user_id, $feed_id, $tag_id)
     $statement = $fof_connection->prepare($query);
     $statement->bindValue(':feed_id', $feed_id);
     $statement->bindValue(':user_id', $user_id);
-    $result = fof_db_statement_execute($query, $statement);
+    $result = fof_db_statement_execute($statement);
     $prefs = unserialize(fof_db_get_row($statement, 'subscription_prefs', TRUE));
 
     if (is_array($prefs['tags'])) {
@@ -995,7 +994,7 @@ function fof_db_untag_feed($user_id, $feed_id, $tag_id)
     $statement->bindValue(':prefs', serialize($prefs));
     $statement->bindValue(':feed_id', $feed_id);
     $statement->bindValue(':user_id', $user_id);
-    $result = fof_db_statement_execute($query, $statement);
+    $result = fof_db_statement_execute($statement);
     $statement->closeCursor();
 }
 
@@ -1014,7 +1013,7 @@ function fof_db_get_item_tags($user_id, $item_id)
     $statement = $fof_connection->prepare($query);
     $statement->bindValue(':item_id', $item_id);
     $statement->bindValue(':user_id', $user_id);
-    $result = fof_db_statement_execute($query, $statement);
+    $result = fof_db_statement_execute($statement);
 
     return $statement;
 }
@@ -1032,7 +1031,7 @@ function fof_db_item_has_tags($item_id)
                 " AND tag_id <= 2";
     $statement = $fof_connection->prepare($query);
     $statement->bindValue(':item_id', $item_id);
-    $result = fof_db_statement_execute($query, $statement);
+    $result = fof_db_statement_execute($statement);
 
     return fof_db_get_row($statement, 'tag_count', TRUE);
 }
@@ -1050,7 +1049,7 @@ function fof_db_get_unread_count($user_id)
                 " AND user_id = :user_id";
     $statement = $fof_connection->prepare($query);
     $statement->bindValue(':user_id', $user_id);
-    $result = fof_db_statement_execute($query, $statement);
+    $result = fof_db_statement_execute($statement);
 
     return fof_db_get_row($statement, 'tag_count', TRUE);
 }
@@ -1074,7 +1073,7 @@ function fof_db_get_tag_unread($user_id)
             " GROUP BY it2.tag_id";
     $statement = $fof_connection->prepare($query);
     $statement->bindValue(':user_id', $user_id);
-    $result = fof_db_statement_execute($query, $statement);
+    $result = fof_db_statement_execute($statement);
     while (($row = fof_db_get_row($statement)) !== false) {
         $counts[$row['tag_id']] = $row['tag_count'];
     }
@@ -1096,7 +1095,7 @@ function fof_db_get_tags($user_id)
             " GROUP BY $FOF_TAG_TABLE.tag_id ORDER BY $FOF_TAG_TABLE.tag_name";
     $statement = $fof_connection->prepare($query);
     $statement->bindValue(':user_id', $user_id);
-    $result = fof_db_statement_execute($query, $statement);
+    $result = fof_db_statement_execute($statement);
 
     return $statement;
 }
@@ -1118,8 +1117,7 @@ function fof_db_get_tag_id_map()
     return $tags;
 }
 
-/* XXX: user_id unused */
-function fof_db_create_tag($user_id, $tag_name)
+function fof_db_create_tag($tag_name)
 {
     global $FOF_TAG_TABLE;
     global $fof_connection;
@@ -1129,21 +1127,20 @@ function fof_db_create_tag($user_id, $tag_name)
     $query = "INSERT INTO $FOF_TAG_TABLE (tag_name) VALUES (:tag_name)";
     $statement = $fof_connection->prepare($query);
     $statement->bindValue(':tag_name', $tag_name);
-    $result = fof_db_statement_execute($query, $statement);
+    $result = fof_db_statement_execute($statement);
 
     /* FIXME: see comments elsewhere about lastInsertId */
 
     $query = "SELECT tag_id FROM $FOF_TAG_TABLE WHERE tag_name = :tag_name";
     $statement = $fof_connection->prepare($query);
     $statement->bindValue(':tag_name', $tag_name);
-    $result = fof_db_statement_execute($query, $statement);
+    $result = fof_db_statement_execute($statement);
 
     return fof_db_get_row($statement, 'tag_id', TRUE);
 }
 
-/* XXX: user_id unused */
 /* XXX: also why doesn't this just return (or take) an array */
-function fof_db_get_tag_by_name($user_id, $tags)
+function fof_db_get_tag_by_name($tags)
 {
     global $FOF_TAG_TABLE;
     global $fof_connection;
@@ -1174,7 +1171,7 @@ function fof_db_mark_unread($user_id, $items)
 {
     fof_trace();
 
-    $tag_id = fof_db_get_tag_by_name($user_id, 'unread');
+    $tag_id = fof_db_get_tag_by_name('unread');
     return fof_db_tag_items($user_id, $tag_id, $items);
 }
 
@@ -1182,7 +1179,7 @@ function fof_db_mark_read($user_id, $items)
 {
     fof_trace();
 
-    $tag_id = fof_db_get_tag_by_name($user_id, 'unread');
+    $tag_id = fof_db_get_tag_by_name('unread');
     return fof_db_untag_items($user_id, $tag_id, $items);
 }
 
@@ -1190,7 +1187,7 @@ function fof_db_fold($user_id, $items)
 {
     fof_trace();
 
-    $tag_id = fof_db_get_tag_by_name($user_id, 'folded');
+    $tag_id = fof_db_get_tag_by_name('folded');
     return fof_db_tag_items($user_id, $tag_id, $items);
 }
 
@@ -1198,7 +1195,7 @@ function fof_db_unfold($user_id, $items)
 {
     fof_trace();
 
-    $tag_id = fof_db_get_tag_by_name($user_id, 'folded');
+    $tag_id = fof_db_get_tag_by_name('folded');
     return fof_db_untag_items($user_id, $tag_id, $items);
 }
 
@@ -1212,7 +1209,7 @@ function fof_db_mark_feed_read($user_id, $feed_id)
         $items[] = $r['item_id'];
     }
 
-    $tag_id = fof_db_get_tag_by_name($user_id, 'unread');
+    $tag_id = fof_db_get_tag_by_name('unread');
     fof_db_untag_items($user_id, $tag_id, $items);
 }
 
@@ -1235,11 +1232,12 @@ function fof_db_mark_feed_unread($user_id, $feed_id, $what)
         $items[] = $r['item_id'];
     }
 
-    $tag_id = fof_db_get_tag_by_name($user_id, 'unread');
+    $tag_id = fof_db_get_tag_by_name('unread');
 
     fof_db_tag_items($user_id, $tag_id, $items);
 }
 
+/* sets unread tag on item_id for each user_id in array of users */
 function fof_db_mark_item_unread($users, $item_id)
 {
     global $FOF_ITEM_TAG_TABLE;
@@ -1250,23 +1248,28 @@ function fof_db_mark_item_unread($users, $item_id)
     if (count($users) == 0)
         return;
 
-    $bvars = array();
+    $unread_tag_id = fof_db_get_tag_by_name('unread');
+
     $values = array();
-    $idx = 0;
-    foreach($users as $user)
-    {
-        $values[] = "(:user_id_$idx, :tag_id_$idx, :item_id)";
-        $bvars["user_id_$idx"] = $user;
-        $bvars["tag_id_$idx"] = fof_db_get_tag_by_name($user, 'unread');
-        $idx += 1;
+    $item_id_q = $fof_connection->quote($item_id);
+    foreach ($users as $user) {
+        $user_id_q = $fof_connection->quote($user);
+        $tag_id = fof_db_get_tag_by_name('unread');
+        $values[] = "( $user_id_q, $tag_id, $item_id_q )";
     }
 
-    $tag_id = fof_db_get_tag_by_name($user);
-
-    $query = "INSERT INTO $FOF_ITEM_TAG_TABLE (user_id, tag_id, item_id) VALUES " . implode(', ', $values);
+    /*
+        This query will need to be changed to work with a driver other than
+        MySQL or SQLite.  It simply needs to be able to insert, and ignore
+        existing row conflicts.
+        I believe this could be a simple INSERT, if the table definitions were
+        changed to not abort on conflicts, but that simply moves the
+        driver-specificness into table creation.
+        Perhaps someone better-versed at SQL has suggestions.
+    */
+    $query = "INSERT OR REPLACE INTO $FOF_ITEM_TAG_TABLE (user_id, tag_id, item_id) VALUES " . implode(', ', $values);
     $statement = $fof_connection->prepare($query);
-    $statement->bindValue(":item_id", $item_id);
-    $result = fof_db_statement_execute($query, $statement, $bvars);
+    $result = fof_db_statement_execute($statement);
     $statement->closeCursor();
 }
 
@@ -1292,12 +1295,18 @@ function fof_db_tag_items($user_id, $tag_id, $items)
         $items_q[] = "( $user_q, $tag_q, $i_q )";
     }
 
-    $query = "INSERT INTO $FOF_ITEM_TAG_TABLE (user_id, tag_id, item_id) VALUES " . implode(', ', $items_q);
-
-    fof_log(__FUNCTION__ . ": query:'$query'");
-
+    /* This query will need to be changed to work with a driver other than MySQL or SQLite. */
+    /* (also see fof_db_mark_item_unread) */
+    $query = "INSERT OR REPLACE INTO $FOF_ITEM_TAG_TABLE (user_id, tag_id, item_id) VALUES " . implode(', ', $items_q);
     $statement = $fof_connection->prepare($query);
-    $result = fof_db_statement_execute($query, $statement);
+    try {
+        $result = fof_db_statement_execute($statement);
+    } catch (PDOException $e) {
+        /* XXX: see previous comments about SQLSTATE 23000 */
+        if ($e->getCode() != "23000") {
+            throw $e;
+        }
+    }
     $statement->closeCursor();
 }
 
@@ -1323,7 +1332,7 @@ function fof_db_untag_items($user_id, $tag_id, $items)
     $statement = $fof_connection->prepare($query);
     $statement->bindValue(':user_id', $user_id);
     $statement->bindValue(':tag_id', $tag_id);
-    $result = fof_db_statement_execute($query, $statement);
+    $result = fof_db_statement_execute($statement);
     $statement->closeCursor();
 }
 
@@ -1383,7 +1392,7 @@ function fof_db_add_user_all($user_id, $user_name, $user_password, $user_level)
     $statement->bindValue(':name', $user_name);
     $statement->bindValue(':password_hash', fof_db_user_password_hash($user_password, $user_name));
     $statement->bindValue(':level', $user_level);
-    $result = fof_db_statement_execute($query, $statement);
+    $result = fof_db_statement_execute($statement);
     $statement->closeCursor();
 
     return $result;
@@ -1400,7 +1409,7 @@ function fof_db_add_user($username, $password)
     $statement = $fof_connection->prepare($query);
     $statement->bindValue(':password_hash', fof_db_user_password_hash($password, $username));
     $statement->bindValue(':name', $username);
-    $result = fof_db_statement_execute($query, $statement);
+    $result = fof_db_statement_execute($statement);
     $statement->closeCursor();
 
     return $result;
@@ -1415,7 +1424,7 @@ function fof_db_change_password($username, $password)
     $statement = $fof_connection->prepare($query);
     $statement->bindValue(':password_hash', fof_db_user_password_hash($password, $username));
     $statement->bindValue(':name', $username);
-    $result = fof_db_statement_execute($query, $statement);
+    $result = fof_db_statement_execute($statement);
     $statement->closeCursor();
 
     return $result;
@@ -1431,7 +1440,7 @@ function fof_db_get_user_id($username)
     $query = "SELECT user_id FROM $FOF_USER_TABLE WHERE user_name = :name";
     $statement = $fof_connection->prepare($query);
     $statement->bindValue(':name', $username);
-    $result = fof_db_statement_execute($query, $statement);
+    $result = fof_db_statement_execute($statement);
 
     return fof_db_get_row($statement, 'user_id', TRUE);
 }
@@ -1451,7 +1460,7 @@ function fof_db_delete_user($username)
         $query = "DELETE FROM $table WHERE user_id = :id";
         $statement = $fof_connection->prepare($query);
         $statement->bindValue(':id', $user_id);
-        $result = fof_db_statement_execute($query, $statement);
+        $result = fof_db_statement_execute($statement);
         $statement->closeCursor();
     }
 }
@@ -1466,7 +1475,7 @@ function fof_db_prefs_get($user_id)
     $query = "SELECT user_prefs FROM $FOF_USER_TABLE WHERE user_id = :user_id";
     $statement = $fof_connection->prepare($query);
     $statement->bindValue(':user_id', $user_id);
-    $result = fof_db_statement_execute($query, $statement);
+    $result = fof_db_statement_execute($statement);
     $prefs = fof_db_get_row($statement, 'user_prefs', TRUE);
 
     return unserialize($prefs);
@@ -1483,7 +1492,7 @@ function fof_db_save_prefs($user_id, $prefs)
     $statement = $fof_connection->prepare($query);
     $statement->bindValue(':id', $user_id);
     $statement->bindValue(':prefs', serialize($prefs));
-    $result = fof_db_statement_execute($query, $statement);
+    $result = fof_db_statement_execute($statement);
     $statement->closeCursor();
 }
 
@@ -1499,7 +1508,7 @@ function fof_db_authenticate_hash($user_name, $user_password_hash)
     $statement = $fof_connection->prepare($query);
     $statement->bindValue(':name', $user_name);
     $statement->bindValue(':password_hash', $user_password_hash);
-    $result = fof_db_statement_execute($query, $statement);
+    $result = fof_db_statement_execute($statement);
     $row = fof_db_get_row($statement, NULL, TRUE);
 
     if ( ! $row) {

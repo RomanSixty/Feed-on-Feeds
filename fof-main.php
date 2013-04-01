@@ -12,12 +12,13 @@
  *
  */
 
-/*  globals controlling behavior:
-    $fof_no_login -- does not force auth if true
-    $fof_installer -- forces auth to admin, changes log file
+/*
+    globals controlling behavior:
+        $fof_no_login -- does not force auth if true
+        $fof_installer -- forces auth to admin, changes log file
 
-    $fof_logall -- forces logging on
-    $fof_tracelog -- enables ridiculous logging for debugging
+        $fof_logall -- forces logging on
+        $fof_tracelog -- enables ridiculous logging for debugging
 */
 
 /* quiet warnings, default to UTC */
@@ -25,13 +26,13 @@ date_default_timezone_set('UTC');
 
 fof_repair_drain_bamage();
 
-if ( (@include_once("fof-config.php")) === false ) {
+if ( (@include_once('fof-config.php')) === false ) {
     echo "You will first need to create a fof-config.php file.  Please copy fof-config-sample.php to fof-config.php and then update the values to match your database settings.\n";
     die();
 }
 
-require_once("fof-db.php");
-require_once("classes/fof-prefs.php");
+require_once('fof-db.php');
+require_once('classes/fof-prefs.php');
 
 fof_db_connect();
 
@@ -62,7 +63,7 @@ function fof_set_content_type($type='text/html')
     }
 }
 
-function fof_log($message, $topic="debug")
+function fof_log($message, $topic='debug')
 {
     global $fof_prefs_obj;
     global $fof_installer;
@@ -117,7 +118,7 @@ function fof_authenticate($user_name, $user_password_hash)
 
     if (fof_db_authenticate_hash($user_name, $user_password_hash))
     {
-        $user_login_expire_time = time() + (60 * 60 * 24 * 365 * 10);
+        $user_login_expire_time = time() + (60 * 60 * 24 * 365 * 10); /* 10 years */
         setcookie('user_name', $fof_user_name, $user_login_expire_time);
         setcookie('user_password_hash', $user_password_hash, $user_login_expire_time);
         return true;
@@ -164,11 +165,6 @@ function fof_username()
     return $fof_user_name;
 }
 
-function fof_get_users()
-{
-    return fof_db_get_users();
-}
-
 function fof_prefs()
 {
     $p =& FoF_Prefs::instance();
@@ -179,7 +175,7 @@ function fof_is_admin()
 {
     global $fof_user_level;
 
-    return $fof_user_level == "admin";
+    return $fof_user_level == 'admin';
 }
 
 function fof_get_unread_count($user_id)
@@ -193,7 +189,7 @@ function fof_get_tags($user_id)
 
     $counts = fof_db_get_tag_unread($user_id);
     $statement = fof_db_get_tags($user_id);
-    while($row = fof_db_get_row($statement))
+    while ( ($row = fof_db_get_row($statement)) !== false )
     {
         if(isset($counts[$row['tag_id']]))
           $row['unread'] = $counts[$row['tag_id']];
@@ -212,7 +208,7 @@ function fof_get_item_tags($user_id, $item_id)
 
     $tags = array();
 
-    while($row = fof_db_get_row($result))
+    while ( ($row = fof_db_get_row($result)) !== false )
     {
         $tags[] = $row['tag_name'];
     }
@@ -220,21 +216,17 @@ function fof_get_item_tags($user_id, $item_id)
     return $tags;
 }
 
-function fof_update_feed_prefs($feed_id, $title, $alt_image)
-{
-    return fof_db_feed_update_prefs($feed_id, $title, $alt_image);
-}
-
 function fof_tag_feed($user_id, $feed_id, $tag)
 {
-    $tag_id = fof_db_get_tag_by_name($user_id, $tag);
+    $tag_id = fof_db_get_tag_by_name($tag);
     if($tag_id == NULL)
     {
-        $tag_id = fof_db_create_tag($user_id, $tag);
+        $tag_id = fof_db_create_tag($tag);
     }
 
-    $result = fof_db_get_items($user_id, $feed_id, $what="all", NULL, NULL);
+    $result = fof_db_get_items($user_id, $feed_id, $what='all', NULL, NULL);
 
+    $items = array();
     foreach($result as $r)
     {
         $items[] = $r['item_id'];
@@ -247,14 +239,15 @@ function fof_tag_feed($user_id, $feed_id, $tag)
 
 function fof_untag_feed($user_id, $feed_id, $tag)
 {
-    $tag_id = fof_db_get_tag_by_name($user_id, $tag);
+    $tag_id = fof_db_get_tag_by_name($tag);
     if($tag_id == NULL)
     {
-        $tag_id = fof_db_create_tag($user_id, $tag);
+        $tag_id = fof_db_create_tag($tag);
     }
 
     $result = fof_db_get_items($user_id, $feed_id, $what="all", NULL, NULL);
 
+    $items = array();
     foreach($result as $r)
     {
         $items[] = $r['item_id'];
@@ -267,7 +260,7 @@ function fof_untag_feed($user_id, $feed_id, $tag)
 
 function fof_tag_item($user_id, $item_id, $tag)
 {
-    if(is_array($tag)) $tags = $tag; else $tags[] = $tag;
+    $tags = is_array($tag) ? $tag : array($tag);
 
     foreach($tags as $tag)
     {
@@ -278,10 +271,10 @@ function fof_tag_item($user_id, $item_id, $tag)
             continue;
         }
 
-        $tag_id = fof_db_get_tag_by_name($user_id, $tag);
+        $tag_id = fof_db_get_tag_by_name($tag);
         if($tag_id == NULL)
         {
-            $tag_id = fof_db_create_tag($user_id, $tag);
+            $tag_id = fof_db_create_tag($tag);
         }
 
         fof_db_tag_items($user_id, $tag_id, $item_id);
@@ -290,16 +283,17 @@ function fof_tag_item($user_id, $item_id, $tag)
 
 function fof_untag_item($user_id, $item_id, $tag)
 {
-    $tag_id = fof_db_get_tag_by_name($user_id, $tag);
+    $tag_id = fof_db_get_tag_by_name($tag);
     fof_db_untag_items($user_id, $tag_id, $item_id);
 }
 
 function fof_untag($user_id, $tag)
 {
-    $tag_id = fof_db_get_tag_by_name($user_id, $tag);
+    $tag_id = fof_db_get_tag_by_name($tag);
 
     $result = fof_db_get_items($user_id, $feed_id, $tag, NULL, NULL);
 
+    $items = array();
     foreach($result as $r)
     {
         $items[] = $r['item_id'];
@@ -372,7 +366,7 @@ function fof_get_feeds($user_id, $order = 'feed_title', $direction = 'asc')
 
     $i = 0;
 
-    while($row = fof_db_get_row($result))
+    while ( ($row = fof_db_get_row($result)) !== false )
     {
         $id = $row['feed_id'];
         $age = $row['feed_cache_date'];
@@ -411,7 +405,7 @@ function fof_get_feeds($user_id, $order = 'feed_title', $direction = 'asc')
 
     $result = fof_db_get_item_count($user_id);
 
-    while($row = fof_db_get_row($result))
+    while ( ($row = fof_db_get_row($result)) !== false )
     {
         for($i=0; $i<count($feeds); $i++)
         {
@@ -426,7 +420,7 @@ function fof_get_feeds($user_id, $order = 'feed_title', $direction = 'asc')
 
     $result = fof_db_get_item_count($user_id, 'unread');
 
-    while($row = fof_db_get_row($result))
+    while ( ($row = fof_db_get_row($result)) !== false )
     {
         for($i=0; $i<count($feeds); $i++)
         {
@@ -445,7 +439,7 @@ function fof_get_feeds($user_id, $order = 'feed_title', $direction = 'asc')
 
     $result = fof_db_get_item_count($user_id, 'starred');
 
-    while($row = fof_db_get_row($result))
+    while ( ($row = fof_db_get_row($result)) !== false )
     {
         for($i=0; $i<count($feeds); $i++)
         {
@@ -458,7 +452,7 @@ function fof_get_feeds($user_id, $order = 'feed_title', $direction = 'asc')
 
     $result = fof_db_get_item_count($user_id, 'tagged');
 
-    while($row = fof_db_get_row($result))
+    while ( ($row = fof_db_get_row($result)) !== false )
     {
         for($i=0; $i<count($feeds); $i++)
         {
@@ -471,7 +465,7 @@ function fof_get_feeds($user_id, $order = 'feed_title', $direction = 'asc')
 
     $result = fof_db_get_latest_item_age($user_id);
 
-    while($row = fof_db_get_row($result))
+    while ( ($row = fof_db_get_row($result)) !== false )
     {
         for($i=0; $i<count($feeds); $i++)
         {
@@ -498,24 +492,25 @@ function fof_view_title($feed=NULL, $what="new", $when=NULL, $start=NULL, $limit
     $prefs = fof_prefs();
     $title = "feed on feeds";
 
-    if(!is_null($when) && $when != "")
-    {
+    if ( ! empty($when))
         $title .= ' - ' . $when ;
-    }
-    if(!is_null($feed) && $feed != "")
+
+    if ( ! empty($feed))
     {
         $r = fof_db_get_feed_by_id($feed);
         $title .=' - ' . $r['feed_title'];
     }
-    if(is_numeric($start))
+
+    if (is_numeric($start))
     {
-        if(!is_numeric($limit)) $limit = $prefs["howmany"];
+        if ( ! is_numeric($limit))
+            $limit = $prefs['howmany'];
         $title .= " - items $start to " . ($start + $limit);
     }
 
     $title .= " of $itemcount items";
 
-    if(isset($search))
+    if (isset($search))
     {
         $title .= " - <a href='javascript:toggle_highlight()'>matching <i class='highlight'>$search</i></a>";
     }
@@ -552,16 +547,6 @@ function fof_get_item($user_id, $item_id)
     }
 
     return $item;
-}
-
-function fof_mark_read($user_id, $items)
-{
-    fof_db_mark_read($user_id, $items);
-}
-
-function fof_mark_unread($user_id, $items)
-{
-    fof_db_mark_unread($user_id, $items);
 }
 
 function fof_delete_subscription($user_id, $feed_id)
@@ -608,8 +593,10 @@ function fof_get_nav_links($feed=NULL, $what="new", $when=NULL, $start=NULL, $li
         $later = $start - $limit;
 
         if($itemcount > $earlier) $string .= "<a href=\".?feed=$feed&amp;what=$what&amp;when=$when&amp;how=paged&amp;which=$earlier&amp;howmany=$limit&amp;search=$search\">[&laquo; previous $limit]</a> ";
-        if($later >= 0) $string .= "<a href=\".?feed=$feed&amp;what=$what&amp;when=$when&amp;how=paged&amp;howmany=$limit&amp;search=$search\">[current items]</a> ";
-        if($later >= 0) $string .= "<a href=\".?feed=$feed&amp;what=$what&amp;when=$when&amp;how=paged&amp;which=$later&amp;howmany=$limit&amp;search=$search\">[next $limit &raquo;]</a> ";
+        if($later >= 0) {
+            $string .= "<a href=\".?feed=$feed&amp;what=$what&amp;when=$when&amp;how=paged&amp;howmany=$limit&amp;search=$search\">[current items]</a> ";
+            $string .= "<a href=\".?feed=$feed&amp;what=$what&amp;when=$when&amp;how=paged&amp;which=$later&amp;howmany=$limit&amp;search=$search\">[next $limit &raquo;]</a> ";
+        }
     }
 
     return $string;
@@ -645,120 +632,78 @@ function fof_opml_to_array($opml)
 
 function fof_prepare_url($url)
 {
-    $url = trim($url);
+    if (substr($url, 0, 7) == 'feed://')
+        $url = substr($url, 7);
 
-    if(substr($url, 0, 7) == "feed://") $url = substr($url, 7);
-
-    if(substr($url, 0, 7) != 'http://' && substr($url, 0, 8) != 'https://')
-    {
+    if (substr($url, 0, 7) != 'http://'
+    &&  substr($url, 0, 8) != 'https://')
         $url = 'http://' . $url;
-    }
 
     return $url;
 }
 
-function fof_subscribe($user_id, $url, $unread="today")
-{
+
+function fof_subscribe($user_id, $url, $unread='today') {
     fof_trace();
 
+    $url = trim($url);
     if (empty($url))
-        return false;
+        return "<span style=\"color:red\">Error: <b>cannot subscribe to nothing</b> (empty url?)</span><br>\n";
 
+    /* ensure url at least has a reasonable protocol */
     $url = fof_prepare_url($url);
 
     $feed = fof_db_get_feed_by_url($url);
-
-    if (fof_is_subscribed($user_id, $url))
-    {
-        return "You are already subscribed to " . fof_render_feed_link($feed) . "<br>";
-    }
-
-    if(fof_feed_exists($url))
-    {
-        fof_db_add_subscription($user_id, $feed['feed_id']);
-        fof_apply_plugin_tags($feed['feed_id'], NULL, $user_id);
-        fof_update_feed($feed['feed_id']);
-
-        if($unread != "no") fof_db_mark_feed_unread($user_id, $feed['feed_id'], $unread);
-        return '<font color="green"><b>Subscribed.</b></font><br>';
-    }
-
-    $rss = fof_parse($url);
-
-    if (isset($rss->error))
-    {
-        return "Error: <B>" . $rss->error . "</b> <a href=\"http://feedvalidator.org/check?url=$url\">try to validate it?</a><br>";
-    }
-    else
-    {
-        $url = html_entity_decode($rss->subscribe_url(), ENT_QUOTES);
-        $self = $rss->get_link(0, 'self');
-        if($self) $url = html_entity_decode($self, ENT_QUOTES);
-
-        if(fof_feed_exists($url))
-        {
-            $feed = fof_db_get_feed_by_url($url);
-
-            if(fof_is_subscribed($user_id, $url))
-            {
-                return "You are already subscribed to " . fof_render_feed_link($feed) . "<br>";
-            }
-
-            fof_db_add_subscription($user_id, $feed['feed_id']);
-            if($unread != "no") fof_db_mark_feed_unread($user_id, $feed['feed_id'], $unread);
-
-            return '<font color="green"><b>Subscribed.</b></font><br>';
+    if (empty($feed)) {
+        /* raw url does not exist, try cooking it with simplepie */
+        if ( ($rss = fof_parse($url)) === false
+        ||   isset($rss->error) ) {
+            $rss_error = (isset($rss) && isset($rss->error)) ? $rss->error : '';
+            return "<span style=\"color:red\">Error: <b>Failed to subscribe to '$url'</b>"
+                   . (!empty($rss_error) ? ": $rss_error</span> <span><a href=\"http://feedvalidator.org/check?url=$url\">try to validate it?</a>" : "")
+                   . "</span><br>\n";
         }
 
-        $id = fof_add_feed($url, $rss->get_title(), $rss->get_link(), $rss->get_description() );
+        $self = $rss->get_link(0, 'self');
+        $url = html_entity_decode( ($self ? $self : $rss->subscribe_url()), ENT_QUOTES);
 
-        fof_update_feed($id);
-        fof_db_add_subscription($user_id, $id);
-        if($unread != "no") fof_db_mark_feed_unread($user_id, $id, $unread);
-
-        fof_apply_plugin_tags($id, NULL, $user_id);
-
-        return '<font color="green"><b>Subscribed.</b></font><br>';
+        $feed = fof_db_get_feed_by_url($url);
+        if (empty($feed)) {
+            /* cooked url does not exist, add it */
+            $new_feed_id = fof_db_add_feed($url, $rss->get_title(), $rss->get_link(), $rss->get_description() );
+            if (empty($new_feed_id))
+                return "<span style=\"color:red\">Error: <b>Failed to subscribe to '$url'</b></span<br>\n";
+            $feed = fof_db_get_feed_by_id($new_feed_id);
+            /* assert(!empty($feed)) */
+        }
     }
+
+    if (fof_db_is_subscribed($user_id, $url)) {
+        return "<span>You are already subscribed to '" . fof_render_feed_link($feed) . "'.</span><br>\n";
+    }
+
+    /* subscribe to the feed */
+    fof_db_add_subscription($user_id, $feed['feed_id']);
+
+    /* set tags for user on any existing items */
+    fof_apply_plugin_tags($feed['feed_id'], NULL, $user_id);
+
+    /* update the feed */
+    list($n, $err) = fof_update_feed($new_feed_id);
+    if ( ! empty($err))
+        return "<span style=\"color:red\">$err</span><br>\n";
+
+    /* and set requested existing items unread */
+    if ($unread != 'no')
+        fof_db_mark_feed_unread($user_id, $feed['feed_id'], $unread);
+
+    return "<span style=\"color:green\"><b>Subscribed.</b></span><br>\n";
 }
 
-function fof_add_feed($url, $title, $link, $description)
-{
-    if (empty($title)) $title = "[no title]";
-    if (empty($link)) $link = "[no link]";
-    if (empty($description)) $description = "[no description]";
-
-    fof_log("adding feed url:'$url' title:'$title' link:'$link' description:'$description'");
-    $id = fof_db_add_feed($url, $title, $link, $description);
-
-    return $id;
-}
-
-function fof_is_subscribed($user_id, $url)
-{
-    return(fof_db_is_subscribed($user_id, $url));
-}
-
-function fof_feed_exists($url)
-{
-    $feed = fof_db_get_feed_by_url($url);
-
-    return $feed;
-}
-
-function fof_get_subscribed_users($feed_id)
-{
-    return(fof_db_get_subscribed_users($feed_id));
-}
-
-function fof_get_subscribed_users_count($feed_id)
-{
-    return fof_db_get_subscribed_users_count($feed_id);
-}
 
 function fof_mark_item_unread($feed_id, $id)
 {
-    $result = fof_get_subscribed_users($feed_id);
+    $result = fof_db_get_subscribed_users($feed_id);
     $users = array();
     while (($user_id = fof_db_get_row($result, 'user_id')) !== false) {
         $users[] = $user_id;
@@ -785,7 +730,10 @@ function fof_parse($url)
 
     if ( $pie -> error() )
     {
-        $data = file_get_contents ( $url );
+        if ( ($data = file_get_contents($url)) === false) {
+            fof_log("failed to fetch '$url'");
+            return false;
+        }
 
         $data = preg_replace ( '~.*<\?xml~sim', '<?xml', $data );
 
@@ -830,116 +778,102 @@ function fof_apply_tags($feed_id, $item_id)
     }
 }
 
+/* returns array of number of items added, and status message to display */
 function fof_update_feed($id)
 {
-    if(!$id) return 0;
-
+    global $fof_item_prefilters;
     static $blacklist = null;
     static $admin_prefs = null;
 
-    if ($blacklist === null)
-    {
+    $ids = array();
+
+    if ($blacklist === null) {
         $p =& FoF_Prefs::instance();
         $admin_prefs = $p->admin_prefs;
-
         $blacklist = preg_split('/(\r\n|\r|\n)/', isset($admin_prefs['blacklist']) ? $admin_prefs['blacklist'] : NULL, -1, PREG_SPLIT_NO_EMPTY);
     }
 
+    if (empty($id))
+        return array(0, '');
+
     $feed = fof_db_get_feed_by_id($id);
+    if (empty($feed)) {
+        fof_log("no such feed '$id'");
+        return array(0, "Error: <b>no such feed '$id'</b>");
+    }
+
     fof_log("updating feed_id:$id url:'" . $feed['feed_url'] . "'");
 
     fof_db_feed_mark_attempted_cache($id);
 
-    if ( ($rss = fof_parse($feed['feed_url'])) === false) {
-        fof_log("feed parse failed id:$id url:'" . $feed['feed_url'] . "'");
-        return array(0, "Error: <b>failed to parse feed '" . $feed['feed_url'] . "'</b>");
+    if ( ($rss = fof_parse($feed['feed_url'])) === false
+    ||   isset($rss->error) ) {
+        $rss_error = (isset($rss) && isset($rss->error)) ? $rss->error : 'unknown error';
+        fof_log("feed update failed feed_id:$id url:'" . $feed['feed_url'] . "': " . $rss_error);
+        return array(0, "Error: <b>failed to parse feed '" . $feed['feed_url'] . "'</b>: $rss_error");
     }
 
-    if ($rss)
-        $rss_error = $rss->error();
-    else
-        $rss_error = NULL;
-
-    if ( is_null($rss) || isset($rss_error) ) {
-        fof_log("feed update failed: " . $rss_error, "update");
-        return array(0, "Error: <b>" . $rss_error . "</b> <a href=\"http://feedvalidator.org/check?url=$url\">try to validate it?</a>");
-    }
-
-    if ( ! empty($feed['alt_image']))
-    {
-        $image = $feed['alt_image'];
-    }
-    else
-    {
-        $image = $feed['feed_image'];
-        $image_cache_date = $feed['feed_image_cache_date'];
+    /* if an alt image is set, don't try to update image from feed */
+    if ( ! empty($feed['alt_image'])) {
+        $feed_image = $feed['alt_image'];
+        $feed_image_cache_date = 0;
+    } else {
+        $feed_image = $feed['feed_image'];
+        $feed_image_cache_date = $feed['feed_image_cache_date'];
 
         // cached favicon older than a week?
-        if ( $feed [ 'feed_image_cache_date' ] < time() - ( 7*24*60*60 ) )
-        {
-            $image = fof_get_favicon ( $feed [ 'feed_link' ] );
-            $image_cache_date = time();
+        if ( $feed [ 'feed_image_cache_date' ] < time() - ( 7*24*60*60 ) ) {
+            $feed_image = fof_get_favicon($feed['feed_link']);
+            $feed_image_cache_date = time();
         }
     }
 
-    $title = $rss->get_title();
-    if (empty($title)) $title = "[no title]";
-    $link = $rss->get_link();
-    if (empty($link)) $link = "[no link]";
-    $description = $rss->get_description();
-    if (empty($description)) $description = "[no description]";
+    $feed_title = $rss->get_title();
+    $feed_link = $rss->get_link();
+    $feed_description = $rss->get_description();
 
-    fof_db_feed_update_metadata($id, $title, $link, $description, $image, $image_cache_date );
+    /* set the feed's current information */
+    fof_db_feed_update_metadata($id, $feed_title, $feed_link, $feed_description, $feed_image, $feed_image_cache_date);
 
     $feed_id = $feed['feed_id'];
     $n = 0;
 
-    if($rss->get_items())
-    {
-        foreach($rss->get_items() as $item)
-        {
+    if ($rss->get_items()) {
+        foreach ($rss->get_items() as $item) {
             $title = $item->get_title();
 
-            foreach($blacklist as $bl)
-              if(stristr($title, $bl) !== false)
-                continue 2;
+            foreach ($blacklist as $bl)
+                if (stristr($title, $bl) !== false)
+                    continue 2;
 
             $link = $item->get_permalink();
             $content = $item->get_content();
             $date = $item->get_date('U');
 
+            if (empty($date))
+                $date = time();
+
             // don't fetch entries older than the purge limit
-            if ( !$date )
-              $date = time();
-            elseif ( !empty ( $admin_prefs [ 'purge' ] ) && $date <= ( time() - $admin_prefs [ 'purge' ] * 24 * 3600 ) )
-              continue;
+            if ( ! empty($admin_prefs['purge'])
+            &&   $date <= ( time() - $admin_prefs['purge'] * 24 * 3600 ) )
+                continue;
 
+            /* check if item already known */
             $item_id = $item->get_id();
-
-            if(!$item_id)
-            {
-                $item_id = $link;
-            }
-
             $id = fof_db_find_item($feed_id, $item_id);
 
-            if($id == NULL)
-            {
+            if ($id == NULL) {
                 $n++;
 
-                global $fof_item_prefilters;
-                foreach($fof_item_prefilters as $filter)
-                {
+                foreach ($fof_item_prefilters as $filter)
                     list($link, $title, $content) = $filter($item, $link, $title, $content);
-                }
 
                 $id = fof_db_add_item($feed_id, $item_id, $link, $title, $content, time(), $date, $date);
                 fof_apply_tags($feed_id, $id);
 
                 $republished = false;
 
-                if(!$republished)
-                {
+                if ( ! $republished) {
                     fof_mark_item_unread($feed_id, $id);
                 }
 
@@ -957,18 +891,17 @@ function fof_update_feed($id)
         // Determine the average time between items, to determine the next update time
         $result = fof_db_items_updated_list($feed_id);
 
-        if ($row = fof_db_get_row($result)) {
+        if ($lastTime = fof_db_get_row($result, 'item_updated')) {
             $count = 1.0;
             $totalDelta = 0.0;
             $totalDeltaSquare = 0.0;
-            $lastTime = $row['item_updated'];
-            while ($row = fof_db_get_row($result)) {
-                $delta = (float)($row['item_updated'] - $lastTime);
+            while ( ($updated = fof_db_get_row($result, 'item_updated')) !== false ) {
+                $delta = (float)($updated - $lastTime);
                 if ($delta > 0.0) {
                     $totalDelta += $delta;
                     $totalDeltaSquare += $delta*$delta;
                     $count++;
-                    $lastTime = $row['item_updated'];
+                    $lastTime = $updated;
                 }
             }
             $delta = (float)(time() - $lastTime);
@@ -1059,6 +992,12 @@ function fof_update_feed($id)
     return array($n, "");
 }
 
+/*  for all users subscribed to feed_id (or the specified user_id)
+    and for all items in feed_id (or the specified item_id)
+    and for each plugin active for each user
+    run the plugin filter on the item data
+    and set the resulting tags for the user and item
+*/
 function fof_apply_plugin_tags($feed_id, $item_id = NULL, $user_id = NULL)
 {
     $users = array();
@@ -1069,7 +1008,7 @@ function fof_apply_plugin_tags($feed_id, $item_id = NULL, $user_id = NULL)
     }
     else
     {
-        $result = fof_get_subscribed_users($feed_id);
+        $result = fof_db_get_subscribed_users($feed_id);
         while (($row = fof_db_get_row($result)) !== false) {
             $users[] = $row['user_id'];
         }
@@ -1090,7 +1029,7 @@ function fof_apply_plugin_tags($feed_id, $item_id = NULL, $user_id = NULL)
         }
     }
 
-    $userdata = fof_get_users();
+    $userdata = fof_db_get_users();
 
     foreach($users as $user)
     {
@@ -1111,11 +1050,6 @@ function fof_apply_plugin_tags($feed_id, $item_id = NULL, $user_id = NULL)
             }
         }
     }
-}
-
-function fof_item_has_tags($item_id)
-{
-    return fof_db_item_has_tags($item_id);
 }
 
 function fof_init_plugins()

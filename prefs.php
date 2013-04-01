@@ -12,9 +12,18 @@
  *
  */
 
-include_once("fof-main.php");
+include_once('fof-main.php');
+
+/* quell warnings */
+function fof_prefs_get_key_($array, $key, $default=NULL) {
+    if ( ! empty($array[$key]))
+        return $array[$key];
+    return $default;
+}
 
 $prefs =& FoF_Prefs::instance();
+
+$message = "";
 
 if(fof_is_admin() && isset($_POST['adminprefs']))
 {
@@ -42,7 +51,7 @@ if(isset($_POST['changed']))
     $title = $_POST['title'];
     $alt_image = $_POST['alt_image'];
 
-    fof_update_feed_prefs($feed_id, $title, $alt_image);
+    fof_db_feed_update_prefs($feed_id, $title, $alt_image);
     $message .= " Updated feed settings of '$title'.";
 }
 
@@ -106,7 +115,7 @@ if(isset($_POST['plugins']))
     foreach(fof_get_plugin_prefs() as $plugin_pref)
     {
         $key = $plugin_pref[1];
-        $prefs->set($key, $_POST[$key]);
+        $prefs->set($key, fof_prefs_get_key_($_POST, $key));
     }
 
     $plugins = array();
@@ -123,7 +132,7 @@ if(isset($_POST['plugins']))
 
     foreach($plugins as $plugin)
     {
-        $prefs->set("plugin_" . $plugin, $_POST[$plugin] != "on");
+        $prefs->set("plugin_" . $plugin, fof_prefs_get_key_($_POST, $plugin) != "on");
     }
 
     $prefs->save(fof_current_user());
@@ -167,14 +176,10 @@ if(fof_is_admin() && isset($_POST['deleteuser']) && $_POST['username'])
 
 include("header.php");
 
+if ( ! empty($message)) {
+    echo "<br><span style=\"color:red\">$message</span><br>\n";
+}
 ?>
-
-<?php if(isset($message)) { ?>
-
-<br><font color="red"><?php echo $message ?></font><br>
-
-<?php } ?>
-
 <br><h1 id="basic">Feed on Feeds - Preferences</h1>
 <form method="post" action="prefs.php#basic" style="border: 1px solid black; margin: 10px; padding: 10px;">
 
@@ -276,37 +281,28 @@ foreach($feeds as $row)
 {
     $id = $row['feed_id'];
     $url = $row['feed_url'];
-    $title = $row['feed_title'];
-    $alt_image = $row['alt_image'];
-    $link = $row['feed_link'];
-    $description = $row['feed_description'];
-    $age = $row['feed_age'];
-    $unread = $row['feed_unread'];
-    $starred = $row['feed_starred'];
-    $items = $row['feed_items'];
-    $agestr = $row['agestr'];
-    $agestrabbr = $row['agestrabbr'];
-    $lateststr = $row['lateststr'];
-    $lateststrabbr = $row['lateststrabbr'];
-    $tags = $row['tags'];
+    $title = fof_prefs_get_key_($row, 'feed_title');
+    $alt_image = fof_prefs_get_key_($row, 'alt_image');
+    $link = fof_prefs_get_key_($row, 'feed_link');
+    $description = fof_prefs_get_key_($row, 'feed_description');
+    $age = fof_prefs_get_key_($row, 'feed_age');
+    $unread = fof_prefs_get_key_($row, 'feed_unread', 0);
+    $starred = fof_prefs_get_key_($row, 'feed_starred', 0);
+    $items = fof_prefs_get_key_($row, 'feed_items', 0);
+    $agestr = fof_prefs_get_key_($row, 'agestr');
+    $agestrabbr = fof_prefs_get_key_($row, 'agestrabbr');
+    $lateststr = fof_prefs_get_key_($row, 'lateststr');
+    $lateststrabbr = fof_prefs_get_key_($row, 'lateststrabbr');
+    $tags = fof_prefs_get_key_($row, 'tags');
 
-    if(++$t % 2)
-    {
-        print "<tr class=\"odd-row\">";
-    }
-    else
-    {
-        print "<tr>";
-    }
+    print '<tr' . (++$t % 2 ? ' class="odd-row"' : '') . '>';
 
-    if($row['feed_image'] && $prefs->get('favicons'))
-    {
-        print "<td><a href=\"$url\" title=\"feed\"><img src='" . $row['feed_image'] . "' width='16' height='16' border='0' /></a></td>";
+    if ($prefs->get('favicons')) {
+        $feed_image = fof_prefs_get_key_($row, 'feed_image', 'image/feed-icon.png');
+    } else {
+        $feed_image = 'image/feed-icon.png';
     }
-    else
-    {
-        print "<td><a href=\"$url\" title=\"feed\"><img src='image/feed-icon.png' width='16' height='16' border='0' /></a></td>";
-    }
+    print "<td><a href=\"$url\" title=\"feed\"><img src='$feed_image' width='16' height='16' border='0' /></a></td>";
 
     print "<td>
     <form method=\"post\" action=\"prefs.php#feedsntags\">
@@ -371,26 +367,26 @@ Username: <input type="text" name=username> Password: <input type="text" name=pa
 <?php
     $result = fof_db_get_nonadmin_usernames();
 
-    while($row = fof_db_get_row($result))
-    {
+    $user_options = array();
+    while ( ($row = fof_db_get_row($result)) !== false ) {
         $username = $row['user_name'];
-        $delete_options .= "<option value=$username>$username</option>";
+        $user_options[] = "<option value=$username>$username</option>";
     }
 
-    if(isset($delete_options))
+    if ( ! empty($user_options))
     {
 ?>
 
 <br><h1 id="deluser">Delete User</h1>
 <form method="post" action="prefs.php#deluser" style="border: 1px solid black; margin: 10px; padding: 10px;" onsubmit="return confirm('Delete User - Are you sure?')">
-<select name=username><?php echo $delete_options ?></select>
+<select name=username><?php echo implode('', $user_options); ?></select>
 <input type=submit name=deleteuser value="Delete user"><br>
 </form>
 
 <br><h1>Change User's Password</h1>
 <form method="post" action="prefs.php" style="border: 1px solid black; margin: 10px; padding: 10px;" onsubmit="return confirm('Change Password - Are you sure?')">
 <table border=0 cellspacing=0 cellpadding=2>
-<tr><td>Select user:</td><td><select name=username><?php echo $delete_options ?></select></td></tr>
+<tr><td>Select user:</td><td><select name=username><?php echo implode('', $user_options); ?></select></td></tr>
 <tr><td>New password:</td><td><input type=password name=password></td></tr>
 <tr><td>Repeat new password:</td><td><input type=password name=password2></td></tr></table>
 <input type=submit name=changepassword value="Change"><br>
