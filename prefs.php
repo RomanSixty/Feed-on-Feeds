@@ -39,9 +39,14 @@ if(fof_is_admin() && isset($_POST['adminprefs']))
 
     $message .= ' Saved admin prefs.';
 
-    if($prefs->get('logging') && !@fopen("fof.log", 'a'))
-    {
-        $message .= ' Warning: could not write to log file!';
+    if ($prefs->get('logging')) {
+        $log_path = (defined('FOF_DATA_PATH') ? FOF_DATA_PATH : '.');
+        $log_file = (empty($fof_installer) ? 'fof.log' : 'fof-install.log');
+        $log = @fopen(implode(DIRECTORY_SEPARATOR, array($log_path, $log_file)), 'a');
+
+        if ($log) {
+            $message .= ' Warning: could not write to log file!';
+        }
     }
 }
 
@@ -52,19 +57,20 @@ if(isset($_POST['changed']))
     $alt_image = $_POST['alt_image'];
 
     fof_db_feed_update_prefs($feed_id, $title, $alt_image);
-    $message .= " Updated feed settings of '$title'.";
+    $feed = fof_db_get_feed_by_id($feed_id);
+    $message .= " Updated feed settings of '" . $feed['feed_title'] . "'.";
 }
 
 if(isset($_POST['tagfeed']))
 {
     $tags = $_POST['tag'];
     $feed_id = $_POST['feed_id'];
-    $title = $_POST['title'];
 
     foreach(explode(" ", $tags) as $tag)
     {
         fof_tag_feed(fof_current_user(), $feed_id, $tag);
-        $message .= " Tagged '$title' as $tag.";
+        $feed = fof_db_get_feed_by_id($feed_id);
+        $message .= " Tagged '" . $feed['feed_title'] . "' as $tag.";
     }
 }
 
@@ -72,12 +78,12 @@ if(isset($_GET['untagfeed']))
 {
     $feed_id = $_GET['untagfeed'];
     $tags = $_GET['tag'];
-    $title = $_GET['title'];
 
     foreach(explode(" ", $tags) as $tag)
     {
         fof_untag_feed(fof_current_user(), $feed_id, $tag);
-        $message .= " Dropped $tag from '$title'.";
+        $feed = fof_db_get_feed_by_id($feed_id);
+        $message .= " Dropped $tag from '" . $feed['feed_title'] . "'.";
     }
 }
 
@@ -86,6 +92,7 @@ if(isset($_POST['prefs']))
     $prefs->set('simple_sidebar', isset($_POST['simple_sidebar']));
     $prefs->set('favicons', isset($_POST['favicons']));
     $prefs->set('keyboard', isset($_POST['keyboard']));
+    $prefs->set('item_target', isset($_POST['item_target']));
     $prefs->set('tzoffset', intval($_POST['tzoffset']));
     $prefs->set('howmany', intval($_POST['howmany']));
     $prefs->set('order', $_POST['order']);
@@ -180,44 +187,55 @@ if ( ! empty($message)) {
     echo "<br><span style=\"color:red\">$message</span><br>\n";
 }
 ?>
-<br><h1 id="basic">Feed on Feeds - Preferences</h1>
+<br>
+<h1 id="basic">Feed on Feeds - Preferences</h1>
 <form method="post" action="prefs.php#basic" style="border: 1px solid black; margin: 10px; padding: 10px;">
-
-<fieldset>
-<legend><b>Basic Settings</b></legend>
-Default display order: <select name="order"><option value=desc>new to old</option><option value=asc <?php if($prefs->get('order') == "asc") echo "selected";?>>old to new</option></select><br><br>
-Number of items in paged displays: <input type="string" size="3" name="howmany" value="<?php echo $prefs->get('howmany') ?>"><br><br>
-Display custom feed favicons? <input type="checkbox" name="favicons" <?php if($prefs->get('favicons')) echo "checked=true";?> ><br><br>
-Display simple sidebar? <input type="checkbox" name="simple_sidebar" <?php if($prefs->get('simple_sidebar')) echo "checked=true";?> ><br><br>
-Use keyboard shortcuts? <input type="checkbox" name="keyboard" <?php if($prefs->get('keyboard')) echo "checked=true";?> ><br><br>
-Time offset in hours: <input size="3" type="text" name=tzoffset value="<?php echo $prefs->get('tzoffset')?>"> (UTC time: <?php echo gmdate("Y-n-d g:ia") ?>, local time: <?php echo gmdate("Y-n-d g:ia", time() + $prefs->get("tzoffset")*60*60) ?>)
-</fieldset>
-<br>
-
-<fieldset>
-<legend><b>Sharing</b></legend>
-Share
-<select name="sharing">
-<option value="no">no</option>
-<option value="all" <?php if($prefs->get('sharing') == "all") echo "selected";?>>all</option>
-<option value="tagged" <?php if($prefs->get('sharing') == "tagged") echo "selected";?>>tagged as "shared"</option>
-<option value="all_tagged" <?php if($prefs->get('sharing') == "all_tagged") echo "selected";?>>all tagged items</option>
-</select>
-items.
-<?php if($prefs->get('sharing') != "no") echo " <small><i>(your default shared page is <a href='./shared.php?user=$fof_user_id'>here</a>)</i></small>";?><br><br>
-Name to be shown on shared page: <input type="text" name="sharedname" value="<?php echo $prefs->get('sharedname')?>"><br><br>
-URL to be linked on shared page: <input type="text" name="sharedurl" value="<?php echo $prefs->get('sharedurl')?>">
-</fieldset>
-<br>
-
-<fieldset>
-<legend><b>Password</b></legend>
-<table border=0 cellspacing=0 cellpadding=2><tr><td>New password:</td><td><input type=password name=password> (leave blank to not change)</td></tr>
-<tr><td>Repeat new password:</td><td><input type=password name=password2></td></tr></table>
-</fieldset>
-<br>
-
-<input type=submit name=prefs value="Save Preferences">
+  <fieldset>
+    <legend><b>Basic Settings</b></legend>
+    Default display order: <select name="order"><option value=desc>new to old</option><option value=asc <?php if($prefs->get('order') == "asc") echo "selected";?>>old to new</option></select>
+    <br>
+    Number of items in paged displays: <input type="string" size="3" name="howmany" value="<?php echo $prefs->get('howmany') ?>">
+    <br>
+    Display custom feed favicons? <input type="checkbox" name="favicons"<?php if($prefs->get('favicons')) echo " checked=true";?>>
+    <br>
+    Display simple sidebar? <input type="checkbox" name="simple_sidebar"<?php if($prefs->get('simple_sidebar')) echo " checked=true";?>>
+    <br>
+    Use keyboard shortcuts? <input type="checkbox" name="keyboard"<?php if($prefs->get('keyboard')) echo " checked=true";?>>
+    <br>
+    Open articles in new window? <input type="checkbox" name="item_target"<?php if($prefs->get('item_target')) echo " checked=true";?>>
+    <br>
+    Time offset in hours: <input size="3" type="text" name=tzoffset value="<?php echo $prefs->get('tzoffset')?>"> (UTC time: <?php echo gmdate("Y-n-d g:ia") ?>, local time: <?php echo gmdate("Y-n-d g:ia", time() + $prefs->get("tzoffset")*60*60) ?>)
+  </fieldset>
+  <br>
+  <fieldset>
+    <legend><b>Sharing</b></legend>
+    Share <select name="sharing">
+      <option value="no">no</option>
+      <option value="all"<?php if ($prefs->get('sharing') == 'all') echo ' selected';?>>all</option>
+      <option value="tagged"<?php if ($prefs->get('sharing') == 'tagged') echo ' selected';?>>tagged as "shared"</option>
+      <option value="all_tagged"<?php if ($prefs->get('sharing') == 'all_tagged') echo ' selected';?>>all tagged items</option>
+    </select> items.<?php if($prefs->get('sharing') != "no") echo " <small><i>(your default shared page is <a href='./shared.php?user=$fof_user_id'>here</a>)</i></small>";?>
+    <br>
+    Name to be shown on shared page: <input type="text" name="sharedname" value="<?php echo $prefs->get('sharedname')?>">
+    <br>
+    URL to be linked on shared page: <input type="text" name="sharedurl" value="<?php echo $prefs->get('sharedurl')?>">
+  </fieldset>
+  <br>
+  <fieldset>
+    <legend><b>Password</b></legend>
+    <table border=0 cellspacing=0 cellpadding=2>
+      <tr>
+        <td>New password:</td>
+        <td><input type=password name=password> (leave blank to not change)</td>
+      </tr>
+      <tr>
+        <td>Repeat new password:</td>
+        <td><input type=password name=password2></td>
+      </tr>
+    </table>
+  </fieldset>
+  <br>
+  <input type=submit name=prefs value="Save Preferences">
 </form>
 
 <br><h1 id="plugins">Feed on Feeds - Plugin Preferences</h1>
@@ -236,11 +254,14 @@ URL to be linked on shared page: <input type="text" name="sharedurl" value="<?ph
     }
 
     closedir();
-?>
 
-<?php foreach($plugins as $plugin) { ?>
-<input type=checkbox name=<?php echo $plugin ?> <?php if(!$prefs->get("plugin_" . $plugin)) echo "checked"; ?>> Enable plugin <tt><?php echo $plugin?></tt>?<br>
-<?php } ?>
+    foreach ($plugins as $plugin) {
+        echo '<input type=checkbox name=\'' . htmlentities($plugin) . '\'';
+        if ( ! $prefs->get('plugin_' . $plugin))
+            echo ' checked';
+        echo '> Enable plugin <tt>' . $plugin . "</tt>?<br>\n";
+    }
+?>
 
 <br>
 <?php foreach(fof_get_plugin_prefs() as $plugin_pref) { $name = $plugin_pref[0]; $key = $plugin_pref[1]; $type = $plugin_pref[2]; ?>
@@ -280,58 +301,49 @@ foreach ( $plugins as $plugin )
 foreach($feeds as $row)
 {
     $id = $row['feed_id'];
-    $url = $row['feed_url'];
-    $title = fof_prefs_get_key_($row, 'feed_title');
-    $alt_image = fof_prefs_get_key_($row, 'alt_image');
-    $link = fof_prefs_get_key_($row, 'feed_link');
-    $description = fof_prefs_get_key_($row, 'feed_description');
-    $age = fof_prefs_get_key_($row, 'feed_age');
-    $unread = fof_prefs_get_key_($row, 'feed_unread', 0);
-    $starred = fof_prefs_get_key_($row, 'feed_starred', 0);
-    $items = fof_prefs_get_key_($row, 'feed_items', 0);
-    $agestr = fof_prefs_get_key_($row, 'agestr');
-    $agestrabbr = fof_prefs_get_key_($row, 'agestrabbr');
-    $lateststr = fof_prefs_get_key_($row, 'lateststr');
-    $lateststrabbr = fof_prefs_get_key_($row, 'lateststrabbr');
-    $tags = fof_prefs_get_key_($row, 'tags');
+    $anchor = 'feed_row_' . $id;
 
-    print '<tr' . (++$t % 2 ? ' class="odd-row"' : '') . '>';
+    $url = $row['feed_url'];
+    $title = htmlentities(fof_prefs_get_key_($row, 'feed_title'), ENT_QUOTES);
+    $alt_image = htmlentities(fof_prefs_get_key_($row, 'alt_image'), ENT_QUOTES);
+    $description = fof_prefs_get_key_($row, 'feed_description');
+    $tags = fof_prefs_get_key_($row, 'tags', array());
+
+    print '<tr' . (++$t % 2 ? ' class="odd-row"' : '') . ">\n";
 
     if ($prefs->get('favicons')) {
         $feed_image = fof_prefs_get_key_($row, 'feed_image', 'image/feed-icon.png');
     } else {
         $feed_image = 'image/feed-icon.png';
     }
-    print "<td><a href=\"$url\" title=\"feed\"><img src='$feed_image' width='16' height='16' border='0' /></a></td>";
+    print "  <td><a href=\"$url\" title=\"feed\" name=\"$anchor\"><img src='$feed_image' width='16' height='16' border='0' /></a></td>";
 
-    print "<td>
-    <form method=\"post\" action=\"prefs.php#feedsntags\">
-    <input type=\"hidden\" name=\"changed\" value=\"$id\"/>
-    <input type=\"text\" name=\"title\" value=\"$title\" size=\"50\"/>
-    <input type=\"text\" name=\"alt_image\" value=\"$alt_image\" size=\"50\"/>
-    <input type=\"submit\" value=\"submit\"/>
+    print "  <td>
+    <form method=\"post\" action=\"prefs.php#$anchor\">
+      <input type=\"hidden\" name=\"changed\" value=\"$id\"/>
+      <input type=\"text\" name=\"title\" value=\"$title\" size=\"50\"/>
+      <input type=\"text\" name=\"alt_image\" value=\"$alt_image\" size=\"50\"/>
+      <input type=\"submit\" value=\"submit\"/>
     </form>
-</td>";
+  </td>";
 
-
-    print "<td align=right>";
-
-    if($tags)
-    {
-        foreach($tags as $tag)
-        {
-            $utag = urlencode($tag);
-            $utitle = urlencode($title);
-            print "$tag <a href='prefs.php?untagfeed=$id&tag=$utag&title=$utitle#feedsntags'>[x]</a> ";
-        }
+    print "  <td align=right>";
+    foreach($tags as $tag) {
+        $utag = urlencode($tag);
+        print "$tag <a href='prefs.php?untagfeed=$id&tag=$utag#$anchor'>[x]</a> ";
     }
-    else
-    {
-    }
+    print "</td>\n";
 
-    print "</td>";
     $title = htmlspecialchars($title);
-    print "<td><form method=\"post\" action=\"prefs.php#feedsntags\"><input type=\"hidden\" name=\"title\" value=\"$title\"><input type=\"hidden\" name=\"feed_id\" value=\"$id\"><input type=\"text\" name=\"tag\"> <input type=\"submit\" name=\"tagfeed\" value=\"Tag Feed\"> <small><i>(separate tags with spaces)</i></small></form></td></tr>";
+    print "  <td>
+    <form method=\"post\" action=\"prefs.php#$anchor\">
+      <input type=\"hidden\" name=\"feed_id\" value=\"$id\">
+      <input type=\"text\" name=\"tag\">
+      <input type=\"submit\" name=\"tagfeed\" value=\"Tag Feed\"> <small><i>(separate tags with spaces)</i></small>
+    </form>
+  </td>\n";
+
+    print "</tr>\n";
 }
 ?>
 </table>

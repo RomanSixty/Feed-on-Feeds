@@ -604,12 +604,22 @@ function fof_get_nav_links($feed=NULL, $what="new", $when=NULL, $start=NULL, $li
 
 function fof_render_feed_link($row)
 {
+    $p =& FoF_Prefs::instance();
+
     $link = $row['feed_link'];
-    $description = $row['feed_description'];
-    $title = $row['feed_title'];
+    $description = htmlentities($row['feed_description']);
+    $title = htmlentities($row['feed_title']);
     $url = $row['feed_url'];
 
-    $s = "<b><a href=\"$link\" title=\"$description\">$title</a></b> ";
+    if ($title == "[no title]")
+        $title = $link;
+    if ($title == "[no link]")
+        $title = $url;
+
+    $s = "<b><a href=\"$link\" title=\"$description\"";
+    if ($p->get('item_target'))
+        $s .= " target=\"_blank\"";
+    $s .= ">$title</a></b> ";
     $s .= "<a href=\"$url\">(rss)</a>";
 
     return $s;
@@ -697,7 +707,7 @@ function fof_subscribe($user_id, $url, $unread='today') {
     if ($unread != 'no')
         fof_db_mark_feed_unread($user_id, $feed['feed_id'], $unread);
 
-    return "<span style=\"color:green\"><b>Subscribed.</b></span><br>\n";
+    return "<span style=\"color:green\"><b>Subscribed to '" . fof_render_feed_link($feed) . "'.</b></span><br>\n";
 }
 
 

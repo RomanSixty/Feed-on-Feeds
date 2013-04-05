@@ -63,31 +63,30 @@ $page_title_js = 'Feed on Feeds';
 if ( ! empty($unread)) {
     $page_title_js .= " ($unread)";
 }
-echo "<script>document.title = '$page_title_js';</script>";
-echo "<script>starred = $starred;</script>";
+echo "<script>document.title = '$page_title_js';</script>\n";
+echo "<script>starred = $starred;</script>\n";
 ?>
 
-<li <?php if($what == "unread") echo "style='background: #ddd'" ?> ><a href=".?what=unread&how=paged"><span style="color:red"><b>Unread <?php if ($unread) echo "($unread)" ?></b></span></a> [<a href=".?what=unread">unpaged</a>]</li>
-<li <?php if($what == "star") echo "style='background: #ddd'" ?> ><a href=".?what=star&how=paged"><img src="image/star-on.gif" border="0" height="10" width="10"> Starred <span id="starredcount"><?php if ($starred) echo "($starred)" ?></span></a> [<a href=".?what=star">unpaged</a>]</li>
-<li <?php if($what == "all" && isset($when)) echo "style='background: #ddd'" ?> ><a href=".?what=all&when=today">&lt; Today</a></li>
-<li <?php if($what == "all" && !isset($when)) echo "style='background: #ddd'" ?> ><a href=".?what=all&how=paged">All Items <?php if ($total) echo "($total)" ?></a></li>
-<li <?php if(isset($search)) echo "style='background: #ddd'" ?> ><a href="javascript:Element.toggle('search'); Field.focus('searchfield');void(0);">Search</a>
-<form action="." id="search" <?php if(!isset($search)) echo 'style="display: none"' ?>>
-<input type="hidden" name="how" value="paged">
-<input id="searchfield" name="search" value="<?php echo $search?>">
+<li<?php if($what == "unread") echo " style='background: #ddd'"; ?>><a href=".?what=unread&how=paged"><span style="color:red"><b>Unread <?php if ($unread) echo "($unread)" ?></b></span></a> [<a href=".?what=unread">unpaged</a>]</li>
+<li<?php if($what == "star") echo " style='background: #ddd'"; ?>><a href=".?what=star&how=paged"><img src="image/star-on.gif" border="0" height="10" width="10"> Starred <span id="starredcount"><?php if ($starred) echo "($starred)" ?></span></a> [<a href=".?what=star">unpaged</a>]</li>
+<li<?php if($what == "all" && isset($when)) echo " style='background: #ddd'"; ?>><a href=".?what=all&when=today">&lt; Today</a></li>
+<li<?php if($what == "all" && !isset($when)) echo " style='background: #ddd'"; ?>><a href=".?what=all&how=paged">All Items <?php if ($total) echo "($total)" ?></a></li>
+<li<?php if(isset($search)) echo " style='background: #ddd'"; ?>><a href="javascript:Element.toggle('search'); Field.focus('searchfield');void(0);">Search</a>
+  <form action="." id="search" <?php if(!isset($search)) echo 'style="display: none"'; ?>>
+    <input type="hidden" name="how" value="paged">
+    <input id="searchfield" name="search" value="<?php echo $search?>">
 <?php
 if($what == "unread" || empty ($what))
-    echo "<input type='hidden' name='what' value='all'>";
+    echo "    <input type='hidden' name='what' value='all'>";
 else
-    echo "<input type='hidden' name='what' value='$what'>";
+    echo "    <input type='hidden' name='what' value='$what'>";
 ?>
-<?php if(!empty($when)) echo "<input type='hidden' name='what' value='$when'>" ?>
-</form>
+<?php if(!empty($when)) echo "    <input type='hidden' name='what' value='$when'>" ?>
+  </form>
 </li>
 </ul>
 
 <?php
-
 $tags = fof_get_tags(fof_current_user());
 
 $unread_id = fof_db_get_tag_by_name('unread');
@@ -105,17 +104,12 @@ foreach ($tags as $tag) {
 
 if ($n) {
 ?>
-
 <div id="tags">
-
 <table cellspacing="0" cellpadding="1" border="0" id="taglist">
-
 <tr class="heading">
 <td><span class="unread">#</span></td><td>tag name</td><td>untag</td>
 <?php if ($sharing == 'all_tagged') { ?><td>shared page</td><?php } ?>
-
 </tr>
-
 <?php
     $t = 0;
     foreach ($tags as $tag) {
@@ -144,26 +138,18 @@ if ($n) {
         print "</tr>\n";
     }
 ?>
-
 </table>
-
 </div>
-
+<!--tags end-->
 <br>
-
 <?php
 }
 ?>
 
-
 <div id="feeds">
-
-<div id="feedlist">
-
-<table cellspacing="0" cellpadding="1" border="0">
-
-<tr class="heading">
-
+  <div id="feedlist">
+    <table cellspacing="0" cellpadding="1" border="0">
+      <tr class="heading">
 <?php
 
 $title = array();
@@ -195,7 +181,7 @@ foreach ($columns as $col) {
         $url = "return change_feed_order('$col', 'asc')";
     }
 
-    echo "<td";
+    echo "        <td";
 
     if($col == "feed_unread")
         echo " style=\"text-align: right\"";
@@ -212,13 +198,11 @@ foreach ($columns as $col) {
         echo ($direction == "asc") ? "&darr;" : "&uarr;";
     }
 
-    echo "</a></nobr></td>";
+    echo "</a></nobr></td>\n";
 }
-
 ?>
-
-<td></td>
-</tr>
+        <td></td>
+      </tr>
 
 <?php
 
@@ -248,16 +232,16 @@ foreach ($feeds as $row) {
     $u = ".?feed=$id&amp;how=paged";
     $u2 = ".?feed=$id&amp;what=all&amp;how=paged";
 
-    print '<tr' . (++$t % 2 ? ' class="odd-row"' : '') . '>';
+    print '<tr' . (++$t % 2 ? ' class="odd-row"' : '') . ">\n";
 
     if (! $image || !$fof_prefs_obj->get('favicons'))
         $image = 'image/feed-icon.png';
 
     if ($simple_sidebar) {
-        print "<td align='center'>";
+        print "  <td align='center'>";
         print "<a href=\"$url\" title=\"feed\"><img src='" . $image . "' width='16' height='16' border='0' /></a>";
-        print "</td>";
-        print '<td>';
+        print "</td>\n";
+        print '  <td>';
         if($unread)
         {
             print "<a href=\"$u\">$title</a> ($unread)";
@@ -266,20 +250,20 @@ foreach ($feeds as $row) {
         {
             print "<a href=\"$u2\">$title</a>";
         }
-        print '</td>';
+        print "</td>\n";
 
         $stitle = htmlspecialchars(addslashes($title));
-        print '<td>';
+        print '  <td>';
         print " <a href=\"delete.php?feed=$id\" title=\"delete\" onclick=\"return confirm('Unsubscribe [$stitle] --are you SURE?')\">[x]</a>";
-        print '</td>';
+        print "</td>\n";
     }
     else
     {
-        print "<td style=\"text-align: right\"><span title=\"$agestr\" id=\"${id}-agestr\">$agestrabbr</span></td>";
+        print "  <td style=\"text-align: right\"><span title=\"$agestr\" id=\"${id}-agestr\">$agestrabbr</span></td>\n";
 
-        print "<td style=\"text-align: right\"><span title=\"$lateststr\" id=\"${id}-lateststr\">$lateststrabbr</span></td>";
+        print "  <td style=\"text-align: right\"><span title=\"$lateststr\" id=\"${id}-lateststr\">$lateststrabbr</span></td>\n";
 
-        print "<td style=\"text-align: right\" class=\"nowrap\" id=\"${id}-items\">";
+        print "  <td style=\"text-align: right\" class=\"nowrap\" id=\"${id}-items\">";
 
         if($unread)
         {
@@ -288,16 +272,19 @@ foreach ($feeds as $row) {
 
         print "<a href=\"$u2\" title=\"all items, $starred starred, $tagged tagged\">$items</a>";
 
-        print "</td>";
+        print "</td>\n";
 
-        print "<td align='center'>";
+        print "  <td align='center'>";
         print "<a href=\"$url\" title=\"feed\"><img src='" . $image . "' width='16' height='16' border='0' /></a>";
-        print "</td>";
+        print "</td>\n";
 
-        print "<td>";
-        print "<a href=\"$link\" title=\"home page\"><b>$title</b></a></td>";
+        print "  <td>";
+        print "<a href=\"$link\" title=\"home page\"";
+        if ($fof_prefs_obj->get('item_target'))
+            print " target=\"_blank\"";
+        print "><b>$title</b></a></td>\n";
 
-        print "<td><nobr>";
+        print "  <td><nobr>";
 
         print "<a href=\"update.php?feed=$id\" title=\"update\">u</a>";
         $stitle = htmlspecialchars(addslashes($title));
@@ -305,22 +292,19 @@ foreach ($feeds as $row) {
         print " <a href=\"delete.php?feed=$id\" title=\"delete\" onclick=\"return confirm('Unsubscribe [$stitle] --are you SURE?')\">d</a>";
     }
 
-    print "</nobr></td>";
+    print "</nobr></td>\n";
 
     print "</tr>\n";
 }
 
 ?>
-
 </table>
-
 </div>
-
 </div>
-
 
 <?php
 $order = fof_sidebar_get_key_($_GET, 'order', 'title');
 $direction = fof_sidebar_get_key_($_GET, 'direction', 'asc');
 ?>
 
+<!--sidebar end-->

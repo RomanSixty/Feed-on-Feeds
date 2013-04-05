@@ -113,7 +113,7 @@ function fof_render_item($item)
 		<script>
 			document.getElementById('fav<?php echo $item_id ?>').star = <?php if($star) echo 'true'; else echo 'false'; ?>;
 		</script>
-		<a href="<?php echo $item_link ?>">
+		<a href="<?php echo $item_link ?>"<?php if (fof_render_get_key_($prefs, 'open_target')) echo ' target="_blank"';?>>
 			<?php echo $item_title ?>
 		</a>
 	</h1>
@@ -165,8 +165,7 @@ function fof_render_item($item)
 		</a>
 	</h2>
 
-	<span class="meta">on <?php echo $item_published ?></span>
-
+	<span class="meta" id="published">on <?php echo $item_published ?></span>
 </div>
 
 

@@ -24,10 +24,14 @@ $feeds = array();
 if ( ! empty($_GET['feed'])) {
     $feed = fof_db_get_feed_by_id($_GET['feed']);
     if (empty($feed)) {
-        print "<span style=\"color:red\">Error: unknown feed '" . $_GET['feed'] . "'</span>\n";
+        $feed_status = "<span style=\"color:red\">Error: unknown feed '" . $_GET['feed'] . "'</span>";
     } else {
         $feeds[] = $feed;
+        $feed_status = " is waiting to update...";
     }
+    print '<div id="feed_id_' . $feed['feed_id'] . '">'
+        . fof_render_feed_link($feed) . ' ' . $feed_status
+        . "</div>\n";
 } else {
     if ($fof_user_id == 1) {
         $result = fof_db_get_feeds_needing_attempt();
@@ -36,19 +40,19 @@ if ( ! empty($_GET['feed'])) {
     }
 
     while ( ($feed = fof_db_get_row($result)) !== false ) {
-        print "<div id=\"f" . $feed['feed_id'] . "\">";
-        print "<span id=\"feed_title\">" . $feed['feed_title'] . "</span> ";
         if ( (time() - $feed['feed_cache_date']) < ($admin_prefs['manualtimeout'] * 60) ) {
             list($timestamp, ) = fof_nice_time_stamp($feed['feed_cache_date']);
-            $feed_status = "was just updated $timestamp!";
+            $feed_status = " was just updated $timestamp!";
         } else if (time() < $feed['feed_cache_next_attempt']) {
             list($timestamp, ) = fof_nice_time_stamp($feed['feed_cache_next_attempt']);
-            $feed_status = "isn't due for an update for " . fof_nice_time_stamp($timestamp);
+            $feed_status = " isn't due for an update for $timestamp.";
         } else {
             $feeds[] = $feed;
-            $feed_status = "waiting to update...";
+            $feed_status = " is waiting to update...";
         }
-        print "<span id=\"update_status\">$feed_status</span></div>\n";
+        print '<div id="feed_id_' . $feed['feed_id'] . '">'
+            . fof_render_feed_link($feed) . ' ' . $feed_status
+            . "</div>\n";
     }
 }
 

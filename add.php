@@ -78,17 +78,17 @@ OPML URL: <input type="hidden" name="MAX_FILE_SIZE" value="100000">
 OPML filename: <input type="file" name="opml_file" size="40" value="<?php echo htmlentities($file) ?>"><input type="Submit" value="Upload an OPML file">
 
 </form>
+<hr>
 
 <?php
 if (count($feeds)) {
     $idx = 0;
     $feedjson = array();
     foreach ($feeds as $feed) {
-        $feedjson[] = json_encode(array('url' => $feed));
-        echo "<div id=\"f_idx_" . $idx . "\">";
-        echo "<span id=\"feed_title\">[$idx] (<a href=\"$feed\">feed URL</a>)</span> ";
-        echo "<span id=\"feed_status\">waiting to add...</span>";
-        echo "</div>\n";
+        $feedjson[] = json_encode(array('url' => $feed, 'idx' => $idx));
+        print '<div id="feed_index_' . $idx . '">'
+            . $feed . ' is waiting to add...'
+            . "</div>\n";
         $idx++;
     }
 

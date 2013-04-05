@@ -904,13 +904,13 @@ function continueupdate()
     if(feed = feedi())
     {
         f = feed();
-        new Insertion.Bottom($('items'), 'Updating  ' + f['title'] + "... ");
-        $('items').childElements().last().scrollTo();
+        var update_feed_id = 'feed_id_' + f['id'];
+        $(update_feed_id).scrollTo();
+//        $('items').childElements().last().scrollTo();
 
-        new Ajax.Updater('items', 'update-single.php', {
+        new Ajax.Updater(update_feed_id, 'update-single.php', {
             method: 'get',
             parameters: 'feed=' + f['id'],
-            insertion: Insertion.Bottom,
             onComplete: continueupdate
         });
     }
@@ -926,15 +926,14 @@ function continueadd()
     if(feed = feedi())
     {
         f = feed();
-        new Insertion.Bottom($('items'), 'Adding  ' + f['url'] + "... ");
-        $('items').childElements().last().scrollTo();
+        var new_feed_id = 'feed_index_' + f['idx'];
+//        $(new_feed_id).scrollTo();
 
         parameters = 'url=' + encodeURIComponent(f['url']) + "&unread=" + document.addform.unread.value;
 
-        new Ajax.Updater('items', 'add-single.php', {
+        new Ajax.Updater(new_feed_id, 'add-single.php', {
             method: 'get',
             parameters: parameters,
-            insertion: Insertion.Bottom,
             onComplete: continueadd
         });
     }
@@ -950,7 +949,7 @@ function ajaxupdate()
     throb();
     feedi = iterate(feedslist);
     for (var i=0; i<Math.min(feedslist.length, 5); i++)
-	    setTimeout(continueupdate,50);
+        setTimeout(continueupdate,50);
 }
 
 function ajaxadd()

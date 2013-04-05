@@ -16,19 +16,16 @@ include_once('fof-main.php');
 
 $feed_id = $_GET['feed'];
 list ($count, $error) = fof_update_feed($feed_id);
-
-print "<span id=\"update_result_f$feed_id\">";
+$feed = fof_db_get_feed_by_id($feed_id);
 
 if ($count) {
-    print "<span style=\"color:green\">$count new items.</span>";
+    print "<span style=\"color:green\">" . fof_render_feed_link($feed) . " has $count new items.</span>";
 } else {
-    print "No new items.";
+    print "<span>" . fof_render_feed_link($feed) . " has no new items.</span>";
 }
 
 if ($error) {
     print " <span style=\"color:red\">$error</span>";
 }
-
-print "</span><br>\n";
 
 ?>
