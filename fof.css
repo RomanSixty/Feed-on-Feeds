@@ -112,6 +112,10 @@ p
     background: #dddddd;
 }
 
+.current-view {
+    background: #ddd;
+}
+
 .unread
 {
     font-weight: bold;
@@ -248,9 +252,11 @@ body
     float: right;
 }
 
-.starred,
-.unstarred
+.starred,.unstarred
 {
+    width: 16px;
+    height: 16px;
+    border: 0;
     cursor: pointer;
 }
 
@@ -399,3 +405,15 @@ display: block;
 padding: 2px 5px;
 }
 
+.feed-icon {
+width: 16px;
+height: 16px;
+border: 0;
+}
+
+.star-icon-small {
+width: 10px;
+height: 10px;
+border: 0;
+}
+}

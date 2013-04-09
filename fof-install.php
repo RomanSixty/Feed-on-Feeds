@@ -301,17 +301,17 @@ function fof_install_database_update_old_tables() {
         try {
             $query = "SHOW COLUMNS FROM $FOF_FEED_TABLE LIKE 'feed_image_cache_date'";
             if ( count(fof_db_query($query)->fetchAll()) == 0 ) {
-                print "Upgrading $FOF_FEED_TABLE: 'feed_image_cache_date'... ";
+                echo "Upgrading $FOF_FEED_TABLE: 'feed_image_cache_date'... ";
 
                 $query = "ALTER TABLE $FOF_FEED_TABLE ADD 'feed_image_cache_date' INT DEFAULT '0' AFTER 'feed_image'";
                 fof_db_exec($query);
 
-                print "Done.<hr>";
+                echo "Done.<hr>";
             }
 
             $query = "SHOW COLUMNS FROM $FOF_USER_TABLE LIKE 'user_password_hash'";
             if ( count(fof_db_query($query)->fetchAll()) == 0 ) {
-                print "Upgrading $FOF_USER_TABLE: 'user_password_hash'... ";
+                echo "Upgrading $FOF_USER_TABLE: 'user_password_hash'... ";
 
                 $query = "ALTER TABLE $FOF_USER_TABLE CHANGE 'user_password' 'user_password_hash' VARCHAR(32) NOT NULL";
                 fof_db_exec($query);
@@ -319,22 +319,22 @@ function fof_install_database_update_old_tables() {
                 $query = "UPDATE $FOF_USER_TABLE SET user_password_hash = md5(concat(user_password_hash, user_name))";
                 fof_db_exec($query);
 
-                print "Done.<hr>";
+                echo "Done.<hr>";
             }
 
             $query = "SHOW COLUMNS FROM $FOF_FEED_TABLE LIKE 'feed_cache_attempt_date'";
             if ( count(fof_db_query($query)->fetchAll()) == 0 ) {
-                print "Upgrading $FOF_FEED_TABLE: 'feed_cache_attempt_date'... ";
+                echo "Upgrading $FOF_FEED_TABLE: 'feed_cache_attempt_date'... ";
 
                 $query = "ALTER TABLE $FOF_FEED_TABLE ADD 'feed_cache_attempt_date' INT DEFAULT '0' AFTER 'feed_cache_date'";
                 fof_db_exec($query);
 
-                print "Done.<hr>";
+                echo "Done.<hr>";
             }
 
             $query = "SHOW COLUMNS FROM $FOF_FEED_TABLE LIKE 'feed_cache_next_attempt'";
             if ( count(fof_db_query($query)->fetchAll()) == 0 ) {
-                print "Upgrading $FOF_FEED_TABLE: 'feed_cache_next_attempt'... ";
+                echo "Upgrading $FOF_FEED_TABLE: 'feed_cache_next_attempt'... ";
 
                 $query = "ALTER TABLE $FOF_FEED_TABLE ADD 'feed_cache_next_attempt' INT DEFAULT '0'";
                 fof_db_exec($query);
@@ -342,17 +342,17 @@ function fof_install_database_update_old_tables() {
                 $query = "ALTER TABLE $FOF_FEED_TABLE ADD KEY 'feed_cache_next_attempt' ('feed_cache_next_attempt')";
                 fof_db_exec($query);
 
-                print "Done.<hr>";
+                echo "Done.<hr>";
             }
 
             $query = "SHOW INDEXES FROM $FOF_ITEM_TABLE WHERE key_name LIKE 'feed_id_item_updated'";
             if ( count(fof_db_query($query)->fetchAll()) == 0 ) {
-                print "Upgrading $FOF_ITEM_TABLE: 'feed_id_item_updated'... ";
+                echo "Upgrading $FOF_ITEM_TABLE: 'feed_id_item_updated'... ";
 
                 $query = "ALTER TABLE $FOF_ITEM_TABLE ADD KEY 'feed_id_item_updated' ('feed_id', 'item_updated')";
                 $fof_db_exec($query);
 
-                print "Done.<hr>";
+                echo "Done.<hr>";
             }
         } catch (PDOException $e) {
             die('Cannot migrate table: <pre>' . $e->GetMessage() . '</pre>');

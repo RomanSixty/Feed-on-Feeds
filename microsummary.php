@@ -9,7 +9,7 @@ if(isset($_COOKIE["user_name"]) && isset($_COOKIE["user_password_hash"]))
 
   if(fof_authenticate($user_name, $user_password_hash))
   {
-    $unread = fof_get_unread_count(fof_current_user());
+    $unread = fof_db_tag_count(fof_current_user(), 'unread');
   }
 }
 

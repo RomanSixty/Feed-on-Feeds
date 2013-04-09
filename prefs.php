@@ -214,7 +214,7 @@ if ( ! empty($message)) {
       <option value="all"<?php if ($prefs->get('sharing') == 'all') echo ' selected';?>>all</option>
       <option value="tagged"<?php if ($prefs->get('sharing') == 'tagged') echo ' selected';?>>tagged as "shared"</option>
       <option value="all_tagged"<?php if ($prefs->get('sharing') == 'all_tagged') echo ' selected';?>>all tagged items</option>
-    </select> items.<?php if($prefs->get('sharing') != "no") echo " <small><i>(your default shared page is <a href='./shared.php?user=$fof_user_id'>here</a>)</i></small>";?>
+    </select> items.<?php if($prefs->get('sharing') != "no") echo " <small><i>(your default shared page is <a href='./shared.php?user=" . urlencode($fof_user_id) . "'>here</a>)</i></small>";?>
     <br>
     Name to be shown on shared page: <input type="text" name="sharedname" value="<?php echo $prefs->get('sharedname')?>">
     <br>
@@ -309,16 +309,16 @@ foreach($feeds as $row)
     $description = fof_prefs_get_key_($row, 'feed_description');
     $tags = fof_prefs_get_key_($row, 'tags', array());
 
-    print '<tr' . (++$t % 2 ? ' class="odd-row"' : '') . ">\n";
+    echo '<tr' . (++$t % 2 ? ' class="odd-row"' : '') . ">\n";
 
     if ($prefs->get('favicons')) {
         $feed_image = fof_prefs_get_key_($row, 'feed_image', 'image/feed-icon.png');
     } else {
         $feed_image = 'image/feed-icon.png';
     }
-    print "  <td><a href=\"$url\" title=\"feed\" name=\"$anchor\"><img src='$feed_image' width='16' height='16' border='0' /></a></td>";
+    echo "  <td><a href=\"$url\" title=\"feed\" name=\"$anchor\"><img src='$feed_image' width='16' height='16' border='0' /></a></td>";
 
-    print "  <td>
+    echo "  <td>
     <form method=\"post\" action=\"prefs.php#$anchor\">
       <input type=\"hidden\" name=\"changed\" value=\"$id\"/>
       <input type=\"text\" name=\"title\" value=\"$title\" size=\"50\"/>
@@ -327,15 +327,14 @@ foreach($feeds as $row)
     </form>
   </td>";
 
-    print "  <td align=right>";
-    foreach($tags as $tag) {
-        $utag = urlencode($tag);
-        print "$tag <a href='prefs.php?untagfeed=$id&tag=$utag#$anchor'>[x]</a> ";
+    echo "  <td align=right>";
+    foreach ($tags as $tag) {
+        echo $tag . ' <a href="' . fof_url('prefs.php', array('untagfeed' => $id, 'tag' => $tag), $anchor) . '">[x]</a> ';
     }
-    print "</td>\n";
+    echo "</td>\n";
 
     $title = htmlspecialchars($title);
-    print "  <td>
+    echo "  <td>
     <form method=\"post\" action=\"prefs.php#$anchor\">
       <input type=\"hidden\" name=\"feed_id\" value=\"$id\">
       <input type=\"text\" name=\"tag\">
@@ -343,7 +342,7 @@ foreach($feeds as $row)
     </form>
   </td>\n";
 
-    print "</tr>\n";
+    echo "</tr>\n";
 }
 ?>
 </table>

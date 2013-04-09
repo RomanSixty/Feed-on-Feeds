@@ -280,7 +280,7 @@ function fof_db_get_latest_item_age($user_id)
 
     fof_trace();
 
-    $query = "SELECT max(item_cached) AS max_date, $FOF_ITEM_TABLE.feed_id AS id FROM $FOF_ITEM_TABLE GROUP BY $FOF_ITEM_TABLE.feed_id";
+    $query = "SELECT max(item_cached) AS max_date, i.feed_id AS id FROM $FOF_ITEM_TABLE i GROUP BY i.feed_id";
     $statement = fof_db_query($query);
 
     return $statement;
@@ -340,12 +340,12 @@ function fof_db_get_item_count ( $user_id, $what = 'all', $feed = null, $search 
     }
 
     $query .= " WHERE s.user_id = :user_id" .
-                    " AND i.feed_id = s.feed_id" .
+                    " AND s.feed_id = f.feed_id" .
                     " AND f.feed_id = i.feed_id";
 
     if ($what != 'all') {
-        $query .= " AND i.item_id = it.item_id" .
-                  " AND it.user_id = :user_id" .
+        $query .= " AND it.user_id = s.user_id" .
+                  " AND i.item_id = it.item_id" .
                   " AND f.feed_id = s.feed_id";
     }
 
@@ -364,14 +364,14 @@ function fof_db_get_item_count ( $user_id, $what = 'all', $feed = null, $search 
     case 'tagged':
         $query .= " AND it.tag_id != :unread_id" .
                   " AND it.tag_id != :star_id" .
-                  " AND it.tag_id = :folded_id";
+                  " AND it.tag_id != :folded_id";
         break;
 
     default:
         $tag_ids_q = array();
-        foreach(explode(',', fof_db_get_tag_by_name($what)) as $t) {
-            $tag_ids_a[] = $fof_connection->quote($t);
-        }
+        foreach (explode(',', fof_db_get_tag_by_name($what)) as $t) {
+            $tag_ids_q[] = $fof_connection->quote($t);
+         }
         $query .= " AND it.tag_id IN ( " . implode(', ', $tag_ids_q) . " )";
     }
 
@@ -417,6 +417,57 @@ function fof_db_get_item_count ( $user_id, $what = 'all', $feed = null, $search 
 
     return $statement;
 }
+
+
+/* FIXME: tried to fix this, but it's still not quite right */
+function fof_db_get_item_count_XXX($user_id=1, $what='all', $feed_id=NULL, $search=NULL) {
+    global $FOF_SUBSCRIPTION_TABLE, $FOF_FEED_TABLE, $FOF_ITEM_TABLE, $FOF_ITEM_TAG_TABLE, $FOF_TAG_TABLE;
+    global $fof_connection;
+
+    fof_trace();
+
+    /* build a query which will return rows containing just feed_id,item_id matching the requested parameters */
+
+    $items_select = "SELECT i.feed_id, i.item_id FROM $FOF_ITEM_TABLE i, $FOF_SUBSCRIPTION_TABLE s";
+    $items_where = " WHERE s.user_id = " . $fof_connection->quote($user_id) . " AND s.feed_id = i.feed_id";
+    if ( ! empty($feed_id)) {
+        $items_where .= " AND i.feed_id = " . $fof_connection->quote($feed_id);
+    }
+    if ( ! empty($search)) {
+        $search = $fof_connection->quote('%' . $search . '%');
+        $items_where .= " AND (i.item_title LIKE $search OR i.item_content LIKE $search)";
+    }
+
+    $tag_invert = '';
+    /* special-case some whats */
+    if ($what == 'all') {
+        $what = '';
+    } else if ($what == 'starred') {
+        $what = 'star';
+    } else if ($what == 'tagged') {
+        $what = 'unread star folded';
+        $tag_invert = ' NOT';
+    }
+
+    $what_q = array_map(array($fof_connection, 'quote'), array_filter(explode(' ', $what)));
+
+    $items_having = '';
+    if ( ! empty($what_q)) {
+        $items_select .= " JOIN $FOF_ITEM_TAG_TABLE it ON it.item_id = i.item_id";
+        $items_select .= " JOIN $FOF_TAG_TABLE t ON t.tag_id = it.tag_id AND t.tag_name" . $tag_invert . " IN (" . implode(',', $what_q). ")";
+        $items_having = " HAVING COUNT(i.item_id) = " . count($what_q);
+    }
+
+    $items_query = $items_select . $items_where . " GROUP BY i.item_id" . $items_having;
+
+    /* wrap that item query, to correlate counts by feed_id, because SQL is hard */
+    $count_query = "SELECT feed_id AS id, COUNT(*) AS count FROM ( $items_query ) GROUP BY feed_id;";
+
+    $statement = $fof_connection->prepare($count_query);
+    $result = fof_db_statement_execute($statement);
+    return $statement;
+}
+
 
 function fof_db_get_subscribed_users($feed_id)
 {
@@ -1018,42 +1069,25 @@ function fof_db_get_item_tags($user_id, $item_id)
     return $statement;
 }
 
-function fof_db_item_has_tags($item_id)
-{
-    global $FOF_ITEM_TAG_TABLE;
+/* returns count of a single tag_name for user_id */
+function fof_db_tag_count($user_id, $tag_name) {
+    global $FOF_ITEM_TAG_TABLE, $FOF_TAG_TABLE;
     global $fof_connection;
 
     fof_trace();
 
-    $query = "SELECT count(*) AS tag_count" .
-            " FROM $FOF_ITEM_TAG_TABLE" .
-            " WHERE item_id = :item_id" .
-                " AND tag_id <= 2";
-    $statement = $fof_connection->prepare($query);
-    $statement->bindValue(':item_id', $item_id);
-    $result = fof_db_statement_execute($statement);
-
-    return fof_db_get_row($statement, 'tag_count', TRUE);
-}
-
-function fof_db_get_unread_count($user_id)
-{
-    global $FOF_ITEM_TAG_TABLE;
-    global $fof_connection;
-
-    fof_trace();
-
-    $query = "SELECT count(*) AS tag_count" .
-            " FROM $FOF_ITEM_TAG_TABLE" .
-            " WHERE tag_id = 1" .
-                " AND user_id = :user_id";
+    $query = "SELECT COUNT(*) AS tag_count FROM $FOF_ITEM_TAG_TABLE it, $FOF_TAG_TABLE t"
+        . " WHERE it.tag_id = t.tag_id AND it.user_id = :user_id AND t.tag_name = :tag_name";
     $statement = $fof_connection->prepare($query);
     $statement->bindValue(':user_id', $user_id);
+    $statement->bindValue(':tag_name', $tag_name);
     $result = fof_db_statement_execute($statement);
 
     return fof_db_get_row($statement, 'tag_count', TRUE);
 }
 
+/* returns rows containing tag_id and count of items with both tag_id and 'unread' tag */
+/* FIXME: this seems to return incorrect count for otherwise-untagged 'unread' items */
 function fof_db_get_tag_unread($user_id)
 {
     global $FOF_ITEM_TABLE, $FOF_ITEM_TAG_TABLE;
@@ -1088,11 +1122,11 @@ function fof_db_get_tags($user_id)
 
     fof_trace();
 
-    $query = "SELECT $FOF_TAG_TABLE.tag_id, $FOF_TAG_TABLE.tag_name, count( $FOF_ITEM_TAG_TABLE.item_id ) AS count" .
-            " FROM $FOF_TAG_TABLE" .
-            " LEFT JOIN $FOF_ITEM_TAG_TABLE ON $FOF_TAG_TABLE.tag_id = $FOF_ITEM_TAG_TABLE.tag_id" .
-            " WHERE $FOF_ITEM_TAG_TABLE.user_id = :user_id" .
-            " GROUP BY $FOF_TAG_TABLE.tag_id ORDER BY $FOF_TAG_TABLE.tag_name";
+    $query = "SELECT t.tag_id, t.tag_name, count( it.item_id ) AS count" .
+            " FROM $FOF_TAG_TABLE t" .
+            " LEFT JOIN $FOF_ITEM_TAG_TABLE it ON t.tag_id = it.tag_id" .
+            " WHERE it.user_id = :user_id" .
+            " GROUP BY t.tag_id ORDER BY t.tag_name";
     $statement = $fof_connection->prepare($query);
     $statement->bindValue(':user_id', $user_id);
     $result = fof_db_statement_execute($statement);

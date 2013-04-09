@@ -12,26 +12,37 @@
  *
  */
 
-include_once("fof-main.php");
-include_once("fof-render.php");
+include_once('fof-main.php');
+include_once('fof-render.php');
 
+$what = (isset($_GET['what'])) ? $_GET['what'] : NULL;
 $how = (isset($_GET['how'])) ? $_GET['how'] : NULL;
+
+/* default to viewing unread items */
+if (empty($what)) {
+    $what = 'unread';
+    /* default to page view only if we defaulted on what to view */
+    if (empty($how)) {
+        $how = 'paged';
+    }
+}
+
 $which = (isset($_GET['which'])) ? $_GET['which'] : NULL;
 if (isset($how) && $how == 'paged' && ! isset($which)) {
     $which = 0;
 }
 $order = (isset($_GET['order'])) ? $_GET['order'] : $fof_prefs_obj->get('order');
-$what = (isset($_GET['what'])) ? $_GET['what'] : 'unread';
+if ($order != 'desc' && $order != 'asc')
+    $order = 'desc';
+
 $feed = (isset($_GET['feed'])) ? $_GET['feed'] : NULL;
 $when = (isset($_GET['when'])) ? $_GET['when'] : NULL;
 $howmany = (isset($_GET['howmany'])) ? $_GET['howmany'] : NULL;
 $search = (isset($_GET['search'])) ? $_GET['search'] : NULL;
 $noedit = (isset($_GET['noedit'])) ? $_GET['noedit'] : NULL;
 
-$result = fof_db_get_item_count(fof_current_user(), $what, $feed, $search);
-
 $itemcount = 0;
-
+$result = fof_db_get_item_count(fof_current_user(), $what, $feed, $search);
 while ($cnt = fof_db_get_row($result, 'count'))
     $itemcount += $cnt;
 
@@ -58,16 +69,29 @@ $title = fof_view_title($feed, $what, $when, $which, $howmany, $search, $itemcou
 <p><?php echo $title?></p>
 
 <ul id="item-display-controls" class="inline-list">
-	<li class="orderby"><?php
+<?php
+    $qv = array('feed' => $feed,
+                'what' => $what,
+                'when' => $when,
+                'how' => $how,
+                'howmany' => $howmany);
 
-	echo ($order == "desc") ? '[new to old]' : "<a href=\".?feed=$feed&amp;what=$what&amp;when=$when&amp;how=$how&amp;howmany=$howmany&amp;order=desc\">[new to old]</a>" ;
+    echo '	<li class="orderby">';
+    if ($order == 'asc')
+        echo '<a href="' . fof_url('.', array_merge($qv, array('order' => 'desc'))) . '">';
+    echo '[new to old]';
+    if ($order == 'asc')
+        echo '</a>';
+    echo "</li>\n";
 
-	?></li>
-	<li class="orderby"><?php
-
-	echo ($order == "asc") ? '[old to new]' : "<a href=\".?feed=$feed&amp;what=$what&amp;when=$when&amp;how=$how&amp;howmany=$howmany&amp;order=asc\">[old to new]</a>" ;
-
-	?></li>
+    echo '	<li class="orderby">';
+    if ($order == 'desc')
+        echo '<a href="' . fof_url('.', array_merge($qv, array('order' => 'asc'))) . '">';
+    echo '[old to new]';
+    if ($order == 'desc')
+        echo '</a>';
+    echo "</li>\n";
+?>
 	<li><a href="javascript:flag_all();mark_read()"><strong>Mark all read</strong></a></li>
 	<li><a href="javascript:flag_all()">Flag all</a></li>
 	<li><a href="javascript:unflag_all()">Unflag all</a></li>
@@ -80,52 +104,37 @@ $title = fof_view_title($feed, $what, $when, $which, $howmany, $search, $itemcou
 </ul>
 
 
-
 <!-- close this form to fix first item! -->
-
 		<form id="itemform" name="items" action="view-action.php" method="post" onSubmit="return false;">
 		<input type="hidden" name="action" />
 		<input type="hidden" name="return" />
 
 <?php
-	$links = fof_get_nav_links($feed, $what, $when, $which, $howmany, $search, $itemcount);
+    $links = fof_get_nav_links($feed, $what, $when, $which, $howmany, $search, $itemcount);
+    $links = ($links ? '<center>' : '') . $links . ($links ? "</center>\n" : '');
 
-	if($links)
-	{
-		echo "<center>$links</center>";
-	}
+    echo $links;
 
 $items = fof_get_items(fof_current_user(), $feed, $what, $when, $which, $howmany, $order, $search);
 
-$first = true;
+if ( ! empty($items)) {
+    list($first_item) = $items;
+    echo "<script>firstItem = 'i" . $first_item['item_id'] . "';</script>\n";
 
-foreach ($items as $item) {
-    $item_id = $item['item_id'];
-    $visibility = in_array("folded", $item['tags']) ? "hidden" : "shown";
-    if ($first) {
-        print "<script>firstItem = 'i$item_id'; </script>";
-        $first = false;
+    foreach ($items as $item) {
+        fof_render_item($item, true);
     }
-    print '<div class="item ' . $visibility . '" id="i' . $item_id . '"  onclick="return itemClicked(event)">';
-    fof_render_item($item);
-    print '</div>';
-}
-
-if(count($result) == 0)
-{
-	echo "<p><i>No items found.</i></p>";
+} else {
+    echo "<p><i>No items found.</i></p>\n";
 }
 
 ?>
 		</form>
 
-        <div id="end-of-items"></div>
+<div id="end-of-items"></div>
 
 <?php
-        if($links)
-        {
-            echo "<center>$links</center>";
-        }
+    echo $links;
 ?>
 
 <script>itemElements = $$('.item');</script>

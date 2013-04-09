@@ -178,11 +178,6 @@ function fof_is_admin()
     return $fof_user_level == 'admin';
 }
 
-function fof_get_unread_count($user_id)
-{
-    return fof_db_get_unread_count($user_id);
-}
-
 function fof_get_tags($user_id)
 {
     $tags = array();
@@ -306,56 +301,54 @@ function fof_nice_time_stamp($age)
 {
     $age = time() - $age;
 
-    if($age == 0)
-    {
-        $agestr = "never";
-        $agestrabbr = "&infin;";
-    }
-    else
-    {
-        $seconds = $age % 60;
-        $minutes = $age / 60 % 60;
-        $hours = $age / 60 / 60 % 24;
-        $days = floor($age / 60 / 60 / 24);
+    if ($age == 0)
+        return array(
+            'never',
+            '&infin;'
+        );
 
-        if($seconds)
-        {
-            $agestr = "$seconds second";
-            if($seconds != 1) $agestr .= "s";
-            $agestr .= " ago";
+    $days = floor($age / 60 / 60 / 24);
+    if ($days > 365)
+        return array(
+            floor($days / 365) . (floor($days / 365) == 1 ? '' : 's') . ' ago',
+            floor($days / 365) . 'y'
+        );
+    else if ($days > 7)
+        return array(
+            floor($days / 7) . (floor($days / 7) == 1 ? '' : 's') . ' ago',
+            floor($days / 7) . 'w'
+        );
+    else if ($days)
+        return array(
+            $days . ' day' . ($days == 1 ? '' : 's') . ' ago',
+            $days . 'd'
+        );
 
-            $agestrabbr = $seconds . "s";
-        }
+    $hours = $age / 60 / 60 % 24;
+    if ($hours)
+        return array(
+            $hours . ' hour' . ($hours == 1 ? '' : 's') . ' ago',
+            $hours . 'h'
+        );
 
-        if($minutes)
-        {
-            $agestr = "$minutes minute";
-            if($minutes != 1) $agestr .= "s";
-            $agestr .= " ago";
+    $minutes = $age / 60 % 60;
+    if ($minutes)
+        return array(
+            $minutes . ' minute' . ($minutes == 1 ? '' : 's') . ' ago',
+            $minutes . 'm'
+        );
 
-            $agestrabbr = $minutes . "m";
-        }
+    $seconds = $age % 60;
+    if ($seconds)
+        return array(
+            $seconds . ' second' . ($seconds == 1 ? '' : 's') . ' ago',
+            $seconds . 's'
+        );
 
-        if($hours)
-        {
-            $agestr = "$hours hour";
-            if($hours != 1) $agestr .= "s";
-            $agestr .= " ago";
-
-            $agestrabbr = $hours . "h";
-        }
-
-        if($days)
-        {
-            $agestr = "$days day";
-            if($days != 1) $agestr .= "s";
-            $agestr .= " ago";
-
-            $agestrabbr = $days . "d";
-        }
-    }
-
-    return array($agestr, $agestrabbr);
+    return array(
+        'never',
+        '&infin;'
+    );
 }
 
 function fof_get_feeds($user_id, $order = 'feed_title', $direction = 'asc')
@@ -365,106 +358,106 @@ function fof_get_feeds($user_id, $order = 'feed_title', $direction = 'asc')
     $result = fof_db_get_subscriptions($user_id);
 
     $i = 0;
-
     while ( ($row = fof_db_get_row($result)) !== false )
     {
-        $id = $row['feed_id'];
-        $age = $row['feed_cache_date'];
-
-        $feeds[$i]['feed_id'] = $id;
+        $feeds[$i]['feed_id'] = $row['feed_id'];
         $feeds[$i]['feed_url'] = $row['feed_url'];
         $feeds[$i]['feed_title'] = $row['feed_title'];
         $feeds[$i]['feed_link'] = $row['feed_link'];
         $feeds[$i]['feed_description'] = $row['feed_description'];
         $feeds[$i]['feed_image'] = empty($row['alt_image']) ? $row['feed_image'] : $row['alt_image'];
         $feeds[$i]['alt_image'] = $row['alt_image'];
+
         $feeds[$i]['prefs'] = unserialize($row['subscription_prefs']);
-        $feeds[$i]['feed_age'] = $age;
+        if ( empty($feeds[$i]['prefs']) )
+            $feeds[$i]['prefs'] = array();
+        if ( empty($feeds[$i]['prefs']['tags']) )
+            $feeds[$i]['prefs']['tags'] = array();
 
-        list($agestr, $agestrabbr) = fof_nice_time_stamp($age);
+        $feeds[$i]['tags'] = array();
 
+        $feeds[$i]['max_date'] = 0;
+        $feeds[$i]['feed_age'] = $row['feed_cache_date'];
+        list($agestr, $agestrabbr) = fof_nice_time_stamp($row['feed_cache_date']);
         $feeds[$i]['agestr'] = $agestr;
         $feeds[$i]['agestrabbr'] = $agestrabbr;
+        $feeds[$i]['lateststr'] = '';
+        $feeds[$i]['lateststrabbr'] = '';
+
+        $feeds[$i]['feed_items'] = 0;
+        $feeds[$i]['feed_read'] = 0;
+        $feeds[$i]['feed_unread'] = 0;
+        $feeds[$i]['feed_starred'] = 0;
+        $feeds[$i]['feed_tagged'] = 0;
 
         $i++;
     }
 
+    /* I guess convert tag_ids in feed prefs to tag names on feed */
     $tags = fof_db_get_tag_id_map();
-
-    for($i=0; $i<count($feeds); $i++)
+    for ($i=0; $i<count($feeds); $i++)
     {
-        $feeds[$i]['tags'] = array();
-        if(is_array($feeds[$i]['prefs']['tags']))
+        foreach($feeds[$i]['prefs']['tags'] as $tag)
         {
-            foreach($feeds[$i]['prefs']['tags'] as $tag)
-            {
-                $feeds[$i]['tags'][] = $tags[$tag];
-            }
+            $feeds[$i]['tags'][] = $tags[$tag];
         }
     }
 
+    /* tally up all items */
     $result = fof_db_get_item_count($user_id);
-
     while ( ($row = fof_db_get_row($result)) !== false )
     {
         for($i=0; $i<count($feeds); $i++)
         {
             if($feeds[$i]['feed_id'] == $row['id'])
             {
-                $feeds[$i]['feed_items'] = $row['count'];
-                $feeds[$i]['feed_read'] = $row['count'];
-                $feeds[$i]['feed_unread'] = 0;
+                $feeds[$i]['feed_items'] += $row['count'];
+                $feeds[$i]['feed_read'] += $row['count'];
             }
         }
     }
 
+    /* tally up unread items */
     $result = fof_db_get_item_count($user_id, 'unread');
-
     while ( ($row = fof_db_get_row($result)) !== false )
     {
         for($i=0; $i<count($feeds); $i++)
         {
             if($feeds[$i]['feed_id'] == $row['id'])
             {
-                $feeds[$i]['feed_unread'] = $row['count'];
+                $feeds[$i]['feed_unread'] += $row['count'];
             }
         }
     }
 
-    foreach($feeds as &$feed)
-    {
-        $feed['feed_starred'] = 0;
-        $feed['feed_tagged']  = 0;
-    }
-
+    /* tally up starred items */
     $result = fof_db_get_item_count($user_id, 'starred');
-
     while ( ($row = fof_db_get_row($result)) !== false )
     {
         for($i=0; $i<count($feeds); $i++)
         {
             if($feeds[$i]['feed_id'] == $row['id'])
             {
-                $feeds[$i]['feed_starred'] = $row['count'];
+                $feeds[$i]['feed_starred'] += $row['count'];
             }
         }
     }
 
+    /* tally up tags which aren't system-tags */
     $result = fof_db_get_item_count($user_id, 'tagged');
-
     while ( ($row = fof_db_get_row($result)) !== false )
     {
         for($i=0; $i<count($feeds); $i++)
         {
             if($feeds[$i]['feed_id'] == $row['id'])
             {
-                $feeds[$i]['feed_tagged'] = $row['count'];
+                $feeds[$i]['feed_tagged'] += $row['count'];
             }
         }
     }
 
+    /* find most recent item for each feed */
     $result = fof_db_get_latest_item_age($user_id);
-
     while ( ($row = fof_db_get_row($result)) !== false )
     {
         for($i=0; $i<count($feeds); $i++)
@@ -473,46 +466,63 @@ function fof_get_feeds($user_id, $order = 'feed_title', $direction = 'asc')
             {
                 $feeds[$i]['max_date'] = $row['max_date'];
                 list($agestr, $agestrabbr) = fof_nice_time_stamp($row['max_date']);
-
                 $feeds[$i]['lateststr'] = $agestr;
                 $feeds[$i]['lateststrabbr'] = $agestrabbr;
-
             }
         }
     }
 
-
-    $feeds = fof_multi_sort($feeds, $order, $direction != "asc");
-
-    return $feeds;
+    return fof_multi_sort($feeds, $order, $direction != 'asc');
 }
 
-function fof_view_title($feed=NULL, $what="new", $when=NULL, $start=NULL, $limit=NULL, $search=NULL, $itemcount = 0)
+/* describe what is being displayed */
+function fof_view_title($feed=NULL, $what='unread', $when=NULL, $start=NULL, $limit=NULL, $search=NULL, $itemcount = 0)
 {
     $prefs = fof_prefs();
-    $title = "feed on feeds";
+    $title = 'feed on feeds - showing';
+
+    if ($itemcount) {
+        if (is_numeric($start))
+        {
+            if ( ! is_numeric($limit))
+                $limit = $prefs['howmany'];
+            $end = $start + $limit;
+            if ($end > $itemcount)
+                $end = $itemcount;
+            $start += 1;
+            if ($start != $end)
+                $title .= " $start to $end of ";
+        }
+
+        $title .= " $itemcount";
+    }
+    $title .= ' item' . ($itemcount != 1 ? 's' : '');
+
+    if ( ! empty($feed)) {
+        $r = fof_db_get_feed_by_id($feed);
+        $title .= ' in \'' . htmlentities($r['feed_title']) . '\'';
+    }
+
+    if (empty($what))
+        $what = 'unread';
+
+    if ($what != 'all') {
+        $tags = explode(' ', $what);
+        $last_tag = array_pop($tags);
+        if ( ! empty($last_tag)) {
+            $title .= ' tagged';
+            if ( ! empty($tags)) {
+                $title .= ' ' . implode(', ', $tags) . (count($tags) > 1 ? ',' : '') . ' and';
+            }
+            $title .= ' ' . $last_tag;
+        }
+    }
 
     if ( ! empty($when))
-        $title .= ' - ' . $when ;
+        $title .= ' from ' . $when ;
 
-    if ( ! empty($feed))
-    {
-        $r = fof_db_get_feed_by_id($feed);
-        $title .=' - ' . $r['feed_title'];
-    }
-
-    if (is_numeric($start))
-    {
-        if ( ! is_numeric($limit))
-            $limit = $prefs['howmany'];
-        $title .= " - items $start to " . ($start + $limit);
-    }
-
-    $title .= " of $itemcount items";
-
-    if (isset($search))
-    {
-        $title .= " - <a href='javascript:toggle_highlight()'>matching <i class='highlight'>$search</i></a>";
+    if (isset($search)) {
+        $title .= " <a href='javascript:toggle_highlight()'>matching <i class='highlight'>$search</i></a>";
     }
 
     return $title;
@@ -558,32 +568,52 @@ function fof_delete_subscription($user_id, $feed_id)
     }
 }
 
-function fof_get_nav_links($feed=NULL, $what="new", $when=NULL, $start=NULL, $limit=NULL, $search=NULL, $itemcount=9999)
+/* simple wrapper to construct a safe GET-style URL from location and variables */
+function fof_url($path='.', $query_variables=array(), $fragment=NULL) {
+    $url = $path;
+    $qv = array();
+    foreach ($query_variables as $k => $v)
+        if ( ! empty($v))
+            $qv[] = urlencode($k) . '=' . urlencode($v);
+
+    if ( ! empty($qv) )
+        $url .= '?' . implode('&', $qv);
+
+    if ( ! empty($fragment) )
+        $url .= '#' . urlencode($fragment);
+
+    return $url;
+}
+
+function fof_get_nav_links($feed=NULL, $what='new', $when=NULL, $start=NULL, $limit=NULL, $search=NULL, $itemcount=9999)
 {
     $prefs = fof_prefs();
-    $string = "";
+    $navlinks = '';
 
-    $how = "";
-    $howmany = "";
+    $qv = array('feed' => $feed,
+                'what' => $what,
+                'when' => $when,
+                'search' => $search,
+                'howmany' => $limit);
 
-    if( ! empty($when))
-    {
+    if( ! empty($when)) {
         $begin = strtotime(($when == 'today') ? fof_todays_date() : $when);
 
         $tomorrow = date( "Y/m/d", $begin + (24 * 60 * 60) );
         $yesterday = date( "Y/m/d", $begin - (24 * 60 * 60) );
 
-        $string .= "<a href=\".?feed=$feed&amp;what=$what&amp;when=$yesterday&amp;how=$how&amp;howmany=$limit\">[&laquo; $yesterday]</a> ";
+        $navlinks .= '<a href="' . fof_url('.', array_merge($qv, array('when' => $yesterday))) . '">[&laquo; ' . $yesterday . ']</a>';
+
         if ($when != "today") {
-            $string .= "<a href=\".?feed=$feed&amp;what=$what&amp;when=today&amp;how=$how&amp;howmany=$limit\">[today]</a> ";
-            $string .= "<a href=\".?feed=$feed&amp;what=$what&amp;when=$tomorrow&amp;how=$how&amp;howmany=$limit\">[$tomorrow &raquo;]</a> ";
+            $navlinks .= ' <a href="' . fof_url('.', array_merge($qv, array('when' => 'today'))) . '">[today]</a>';
+            $navlinks .= ' <a href="' . fof_url('.', array_merge($qv, array('when' => 'tomorrow'))) . '">[' . $tomorrow . '&raquo;]</a>';
         }
     }
 
-    if (is_numeric($start))
-    {
+    if (is_numeric($start)) {
         if ( ! is_numeric($limit)) {
             $limit = isset($prefs['howmany']) ? $prefs['howmany'] : NULL;
+            $qv['howmany'] = $limit;
         }
 
         if ($itemcount <= $limit)
@@ -592,14 +622,18 @@ function fof_get_nav_links($feed=NULL, $what="new", $when=NULL, $start=NULL, $li
         $earlier = $start + $limit;
         $later = $start - $limit;
 
-        if($itemcount > $earlier) $string .= "<a href=\".?feed=$feed&amp;what=$what&amp;when=$when&amp;how=paged&amp;which=$earlier&amp;howmany=$limit&amp;search=$search\">[&laquo; previous $limit]</a> ";
+        $qv['how'] = 'paged';
+
+        if($itemcount > $earlier)
+            $navlinks .= ' <a href="' . fof_url('.', array_merge($qv, array('which' => urlencode($earlier)))) . '">[&laquo; previous ' . $limit . ']</a>';
+
         if($later >= 0) {
-            $string .= "<a href=\".?feed=$feed&amp;what=$what&amp;when=$when&amp;how=paged&amp;howmany=$limit&amp;search=$search\">[current items]</a> ";
-            $string .= "<a href=\".?feed=$feed&amp;what=$what&amp;when=$when&amp;how=paged&amp;which=$later&amp;howmany=$limit&amp;search=$search\">[next $limit &raquo;]</a> ";
+            $navlinks .= ' <a href="' . fof_url('.', $qv) . '">[current items]</a>';
+            $navlinks .= ' <a href="' . fof_url('.', array_merge($qv, array('which' => urlencode($later)))) . '">[next ' . $limit . '&raquo;]</a>';
         }
     }
 
-    return $string;
+    return $navlinks;
 }
 
 function fof_render_feed_link($row)
@@ -670,7 +704,7 @@ function fof_subscribe($user_id, $url, $unread='today') {
         ||   isset($rss->error) ) {
             $rss_error = (isset($rss) && isset($rss->error)) ? $rss->error : '';
             return "<span style=\"color:red\">Error: <b>Failed to subscribe to '$url'</b>"
-                   . (!empty($rss_error) ? ": $rss_error</span> <span><a href=\"http://feedvalidator.org/check?url=$url\">try to validate it?</a>" : "")
+                   . (!empty($rss_error) ? ": $rss_error</span> <span><a href=\"http://feedvalidator.org/check?url=" . urlencode($url) . "\">try to validate it?</a>" : "")
                    . "</span><br>\n";
         }
 
@@ -1130,15 +1164,13 @@ function fof_get_widgets($item)
 {
     global $fof_item_widgets;
 
-    if (!is_array($fof_item_widgets))
-    {
-        return false;
-    }
+    $widgets = array();
 
-    foreach($fof_item_widgets as $widget)
-    {
-        $w = $widget($item);
-        if($w) $widgets[] = $w;
+    if (is_array($fof_item_widgets)) {
+        foreach($fof_item_widgets as $widget) {
+            $w = $widget($item);
+            if($w) $widgets[] = $w;
+        }
     }
 
     return $widgets;
@@ -1206,22 +1238,22 @@ function fof_repair_drain_bamage()
 // grab a favicon from $url and cache it
 function fof_get_favicon ( $url )
 {
-    $request = 'http://fvicon.com/' . $url . '?format=gif&width=16&height=16&canAudit=false';
+    $request = 'http://fvicon.com/' . urlencode($url) . '?format=gif&width=16&height=16&canAudit=false';
 
     $reflector = new ReflectionClass('SimplePie_File');
     $sp = $reflector->newInstanceArgs(array($request));
 
     if ( $sp -> success )
     {
+        /* XXX: seems like this ought to check the result somehow... */
+
         $data = $sp -> body;
-
-        $path = 'cache/' . md5 ( $data ) . '.png';
-
-        file_put_contents ( dirname(__FILE__) . '/' . $path, $data );
-
-        return $path;
+        $path = join(DIRECTORY_SEPARATOR, array('cache', md5($data) . '.png'));
+        file_put_contents(join(DIRECTORY_SEPARATOR, array(dirname(__FILE__), $path)), $data);
+    } else {
+        $path = join(DIRECTORY_SEPARATOR, array('image', 'feed-icon.png'));
     }
-    else
-        return 'image/feed-icon.png';
+
+    return $path;
 }
 ?>

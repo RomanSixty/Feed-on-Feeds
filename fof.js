@@ -756,7 +756,7 @@ function add_tag(id, tag)
     throb();
 
     var url = "add-tag.php";
-    var params = "tag=" + tag + "&item=" + id;
+    var params = "tag=" + encodeURIComponent(tag) + "&item=" + id;
     var complete = function () { refreshlist(); refreshitem(id); };
     var options = { method: 'get', parameters: params, onComplete: complete };
 
@@ -770,7 +770,7 @@ function remove_tag(id, tag)
     throb();
 
     var url = "add-tag.php";
-    var params = "remove=true&tag=" + tag + "&item=" + id;
+    var params = "remove=true&tag=" + encodeURIComponent(tag) + "&item=" + id;
     var complete = function () { refreshlist(); refreshitem(id); };
     var options = { method: 'get', parameters: params, onComplete: complete };
 
@@ -784,7 +784,7 @@ function delete_tag(tag)
     throb();
 
     var url = "view-action.php";
-    var params = "deltag=" + tag;
+    var params = "deltag=" + encodeURIComponent(tag);
     var complete = function () { refreshlist(); };
     var options = { method: 'get', parameters: params, onComplete: complete };
 
@@ -824,7 +824,7 @@ function toggle_favorite(id)
         var complete = function()
 		{
 			image.src='image/star-off.gif';
-                        image.className='unstarred';
+			image.className='unstarred';
 			starred--;
 			if(starred)
 			{
@@ -842,7 +842,7 @@ function toggle_favorite(id)
         var complete = function()
 		{
 			image.src='image/star-on.gif';
-                        image.className='starred';
+			image.className='starred';
 			starred++;
 			if(starred)
 			{
@@ -877,7 +877,10 @@ function refreshlist()
     throb();
 
     var url = 'sidebar.php';
-    var params = "what=" + what + "&when=" + when;
+    var params = 'what=' + encodeURIComponent(what);
+
+    if (when != null)
+        params += '&when=' + encodeURIComponent(when);
 
     new Ajax.Updater($('sidebar'), url, {method: 'get', parameters: params, evalScripts: true });
 }
@@ -959,3 +962,32 @@ function ajaxadd()
     continueadd();
 }
 
+function itemTagAddShow(id) {
+    document.getElementById('addtag' + id).style.display = '';
+    this.style.display = 'none';
+    return false;
+}
+
+function itemTagAdd(id, key) {
+    if (key == null || key == 13)
+        return add_tag(id, document.getElementById('tag' + id).value);
+    return false;
+}
+
+function sb_read_conf(title, id) {
+    if (confirm('Mark all [' + title + '] items as read -- are you SURE?')) {
+        mark_feed_read(id);
+    }
+    return false
+}
+
+function sb_del_tag_conf(tagname) {
+    if (confirm('Untag all [' + tag_name + '] items -- are you SURE?')) {
+         delete_tag(tag_name);
+    }
+    return false;
+};
+
+function sb_unsub_conf(title) {
+    return confirm('Unsubscribe [' + title + '] -- are you SURE?');
+}

@@ -98,7 +98,7 @@ $first = true;
 foreach($result as $item)
 {
     $item_id = $item['item_id'];
-    print '<div class="item shown" id="i' . $item_id . '">';
+    echo '<div class="item shown" id="i' . $item_id . '">';
 
     $feed_link = $item['feed_link'];
     $feed_title = $item['feed_title'];
@@ -145,8 +145,8 @@ foreach($result as $item)
 
     <h2>
 
-        <a href="<?php echo $feed_link ?>" title='<?php echo $feed_description ?>'><img src="<?php echo $feed_image ?>" height="16" width="16" border="0" /></a>
-        <a href="<?php echo $feed_link ?>" title='<?php echo $feed_description ?>'><?php echo $feed_title ?></a>
+        <a href="<?php echo $feed_link ?>" title='<?php echo htmlentities($feed_description); ?>'><img src="<?php echo $feed_image ?>" height="16" width="16" border="0" /></a>
+        <a href="<?php echo $feed_link ?>" title='<?php echo htmlentities($feed_description); ?>'><?php echo $feed_title ?></a>
 
     </h2>
 

@@ -12,10 +12,10 @@
  *
  */
 
-include_once("fof-main.php");
+include_once('fof-main.php');
 
 $url = $_REQUEST['url'];
 $unread = $_REQUEST['unread'];
 
-print(fof_subscribe(fof_current_user(), $url, $unread));
+echo fof_subscribe(fof_current_user(), $url, $unread);
 ?>

@@ -16,10 +16,11 @@ $fof_no_login = true;
 include_once("fof-main.php");
 include_once("fof-render.php");
 
+if ( ! isset($_GET['user']) )
+    die();
 $user = $_GET['user'];
-if(!isset($user)) die;
 
-$format = $_GET['format'];
+$format = isset($_GET['format']) ? $_GET['format'] : NULL;
 
 $prefs = new FoF_Prefs($user);
 $sharing = $prefs->get("sharing");
@@ -46,22 +47,13 @@ if(isset($_GET['feed']))
 
 $result = fof_get_items($user, $feed, $which, NULL, 0, 100);
 
-
-$shared_feed = htmlspecialchars("http://" . $_SERVER['SERVER_NAME'] . $_SERVER['PHP_SELF'] . "?user=$user&format=atom");
-$shared_link = htmlspecialchars("http://" . $_SERVER['SERVER_NAME'] . $_SERVER['PHP_SELF'] . "?user=$user");
-
-if(isset($_GET['which']))
-{
-    $shared_feed .= '&amp;which=' . $_GET['which'];
-    $shared_link .= '&amp;which=' . $_GET['which'];
-}
-
-if(isset($_GET['feed']))
-{
-    $shared_feed .= '&amp;feed=' . $_GET['feed'];
-    $shared_link .= '&amp;feed=' . $_GET['feed'];
-}
-
+$qv = array('user' => $user,
+            'which' => isset($_GET['which']) ? $_GET['which'] : NULL,
+            'feed' => isset($_GET['feed']) ? $_GET['feed'] : NULL
+            );
+$baseurl = 'http' . (isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] != 'off' ? 's' : '') . '://' . $_SERVER['SERVER_NAME'] . $_SERVER['PHP_SELF'];
+$shared_feed = fof_url($baseurl, array_merge($qv, array('format' => 'atom')));
+$shared_link = fof_url($baseurl, $qv);
 
 if ($format == 'atom')
 {
@@ -161,7 +153,7 @@ else /* format != 'atom' */
     foreach($result as $item)
     {
         $item_id = $item['item_id'];
-        print '<div class="item shown" id="i' . $item_id . '">';
+        echo '<div class="item shown" id="i' . $item_id . '">';
 
         $feed_link = $item['feed_link'];
         $feed_title = $item['feed_title'];

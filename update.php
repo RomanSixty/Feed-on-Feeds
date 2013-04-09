@@ -14,7 +14,7 @@
 
 include('header.php');
 
-print("<br>\n");
+echo "<br>\n";
 
 $p =& FoF_Prefs::instance();
 $admin_prefs = $p->admin_prefs;
@@ -29,7 +29,7 @@ if ( ! empty($_GET['feed'])) {
         $feeds[] = $feed;
         $feed_status = " is waiting to update...";
     }
-    print '<div id="feed_id_' . $feed['feed_id'] . '">'
+    echo '<div id="feed_id_' . $feed['feed_id'] . '">'
         . fof_render_feed_link($feed) . ' ' . $feed_status
         . "</div>\n";
 } else {
@@ -50,7 +50,7 @@ if ( ! empty($_GET['feed'])) {
             $feeds[] = $feed;
             $feed_status = " is waiting to update...";
         }
-        print '<div id="feed_id_' . $feed['feed_id'] . '">'
+        echo '<div id="feed_id_' . $feed['feed_id'] . '">'
             . fof_render_feed_link($feed) . ' ' . $feed_status
             . "</div>\n";
     }
@@ -63,7 +63,7 @@ foreach ($feeds as $feed) {
     $feedjson[] = json_encode(array('id' => $feed['feed_id'], 'title' => $feed['feed_title']));
 }
 
-print "<script>\nwindow.onload = ajaxupdate;\nfeedslist = [ " . implode(', ', $feedjson) . " ];\n</script>\n";
+echo "<script>\nwindow.onload = ajaxupdate;\nfeedslist = [ " . implode(', ', $feedjson) . " ];\n</script>\n";
 
 include('footer.php');
 ?>
