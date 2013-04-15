@@ -14,7 +14,7 @@
 
 /*
     globals controlling behavior:
-        $fof_no_login -- does not force auth if true
+        $fof_no_login -- does not force auth redirect if true
         $fof_installer -- forces auth to admin, changes log file
 
         $fof_logall -- forces logging on
@@ -129,6 +129,31 @@ function fof_authenticate($user_name, $user_password_hash)
 
 function require_user()
 {
+    global $fof_user_id, $fof_user_name, $fof_user_level;
+
+    if (defined('FOF_AUTH_EXTERNAL') && ! empty($_SERVER['REMOTE_USER'])) {
+        $user_row = fof_db_get_user($_SERVER['REMOTE_USER']);
+        if (empty($user_row)) {
+            fof_log('user \'' . $_SERVER['REMOTE_USER'] . '\' not indexed', 'auth');
+
+            if (defined('FOF_AUTH_EXTERNAL_ADD')) {
+                $result = fof_db_add_user($_SERVER['REMOTE_USER'], 'unused password' . $_SERVER['UNIQUE_ID']);
+                $user_row = fof_db_get_user($_SERVER['REMOTE_USER']);
+                fof_log('added new index for user \'' . $_SERVER['REMOTE_USER'] . '\'', 'auth');
+            }
+        }
+        if ( ! empty($user_row)) {
+            $fof_user_id = $user_row['user_id'];
+            $fof_user_name = $user_row['user_name'];
+            $fof_user_level = $user_row['user_level'];
+
+            fof_log('user \'' . $_SERVER['REMOTE_USER'] . '\' established', 'auth');
+            return true;
+        }
+        if (defined('FOF_AUTH_EXTERNAL_ONLY'))
+            return false;
+    }
+
     if ( ! isset($_COOKIE['user_name']) || ! isset($_COOKIE['user_password_hash']))
     {
         header('Location: login.php');
@@ -983,6 +1008,7 @@ function fof_update_feed($id)
     // of being in the feed, and are over 'purge' many days old
 
     $ndelete = 0;
+    $delete = array();
 
     if ( ! empty($admin_prefs['purge']) )
     {
@@ -991,8 +1017,6 @@ function fof_update_feed($id)
         fof_log('purge is ' . $purge);
 
         $result = fof_db_items_purge_list($feed_id, $purge);
-
-        $delete = array();
 
         while($row = fof_db_get_row($result)) {
             $delete[] = $row['item_id'];

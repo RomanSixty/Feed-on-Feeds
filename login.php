@@ -18,6 +18,11 @@ $fof_no_login = true;
 
 include_once("fof-main.php");
 
+if (defined('FOF_AUTH_EXTERNAL_ONLY')) {
+    header('Location: .');
+    exit();
+}
+
 fof_set_content_type();
 
 $failed = false;

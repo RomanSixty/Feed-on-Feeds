@@ -1464,6 +1464,17 @@ function fof_db_change_password($username, $password)
     return $result;
 }
 
+function fof_db_get_user($username) {
+    global $FOF_USER_TABLE;
+    global $fof_connection;
+
+    $query = "SELECT * FROM $FOF_USER_TABLE WHERE user_name = :name";
+    $statement = $fof_connection->prepare($query);
+    $statement->bindValue(':name', $username);
+    $result = fof_db_statement_execute($statement);
+    return fof_db_get_row($statement, NULL, TRUE);
+}
+
 function fof_db_get_user_id($username)
 {
     global $FOF_USER_TABLE;

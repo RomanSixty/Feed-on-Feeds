@@ -102,16 +102,18 @@ if(isset($_POST['prefs']))
 
     $prefs->save(fof_current_user());
 
-    if($_POST['password'] && ($_POST['password'] == $_POST['password2']))
-    {
-        fof_db_change_password($fof_user_name, $_POST['password']);
-        $user_password_hash = fof_db_user_password_hash($_POST['password'], $fof_user_name);
-        setcookie ( "user_password_hash",  $user_password_hash, time()+60*60*24*365*10 );
-        $message = "Updated password.";
-    }
-    else if($_POST['password'] || $_POST['password2'])
-    {
-        $message = "Passwords do not match!";
+    if ( ! defined('FOF_AUTH_EXTERNAL_ONLY')) {
+        if($_POST['password'] && ($_POST['password'] == $_POST['password2']))
+        {
+            fof_db_change_password($fof_user_name, $_POST['password']);
+            $user_password_hash = fof_db_user_password_hash($_POST['password'], $fof_user_name);
+            setcookie ( "user_password_hash",  $user_password_hash, time()+60*60*24*365*10 );
+            $message = "Updated password.";
+        }
+        else if($_POST['password'] || $_POST['password2'])
+        {
+            $message = "Passwords do not match!";
+        }
     }
 
     $message .= ' Saved prefs.';
@@ -147,38 +149,39 @@ if(isset($_POST['plugins']))
     $message .= ' Saved plugin prefs.';
 }
 
-if(isset($_POST['changepassword']))
-{
-    if($_POST['password'] != $_POST['password2'])
+if ( ! defined('FOF_AUTH_EXTERNAL_ONLY')) {
+    if(isset($_POST['changepassword']))
     {
-        $message = "Passwords do not match!";
+        if($_POST['password'] != $_POST['password2'])
+        {
+            $message = "Passwords do not match!";
+        }
+        else
+        {
+            $username = $_POST['username'];
+            $password = $_POST['password'];
+            fof_db_change_password($username, $password);
+
+            $message = "Changed password for $username.";
+        }
     }
-    else
+
+    if(fof_is_admin() && isset($_POST['adduser']) && $_POST['username'] && $_POST['password'])
     {
         $username = $_POST['username'];
         $password = $_POST['password'];
-        fof_db_change_password($username, $password);
 
-        $message = "Changed password for $username.";
+        fof_db_add_user($username, $password);
+        $message = "User '$username' added.";
     }
-}
 
-if(fof_is_admin() && isset($_POST['adduser']) && $_POST['username'] && $_POST['password'])
-{
-    $username = $_POST['username'];
-    $password = $_POST['password'];
+    if(fof_is_admin() && isset($_POST['deleteuser']) && $_POST['username'])
+    {
+        $username = $_POST['username'];
 
-    fof_db_add_user($username, $password);
-    $message = "User '$username' added.";
-}
-
-
-if(fof_is_admin() && isset($_POST['deleteuser']) && $_POST['username'])
-{
-    $username = $_POST['username'];
-
-    fof_db_delete_user($username);
-    $message = "User '$username' deleted.";
+        fof_db_delete_user($username);
+        $message = "User '$username' deleted.";
+    }
 }
 
 include("header.php");
@@ -221,6 +224,9 @@ if ( ! empty($message)) {
     URL to be linked on shared page: <input type="text" name="sharedurl" value="<?php echo $prefs->get('sharedurl')?>">
   </fieldset>
   <br>
+<?php
+if ( ! defined('FOF_AUTH_EXTERNAL_ONLY')) {
+?>
   <fieldset>
     <legend><b>Password</b></legend>
     <table border=0 cellspacing=0 cellpadding=2>
@@ -235,6 +241,9 @@ if ( ! empty($message)) {
     </table>
   </fieldset>
   <br>
+<?php
+}
+?>
   <input type=submit name=prefs value="Save Preferences">
 </form>
 
@@ -370,6 +379,9 @@ Feed items with titles containing one of the following terms (one per line) will
 <input type=submit name=adminprefs value="Save Admin Options">
 </form>
 
+<?php
+if ( ! defined('FOF_AUTH_EXTERNAL_ONLY')) {
+?>
 <br><h1 id="adduser">Add User</h1>
 <form method="post" action="prefs.php#adduser" style="border: 1px solid black; margin: 10px; padding: 10px;">
 Username: <input type="text" name=username> Password: <input type="text" name=password> <input type=submit name=adduser value="Add user">
@@ -405,6 +417,9 @@ Username: <input type="text" name=username> Password: <input type="text" name=pa
 
 <?php } ?>
 
+<?php
+} /* FOF_AUTH_EXTERNAL_ONLY */
+?>
 <br>
 <form method="get" action="uninstall.php" onsubmit="return confirm('Really?  This will delete all the database tables!')">
 <center><input type=submit name=uninstall value="Uninstall Feed on Feeds" style="background-color: #ff9999"></center>

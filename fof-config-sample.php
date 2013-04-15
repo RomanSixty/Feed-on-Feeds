@@ -26,8 +26,13 @@ define('FOF_DB_USER', "username");
 define('FOF_DB_PASS', "password");
 define('FOF_DB_DBNAME', "database");
 
+// choose a backend
 // define('USE_MYSQL', 1);
 // define('USE_SQLITE', 1);
+
+// define('FOF_AUTH_EXTERNAL',1); // trust server auth to manage users
+// define('FOF_AUTH_EXTERNAL_ONLY', 1); // never fall back to internal user/passwords
+// define('FOF_AUTH_EXTERNAL_ADD', 1); // create user->id mappings automatically
 
 // The rest you should not need to change
 
