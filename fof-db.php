@@ -1201,6 +1201,33 @@ function fof_db_get_tag_by_name($tags)
     return NULL;
 }
 
+/* removes unread tag from all items with tagname for user_id */
+function fof_db_mark_tag_read($user_id, $tagname) {
+    global $FOF_ITEM_TAG_TABLE;
+    global $fof_connection;
+
+    fof_trace();
+
+    $user_id = $fof_connection->quote($user_id);
+    $tag_id = fof_db_get_tag_by_name($tagname);
+    $unread_id = fof_db_get_tag_by_name('unread');
+    if (empty($tag_id) || empty($unread_id) || $tag_id == $unread_id)
+        return false;
+
+    /* items with all these tags */
+    $matching_tag_ids = array($tag_id, $unread_id);
+
+    /* all items with both unread and tagname */
+    $items_query = "SELECT item_id FROM $FOF_ITEM_TAG_TABLE it WHERE it.user_id = $user_id AND it.tag_id IN (" . implode(', ', $matching_tag_ids) . ") GROUP BY it.item_id HAVING COUNT(DISTINCT it.tag_id) = " . count($matching_tag_ids);
+
+    /* get rid of the unread ones */
+    $untag_query = "DELETE FROM $FOF_ITEM_TAG_TABLE WHERE user_id = $user_id AND tag_id = $unread_id AND item_id IN ($items_query)";
+
+    $result = fof_db_exec($untag_query);
+
+    return $result;
+}
+
 function fof_db_mark_unread($user_id, $items)
 {
     fof_trace();

@@ -12,20 +12,16 @@
  *
  */
 
-include_once("fof-main.php");
+include_once('fof-main.php');
 
-$tags = $_GET['tag'];
-$item = $_GET['item'];
-$remove = $_GET['remove'];
+$tags = $_POST['tag'];
+$item = $_POST['item'];
+$remove = $_POST['remove'];
 
-foreach(explode(" ", $tags) as $tag)
-{
-    if($remove == 'true')
-    {
+foreach (explode(' ', $tags) as $tag) {
+    if($remove == 'true') {
         fof_untag_item(fof_current_user(), $item, $tag);
-    }
-    else
-    {
+    } else {
         fof_tag_item(fof_current_user(), $item, $tag);
     }
 }

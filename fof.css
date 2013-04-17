@@ -63,12 +63,18 @@ p
     padding-top: 25px;
 }
 
+#sidebar #throbber {
+    position: fixed;
+    left: 0;
+    top: 0;
+}
+
 #nav
 {
     font-size: 11px;
 }
 
-#sidebar ul
+#sidebar #nav ul
 {
     padding-left: 2em;
 }
@@ -87,6 +93,10 @@ p
 {
     border-collapse: collapse;
     width: 100%;
+}
+
+#sidebar th {
+    font-weight: normal;
 }
 
 .heading a
@@ -109,11 +119,12 @@ p
 
 .odd-row
 {
-    background: #dddddd;
+    background: #ddd;
 }
 
 .current-view {
     background: #ddd;
+    border: 1px #ccc;
 }
 
 .unread
@@ -199,7 +210,7 @@ body
     overflow: hidden;
 }
 
-.item.selected
+.item .selected
 {
     border: 2px solid #888;
     background-color: #eee;
@@ -378,6 +389,17 @@ padding: 5px 4px;
 padding: 0;
 }
 
+#keyboard-legend {
+position: fixed;
+top: 40px;
+right: 20px;
+padding: 10px;
+font-size: 50%;
+width: 20%;
+background: #eee;
+border: 1px solid #000;
+}
+
 .item-date-nav
 {
 text-align: center;
@@ -416,4 +438,61 @@ width: 10px;
 height: 10px;
 border: 0;
 }
+
+/* fancy sidebar menus */
+.feedmenu {
+    list-style: none;
+    margin: 0px;
+    padding-left: 10px;
+    padding-right: 10px;
+    float: left;
+    width: 20%;
+    position: relative;
+}
+.feedmenu li {
+    float: left;
+    position: relative;
+}
+.feedmenu a {
+    display: block;
+    padding: 2px;
+    padding-left: 10px;
+    padding-right: 10px;
+    text-decoration: none;
+}
+.feedmenu a:hover {
+    color: #fff;
+    background: #333;
+    text-decoration: underline;
+}
+.feedmenu ul {
+    background: #ccc;
+    list-style: none;
+    position: absolute;
+    right: 9999px;
+    background-color: #eee;
+    border: 1px solid black;
+    margin: 0px;
+    padding: 2px;
+    z-index: 4;
+}
+.feedmenu ul li {
+    padding-top: 1px;
+    float: none;
+}
+.feedmenu ul a {
+    white-space: nowrap;
+}
+.feedmenu li:hover ul {
+    right: 0px;
+}
+.feedmenu li:hover a {
+    background: #ccc;
+    text-decoration: underline;
+}
+.feedmenu li:hover ul a {
+    text-decoration: none;
+}
+.feedmenu li:hover ul li a:hover {
+    background: #333;
 }
