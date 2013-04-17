@@ -14,7 +14,7 @@
 
 include_once('fof-main.php');
 
-$feed_id = $_GET['feed'];
+$feed_id = $_POST['feed'];
 list ($count, $error) = fof_update_feed($feed_id);
 $feed = fof_db_get_feed_by_id($feed_id);
 

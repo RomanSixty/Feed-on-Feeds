@@ -91,6 +91,7 @@ $title = fof_view_title($feed, $what, $when, $which, $howmany, $search, $itemcou
     if ($order == 'desc')
         echo '</a>';
     echo "</li>\n";
+
 ?>
 	<li><a href="javascript:flag_all();mark_read()"><strong>Mark all read</strong></a></li>
 	<li><a href="javascript:flag_all()">Flag all</a></li>
@@ -103,6 +104,32 @@ $title = fof_view_title($feed, $what, $when, $which, $howmany, $search, $itemcou
 	<li><a href="javascript:untag_all()">Untag all</a></li>
 </ul>
 
+<?php
+if ($fof_prefs_obj->get('keyboard')) {
+?>
+<div id="keyboard-legend" style="display:none">
+  <span style="font-variant:small-caps;">Keyboard Commands</span>
+  <dl>
+    <dt>?</dt><dd>Toggle this display.</dd>
+    <dt>H</dt><dd>Toggle folding of all visible items.</dd>
+    <dt>h</dt><dd>Toggle folding of current item.</dd>
+    <dt>s</dt><dd>Toggle starring of current item.</dd>
+    <dt>f</dt><dd>Mark current item as read.</dd>
+    <dt>F</dt><dd>Mark current and all previous items as read.</dd>
+    <dt>U</dt><dd>Mark all items as unread.</dd>
+    <dt>j</dt><dd>Mark current item as read and move to next item.</dd>
+    <dt>J</dt><dd>??</dd>
+    <dt>n</dt><dd>Skip to next item.</dd>
+    <dt>p</dt><dd>Skip to previous item.</dd>
+    <dt>N</dt><dd>Skip to last item.</dd>
+    <dt>P</dt><dd>Skip to first item.</dd>
+    <dt>r</dt><dd>Refresh sidebar.</dd>
+  </dl>
+</div>
+
+<?php
+}
+?>
 
 <!-- close this form to fix first item! -->
 		<form id="itemform" name="items" action="view-action.php" method="post" onSubmit="return false;">

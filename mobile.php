@@ -17,6 +17,9 @@ include_once("fof-render.php");
 
 $result = fof_get_items($fof_user_id, NULL, "unread", NULL, 0, 10);
 
+$prefs = fof_prefs();
+$offset = isset($prefs['tzoffset']) ? $prefs['tzoffset'] : 0;
+
 fof_set_content_type();
 ?>
 <!DOCTYPE html>
@@ -47,13 +50,13 @@ function toggle_favorite(id)
 {
     var image = $('fav' + id);
 
-    var url = "add-tag.php?tag=star";
-    var params = "&item=" + id;
+    var url = "add-tag.php";
+    var params = { "tag": "star", "item": id };
     image.src = 'image/star-pending.gif';
 
     if(image.star)
     {
-        params += "&remove=true";
+        params["remove"] = "true";
         var complete = function()
         {
             image.src='image/star-off.gif';
@@ -69,7 +72,7 @@ function toggle_favorite(id)
         };
     }
 
-    var options = { method: 'get', parameters: params, onComplete: complete };  
+    var options = { method: 'post', parameters: params, onComplete: complete };
     new Ajax.Request(url, options);
 
     return false;
@@ -109,7 +112,6 @@ foreach($result as $item)
     $item_id = $item['item_id'];
     $item_title = $item['item_title'];
     $item_content = $item['item_content'];
-    $item_read = $item['item_read'];
 
     $item_published = gmdate("Y-n-d g:ia", $item['item_published'] + $offset*60*60);
     $item_cached = gmdate("Y-n-d g:ia", $item['item_cached'] + $offset*60*60);

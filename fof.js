@@ -527,6 +527,14 @@ function keyboard(e)
         }
     }
 
+    if (key == "r") { // refresh sidebar
+        refreshlist();
+    }
+
+    if (key == "?") { // show help pane
+        $('keyboard-legend').toggle();
+    }
+
     return true;
 }
 
@@ -619,7 +627,7 @@ function hide_body(id)
 	throb();
 
 	var url = "view-action.php";
-	var params = "fold=" + id;
+	var params = { "fold": id };
 	var complete = function () { $('i'+id).className = 'item hidden'; unthrob(); };
 	var options = { method: 'post', parameters: params, onComplete: complete };
 
@@ -631,7 +639,7 @@ function show_body(id)
 	throb();
 
 	var url = "view-action.php";
-	var params = "unfold=" + id;
+	var params = { "unfold": id };
 
 	var complete = function () { $('i'+id).className = 'item shown'; unthrob(); };
 	var options = { method: 'post', parameters: params, onComplete: complete };
@@ -704,7 +712,7 @@ function ajax_mark_read(id)
     throb();
 
     var url = "view-action.php";
-    var params = "mark_read=" + id;
+    var params = { "mark_read": id };
     var complete = function () {
         refreshlist();
 
@@ -736,7 +744,7 @@ function mark_feed_read(id)
     throb();
 
     var url = "view-action.php";
-    var params = "feed=" + id;
+    var params = { "feed": id };
     var complete = function () { refreshlist(); };
     var options = { method: 'post', parameters: params, onComplete: complete };
 
@@ -756,9 +764,9 @@ function add_tag(id, tag)
     throb();
 
     var url = "add-tag.php";
-    var params = "tag=" + encodeURIComponent(tag) + "&item=" + id;
+    var params = { "tag": tag, "item": id };
     var complete = function () { refreshlist(); refreshitem(id); };
-    var options = { method: 'get', parameters: params, onComplete: complete };
+    var options = { method: 'post', parameters: params, onComplete: complete };
 
     new Ajax.Request(url, options);
 
@@ -770,9 +778,9 @@ function remove_tag(id, tag)
     throb();
 
     var url = "add-tag.php";
-    var params = "remove=true&tag=" + encodeURIComponent(tag) + "&item=" + id;
+    var params = { "remove": "true", "tag": tag, "item": id };
     var complete = function () { refreshlist(); refreshitem(id); };
-    var options = { method: 'get', parameters: params, onComplete: complete };
+    var options = { method: 'post', parameters: params, onComplete: complete };
 
     new Ajax.Request(url, options);
 
@@ -784,9 +792,9 @@ function delete_tag(tag)
     throb();
 
     var url = "view-action.php";
-    var params = "deltag=" + encodeURIComponent(tag);
+    var params = { "deltag": tag };
     var complete = function () { refreshlist(); };
-    var options = { method: 'get', parameters: params, onComplete: complete };
+    var options = { method: 'post', parameters: params, onComplete: complete };
 
     new Ajax.Request(url, options);
 
@@ -798,7 +806,7 @@ function change_feed_order(order, direction)
     throb();
 
     var url = "set-prefs.php";
-    var params = "feed_order=" + order + "&feed_direction=" + direction;
+    var params = { "feed_order": order, "feed_direction": direction };
     var complete = function () { refreshlist(); };
     var options = { method: 'post', parameters: params, onComplete: complete };
 
@@ -814,13 +822,13 @@ function toggle_favorite(id)
 
     var image = $('fav' + id);
 
-    var url = "add-tag.php?tag=star";
-    var params = "&item=" + id;
+    var url = "add-tag.php";
+    var params = { "tag": "star", "item": id };
     image.src = 'image/star-pending.gif';
 
     if(image.className == 'starred')
     {
-        params += "&remove=true";
+        params['remove'] = "true";
         var complete = function()
 		{
 			image.src='image/star-off.gif';
@@ -856,7 +864,7 @@ function toggle_favorite(id)
 		};
     }
 
-    var options = { method: 'get', parameters: params, onComplete: complete };
+    var options = { method: 'post', parameters: params, onComplete: complete };
     new Ajax.Request(url, options);
 
     return false;
@@ -867,7 +875,7 @@ function refreshitem(id)
     throb();
 
     var url = 'item.php';
-    var params = 'id=' + id;
+    var params = { "id": id };
     new Ajax.Updater($("i"+id), url, {method: 'get', parameters: params });
 }
 
@@ -877,10 +885,10 @@ function refreshlist()
     throb();
 
     var url = 'sidebar.php';
-    var params = 'what=' + encodeURIComponent(what);
+    var params = { "what": what };
 
     if (when != null)
-        params += '&when=' + encodeURIComponent(when);
+        params["when"] = when;
 
     new Ajax.Updater($('sidebar'), url, {method: 'get', parameters: params, evalScripts: true });
 }
@@ -912,8 +920,8 @@ function continueupdate()
 //        $('items').childElements().last().scrollTo();
 
         new Ajax.Updater(update_feed_id, 'update-single.php', {
-            method: 'get',
-            parameters: 'feed=' + f['id'],
+            method: 'post',
+            parameters: { "feed": f["id"] },
             onComplete: continueupdate
         });
     }
@@ -932,10 +940,10 @@ function continueadd()
         var new_feed_id = 'feed_index_' + f['idx'];
 //        $(new_feed_id).scrollTo();
 
-        parameters = 'url=' + encodeURIComponent(f['url']) + "&unread=" + document.addform.unread.value;
+        parameters = { "url": f['url'], "unread": document.addform.unread.value };
 
         new Ajax.Updater(new_feed_id, 'add-single.php', {
-            method: 'get',
+            method: 'post',
             parameters: parameters,
             onComplete: continueadd
         });
@@ -990,4 +998,28 @@ function sb_del_tag_conf(tagname) {
 
 function sb_unsub_conf(title) {
     return confirm('Unsubscribe [' + title + '] -- are you SURE?');
+}
+
+function sb_mark_tag_read(tagname) {
+    if (confirm('Mark all [' + tagname + '] items as read -- are you SURE?')) {
+            throb();
+
+            var url = "view-action.php";
+            var params = { 'tag_read': tagname };
+            var complete = function () { refreshlist(); };
+            var options = { method: 'post', parameters: params, onComplete: complete };
+
+            new Ajax.Request(url, options);
+    }
+    return false;
+}
+
+function sb_update_feed(id) {
+    throb();
+
+    var url = "view-action.php";
+    var params = { 'feed_update': id };
+    var complete = function() { refreshlist(); };
+    var options = { method: 'post', parameters: params, onComplete: complete };
+    new Ajax.Request(url, options);
 }

@@ -335,12 +335,12 @@ function fof_nice_time_stamp($age)
     $days = floor($age / 60 / 60 / 24);
     if ($days > 365)
         return array(
-            floor($days / 365) . (floor($days / 365) == 1 ? '' : 's') . ' ago',
+            floor($days / 365) . ' year' . (floor($days / 365) == 1 ? '' : 's') . ' ago',
             floor($days / 365) . 'y'
         );
     else if ($days > 7)
         return array(
-            floor($days / 7) . (floor($days / 7) == 1 ? '' : 's') . ' ago',
+            floor($days / 7) . ' week' . (floor($days / 7) == 1 ? '' : 's') . ' ago',
             floor($days / 7) . 'w'
         );
     else if ($days)

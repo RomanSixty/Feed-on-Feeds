@@ -89,6 +89,7 @@ if(isset($_GET['untagfeed']))
 
 if(isset($_POST['prefs']))
 {
+    $prefs->set('sidebar_style', $_POST['sidebar_style']);
     $prefs->set('simple_sidebar', isset($_POST['simple_sidebar']));
     $prefs->set('favicons', isset($_POST['favicons']));
     $prefs->set('keyboard', isset($_POST['keyboard']));
@@ -195,13 +196,23 @@ if ( ! empty($message)) {
 <form method="post" action="prefs.php#basic" style="border: 1px solid black; margin: 10px; padding: 10px;">
   <fieldset>
     <legend><b>Basic Settings</b></legend>
+    Sidebar style: <select name="sidebar_style">
+<?php
+    $sidebar_style = $prefs->get('sidebar_style');
+    /* migrate old settings */
+    if (empty($sidebar_style) && $prefs->get('simple_sidebar'))
+        $sidebar_style = 'simple';
+?>
+        <option value=""<?php if (empty($sidebar_style)) echo ' selected'; ?>>Default</option>
+        <option value="simple"<?php if ($sidebar_style === 'simple') echo ' selected'; ?>>Simple</option>
+        <option value="fancy"<?php if ($sidebar_style === 'fancy') echo ' selected'; ?>>Fancy</option>
+    </select>
+    <br>
     Default display order: <select name="order"><option value=desc>new to old</option><option value=asc <?php if($prefs->get('order') == "asc") echo "selected";?>>old to new</option></select>
     <br>
     Number of items in paged displays: <input type="string" size="3" name="howmany" value="<?php echo $prefs->get('howmany') ?>">
     <br>
     Display custom feed favicons? <input type="checkbox" name="favicons"<?php if($prefs->get('favicons')) echo " checked=true";?>>
-    <br>
-    Display simple sidebar? <input type="checkbox" name="simple_sidebar"<?php if($prefs->get('simple_sidebar')) echo " checked=true";?>>
     <br>
     Use keyboard shortcuts? <input type="checkbox" name="keyboard"<?php if($prefs->get('keyboard')) echo " checked=true";?>>
     <br>
