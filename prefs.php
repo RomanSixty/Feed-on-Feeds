@@ -266,10 +266,10 @@ if ( ! defined('FOF_AUTH_EXTERNAL_ONLY')) {
     $dirlist = opendir(FOF_DIR . "/plugins");
     while($file=readdir($dirlist))
     {
-        fof_log("considering " . $file);
         if(preg_match('/\.php$/',$file))
         {
-           $plugins[] = substr($file, 0, -4);
+            fof_log("considering " . $file);
+            $plugins[] = substr($file, 0, -4);
         }
     }
 

@@ -972,6 +972,38 @@ function fof_db_tag_delete($items)
     $result = fof_db_exec($query);
 }
 
+/* fetches an array of tag_ids and the list of feed_ids which tag them for $user_id */
+function fof_db_subscriptions_by_tags($user_id) {
+    global $FOF_SUBSCRIPTION_TABLE;
+    global $fof_connection;
+    $r = array();
+
+    fof_trace();
+
+    $query = "SELECT feed_id, subscription_prefs FROM $FOF_SUBSCRIPTION_TABLE WHERE user_id = :user_id";
+    $statement = $fof_connection->prepare($query);
+    $statement->bindValue('user_id', $user_id);
+    $result = fof_db_statement_execute($statement);
+
+    while (($sub = fof_db_get_row($statement)) !== false) {
+        $sub['subscription_prefs'] = empty($sub['subscription_prefs']) ? array('tags'=>array()) : unserialize($sub['subscription_prefs']);
+        if ( ! empty($sub['subscription_prefs']['tags'])) {
+            foreach ($sub['subscription_prefs']['tags'] as $tagid) {
+                if (empty($r[$tagid]))
+                    $r[$tagid] = array();
+                $r[$tagid][] = $sub['feed_id'];
+            }
+        } else {
+            $tagid = 0; /* untagged feeds get lumped into tagid '0' */
+            if (empty($r[$tagid]))
+                $r[$tagid] = array();
+            $r[$tagid][] = $sub['feed_id'];
+        }
+    }
+
+    return $r;
+}
+
 function fof_db_get_subscription_to_tags()
 {
     global $FOF_SUBSCRIPTION_TABLE;

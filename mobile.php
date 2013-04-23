@@ -52,14 +52,14 @@ function toggle_favorite(id)
 
     var url = "add-tag.php";
     var params = { "tag": "star", "item": id };
-    image.src = 'image/star-pending.gif';
+    image.src = '<?php echo $fof_asset['star_pend_image']; ?>';
 
     if(image.star)
     {
         params["remove"] = "true";
         var complete = function()
         {
-            image.src='image/star-off.gif';
+            image.src='<?php echo $fof_asset['star_off_image']; ?>';
             image.star = false;
         };
     }
@@ -67,7 +67,7 @@ function toggle_favorite(id)
     {
         var complete = function()
         {
-            image.src='image/star-on.gif';
+            image.src='<?php echo $fof_asset['star_on_image']; ?>';
             image.star = true;
         };
     }
@@ -120,7 +120,7 @@ foreach($result as $item)
     if(!$item_title) $item_title = "[no title]";
     $tags = $item['tags'];
     $star = in_array("star", $tags) ? true : false;
-    $star_image = $star ? "image/star-on.gif" : "image/star-off.gif";
+    $star_image = $star ? $fof_asset['star_on_image'] : $fof_asset['star_off_image'];
 
 ?>
 

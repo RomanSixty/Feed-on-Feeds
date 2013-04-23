@@ -9,6 +9,33 @@ var item;
 var itemElement;
 var itemElements;
 
+var pendingUpdates = [];
+pendingUpdates.inFlight = 0;
+pendingUpdates.add = function(items) { this.push.apply(this, items); this.work(); }
+pendingUpdates.work = function() {
+    var that = this;
+    var url = "feed-action.php";
+    var complete = function() {
+        that.inFlight -= 1;
+        if (that.inFlight == 0 && that.length == 0)
+            unthrob();
+    };
+    while (that.length) {
+        var id = that.shift();
+        that.inFlight += 1;
+
+        var feed_element = $$("#sidebar #feeds #f" + id)[0];
+        var feed_icon_element = $$("#sidebar #feeds #f" + id + " img.feed-icon")[0];
+        feed_icon_element.replace("<img class=\"feed-icon\" src=\"image/spinner.gif\" title=\"update pending\" />");
+
+        var params = { "update_feedid": id };
+        var options = { method: "post", parameters: params, onComplete: complete };
+        new Ajax.Updater( { success: feed_element, failure: feed_icon_element }, url, options);
+    }
+    if (that.inFlight == 0 && that.length == 0)
+        unthrob();
+}
+
 // magic from http://peter.michaux.ca/article/3556
 
 var getScrollY = function() {
@@ -1002,14 +1029,14 @@ function sb_unsub_conf(title) {
 
 function sb_mark_tag_read(tagname) {
     if (confirm('Mark all [' + tagname + '] items as read -- are you SURE?')) {
-            throb();
+        throb();
 
-            var url = "view-action.php";
-            var params = { 'tag_read': tagname };
-            var complete = function () { refreshlist(); };
-            var options = { method: 'post', parameters: params, onComplete: complete };
+        var url = "view-action.php";
+        var params = { 'tag_read': tagname };
+        var complete = function () { refreshlist(); };
+        var options = { method: 'post', parameters: params, onComplete: complete };
 
-            new Ajax.Request(url, options);
+        new Ajax.Request(url, options);
     }
     return false;
 }
@@ -1017,9 +1044,25 @@ function sb_mark_tag_read(tagname) {
 function sb_update_feed(id) {
     throb();
 
-    var url = "view-action.php";
-    var params = { 'feed_update': id };
-    var complete = function() { refreshlist(); };
-    var options = { method: 'post', parameters: params, onComplete: complete };
+    var url = "feed-action.php";
+    var params = { "update_feedid": id };
+    var complete = function() { unthrob(); };
+    var options = { method: "post", parameters: params, onSuccess: complete };
+    var feed_element = $$("#sidebar #feeds #f" + id)[0];
+    var feed_icon_element = $$("#sidebar #feeds #f" + id + " img.feed-icon")[0];
+
+    /* show in-progress state */
+    feed_icon_element.replace("<img class=\"feed-icon\" src=\"image/spinner.gif\" title=\"update pending\" />");
+
+    /* success replaces the whole table row, failure just replaces the icon */
+    new Ajax.Updater( { success: feed_element, failure: feed_icon_element }, url, options);
+}
+
+function sb_update_tag_sources(tagname) {
+    throb();
+
+    var url = "feed-action.php";
+    var params = { "update_tag_sources": tagname };
+    var options = { method: "post", parameters: params };
     new Ajax.Request(url, options);
 }
