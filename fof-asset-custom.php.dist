@@ -1,0 +1,6 @@
+<?php
+/* override assets here */
+$fof_asset = array_merge($fof_asset, array(
+//    'tag_icon' => 'images/tag-icon.png'
+));
+?>

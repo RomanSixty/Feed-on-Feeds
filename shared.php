@@ -29,6 +29,8 @@ if($sharing == "no") die;
 $name = $prefs->get("sharedname");
 $url = $prefs->get("sharedurl");
 
+$offset = $prefs->get('tzoffset');
+
 $which = ($sharing == "all") ? "all" : "shared";
 
 if(isset($_GET['which']))
@@ -164,7 +166,6 @@ else /* format != 'atom' */
         $item_id = $item['item_id'];
         $item_title = $item['item_title'];
         $item_content = $item['item_content'];
-        $item_read = $item['item_read'];
 
         $item_published = gmdate("Y-n-d g:ia", $item['item_published'] + $offset*60*60);
         $item_cached = gmdate("Y-n-d g:ia", $item['item_cached'] + $offset*60*60);

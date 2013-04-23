@@ -31,6 +31,7 @@ if ( (@include_once('fof-config.php')) === false ) {
     die();
 }
 
+require_once('fof-asset.php');
 require_once('fof-db.php');
 require_once('classes/fof-prefs.php');
 
@@ -374,6 +375,73 @@ function fof_nice_time_stamp($age)
         'never',
         '&infin;'
     );
+}
+
+/* returns an array representing a user's view of a feed */
+function fof_get_feed($user_id, $feed_id) {
+    /* should verify user_id is subscribed to feed */
+
+    $feed = fof_db_get_feed_by_id($feed_id);
+
+    if ( ! empty($feed['alt_image']))
+        $feed['feed_image'] = $feed['alt_image'];
+
+    if ( ! empty($feed['subscription_prefs'])) {
+        $feed['prefs'] = unserialize($feed['subscription_prefs']);
+        unset($feed['subscription_prefs']);
+    }
+    if (empty($feed['prefs']))
+        $feed['prefs'] = array('tags' => array());
+    if (empty($feed['prefs']['tags']))
+        $feed['prefs']['tags'] = array();
+    $feed['tags'] = array();
+    $tagmap = fof_db_get_tag_id_map();
+    foreach ($feed['prefs']['tags'] as $tagid) {
+        $feed['tags'][] = $tagmap[$tagid];
+    }
+    unset($tagmap);
+
+    $feed['feed_items'] = 0;
+    $feed['feed_read'] = 0;
+    $statement = fof_db_get_item_count($user_id, 'all', $feed_id);
+    while ( ($row = fof_db_get_row($statement)) !== false ) {
+        $feed['feed_items'] += $row['count'];
+        $feed['feed_read'] += $row['count'];
+    }
+
+    $feed['feed_unread'] = 0;
+    $statement = fof_db_get_item_count($user_id, 'unread', $feed_id);
+    while ( ($row = fof_db_get_row($statement)) !== false ) {
+        $feed['feed_unread'] += $row['count'];
+    }
+
+    $feed['feed_starred'] = 0;
+    $statement = fof_db_get_item_count($user_id, 'starred', $feed_id);
+    while ( ($row = fof_db_get_row($statement)) !== false ) {
+        $feed['feed_starred'] += $row['count'];
+    }
+
+    $feed['feed_tagged'] = 0;
+    $statement = fof_db_get_item_count($user_id, 'tagged', $feed_id);
+    while ( ($row = fof_db_get_row($statement)) !== false ) {
+        $feed['feed_tagged'] += $row['count'];
+    }
+
+    $feed['feed_age'] = $feed['feed_cache_date'];
+    list($feed['agestr'], $feed['agestrabbr']) = fof_nice_time_stamp($feed['feed_cache_date']);
+
+    $feed['max_date'] = 0;
+    $feed['lateststr'] = '';
+    $feed['lateststrabbr'] = '';
+    $statement = fof_db_get_latest_item_age($user_id);
+    while ( ($row = fof_db_get_row($statement)) !== false) {
+        if ($row['id'] == $feed['feed_id']) {
+            $feed['max_date'] = $row['max_date'];
+            list($feed['lateststr'], $feed['lateststrabbr']) = fof_nice_time_stamp($row['max_date']);
+        }
+    }
+
+    return $feed;
 }
 
 function fof_get_feeds($user_id, $order = 'feed_title', $direction = 'asc')
@@ -1280,4 +1348,94 @@ function fof_get_favicon ( $url )
 
     return $path;
 }
+
+/* generate the contents of a tr element from a feed db row*/
+function fof_render_feed_row($f) {
+    global $fof_asset;
+    global $fof_prefs_obj;
+
+    $out = '';
+
+    /* provide some reasonable fallbacks when things aren't set */
+    $link = $f['feed_link'] == '[no link]' ? $f['feed_url'] : $f['feed_link'];
+    $title = $f['feed_title'] == '[no title]' ? $link : $f['feed_title'];
+    $title_json = htmlentities(json_encode($title), ENT_QUOTES);
+
+    /* show default icon if none exists, or we don't want per-feed icons */
+    $image = (empty($f['feed_image']) || ! $fof_prefs_obj->get('favicons')) ? $fof_asset['feed_icon'] : $f['feed_image'];
+
+    $unread = empty($f['feed_unread']) ? 0 : $f['feed_unread'];
+    $items = empty($f['feed_items']) ? 0 : $f['feed_items'];
+    $starred = empty($f['feed_starred']) ? 0 : $f['feed_starred'];
+    $tagged = empty($f['feed_tagged']) ? 0 : $f['feed_tagged'];
+    $feed_view_unread_url = fof_url('.', array('feed' => $f['feed_id'], 'how' => 'paged'));
+    $feed_view_all_url = fof_url('.', array('feed' => $f['feed_id'], 'how' => 'paged', 'what' => 'all'));
+    $feed_unsubscribe_url = fof_url('delete.php', array('feed' => $f['feed_id']));
+    $feed_update_url = fof_url('update.php', array('feed' => $f['feed_id']));
+
+    switch ($fof_prefs_obj->get('sidebar_style')) {
+        case 'simple': /* feed_unread feed_title */
+            $out .= '	<td align="center"><a href="' . $f['feed_url'] . '" title="feed"><img class="feed-icon" src="' . $image . '" /</a></td>' . "\n";
+
+            $out .= '	<td><a href="' . ($unread ? $feed_view_unread_url : $feed_view_all_url) . '">' . $title . '</a></td>' . "\n";
+
+            /* controls */
+            $out .= '	<td><a href="' . $feed_unsubscribe_url . '" title="delete" onclick="return sb_unsub_conf(' . $title_json . ');">[x]</a></td>' . "\n";
+            break;
+
+        case 'fancy': /* feed_url max_date feed_unread feed_title */
+            $out .= '	<td align="center"><a href="' . $link . '" title="site"' . ($fof_prefs_obj->get('item_target') ? ' target="_blank"' : '') . '><img class="feed-icon" src="' . $image . '" /></a></td>' . "\n";
+
+            $out .= '	<td style="text-align: right;"><span title="' . $f['lateststr'] . '" id="' . $f['feed_id'] . '-lateststr">' . $f['lateststrabbr'] . '</span></td>' . "\n";
+
+            $out .= '	<td style="text-align: right;"><span class="nowrap" id="' . $f['feed_id'] . '-items">';
+            if ($unread)
+                $out .= '<a class="unread" title="' . $unread . ' unread items" href="' . $feed_view_unread_url . '">' . $unread . '</a>';
+            $out .= '</span></td>' . "\n";
+
+            $out .= '	<td><a href="' . $feed_view_all_url . '" title="' . $items . ' total items">' . $title . '</a></td>' . "\n";
+
+            /* controls */
+            $out .= '	<td>';
+            $out .=   '<ul class="feedmenu">';
+            $out .=     '<li>';
+            $out .=       '<a href="#" title="feed controls">&Delta;</a>';
+            $out .=       '<ul>';
+            $out .=         '<li><a href="#" title="last update ' . $f['agestr']. '" onclick="return sb_update_feed(' . $f['feed_id'] . ');">Update Feed</a></li>';
+            $out .=         '<li><a href="#" title="mark all as read" onclick="">Mark all items as read</a></li>';
+            $out .=         '<li><a href="' . $link . '" title="home page"' . ($fof_prefs_obj->get('item_target') ? ' target="_blank"' : '') . '>Feed Source Site</a></li>';
+            $out .=         '<li><a href="' . $feed_unsubscribe_url . '" title="unsubscribe" onclick="return sb_unsub_conf(' . $title_json . ');">Unsubscribe from feed</a></li>';
+            $out .=       '</ul>';
+            $out .=     '</li>';
+            $out .=   '</ul>';
+            $out .= '</td>' . "\n";
+            break;
+
+        default: /* feed_age max_date feed_unread feed_url feed_title */
+            $out .= '	<td style="text-align: right;"><span title="' . $f['agestr'] . '" id="' . $f['feed_id'] . '-agestr">' . $f['agestrabbr'] . '</span></td>' . "\n";
+
+            $out .= '	<td style="text-align: right;"><span title="' . $f['lateststr'] . '" id="' . $f['feed_id'] . '-lateststr">' . $f['lateststrabbr'] . '</span></td>' . "\n";
+
+            $out .= '	<td style="text-align: right;" class="nowrap" id="' . $f['feed_id'] . '-items">';
+            if ($unread)
+                echo '<a class="unread" title="new items" href="' . $feed_view_unread_url . '">' . $unread . '</a>/';
+            $out .= '<a href="' . $feed_view_all_url . '" title="all items, ' . $starred . ' starred, ' . $tagged . ' tagged">' . $items . '</a>';
+            $out .= '</td>' . "\n";
+
+            $out .= '	<td align="center"><a href="' . $f['feed_url'] . '"><img class="feed-icon" src="' . $image .'" ></a>' . "\n";
+
+            $out .= '	<td><a href="' . $link . '" title="home page"' . ($fof_prefs_obj->get('item_target') ? ' target="_blank"' : '') . '><b>' . $title . '</b></a></td>' . "\n";
+
+            /* controls */
+            $out .= '	<td><span class="nowrap">';
+            $out .= ' <a href="' . $feed_update_url . '" title="update">u</a>';
+            $out .= ' <a href="#" title="mark all read" onclick="return sb_read_conf(' . $title_json . ', ' . $id . ');">m</a>';
+            $out .= ' <a href="' . $feed_unsubscribe_url . '" title="delete" onclick="return sb_unsub_conf(' . $title_json . ');">d</a>';
+            $out .= '</span></td>' . "\n";
+            break;
+    }
+
+    return $out;
+}
+
 ?>

@@ -12,6 +12,8 @@
  *
  */
 
+require_once('fof-asset.php');
+
 // From Brian Suda @ http://suda.co.uk/projects/SEHL/
 
 function do_highlight($full_body, $q, $class){
@@ -50,6 +52,8 @@ function fof_render_get_key_($array, $key, $default=NULL) {
 
 function fof_render_item($item, $include_div=true)
 {
+    global $fof_asset;
+
 	$feed_link = fof_render_get_key_($item, 'feed_link');
 	if ($feed_link == "[no link]")
 	    $feed_link = $item['feed_url'];
@@ -81,7 +85,7 @@ function fof_render_item($item, $include_div=true)
     $tags = fof_render_get_key_($item, 'tags', array());
 
 	$star = in_array("star", $tags) ? true : false;
-	$star_image = $star ? "image/star-on.gif" : "image/star-off.gif";
+	$star_image = $star ? $fof_asset['star_on_image'] : $fof_asset['star_off_image'];
 
 	$unread = in_array("unread", $tags) ? true : false;
 

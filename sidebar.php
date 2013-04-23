@@ -23,11 +23,23 @@ function fof_sidebar_get_key_($array, $key, $default=NULL) {
     return $default;
 }
 
+$sidebar_style = $fof_prefs_obj->get('sidebar_style');
+/* honor old pref, if user hasn't saved new-style yet */
+if (empty($sidebar_style) && $fof_prefs_obj->get('simple_sidebar'))
+    $sidebar_style = 'simple';
+
 ?>
-<img id="throbber" src="image/throbber.gif" align="left" style="display: none;" />
+<img id="throbber" src="<?php echo $fof_asset['throbber_image']; ?>" align="left" style="display: none;" />
 <center id="welcome">Welcome <b><?php echo $fof_user_name ?></b>! <a href="prefs.php">prefs</a><?php if ( ! defined('FOF_AUTH_EXTERNAL')) { ?> | <a href="logout.php">log out</a><?php } ?> | <a href="http://feedonfeeds.com/">about</a></center>
 <br>
-<center><a href="add.php"><b>Add Feeds</b></a> / <a href="update.php"><b>Update Feeds</b></a></center>
+<?php
+echo '<center><a href="add.php"><b>Add Feeds</b></a> / ';
+if ($sidebar_style == "fancy")
+    echo '<a href="#" title="Update all subscribed feeds" onclick="' . htmlentities('throb(); new Ajax.Request("feed-action.php", {method:"post", parameters:{"update_subscribed_sources": true}});', ENT_QUOTES) . '"><b>Update Feeds</b></a>';
+else
+    echo '<a href="update.php"><b>Update Feeds</b></a>';
+echo '</center>' . "\n";
+?>
 
 <ul id="nav">
 <?php
@@ -35,11 +47,6 @@ function fof_sidebar_get_key_($array, $key, $default=NULL) {
 $order = $fof_prefs_obj->get('feed_order');
 $direction = $fof_prefs_obj->get('feed_direction');
 $sharing = $fof_prefs_obj->get('sharing');
-
-$sidebar_style = $fof_prefs_obj->get('sidebar_style');
-/* honor old pref, if user hasn't saved new-style yet */
-if (empty($sidebar_style) && $fof_prefs_obj->get('simple_sidebar'))
-    $sidebar_style = 'simple';
 
 /* these parameters control highlighting of the active view */
 $what = fof_sidebar_get_key_($_GET, 'what', 'unread');
@@ -79,7 +86,7 @@ if ( ! empty($unread)) {
     echo "</li>\n";
 
     echo '  <li' . (empty($feed) && $what == 'star' ? " class='current-view'" : '') . '>';
-    echo '<a href="' . fof_url('.', array('what'=>'star', 'how'=>'paged')). '"><img class="star-icon-small" src="image/star-on.gif" /> Starred <span id="starredcount">' . ($starred ? "($starred)" : '') . '</span></a>';
+    echo '<a href="' . fof_url('.', array('what'=>'star', 'how'=>'paged')). '"><img class="star-icon-small" src="' . $fof_asset['star_on_image'] . '" /> Starred <span id="starredcount">' . ($starred ? "($starred)" : '') . '</span></a>';
     echo ' [<a href="' . fof_url('.', array('what'=>'star')). '">unpaged</a>]';
     echo "</li>\n";
 
@@ -107,6 +114,7 @@ if ( ! empty($unread)) {
 
 <?php
 function fof_sidebar_tags_fancy() {
+    global $fof_asset;
     global $sharing;
 
     $taglines = array();
@@ -118,7 +126,10 @@ function fof_sidebar_tags_fancy() {
         $tag_name_html = htmlentities($tag['tag_name']);
         $tag_name_json = htmlentities(json_encode($tag['tag_name']), ENT_QUOTES);
 
-        $tagline = '	<tr' . (++$n % 2 ? ' class="odd-row"' : '') . '>';
+        $tagline = '	<tr' . (++$n % 2 ? ' class="odd-row"' : '') . ' id="tagid_' . $tag['tag_id']. '">';
+
+        $tagline .= '<td class="feed-icon"><img src="' . ( empty($tag['tag_icon']) ? $fof_asset['tag_icon'] : $tag['tag_icon']) . '" class="feed-icon" /></td>';
+        $tagline .= '<td></td>';
 
         $tagline .= '<td style="text-align: right;"><span class="unread"><a ' . ($tag['unread'] ? 'class="unread" ' : '') . 'href="' . fof_url('.', array('what'=>implode(' ', array($tag['tag_name'], 'unread')))) . '" title="unread items">' . $tag['unread'] . '</a></span></td>';
 
@@ -128,7 +139,7 @@ function fof_sidebar_tags_fancy() {
         $tagline .= '<ul class="feedmenu"><li>';
         $tagline .= '<a href="#" title="tag controls">&Delta;</a>';
         $tagline .=   '<ul>';
-        $tagline .=     '<li>Update feeds</li>';
+        $tagline .=     '<li><a href="#" title="update all source feeds" onclick="return sb_update_tag_sources(' . $tag_name_json . ');">Update feeds</a></li>';
         $tagline .=     '<li><a href="#" title="mark all read" onclick="return sb_mark_tag_read(' . $tag_name_json . ')">Mark all items as read</a></li>';
         $tagline .=     '<li><a href="#" title="untag all items" onclick="return sb_del_tag_conf(' . $tag_name_json . ');">Delete tag from all items</a></li>';
         $tagline .=   '</ul>';
@@ -136,7 +147,7 @@ function fof_sidebar_tags_fancy() {
         $tagline .= '</td>';
 
         if ($sharing == 'all_tagged')
-            echo '<td><a href="' . fof_url('./shared.php', array('user'=>$fof_user_id, 'which'=>$tag_name_html, 'how'=>'paged')) . '"></td>';
+            $tagline .= '<td><a href="' . fof_url('./shared.php', array('user'=>fof_current_user(), 'which'=>$tag_name_html, 'how'=>'paged')) . '">' . $tag['tag_name'] . '</a></td>';
 
         $tagline .= '</tr>';
 
@@ -149,6 +160,8 @@ function fof_sidebar_tags_fancy() {
         echo "<table cellspacing=\"0\" cellpadding=\"1\" border=\"0\" class=\"taglist\">\n";
         echo "<thead>\n";
         echo '	<tr class="heading">';
+        echo '<th class="feed-icon"></th>';
+        echo '<th>latest</th>';
         echo '<th style="text-align: right;"><span class="unread">#</span></th>';
         echo '<th style="width: 100%;">tag name</th>';
         echo '<th><span></span></th>';
@@ -299,103 +312,8 @@ foreach ($columns as $col) {
 
 $t = 0;
 foreach ($feeds as $row) {
-    $id = $row['feed_id'];
-    $url = $row['feed_url'];
-    $link = $row['feed_link'];
-    if ($link == '[no link]')
-        $link = $url;
-    $title = $row['feed_title'];
-    if ($title == '[no title]')
-        $title = $link;
-    $title_html = htmlentities($title);
-    $title_json = htmlentities(json_encode($title), ENT_QUOTES);
-
-    $image = $row['feed_image'];
-    $description = $row['feed_description'];
-    $age = $row['feed_age'];
-    $unread = fof_sidebar_get_key_($row, 'feed_unread', 0);
-    $starred = fof_sidebar_get_key_($row, 'feed_starred', 0);
-    $tagged = fof_sidebar_get_key_($row, 'feed_tagged', 0);
-    $items = fof_sidebar_get_key_($row, 'feed_items', 0);
-    $agestr = fof_sidebar_get_key_($row, 'agestr');
-    $agestrabbr = fof_sidebar_get_key_($row, 'agestrabbr');
-    $lateststr = fof_sidebar_get_key_($row, 'lateststr');
-    $lateststrabbr = fof_sidebar_get_key_($row, 'lateststrabbr');
-
-    $qv = array('feed' => $id);
-    $view_feed_url = fof_url('.', array_merge($qv, array('how' => 'paged')));
-    $view_feed_all_url = fof_url('.', array_merge($qv, array('how' => 'paged', 'what' => 'all')));
-    $unsubscribe_feed_url = fof_url('delete.php', $qv);
-    $update_feed_url = fof_url('update.php', $qv);
-
-    echo '<tr' . (++$t % 2 ? ' class="odd-row"' : '') . ">\n";
-
-    if (! $image || ! $fof_prefs_obj->get('favicons'))
-        $image = 'image/feed-icon.png';
-
-    switch ($sidebar_style) {
-        case 'simple': /* 'feed_unread', 'feed_title' */
-            echo '  <td align="center"><a href="' . $url . '" title="feed"><img class="feed-icon" src="' . $image . '" /></a></td>' . "\n";
-
-            echo '  <td><a href="' . ($unread ? $view_feed_url : $view_feed_all_url) . '">' . $title_html . '</a>' . ($unread ? " ($unread)" : '') . "</td>" . "\n";
-
-            /* controls */
-            echo '  <td><a href="' . $unsubscribe_feed_url . '" title="delete" onclick="return sb_unsub_conf(' . $title_json . ');">[x]</a></td>' . "\n";
-            break;
-
-        case 'fancy': /* 'feed_url', 'max_date', 'feed_unread', 'feed_title' */
-            echo '  <td align="center"><a href="' . $link . '" title="site"><img class="feed-icon" src="' . $image . '" /></a></td>' . "\n";
-
-            echo '  <td style="text-align: right"><span title="' . $lateststr . '" id="' . $id . '-lateststr">' . $lateststrabbr . '</span></td>' . "\n";
-
-            echo '  <td style="text-align: right"><span class="nowrap" id="' . $id . '-items">';
-            if ($unread)
-                echo '<a class="unread" title="unread items" href="' . $view_feed_url . '">' . $unread . '</a>';
-            echo '</span></td>' . "\n";
-
-            echo '  <td><a href="' . $view_feed_all_url . '" title="' . $items . ' total items">' . $title_html . '</a></td>' . "\n";
-
-            /* controls */
-            echo '  <td>';
-
-            echo '<ul class="feedmenu"><li>';
-            echo '<a href="#" title="feed controls">&Delta;</a>';
-            echo '<ul>';
-            echo '<li><a href="#" title="update" onclick="return sb_update_feed(' . $id . ');">Update Feed</a></li>';
-            echo '<li><a href="#" title="mark all as read" onclick="return sb_read_conf(' . $title_json . ', ' . $id . ');">Mark all items as read</a></li>';
-            echo '<li><a href="' . $link . '" title="home page"' . ( $fof_prefs_obj->get('item_target') ? ' target="_blank"' : '') . '>Feed Source Site</a></li>';
-            echo '<li><a href="' . $unsubscribe_feed_url . '" title="unsubscribe" onclick="return sb_unsub_conf(' . $title_json . ');">Unsubscribe from feed</a></li>';
-            echo '</ul>';
-            echo '</li></ul>';
-
-            echo '</td>' . "\n";
-            break;
-
-        default: /* 'feed_age', 'max_date', 'feed_unread', 'feed_url', 'feed_title' */
-            echo "  <td style=\"text-align: right\"><span title=\"$agestr\" id=\"${id}-agestr\">$agestrabbr</span></td>\n";
-
-            echo "  <td style=\"text-align: right\"><span title=\"$lateststr\" id=\"${id}-lateststr\">$lateststrabbr</span></td>\n";
-
-            echo "  <td style=\"text-align: right\" class=\"nowrap\" id=\"${id}-items\">";
-            if ($unread)
-                echo "<a class=\"unread\" title=\"new items\" href=\"$view_feed_url\">$unread</a>/";
-            echo "<a href=\"$view_feed_all_url\" title=\"all items, $starred starred, $tagged tagged\">$items</a>";
-            echo "</td>\n";
-
-            echo '  <td align="center">';
-            echo '<a href="' . $url . '" title="feed"><img class="feed-icon" src="' . $image . '" /></a>';
-            echo "</td>\n";
-
-            echo '  <td><a href="' . $link . '" title="home page"' . ($fof_prefs_obj->get('item_target') ? ' target="_blank"' : '') . '><b>' . $title_html . "</b></a></td>\n";
-
-            /* controls */
-            echo '  <td><span class="nowrap">';
-            echo '<a href="' . $update_feed_url . '" title="update">u</a>';
-            echo ' <a href="#" title="mark all read" onclick="return sb_read_conf(' . $title_json . ', ' . $id . ');">m</a>';
-            echo ' <a href="' . $unsubscribe_feed_url . '" title="delete" onclick="return sb_unsub_conf(' . $title_json . ');">d</a>';
-            echo "</span></td>\n";
-    }
-
+    echo '<tr id="f' . $row['feed_id'] . '"' . (++$t % 2 ? ' class="odd-row"' : '') . ">\n";
+    echo fof_render_feed_row($row);
     echo "</tr>\n";
 }
 
