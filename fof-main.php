@@ -961,7 +961,7 @@ function fof_update_feed($id)
         $now = time();
         $nextInterval = $mean + $stdev*2/($count + 1);
         $nextTime = min(max($lastTime + $nextInterval, $now + $stdev),
-                        $now + 86400*2);
+                        $now + 86400/2);
        
 	$lastInterval = $now - $lastTime; 
         fof_log($feed['feed_title'] . ": Next feed update in "
@@ -972,7 +972,7 @@ function fof_update_feed($id)
                 // In a perfect world, we want both of these numbers to be low
                 fof_log("DYNUPDATE_ADD $feed_id count $count_Added overstep $lastInterval");
         } else {
-                fof_log("DYNUPDATE_NONE $feed_id");
+                fof_log("DYNUPDATE_NONE $feed_id since $lastInterval");
         }
         fof_safe_query("UPDATE $FOF_FEED_TABLE SET feed_cache_next_attempt=%d"
                        . " WHERE feed_id = %d",
