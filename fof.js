@@ -1066,3 +1066,16 @@ function sb_update_tag_sources(tagname) {
     var options = { method: "post", parameters: params };
     new Ajax.Request(url, options);
 }
+
+function sb_readall_feed(id) {
+    throb();
+
+    var url = "feed-action.php";
+    var params = { "read_feed": id };
+    var complete = function() { unthrob(); };
+    var options = { method: "post", parameters: params, onComplete: complete };
+    var feed_element = $$("#sidebar #feeds #f" + id)[0];
+    var feed_icon_element = $$("#sidebar #feeds #f" + id + " img.feed-icon")[0];
+    feed_icon_element.replace("<img class=\"feed-icon\" src=\"image/spinner.gif\" title=\"update pending\" />");
+    new Ajax.Updater( { success: feed_element, failure: feed_icon_element }, url, options);
+}

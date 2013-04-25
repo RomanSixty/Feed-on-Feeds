@@ -12,6 +12,15 @@
 
 include_once('fof-main.php');
 
+/* mark all items in feed as read, return updated sidebar entry */
+if ( ! empty($_POST['read_feed'])) {
+    fof_db_mark_feed_read(fof_current_user(), $_POST['read_feed']);
+    $feed_row = fof_get_feed(fof_current_user(), $_POST['read_feed']);
+    echo fof_render_feed_row($feed_row);
+
+    exit();
+}
+
 /* update one feed, return replacement sidebar feed list content */
 if ( ! empty($_POST['update_feedid'])) {
     list($count, $error) = fof_update_feed($_POST['update_feedid']);
@@ -20,7 +29,7 @@ if ( ! empty($_POST['update_feedid'])) {
         echo '<img class="feed-icon" src="' . $fof_asset['alert_icon'] . '" title="' . htmlentities($error, ENT_QUOTES) . '" />';
     } else {
         $feed_row = fof_get_feed(fof_current_user(), $_POST['update_feedid']);
-        echo fof_render_feed_row($feed_row, false);
+        echo fof_render_feed_row($feed_row);
     }
     exit();
 }

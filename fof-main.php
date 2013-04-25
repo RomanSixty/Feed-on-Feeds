@@ -1402,7 +1402,7 @@ function fof_render_feed_row($f) {
             $out .=       '<a href="#" title="feed controls">&Delta;</a>';
             $out .=       '<ul>';
             $out .=         '<li><a href="#" title="last update ' . $f['agestr']. '" onclick="return sb_update_feed(' . $f['feed_id'] . ');">Update Feed</a></li>';
-            $out .=         '<li><a href="#" title="mark all as read" onclick="">Mark all items as read</a></li>';
+            $out .=         '<li><a href="#" title="mark all as read" onclick="return sb_readall_feed(' . $f['feed_id']. ')">Mark all items as read</a></li>';
             $out .=         '<li><a href="' . $link . '" title="home page"' . ($fof_prefs_obj->get('item_target') ? ' target="_blank"' : '') . '>Feed Source Site</a></li>';
             $out .=         '<li><a href="' . $feed_unsubscribe_url . '" title="unsubscribe" onclick="return sb_unsub_conf(' . $title_json . ');">Unsubscribe from feed</a></li>';
             $out .=       '</ul>';
