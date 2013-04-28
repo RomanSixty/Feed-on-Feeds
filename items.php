@@ -108,23 +108,23 @@ $title = fof_view_title($feed, $what, $when, $which, $howmany, $search, $itemcou
 if ($fof_prefs_obj->get('keyboard')) {
 ?>
 <div id="keyboard-legend" style="display:none">
-  <span style="font-variant:small-caps;">Keyboard Commands</span>
-  <dl>
-    <dt>?</dt><dd>Toggle this display.</dd>
-    <dt>H</dt><dd>Toggle folding of all visible items.</dd>
-    <dt>h</dt><dd>Toggle folding of current item.</dd>
-    <dt>s</dt><dd>Toggle starring of current item.</dd>
-    <dt>f</dt><dd>Mark current item as read.</dd>
-    <dt>F</dt><dd>Mark current and all previous items as read.</dd>
-    <dt>U</dt><dd>Mark all items as unread.</dd>
-    <dt>j</dt><dd>Mark current item as read and move to next item.</dd>
-    <dt>J</dt><dd>??</dd>
-    <dt>n</dt><dd>Skip to next item.</dd>
-    <dt>p</dt><dd>Skip to previous item.</dd>
-    <dt>N</dt><dd>Skip to last item.</dd>
-    <dt>P</dt><dd>Skip to first item.</dd>
-    <dt>r</dt><dd>Refresh sidebar.</dd>
-  </dl>
+	<span style="font-variant:small-caps;">Keyboard Commands</span>
+	<dl>
+		<dt>?</dt><dd>Toggle this display.</dd>
+		<dt>H</dt><dd>Toggle folding of all visible items.</dd>
+		<dt>h</dt><dd>Toggle folding of current item.</dd>
+		<dt>s</dt><dd>Toggle starring of current item.</dd>
+		<dt>f</dt><dd>Flag current item.</dd>
+		<dt>F</dt><dd>Flag current and all previous items.</dd>
+		<dt>U</dt><dd>Unflag all items.</dd>
+		<dt>j</dt><dd>Scroll current item, flag if at end of item, move to next item.</dd>
+		<dt>J</dt><dd>Flag current item, move to next.</dd>
+		<dt>n</dt><dd>Skip to next item.</dd>
+		<dt>p</dt><dd>Skip to previous item.</dd>
+		<dt>N</dt><dd>Skip to last item.</dd>
+		<dt>P</dt><dd>Skip to first item.</dd>
+		<dt>r</dt><dd>Refresh sidebar.</dd>
+	</dl>
 </div>
 
 <?php

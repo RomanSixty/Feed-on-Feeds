@@ -1429,7 +1429,7 @@ function fof_render_feed_row($f) {
             /* controls */
             $out .= '	<td><span class="nowrap">';
             $out .= ' <a href="' . $feed_update_url . '" title="update">u</a>';
-            $out .= ' <a href="#" title="mark all read" onclick="return sb_read_conf(' . $title_json . ', ' . $id . ');">m</a>';
+            $out .= ' <a href="#" title="mark all read" onclick="return sb_read_conf(' . $title_json . ', ' . $f['feed_id'] . ');">m</a>';
             $out .= ' <a href="' . $feed_unsubscribe_url . '" title="delete" onclick="return sb_unsub_conf(' . $title_json . ');">d</a>';
             $out .= '</span></td>' . "\n";
             break;

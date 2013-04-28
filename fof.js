@@ -168,7 +168,7 @@ function itemClicked(event)
 	    n = itemElements.length;
 	    i++;
 
-	    document.title = "Feed on Feeds - " + i + " of " + n;
+	    document.title = "Feed on Feeds - item " + i + " selected, of " + n + " displayed";
 		return false;
 	}
 
@@ -208,7 +208,7 @@ function select(item)
     n = itemElements.length;
     i++;
 
-    document.title = "Feed on Feeds - " + i + " of " + n;
+    document.title = "Feed on Feeds - item " + i + " selected, of " + n + " displayed";
 }
 
 function unselect(item)
@@ -278,7 +278,7 @@ function keyboard(e)
         }
     }
 
-    if(key == "s") // (un)flag current item as favorite
+    if(key == "s") // toggle starred status of current item
     {
         if(itemElement)
         {
@@ -288,7 +288,7 @@ function keyboard(e)
         }
     }
 
-    if(key == "f") // mark current item read
+    if(key == "f") // flag current item
     {
         if(itemElement)
         {
@@ -298,7 +298,7 @@ function keyboard(e)
         }
     }
 
-    if(key == "F") // mark current and all previous items read
+    if(key == "F") // flag current and all previous items
     {
         itemElements.each(
             function(i) {
@@ -315,7 +315,7 @@ function keyboard(e)
         return false;
     }
 
-    if(key == "U") // mark all items unread
+    if(key == "U") // unflag all items
     {
         itemElements.each(
             function(i) {
@@ -327,15 +327,15 @@ function keyboard(e)
         return false;
     }
 
-    if(key == "j") // skip to next item, mark current item as read
+    if(key == "j") // scroll current item or move to next item, flag current item
     {
         if(itemElement)
         {
             // is the next element visible yet?  scroll if not.
 
-            if(itemElement.nextSibling.id && itemElement.nextSibling.id != "end-of-items")
+            if(itemElement.nextElementSibling.id && itemElement.nextElementSibling.id != "end-of-items")
             {
-                nextElement = itemElement.nextSibling;
+                nextElement = itemElement.nextElementSibling;
                 scrollHeight = getScrollY();
                 y = getY(nextElement);
 
@@ -350,7 +350,7 @@ function keyboard(e)
             checkbox = ($('c' + itemElement.id.substring(1)));
             checkbox.checked = true;
 
-            next = itemElement.nextSibling;
+            next = itemElement.nextElementSibling;
 
             if(next.id && next.id != "end-of-items")
             {
@@ -409,7 +409,7 @@ function keyboard(e)
         }
     }
 
-    if(key == "J")
+    if(key == "J") // flag item, move to next
     {
         if(itemElement)
         {
@@ -417,7 +417,7 @@ function keyboard(e)
             checkbox = ($('c' + itemElement.id.substring(1)));
             checkbox.checked = true;
 
-            next = itemElement.nextSibling;
+            next = itemElement.nextElementSibling;
 
             if(next.id)
             {
@@ -461,7 +461,7 @@ function keyboard(e)
         {
             unselect(itemElement);
 
-            next = itemElement.nextSibling;
+            next = itemElement.nextElementSibling;
 
             if(next.id)
             {
@@ -523,7 +523,7 @@ function keyboard(e)
         {
             unselect(itemElement);
 
-            next = itemElement.previousSibling;
+            next = itemElement.previousElementSibling;
 
             if(next.id)
             {
@@ -556,10 +556,12 @@ function keyboard(e)
 
     if (key == "r") { // refresh sidebar
         refreshlist();
+        return false;
     }
 
     if (key == "?") { // show help pane
         $('keyboard-legend').toggle();
+        return false;
     }
 
     return true;
