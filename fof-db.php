@@ -46,13 +46,17 @@ Non-local variable dependencies:
 /* set up a db connection, creating the db if it doesn't exist */
 function fof_db_connect()
 {
-    global $FOF_DB_HOST, $FOF_DB_NAME, $FOF_DB_USER, $FOF_DB_PASS;
     global $fof_connection;
 
-    $pdo_options = array( PDO::ATTR_EMULATE_PREPARES => false,
-                          PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION );
+    /* It would be nice to actually use prepared statements by setting
+       PDO::ATTR_EMULATE_PREPARES => false
+       but it seems that however PDO translates its named parameters to the
+       MySQL bindings doesn't work when a parameter is repeated in a query..
+       Leaving the emulation on is easier than changing the sql.
+     */
+    $pdo_options = array( PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION );
     if (defined('USE_MYSQL')) {
-        $dsn = "mysql:host=$FOF_DB_HOST;charset=utf8";
+        $dsn = "mysql:host=" . FOF_DB_HOST . ";charset=utf8";
     } else if (defined('USE_SQLITE')) {
         if (! defined('FOF_DATA_PATH') || ! defined('FOF_DB_DBNAME') ) {
             throw new Exception('vital configuration is not set');
@@ -65,12 +69,12 @@ function fof_db_connect()
 
     fof_log("Connecting to '$dsn'...");
 
-    $fof_connection = new PDO($dsn, $FOF_DB_USER, $FOF_DB_PASS, $pdo_options);
+    $fof_connection = new PDO($dsn, FOF_DB_USER, FOF_DB_PASS, $pdo_options);
 
     if (defined('USE_MYSQL')) {
         if ($fof_connection) {
-            $fof_connection->exec("CREATE DATABASE IF NOT EXISTS $FOF_DB_DBNAME");
-            $fof_connection->exec("USE $FOF_DB_DBNAME");
+            $fof_connection->exec("CREATE DATABASE IF NOT EXISTS " . FOF_DB_DBNAME);
+            $fof_connection->exec("USE " . FOF_DB_DBNAME);
         }
     }
 
@@ -372,7 +376,7 @@ function fof_db_get_item_count ( $user_id, $what = 'all', $feed = null, $search 
         foreach (explode(',', fof_db_get_tag_by_name($what)) as $t) {
             $tag_ids_q[] = $fof_connection->quote($t);
          }
-        $query .= " AND it.tag_id IN ( " . implode(', ', $tag_ids_q) . " )";
+        $query .= " AND it.tag_id IN ( " . (count($tag_ids_q) ? implode(', ', $tag_ids_q) : "''") . " )";
     }
 
     if ( ! empty($search)) {
@@ -454,7 +458,7 @@ function fof_db_get_item_count_XXX($user_id=1, $what='all', $feed_id=NULL, $sear
     $items_having = '';
     if ( ! empty($what_q)) {
         $items_select .= " JOIN $FOF_ITEM_TAG_TABLE it ON it.item_id = i.item_id";
-        $items_select .= " JOIN $FOF_TAG_TABLE t ON t.tag_id = it.tag_id AND t.tag_name" . $tag_invert . " IN (" . implode(',', $what_q). ")";
+        $items_select .= " JOIN $FOF_TAG_TABLE t ON t.tag_id = it.tag_id AND t.tag_name" . $tag_invert . " IN (" . (count($what_q) ? implode(',', $what_q) : "''") . ")";
         $items_having = " HAVING COUNT(i.item_id) = " . count($what_q);
     }
 
@@ -619,7 +623,7 @@ function fof_db_delete_subscription($user_id, $feed_id)
     }
 
     if (count($items_q) > 0) {
-        $query = "DELETE FROM $FOF_ITEM_TAG_TABLE WHERE user_id = :user_id AND item_id IN ( " . implode(', ', $items_q) . " )";
+        $query = "DELETE FROM $FOF_ITEM_TAG_TABLE WHERE user_id = :user_id AND item_id IN ( " . (count($items_q) ? implode(', ', $items_q) : "''") . " )";
         $statement = $fof_connection->prepare($query);
         $statement->bindValue(':user_id', $user_id);
         $result = fof_db_statement_execute($statement);
@@ -760,13 +764,13 @@ function fof_db_get_items($user_id=1, $feed=NULL, $what='unread', $when=NULL, $s
         foreach (explode(' ', $what) as $tag) {
             $tags_q[] = $fof_connection->quote($tag);
         }
-        $where .= " AND it.user_id = s.user_id AND it.tag_id = t.tag_id AND i.item_id = it.item_id AND t.tag_name IN (" . implode(', ', $tags_q) . ")";
+        $where .= " AND it.user_id = s.user_id AND it.tag_id = t.tag_id AND i.item_id = it.item_id AND t.tag_name IN (" . (count($tags_q) ? implode(', ', $tags_q) : "''") . ")";
     }
 
     if ($what == 'all') {
         $group = "";
     } else {
-        $group = " GROUP BY i.item_id HAVING COUNT ( i.item_id ) = " . count($tags_q);
+        $group = " GROUP BY i.item_id HAVING COUNT( i.item_id ) = " . count($tags_q);
     }
 
     if ( ! empty($search)) {
@@ -803,10 +807,11 @@ function fof_db_get_items($user_id=1, $feed=NULL, $what='unread', $when=NULL, $s
     $query = "SELECT t.tag_name, it.item_id" .
             " FROM $FOF_TAG_TABLE t, $FOF_ITEM_TAG_TABLE it" .
             " WHERE t.tag_id = it.tag_id" .
-                " AND it.item_id IN ( " . implode(', ', $item_ids_q) . " )" .
+                " AND it.item_id IN ( " . (count($item_ids_q) ? implode(', ', $item_ids_q) : "''") . " )" .
                 " AND it.user_id = " . $fof_connection->quote($user_id);
 
     fof_log(__FUNCTION__ . " second query: " . $query);
+    fof_log('item_ids_q' . var_export($item_ids_q, true));
 
     $statement = fof_db_statement_prepare($query);
     $result = fof_db_statement_execute($statement);
@@ -907,7 +912,7 @@ function fof_db_items_delete($items)
         $items_q[] = $fof_connection->quote($item);
     }
 
-    $query = "DELETE FROM $FOF_ITEM_TABLE WHERE item_id IN (" . implode(', ', $items_q) . ")";
+    $query = "DELETE FROM $FOF_ITEM_TABLE WHERE item_id IN (" . (count($items_q) ? implode(', ', $items_q) : "''") . ")";
     $statement = $fof_connection->prepare($query);
     $result = fof_db_statement_execute($statement);
     $statement->closeCursor();
@@ -968,7 +973,7 @@ function fof_db_tag_delete($items)
         $items_q[] = $fof_connection->quote($item);
     }
 
-    $query = "DELETE FROM $FOF_ITEM_TAG_TABLE WHERE item_id IN (" . implode(', ', $items_q) . ")";
+    $query = "DELETE FROM $FOF_ITEM_TAG_TABLE WHERE item_id IN (" . (count($items_q) ? implode(', ', $items_q) : "''") . ")";
     $result = fof_db_exec($query);
 }
 
@@ -1221,7 +1226,7 @@ function fof_db_get_tag_by_name($tags)
 
     $query = "SELECT DISTINCT tag_id" .
             " FROM $FOF_TAG_TABLE" .
-            " WHERE tag_name IN ( " . implode (', ', $tags_q) . " )";
+            " WHERE tag_name IN ( " . (count($tags_q) ? implode (', ', $tags_q) : "''") . " )";
     $statement = fof_db_query($query);
     while (($row = fof_db_get_row($statement)) !== false) {
         $return[] = $row['tag_id'];
@@ -1250,7 +1255,7 @@ function fof_db_mark_tag_read($user_id, $tagname) {
     $matching_tag_ids = array($tag_id, $unread_id);
 
     /* all items with both unread and tagname */
-    $items_query = "SELECT item_id FROM $FOF_ITEM_TAG_TABLE it WHERE it.user_id = $user_id AND it.tag_id IN (" . implode(', ', $matching_tag_ids) . ") GROUP BY it.item_id HAVING COUNT(DISTINCT it.tag_id) = " . count($matching_tag_ids);
+    $items_query = "SELECT item_id FROM $FOF_ITEM_TAG_TABLE it WHERE it.user_id = $user_id AND it.tag_id IN (" . (count($matching_tag_ids) ? implode(', ', $matching_tag_ids) : "''") . ") GROUP BY it.item_id HAVING COUNT(DISTINCT it.tag_id) = " . count($matching_tag_ids);
 
     /* get rid of the unread ones */
     $untag_query = "DELETE FROM $FOF_ITEM_TAG_TABLE WHERE user_id = $user_id AND tag_id = $unread_id AND item_id IN ($items_query)";
@@ -1341,29 +1346,43 @@ function fof_db_mark_item_unread($users, $item_id)
     if (count($users) == 0)
         return;
 
-    $unread_tag_id = fof_db_get_tag_by_name('unread');
-
-    $values = array();
-    $item_id_q = $fof_connection->quote($item_id);
-    foreach ($users as $user) {
-        $user_id_q = $fof_connection->quote($user);
-        $tag_id = fof_db_get_tag_by_name('unread');
-        $values[] = "( $user_id_q, $tag_id, $item_id_q )";
-    }
+    $tag_id = fof_db_get_tag_by_name('unread');
 
     /*
         This query will need to be changed to work with a driver other than
         MySQL or SQLite.  It simply needs to be able to insert, and ignore
         existing row conflicts.
-        I believe this could be a simple INSERT, if the table definitions were
-        changed to not abort on conflicts, but that simply moves the
-        driver-specificness into table creation.
-        Perhaps someone better-versed at SQL has suggestions.
+        Perhaps someone versed in SQL has suggestions.
     */
-    $query = "INSERT OR REPLACE INTO $FOF_ITEM_TAG_TABLE (user_id, tag_id, item_id) VALUES " . implode(', ', $values);
-    $statement = $fof_connection->prepare($query);
-    $result = fof_db_statement_execute($statement);
-    $statement->closeCursor();
+
+    if (defined('USE_SQLITE')) {
+
+        $query = "INSERT OR IGNORE INFO $FOF_ITEM_TAG_TABLE (user_id, tag_id, item_id) VALUES (:user_id, :tag_id, :item_id)";
+        $statement = $fof_connection->prepare($query);
+        $statement->bindValue(':tag_id', $tag_id);
+        $statement->bindValue(':item_id', $item_id);
+
+        fof_db_exec('BEGIN TRANSACTION');
+        foreach ($users as $user_id) {
+            $statement->bindValue(':user_id', $user_id);
+            $result = fof_db_statement_execute($statement);
+            $statement->closeCursor();
+        }
+        fof_db_exec('COMMIT');
+        return;
+    }
+
+    if (defined('USE_MYSQL')) {
+        $values = array();
+        $item_id_q = $fof_connection->quote($item_id);
+        foreach ($users as $user) {
+            $user_id_q = $fof_connection->quote($user);
+            $values[] = "( $user_id_q, $tag_id, $item_id_q )";
+        }
+        $query = "INSERT IGNORE INTO $FOF_ITEM_TAG_TABLE (user_id, tag_id, item_id) VALUES " . implode(', ', $values);
+        $result = fof_db_exec($query);
+        return;
+    }
 }
 
 /* sets (user_id, tag_id, item_id) for each item_id in items array */
@@ -1380,27 +1399,41 @@ function fof_db_tag_items($user_id, $tag_id, $items)
     if (! is_array($items))
         $items = array($items);
 
-    $items_q = array();
-    $tag_q = $fof_connection->quote($tag_id);
-    $user_q = $fof_connection->quote($user_id);
-    foreach($items as $item) {
-        $i_q = $fof_connection->quote($item);
-        $items_q[] = "( $user_q, $tag_q, $i_q )";
-    }
+    if (empty($items))
+        return;
 
     /* This query will need to be changed to work with a driver other than MySQL or SQLite. */
     /* (also see fof_db_mark_item_unread) */
-    $query = "INSERT OR REPLACE INTO $FOF_ITEM_TAG_TABLE (user_id, tag_id, item_id) VALUES " . implode(', ', $items_q);
-    $statement = $fof_connection->prepare($query);
-    try {
-        $result = fof_db_statement_execute($statement);
-    } catch (PDOException $e) {
-        /* XXX: see previous comments about SQLSTATE 23000 */
-        if ($e->getCode() != "23000") {
-            throw $e;
+
+    if (defined('USE_SQLITE')) {
+        $query = "INSERT OR IGNORE INTO $FOF_ITEM_TAG_TABLE (user_id, tag_id, item_id) VALUES (:user_id, :tag_id, :item_id)";
+        $statement = $fof_connection->prepare($query);
+        $statement->bindValue(':user_id', $user_id);
+        $statement->bindValue(':tag_id', $tag_id);
+
+        fof_db_exec('BEGIN TRANSACTION');
+        foreach ($items as $item_id) {
+            $statement->bindValue(':item_id', $item_id);
+            $result = fof_db_statement_execute($statement);
+            $statement->closeCursor();
         }
+        fof_db_exec('COMMIT');
+        return;
     }
-    $statement->closeCursor();
+
+    if (defined('USE_MYSQL')) {
+        $items_q = array();
+        $tag_q = $fof_connection->quote($tag_id);
+        $user_q = $fof_connection->quote($user_id);
+        foreach ($items as $item) {
+            $i_q = $fof_connection->quote($item);
+            $items_q[] = "($user_q, $tag_q, $i_q)";
+        }
+
+        $query = "INSERT IGNORE INTO $FOF_ITEM_TAG_TABLE (user_id, tag_id, item_id) VALUES " . implode(', ', $items_q);
+        $result = fof_db_exec($query);
+        return;
+    }
 }
 
 function fof_db_untag_items($user_id, $tag_id, $items)
@@ -1421,7 +1454,7 @@ function fof_db_untag_items($user_id, $tag_id, $items)
         $items_q[] = $fof_connection->quote($item);
     }
 
-    $query = "DELETE FROM $FOF_ITEM_TAG_TABLE WHERE user_id = :user_id AND tag_id = :tag_id AND item_id IN ( " . implode(', ', $items_q) . " )";
+    $query = "DELETE FROM $FOF_ITEM_TAG_TABLE WHERE user_id = :user_id AND tag_id = :tag_id AND item_id IN ( " . (count($items_q) ? implode(', ', $items_q) : "''") . " )";
     $statement = $fof_connection->prepare($query);
     $statement->bindValue(':user_id', $user_id);
     $statement->bindValue(':tag_id', $tag_id);

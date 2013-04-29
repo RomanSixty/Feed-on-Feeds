@@ -161,7 +161,7 @@ function fof_sidebar_tags_fancy() {
         echo "<thead>\n";
         echo '	<tr class="heading">';
         echo '<th class="feed-icon"></th>';
-        echo '<th>latest</th>';
+        echo '<th style="visibility:hidden;">latest&darr;</th>';
         echo '<th style="text-align: right;"><span class="unread">#</span></th>';
         echo '<th style="width: 100%;">tag name</th>';
         echo '<th><span></span></th>';
