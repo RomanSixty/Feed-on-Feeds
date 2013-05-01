@@ -12,13 +12,13 @@
  *
  */
 
-set_time_limit(60*10);
-
 ob_start();
 
 $fof_no_login = true;
 $fof_user_id = 1;
 include_once("fof-main.php");
+
+set_time_limit(FOF_UPDATE_TIME_LIMIT);
 
 $p =& FoF_Prefs::instance();
 $fof_admin_prefs = $p->prefs;

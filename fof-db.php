@@ -1357,7 +1357,7 @@ function fof_db_mark_item_unread($users, $item_id)
 
     if (defined('USE_SQLITE')) {
 
-        $query = "INSERT OR IGNORE INFO $FOF_ITEM_TAG_TABLE (user_id, tag_id, item_id) VALUES (:user_id, :tag_id, :item_id)";
+        $query = "INSERT OR IGNORE INTO $FOF_ITEM_TAG_TABLE (user_id, tag_id, item_id) VALUES (:user_id, :tag_id, :item_id)";
         $statement = $fof_connection->prepare($query);
         $statement->bindValue(':tag_id', $tag_id);
         $statement->bindValue(':item_id', $item_id);

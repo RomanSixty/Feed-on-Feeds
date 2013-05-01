@@ -34,6 +34,9 @@ define('FOF_DB_DBNAME', "database");
 // define('FOF_AUTH_EXTERNAL_ONLY', 1); // never fall back to internal user/passwords
 // define('FOF_AUTH_EXTERNAL_ADD', 1); // create user->id mappings automatically
 
+// maximum number of seconds background update script can run, 0 for indefinitely
+define('FOF_UPDATE_TIME_LIMIT', 60 * 10);
+
 // The rest you should not need to change
 
 // DB table names
