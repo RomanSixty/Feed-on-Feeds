@@ -126,16 +126,16 @@ function fof_sidebar_tags_fancy() {
         $tag_name_html = htmlentities($tag['tag_name']);
         $tag_name_json = htmlentities(json_encode($tag['tag_name']), ENT_QUOTES);
 
-        $tagline = '	<tr' . (++$n % 2 ? ' class="odd-row"' : '') . ' id="tagid_' . $tag['tag_id']. '">';
+        $tagline = '	<tr class="tag' . (++$n % 2 ? ' odd-row' : '') . '" id="tagid_' . $tag['tag_id']. '">';
 
-        $tagline .= '<td class="feed-icon"><img src="' . ( empty($tag['tag_icon']) ? $fof_asset['tag_icon'] : $tag['tag_icon']) . '" class="feed-icon" /></td>';
-        $tagline .= '<td></td>';
+        $tagline .= '<td class="source"><img src="' . ( empty($tag['tag_icon']) ? $fof_asset['tag_icon'] : $tag['tag_icon']) . '" class="feed-icon" /></td>';
+        $tagline .= '<td class="latest"></td>';
 
-        $tagline .= '<td style="text-align: right;"><span class="unread"><a ' . ($tag['unread'] ? 'class="unread" ' : '') . 'href="' . fof_url('.', array('what'=>implode(' ', array($tag['tag_name'], 'unread')))) . '" title="unread items">' . $tag['unread'] . '</a></span></td>';
+        $tagline .= '<td class="unread"><span class="unread"><a ' . ($tag['unread'] ? 'class="unread" ' : '') . 'href="' . fof_url('.', array('what'=>implode(' ', array($tag['tag_name'], 'unread')))) . '" title="unread items">' . $tag['unread'] . '</a></span></td>';
 
-        $tagline .= '<td><b><a href="' . fof_url('.', array('what'=>$tag['tag_name'], 'how'=>'paged')) . '" title="' . $tag['count'] . ' total items">' . $tag['tag_name'] . '</a></b></td>';
+        $tagline .= '<td class="title"><a href="' . fof_url('.', array('what'=>$tag['tag_name'], 'how'=>'paged')) . '" title="' . $tag['count'] . ' total items">' . $tag['tag_name'] . '</a></td>';
 
-        $tagline .= '<td>';
+        $tagline .= '<td class="controls">';
         $tagline .= '<ul class="feedmenu"><li>';
         $tagline .= '<a href="#" title="tag controls">&Delta;</a>';
         $tagline .=   '<ul>';
@@ -147,7 +147,7 @@ function fof_sidebar_tags_fancy() {
         $tagline .= '</td>';
 
         if ($sharing == 'all_tagged')
-            $tagline .= '<td><a href="' . fof_url('./shared.php', array('user'=>fof_current_user(), 'which'=>$tag_name_html, 'how'=>'paged')) . '">' . $tag['tag_name'] . '</a></td>';
+            $tagline .= '<td class="sharing"><a href="' . fof_url('./shared.php', array('user'=>fof_current_user(), 'which'=>$tag_name_html, 'how'=>'paged')) . '">' . $tag['tag_name'] . '</a></td>';
 
         $tagline .= '</tr>';
 
@@ -160,13 +160,13 @@ function fof_sidebar_tags_fancy() {
         echo "<table cellspacing=\"0\" cellpadding=\"1\" border=\"0\" class=\"taglist\">\n";
         echo "<thead>\n";
         echo '	<tr class="heading">';
-        echo '<th class="feed-icon"></th>';
-        echo '<th style="visibility:hidden;">latest&darr;</th>';
-        echo '<th style="text-align: right;"><span class="unread">#</span></th>';
-        echo '<th style="width: 100%;">tag name</th>';
-        echo '<th><span></span></th>';
+        echo '<th class="source"></th>';
+        echo '<th class="latest" style="visibility:hidden;">latest&darr;</th>';
+        echo '<th class="unread"><span class="unread">#</span></th>';
+        echo '<th class="title">tag name</th>';
+        echo '<th class="controls"><span></span></th>';
         if ($sharing == 'all_tagged')
-            echo '<th>shared page</th>';
+            echo '<th class="sharing">shared page</th>';
         echo "</tr>\n";
         echo "</thead>\n";
         echo "<tbody>\n";
@@ -203,18 +203,18 @@ function fof_sidebar_tags_default() {
 
         $tagline .= '    <tr' . (++$n % 2 ? ' class="odd-row"' : '') . '>';
 
-        $tagline .= '<td>';
+        $tagline .= '<td class="unread">';
         if ($unread)
             $tagline .= '<a class="unread" href="' . fof_url('.', array('what' => "$tag_name unread", 'how' => 'paged')) . "\">$unread</a>/";
         $tagline .= '<a href="' . fof_url('.', array('what' => $tag_name, 'how' => 'paged')) . "\">$count</a>";
         $tagline .= '</td>';
 
-        $tagline .= '<td><b><a href="' . fof_url('.', array('what' => $tag_name, 'how' => 'paged')). '">' . $tag_name_html . '</a></b></td>';
+        $tagline .= '<td class="title"><b><a href="' . fof_url('.', array('what' => $tag_name, 'how' => 'paged')). '">' . $tag_name_html . '</a></b></td>';
 
-        $tagline .= '<td><a href="#" title="untag all items" onclick="return sb_del_tag_conf(' . $tag_name_json . ');">[x]</a></td>';
+        $tagline .= '<td class="controls"><a href="#" title="untag all items" onclick="return sb_del_tag_conf(' . $tag_name_json . ');">[x]</a></td>';
 
         if ($sharing == 'all_tagged')
-            $tagline .= '<td><a href="' . fof_url('./shared.php', array('user' => $fof_user_id, 'which' => $tag_name, 'how' => 'paged')) . '">[' . $tag_name_html . ']</a>';
+            $tagline .= '<td class="sharing"><a href="' . fof_url('./shared.php', array('user' => $fof_user_id, 'which' => $tag_name, 'how' => 'paged')) . '">[' . $tag_name_html . ']</a>';
 
         $tagline .= '</tr>';
 
@@ -224,7 +224,7 @@ function fof_sidebar_tags_default() {
     if ( ! empty($taglines)) { ?>
     <div id="tags">
       <table cellspacing="0" cellpadding="1" border="0" id="taglist">
-        <tr class="heading"><td><span class="unread">#</span></td><td>tag name</td><td>untag</td><?php if ($sharing == 'all_tagged') echo '<td>shared page</td>'; ?></tr>
+        <tr class="heading"><td><span class="unread">#</span></td><td class="title">tag name</td><td class="controls">untag</td><?php if ($sharing == 'all_tagged') echo '<td class="sharing">shared page</td>'; ?></tr>
     <?php
         echo implode("\n", $taglines);
     ?>
@@ -269,8 +269,11 @@ $name = array('feed_age' => 'age',
               'null' => ''
              );
 
-$column_style = array('feed_title' => 'width:100%;',
-                      'feed_unread' => 'text-align:right;'
+$column_class = array('feed_age' => 'update',
+                      'max_date' => 'latest',
+                      'feed_unread' => 'unread',
+                      'feed_url' => 'source',
+                      'feed_title' => 'title'
                      );
 
 switch ($sidebar_style) {
@@ -293,7 +296,11 @@ foreach ($columns as $col) {
         $feed_order_toggle = 'asc';
     $onclick = "return change_feed_order('$col', '$feed_order_toggle')";
 
-    echo '		<th' . (empty($column_style[$col]) ? '' : (' style="' . $column_style[$col] . '"')) . '>';
+    echo '		<th';
+    if ( ! empty($column_class[$col])) {
+        echo ' class="' . $column_class[$col] . '"';
+    }
+    echo '>';
 
     echo '<span class="nowrap"><a href="#" title="' . $title[$col] . '" onclick="' . $onclick . '">';
     echo $name[$col];
@@ -304,7 +311,7 @@ foreach ($columns as $col) {
     echo "</a></span></th>\n";
 }
 ?>
-        <th></th>
+        <th class="controls"></th>
       </tr>
     </thead>
     <tbody>
@@ -312,7 +319,7 @@ foreach ($columns as $col) {
 
 $t = 0;
 foreach ($feeds as $row) {
-    echo '<tr id="f' . $row['feed_id'] . '"' . (++$t % 2 ? ' class="odd-row"' : '') . ">\n";
+    echo '<tr id="f' . $row['feed_id'] . '" class="feed' . (++$t % 2 ? ' odd-row' : '') . "\">\n";
     echo fof_render_feed_row($row);
     echo "</tr>\n";
 }

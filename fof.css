@@ -439,6 +439,26 @@ height: 10px;
 border: 0;
 }
 
+#tags .source, #feeds .source {
+    vertical-align: middle;
+    margin-left: auto;
+    margin-right: auto;
+}
+#tags .latest, #feeds .latest {
+    text-align: right;
+}
+#tags .unread, #feeds .unread {
+    text-align: right;
+}
+#tags .title, #feeds .title {
+    width: 100%;
+}
+#tags .title a, #feeds .title a {
+    font-weight: bold;
+    text-decoration: none;
+    color: #000;
+}
+
 /* fancy sidebar menus */
 .feedmenu {
     list-style: none;

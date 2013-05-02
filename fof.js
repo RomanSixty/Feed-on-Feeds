@@ -999,9 +999,9 @@ function ajaxadd()
     continueadd();
 }
 
-function itemTagAddShow(id) {
+function itemTagAddShow(id, link) {
     document.getElementById('addtag' + id).style.display = '';
-    this.style.display = 'none';
+    link.style.display = 'none';
     return false;
 }
 
@@ -1019,8 +1019,8 @@ function sb_read_conf(title, id) {
 }
 
 function sb_del_tag_conf(tagname) {
-    if (confirm('Untag all [' + tag_name + '] items -- are you SURE?')) {
-         delete_tag(tag_name);
+    if (confirm('Untag all [' + tagname + '] items -- are you SURE?')) {
+         delete_tag(tagname);
     }
     return false;
 };

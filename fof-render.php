@@ -70,11 +70,11 @@ function fof_render_item($item, $include_div=true)
 	$item_read = fof_render_get_key_($item, 'item_read');
 
 	$prefs = fof_prefs();
-	$offset = fof_render_get_key_($prefs, 'tzoffset');
+	$offset = fof_render_get_key_($prefs, 'tzoffset') * 60 * 60;
 
-	$item_published = gmdate("Y-n-d g:ia", $item['item_published'] + $offset*60*60);
-	$item_cached = gmdate("Y-n-d g:ia", $item['item_cached'] + $offset*60*60);
-	$item_updated = gmdate("Y-n-d g:ia", $item['item_updated'] + $offset*60*60);
+	$item_published = gmdate("Y-n-d g:ia", $item['item_published'] + $offset);
+	$item_cached = gmdate("Y-n-d g:ia", $item['item_cached'] + $offset);
+	$item_updated = gmdate("Y-n-d g:ia", $item['item_updated'] + $offset);
 
 	if ( ! empty($_GET['search']))
 	{
@@ -99,7 +99,7 @@ function fof_render_item($item, $include_div=true)
 	<span class="controls">
 		<a class="uparrow" href="javascript:hide_body('<?php echo $item_id ?>')">fold &uarr;</a>
 		<a class="downarrow" href="javascript:show_body('<?php echo $item_id ?>')">unfold &darr;</a>
-		<a href="" onclick="ajax_mark_read('<?php echo $item_id ?>'); return false;">mark read</a>
+		<a href="#" onclick="ajax_mark_read('<?php echo $item_id ?>'); return false;">mark read</a>
 	</span>
 	<h1 <?php if($unread) echo "class='unread-item'" ?>>
 		<input type="checkbox"
@@ -125,10 +125,10 @@ function fof_render_item($item, $include_div=true)
 	/* show non-system tags */
 	foreach (array_diff($tags, array('unread', 'star', 'folded')) as $tag) {
 		echo '		<a href="' . fof_url('.', array('what' => $tag)) . '">' . htmlentities($tag) . '</a>';
-		echo '		<a href="#" class="untag" onclick="return remove_tag(' . $item_id . ',' . htmlentities(json_encode($tag), ENT_QUOTES) . ');">[x]</a>' . "\n";
+		echo '		<a href="#" class="untag" title="remove ' . htmlentities('"' . $tag . '"') . ' tag" onclick="return remove_tag(' . $item_id . ',' . htmlentities(json_encode($tag), ENT_QUOTES) . ');">[x]</a>' . "\n";
 	}
 ?>
-		<a href="#" onclick="return itemTagAddShow('<?php echo $item_id; ?>')">add tag</a>
+		<a href="#" onclick="return itemTagAddShow('<?php echo $item_id; ?>', this);">add tag</a>
 		<div id="addtag<?php echo $item_id ?>" style="display: none !important">
 			<input onfocus="this.value=''" onkeypress="itemTagAdd('<?php echo $item_id; ?>', event.keyCode);" type="text" id="tag<?php echo $item_id ?>" size="12" value="enter tag here" />
 			<input type="button" name="add tag" value="tag" onclick="itemTagAdd('<?php echo $item_id; ?>');" />
@@ -153,7 +153,7 @@ function fof_render_item($item, $include_div=true)
 <?php
     $widgets = fof_get_widgets($item);
 
-    $widgets[] = '<a href="" onclick="return ajax_mark_read(\'' . $item_id . '\');">mark read</a>';
+    $widgets[] = '<a href="#" onclick="return ajax_mark_read(\'' . $item_id . '\');">mark read</a>';
 
     if ( ! empty($widgets)) {
         echo '<div class="clearer"></div>' . "\n";
