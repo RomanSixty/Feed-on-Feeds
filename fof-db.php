@@ -116,7 +116,9 @@ function fof_db_wrap_elapsed_(/* callable, args... */)
 
 function fof_db_log_query_caller_($caller_frame, $query, $elapsed, $rows=null)
 {
-    $msg = sprintf("%s:%s [%s] %.3f", basename($caller_frame['file']), $caller_frame['function'], $query, $elapsed);
+    $caller_file = empty($caller_frame['file']) ? '[no file]' : basename($caller_frame['file']);
+    $caller_func = empty($caller_frame['function']) ? '[no func]' : $caller_frame['function'];
+    $msg = sprintf("%s:%s [%s] %.3f", $caller_file, $caller_func, $query, $elapsed);
     if ($rows) {
         $msg .= sprintf(" (%d rows affected)", $rows);
     }

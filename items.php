@@ -50,59 +50,57 @@ $title = fof_view_title($feed, $what, $when, $which, $howmany, $search, $itemcou
 
 // Placeholder to push content down:
 ?>
-<ul id="item-display-controls-spacer" class="inline-list">
-	<li class="orderby">[new to old]</li>
-	<li class="orderby">[old to new]</li>
-	<li><strong>Mark all read</strong></li>
-	<li>Flag all</li>
-	<li>Unflag all</li>
-	<li>Toggle all</li>
-	<li><strong>Mark flagged read</strong></li>
-	<li>Mark flagged unread</li>
-	<li>Show all</li>
-	<li>Hide all</li>
-	<li>Untag all</li>
-</ul>
-
-<br style="clear: both"><br>
-
-<p><?php echo $title?></p>
-
-<ul id="item-display-controls" class="inline-list">
+<div id="item-display-controls" class="banner ontop">
+<ul class="inline-list">
 <?php
+    $item_controls = '';
+
     $qv = array('feed' => $feed,
                 'what' => $what,
                 'when' => $when,
                 'how' => $how,
                 'howmany' => $howmany);
 
-    echo '	<li class="orderby">';
+    $item_controls .= '	<li class="orderby">';
     if ($order == 'asc')
-        echo '<a href="' . fof_url('.', array_merge($qv, array('order' => 'desc'))) . '">';
-    echo '[new to old]';
+        $item_controls .= '<a href="' . fof_url('.', array_merge($qv, array('order' => 'desc'))) . '">';
+    $item_controls .= '[new to old]';
     if ($order == 'asc')
-        echo '</a>';
-    echo "</li>\n";
+        $item_controls .= '</a>';
+    $item_controls .= "</li>\n";
 
-    echo '	<li class="orderby">';
+    $item_controls .= '	<li class="orderby">';
     if ($order == 'desc')
-        echo '<a href="' . fof_url('.', array_merge($qv, array('order' => 'asc'))) . '">';
-    echo '[old to new]';
+        $item_controls .= '<a href="' . fof_url('.', array_merge($qv, array('order' => 'asc'))) . '">';
+    $item_controls .= '[old to new]';
     if ($order == 'desc')
-        echo '</a>';
-    echo "</li>\n";
+        $item_controls .= '</a>';
+    $item_controls .= "</li>\n";
 
+    $item_controls .= '	<li><a href="javascript:flag_all();mark_read()"><strong>Mark all read</strong></a></li>';
+    $item_controls .= '	<li><a href="javascript:flag_all()">Flag all</a></li>';
+    $item_controls .= '	<li><a href="javascript:unflag_all()">Unflag all</a></li>';
+    $item_controls .= '	<li><a href="javascript:toggle_all()">Toggle all</a></li>';
+    $item_controls .= '	<li><a href="javascript:mark_read()"><strong>Mark flagged read</strong></a></li>';
+    $item_controls .= '	<li><a href="javascript:mark_unread()">Mark flagged unread</a></li>';
+    $item_controls .= '	<li><a href="javascript:show_all()">Show all</a></li>';
+    $item_controls .= '	<li><a href="javascript:hide_all()">Hide all</a></li>';
+    $item_controls .= '	<li><a href="javascript:untag_all()">Untag all</a></li>';
+
+    echo $item_controls;
 ?>
-	<li><a href="javascript:flag_all();mark_read()"><strong>Mark all read</strong></a></li>
-	<li><a href="javascript:flag_all()">Flag all</a></li>
-	<li><a href="javascript:unflag_all()">Unflag all</a></li>
-	<li><a href="javascript:toggle_all()">Toggle all</a></li>
-	<li><a href="javascript:mark_read()"><strong>Mark flagged read</strong></a></li>
-	<li><a href="javascript:mark_unread()">Mark flagged unread</a></li>
-	<li><a href="javascript:show_all()">Show all</a></li>
-	<li><a href="javascript:hide_all()">Hide all</a></li>
-	<li><a href="javascript:untag_all()">Untag all</a></li>
 </ul>
+</div>
+
+<div id="item-display-controls-spacer" class="banner">
+<ul class="inline-list">
+<?php echo $item_controls; ?>
+</ul>
+</div>
+
+<br class="clearer">
+
+<div id="display-summary"><?php echo $title; ?></div>
 
 <?php
 if ($fof_prefs_obj->get('keyboard')) {

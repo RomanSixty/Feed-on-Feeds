@@ -145,7 +145,7 @@ function fof_render_item($item, $include_div=true)
 		<a href="<?php echo $feed_link ?>" title="<?php echo htmlspecialchars($feed_description); ?>"><?php echo $feed_title; ?></a>
 	</h2>
 
-	<span class="meta" id="published">on <?php echo $item_published ?></span>
+	<span class="meta published">on <?php echo $item_published ?></span>
 </div>
 
 <div class="body"><?php echo $item_content ?></div>

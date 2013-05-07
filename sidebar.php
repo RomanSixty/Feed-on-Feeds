@@ -30,15 +30,22 @@ if (empty($sidebar_style) && $fof_prefs_obj->get('simple_sidebar'))
 
 ?>
 <img id="throbber" src="<?php echo $fof_asset['throbber_image']; ?>" align="left" style="display: none;" />
-<center id="welcome">Welcome <b><?php echo $fof_user_name ?></b>! <a href="prefs.php">prefs</a><?php if ( ! defined('FOF_AUTH_EXTERNAL')) { ?> | <a href="logout.php">log out</a><?php } ?> | <a href="http://feedonfeeds.com/">about</a></center>
-<br>
 <?php
-echo '<center><a href="add.php"><b>Add Feeds</b></a> / ';
-if ($sidebar_style == "fancy")
+$welcomecontent = '<span>Welcome, <span class="userid">' . $fof_user_name . '</span>!</span>';
+$welcomecontent .= ' | <a href="prefs.php">prefs</a>';
+if ( ! defined('FOF_AUTH_EXTERNAL'))
+    $welcomecontent .= ' | <a href="logout.php">log out</a>';
+$welcomecontent .= ' | <a href="http://feedonfeeds.com/">about</a>';
+
+echo '<div id="welcome" class="banner ontop">' . $welcomecontent . "</div>\n";
+echo '<div id="welcome-spacer" class="banner">' . $welcomecontent . "</div>\n";
+echo '<br class="clearer">' . "\n";
+echo '<div id="feed-actions"><a href="add.php"><b>Add Feeds</b></a> / ';
+if ($sidebar_style == 'fancy')
     echo '<a href="#" title="Update all subscribed feeds" onclick="' . htmlentities('throb(); new Ajax.Request("feed-action.php", {method:"post", parameters:{"update_subscribed_sources": true}});', ENT_QUOTES) . '"><b>Update Feeds</b></a>';
 else
     echo '<a href="update.php"><b>Update Feeds</b></a>';
-echo '</center>' . "\n";
+echo '</div>' . "\n";
 ?>
 
 <ul id="nav">
@@ -50,6 +57,7 @@ $sharing = $fof_prefs_obj->get('sharing');
 
 /* these parameters control highlighting of the active view */
 $what = fof_sidebar_get_key_($_GET, 'what', 'unread');
+$what_a = explode(' ', $what);
 $when = fof_sidebar_get_key_($_GET, 'when');
 $search = fof_sidebar_get_key_($_GET, 'search');
 $feed = fof_sidebar_get_key_($_GET, 'feed');
@@ -116,6 +124,7 @@ if ( ! empty($unread)) {
 function fof_sidebar_tags_fancy() {
     global $fof_asset;
     global $sharing;
+    global $what_a;
 
     $taglines = array();
     $n = 0;
@@ -126,7 +135,7 @@ function fof_sidebar_tags_fancy() {
         $tag_name_html = htmlentities($tag['tag_name']);
         $tag_name_json = htmlentities(json_encode($tag['tag_name']), ENT_QUOTES);
 
-        $tagline = '	<tr class="tag' . (++$n % 2 ? ' odd-row' : '') . '" id="tagid_' . $tag['tag_id']. '">';
+        $tagline = '	<tr class="tag' . (++$n % 2 ? ' odd-row' : '') . (in_array($tag['tag_name'], $what_a) ? ' current-view' : '') . '" id="tagid_' . $tag['tag_id']. '">';
 
         $tagline .= '<td class="source"><img src="' . ( empty($tag['tag_icon']) ? $fof_asset['tag_icon'] : $tag['tag_icon']) . '" class="feed-icon" /></td>';
         $tagline .= '<td class="latest"></td>';
@@ -177,6 +186,7 @@ function fof_sidebar_tags_fancy() {
 
 function fof_sidebar_tags_default() {
     global $sharing;
+    global $what_a;
 
     $unread_id = fof_db_get_tag_by_name('unread');
     $star_id = fof_db_get_tag_by_name('star');
@@ -201,7 +211,16 @@ function fof_sidebar_tags_default() {
         $count = $tag['count'];
         $unread = $tag['unread'];
 
-        $tagline .= '    <tr' . (++$n % 2 ? ' class="odd-row"' : '') . '>';
+        $tag_classes = array();
+        if (++$n % 2)
+            $tag_classes[] = 'odd-row';
+        if (in_array($tag_name, $what_a))
+            $tag_classes[] = 'current-view';
+        $tag_classes = implode(' ', $tag_classes);
+        if ( ! empty($tag_classes))
+            $tag_classes = ' class="' . $tag_classes . '"';
+
+        $tagline .= '    <tr' . $tag_classes . '>';
 
         $tagline .= '<td class="unread">';
         if ($unread)
@@ -317,9 +336,11 @@ foreach ($columns as $col) {
     <tbody>
 <?php
 
+$what_id = array_map('fof_db_get_tag_by_name', $what_a);
 $t = 0;
 foreach ($feeds as $row) {
-    echo '<tr id="f' . $row['feed_id'] . '" class="feed' . (++$t % 2 ? ' odd-row' : '') . "\">\n";
+    $view_contrib = array_intersect($what_id, $row['prefs']['tags']);
+    echo '<tr id="f' . $row['feed_id'] . '" class="feed' . (++$t % 2 ? ' odd-row' : '') . (count($view_contrib) ? ' current-view' : '') . "\">\n";
     echo fof_render_feed_row($row);
     echo "</tr>\n";
 }
