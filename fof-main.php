@@ -579,12 +579,14 @@ function fof_view_title($feed=NULL, $what='unread', $when=NULL, $start=NULL, $li
         {
             if ( ! is_numeric($limit))
                 $limit = $prefs['howmany'];
-            $end = $start + $limit;
-            if ($end > $itemcount)
-                $end = $itemcount;
-            $start += 1;
-            if ($start != $end)
-                $title .= " $start to $end of ";
+            if ($start || $limit < $itemcount) {
+                $end = $start + $limit;
+                if ($end > $itemcount)
+                    $end = $itemcount;
+                $start += 1;
+                if ($start != $end)
+                    $title .= " $start to $end of ";
+            }
         }
 
         $title .= " $itemcount";
@@ -717,12 +719,14 @@ function fof_get_nav_links($feed=NULL, $what='new', $when=NULL, $start=NULL, $li
 
         $qv['how'] = 'paged';
 
-        if($itemcount > $earlier)
-            $navlinks .= ' <a href="' . fof_url('.', array_merge($qv, array('which' => urlencode($earlier)))) . '">[&laquo; previous ' . $limit . ']</a>';
+        if($itemcount > $earlier) {
+            $navlinks .= ' <a href="' . fof_url('.', array_merge($qv, array('which' => $earlier))) . '">[&laquo; previous ' . $limit . ']</a>';
+            $navlinks .= ' <a href="' . fof_url('.', array_merge($qv, array('how' => 'unpaged'))) . '">[all-at-once]</a>';
+        }
 
         if($later >= 0) {
-            $navlinks .= ' <a href="' . fof_url('.', $qv) . '">[current items]</a>';
-            $navlinks .= ' <a href="' . fof_url('.', array_merge($qv, array('which' => urlencode($later)))) . '">[next ' . $limit . '&raquo;]</a>';
+            $navlinks .= ' <a href="' . fof_url('.', array_merge($qv, array('which' => $start))) . '">[current items]</a>';
+            $navlinks .= ' <a href="' . fof_url('.', array_merge($qv, array('which' => $later))) . '">[next ' . $limit . ' &raquo;]</a>';
         }
     }
 
@@ -1395,7 +1399,7 @@ function fof_render_feed_row($f) {
                 $out .= '<a class="unread" title="' . $unread . ' unread items" href="' . $feed_view_unread_url . '">' . $unread . '</a>';
             $out .= '</span></td>' . "\n";
 
-            $out .= '	<td class="title"><a href="' . $feed_view_all_url . '" title="' . $items . ' total items">' . $title . '</a></td>' . "\n";
+            $out .= '	<td class="title"><a href="' . ($unread ? $feed_view_unread_url : $feed_view_all_url) . '" title="' . ($unread ? ($unread . ' new of ') : '') . $items . ' total items">' . $title . '</a></td>' . "\n";
 
             /* controls */
             $out .= '	<td class="controls">';
@@ -1405,6 +1409,7 @@ function fof_render_feed_row($f) {
             $out .=       '<ul>';
             $out .=         '<li><a href="#" title="last update ' . $f['agestr']. '" onclick="return sb_update_feed(' . $f['feed_id'] . ');">Update Feed</a></li>';
             $out .=         '<li><a href="#" title="mark all as read" onclick="return sb_readall_feed(' . $f['feed_id']. ')">Mark all items as read</a></li>';
+            $out .=         '<li><a href="' . $feed_view_all_url . '" title="' . $items . ' total items">View all items</a></li>';
             $out .=         '<li><a href="' . $link . '" title="home page"' . ($fof_prefs_obj->get('item_target') ? ' target="_blank"' : '') . '>Feed Source Site</a></li>';
             $out .=         '<li><a href="' . $feed_unsubscribe_url . '" title="unsubscribe" onclick="return sb_unsub_conf(' . $title_json . ');">Unsubscribe from feed</a></li>';
             $out .=       '</ul>';

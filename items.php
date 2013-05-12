@@ -136,7 +136,7 @@ if ($fof_prefs_obj->get('keyboard')) {
 
 <?php
     $links = fof_get_nav_links($feed, $what, $when, $which, $howmany, $search, $itemcount);
-    $links = ($links ? '<center>' : '') . $links . ($links ? "</center>\n" : '');
+    $links = ($links ? '<div class="pagination-nav">' : '') . $links . ($links ? "</div>\n" : '');
 
     echo $links;
 

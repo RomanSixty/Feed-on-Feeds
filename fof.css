@@ -144,6 +144,10 @@ p
     font-weight: bold;
 }
 
+.pagination-nav {
+    text-align: center;
+}
+
 .highlight-on .highlight
 {
     background: yellow;

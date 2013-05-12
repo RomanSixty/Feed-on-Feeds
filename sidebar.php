@@ -90,12 +90,12 @@ if ( ! empty($unread)) {
 <?php
     echo '  <li' . (empty($feed) && $what == 'unread' ? " class='current-view'" : '') . '>';
     echo '<a href="' . fof_url('.', array('what'=>'unread', 'how'=>'paged')) . '"><span style="color:red"><b>Unread' . ($unread ? " ($unread)" : '') . '</b></span></a>';
-    echo ' [<a href="' . fof_url('.', array('what'=>'unread')) . '">unpaged</a>]';
+    echo ' [<a href="' . fof_url('.', array('what'=>'unread', 'how'=>'unpaged')) . '">unpaged</a>]';
     echo "</li>\n";
 
     echo '  <li' . (empty($feed) && $what == 'star' ? " class='current-view'" : '') . '>';
     echo '<a href="' . fof_url('.', array('what'=>'star', 'how'=>'paged')). '"><img class="star-icon-small" src="' . $fof_asset['star_on_image'] . '" /> Starred <span id="starredcount">' . ($starred ? "($starred)" : '') . '</span></a>';
-    echo ' [<a href="' . fof_url('.', array('what'=>'star')). '">unpaged</a>]';
+    echo ' [<a href="' . fof_url('.', array('what'=>'star', 'how'=>'unpaged')). '">unpaged</a>]';
     echo "</li>\n";
 
     echo '  <li' . (empty($feed) && $what == 'all' && isset($when) ? " class='current-view'" : '') . '>';
@@ -135,20 +135,27 @@ function fof_sidebar_tags_fancy() {
         $tag_name_html = htmlentities($tag['tag_name']);
         $tag_name_json = htmlentities(json_encode($tag['tag_name']), ENT_QUOTES);
 
+        $tag_view_unread_url = fof_url('.', array('what'=>implode(' ', array($tag['tag_name'], 'unread')), 'how'=>'paged'));
+        $tag_view_all_url = fof_url('.', array('what'=>$tag['tag_name'], 'how'=>'paged'));
+
         $tagline = '	<tr class="tag' . (++$n % 2 ? ' odd-row' : '') . (in_array($tag['tag_name'], $what_a) ? ' current-view' : '') . '" id="tagid_' . $tag['tag_id']. '">';
 
         $tagline .= '<td class="source"><img src="' . ( empty($tag['tag_icon']) ? $fof_asset['tag_icon'] : $tag['tag_icon']) . '" class="feed-icon" /></td>';
         $tagline .= '<td class="latest"></td>';
 
-        $tagline .= '<td class="unread"><span class="unread"><a ' . ($tag['unread'] ? 'class="unread" ' : '') . 'href="' . fof_url('.', array('what'=>implode(' ', array($tag['tag_name'], 'unread')))) . '" title="unread items">' . $tag['unread'] . '</a></span></td>';
+        $tagline .= '<td class="unread"><span class="unread">';
+        if ($tag['unread'])
+            $tagline .= '<a class="unread" href="' . $tag_view_unread_url . '" title="' . $tag['unread'] . ' unread items">' . $tag['unread'] . '</a>';
+        $tagline .= '</span></td>';
 
-        $tagline .= '<td class="title"><a href="' . fof_url('.', array('what'=>$tag['tag_name'], 'how'=>'paged')) . '" title="' . $tag['count'] . ' total items">' . $tag['tag_name'] . '</a></td>';
+        $tagline .= '<td class="title"><a href="' . ($tag['unread'] ? $tag_view_unread_url : $tag_view_all_url) . '" title="' . ($tag['unread'] ? ($tag['unread'] . ' new of ') : '') . $tag['count'] . ' total items">' . $tag['tag_name'] . '</a></td>';
 
         $tagline .= '<td class="controls">';
         $tagline .= '<ul class="feedmenu"><li>';
         $tagline .= '<a href="#" title="tag controls">&Delta;</a>';
         $tagline .=   '<ul>';
-        $tagline .=     '<li><a href="#" title="update all source feeds" onclick="return sb_update_tag_sources(' . $tag_name_json . ');">Update feeds</a></li>';
+        $tagline .=     '<li><a href="' . $tag_view_all_url . '" title="' . $tag['count'] . ' total items">View all items</a></li>';
+        $tagline .=     '<li><a href="#" title="update all source feeds" onclick="return sb_update_tag_sources(' . $tag_name_json . ');">Update contributing feeds</a></li>';
         $tagline .=     '<li><a href="#" title="mark all read" onclick="return sb_mark_tag_read(' . $tag_name_json . ')">Mark all items as read</a></li>';
         $tagline .=     '<li><a href="#" title="untag all items" onclick="return sb_del_tag_conf(' . $tag_name_json . ');">Delete tag from all items</a></li>';
         $tagline .=   '</ul>';
@@ -340,7 +347,8 @@ $what_id = array_map('fof_db_get_tag_by_name', $what_a);
 $t = 0;
 foreach ($feeds as $row) {
     $view_contrib = array_intersect($what_id, $row['prefs']['tags']);
-    echo '<tr id="f' . $row['feed_id'] . '" class="feed' . (++$t % 2 ? ' odd-row' : '') . (count($view_contrib) ? ' current-view' : '') . "\">\n";
+    $view_feed = (! empty($_GET['feed']) && $_GET['feed'] == $row['feed_id']);
+    echo '<tr id="f' . $row['feed_id'] . '" class="feed' . (++$t % 2 ? ' odd-row' : '') . ((count($view_contrib) || $view_feed) ? ' current-view' : '') . "\">\n";
     echo fof_render_feed_row($row);
     echo "</tr>\n";
 }
