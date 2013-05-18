@@ -347,6 +347,12 @@ function fof_db_add_item($feed_id, $guid, $link, $title, $content, $cached, $pub
     return(mysql_insert_id($fof_connection));
 }
 
+function fof_db_update_item($feed_id, $guid, $link, $cached) {
+    global $FOF_FEED_TABLE, $FOF_ITEM_TABLE, $fof_connection;
+    fof_safe_query("update $FOF_ITEM_TABLE set item_link='%s', item_cached=%d where feed_id=%d AND item_guid='%s'",
+                   $link, $cached, $feed_id, $guid);
+}
+
 function fof_db_get_items($user_id=1, $feed=NULL, $what="unread", $when=NULL, $start=NULL, $limit=NULL, $order="desc", $search=NULL)
 {
     global $FOF_SUBSCRIPTION_TABLE, $FOF_FEED_TABLE, $FOF_ITEM_TABLE, $FOF_ITEM_TAG_TABLE, $FOF_TAG_TABLE;
@@ -779,8 +785,8 @@ function fof_db_get_users()
 
     while($row = fof_db_get_row($result))
     {
-        $users[$row['user_id']['user_name']] = $row['user_name'];
-        $users[$row['user_id']['user_prefs']] = unserialize($row['user_prefs']);
+        $users[$row['user_id']]['user_name'] = $row['user_name'];
+        $users[$row['user_id']]['user_prefs'] = unserialize($row['user_prefs']);
     }
 }
 
