@@ -860,9 +860,9 @@ function fof_update_feed($id)
             $date = $item->get_date('U');
 
             // don't fetch entries older than the purge limit
-            if ( !$date )
-              $date = time();
-            elseif ( !empty ( $admin_prefs [ 'purge' ] ) && $date <= ( time() - $admin_prefs [ 'purge' ] * 24 * 3600 ) ) {
+            if ( !$date ) {
+                $date = time();
+            } elseif ( !empty ( $admin_prefs [ 'purge' ] ) && $date <= ( time() - $admin_prefs [ 'purge' ] * 24 * 3600 ) ) {
                 $purgedUpdTimes[] = $date;
                 continue;
             }
@@ -898,6 +898,8 @@ function fof_update_feed($id)
                 }
 
                 fof_apply_plugin_tags($feed_id, $id, NULL);
+            } else {
+                fof_db_update_item($feed_id, $item_id, $link, time());
             }
 
             $ids[] = $id;
