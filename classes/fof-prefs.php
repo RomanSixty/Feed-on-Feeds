@@ -49,7 +49,7 @@ class FoF_Prefs
         }
     }
 
-    function &instance()
+    static function &instance()
     {
         static $instance;
         if(!isset($instance)) $instance = new FoF_Prefs(fof_current_user());
