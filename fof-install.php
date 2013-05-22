@@ -78,13 +78,14 @@ function fof_install_cachedir() {
    mature solution to this problem in existence somewhere..
  */
 
+if ( ! defined('MYSQL_ENGINE')) define('MYSQL_ENGINE', 'MyISAM');
 /* generates a query string to create a table, given an array of columns */
 function fof_install_create_table_query($table_name, $column_array) {
     $query = "CREATE TABLE IF NOT EXISTS $table_name (\n  ";
     $query .= implode(",\n  ", $column_array);
     $query .= "\n)";
     if (defined('USE_MYSQL')) {
-        $query .= "ENGINE=MyISAM DEFAULT CHARSET=UTF8";
+        $query .= "ENGINE=" . MYSQL_ENGINE . " DEFAULT CHARSET=UTF8";
     }
 
     return $query . ';';
