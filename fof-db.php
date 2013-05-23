@@ -732,6 +732,18 @@ function fof_db_add_item($feed_id, $guid, $link, $title, $content, $cached, $pub
     return fof_db_get_row($statement, 'item_id', TRUE);
 }
 
+function fof_db_update_item($feed_id, $guid, $link, $cached) {
+    global $FOF_ITEM_TABLE;
+    global $fof_connection;
+
+    $query = "UPDATE $FOF_ITEM_TABLE SET item_link = :item_link, item_cached = :item_cached WHERE feed_id = :feed_id and item_guid = :item_guid";
+    $statement = $fof_connection->prepare($query);
+    $statement->bindValue(':item_link', $link);
+    $statement->bindValue(':item_cached', $cached);
+    $statement->bindValue(':feed_id', $feed_id);
+    $statement->bindValue(':item_guid', $guid);
+    $result = fof_db_statement_execute($statement);
+}
 
 /* when: Y/m/d or 'today' */
 function fof_db_get_items($user_id=1, $feed=NULL, $what='unread', $when=NULL, $start=NULL, $limit=NULL, $order='desc', $search=NULL) {

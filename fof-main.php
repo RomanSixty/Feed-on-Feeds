@@ -979,6 +979,10 @@ function fof_update_feed($id)
     $feed_id = $feed['feed_id'];
     $n = 0;
 
+    // Set up the dynamic updates here, so we can include would-be-purged items
+    $purgedUpdTimes = array();
+    $count_Added = 0;
+
     if ($rss->get_items()) {
         foreach ($rss->get_items() as $item) {
             $title = $item->get_title();
@@ -995,9 +999,13 @@ function fof_update_feed($id)
                 $date = time();
 
             // don't fetch entries older than the purge limit
-            if ( ! empty($admin_prefs['purge'])
-            &&   $date <= ( time() - $admin_prefs['purge'] * 24 * 3600 ) )
+            if ( ! $date ) {
+                $date = time();
+            } elseif ( ! empty($admin_prefs['purge'])
+            &&   $date <= ( time() - $admin_prefs['purge'] * 24 * 3600 ) ) {
+                $purgedUpdTimes[] = $date;
                 continue;
+            }
 
             /* check if item already known */
             $item_id = $item->get_id();
@@ -1011,6 +1019,7 @@ function fof_update_feed($id)
 
                 $id = fof_db_add_item($feed_id, $item_id, $link, $title, $content, time(), $date, $date);
                 fof_apply_tags($feed_id, $id);
+                $count_Added++;
 
                 $republished = false;
 
@@ -1019,6 +1028,8 @@ function fof_update_feed($id)
                 }
 
                 fof_apply_plugin_tags($feed_id, $id, NULL);
+            } else {
+                fof_db_update_item($feed_id, $item_id, $link, time());
             }
 
             $ids[] = $id;
@@ -1030,49 +1041,72 @@ function fof_update_feed($id)
     if ( ! empty($admin_prefs['dynupdates']) )
     {
         // Determine the average time between items, to determine the next update time
-        $result = fof_db_items_updated_list($feed_id);
 
-        if ($lastTime = fof_db_get_row($result, 'item_updated')) {
-            $count = 1.0;
-            $totalDelta = 0.0;
-            $totalDeltaSquare = 0.0;
-            while ( ($updated = fof_db_get_row($result, 'item_updated')) !== false ) {
-                $delta = (float)($updated - $lastTime);
-                if ($delta > 0.0) {
-                    $totalDelta += $delta;
-                    $totalDeltaSquare += $delta*$delta;
-                    $count++;
-                    $lastTime = $updated;
-                }
-            }
-            $delta = (float)(time() - $lastTime);
-            if ($delta > 0) {
+        $count = 0;
+        $lastTime = 0;
+        $totalDelta = 0.0;
+        $totalDeltaSquare = 0.0;
+
+        // Accumulate the times for the pre-purged items
+        sort ($purgedUpdTimes, SORT_NUMERIC);
+        foreach ($purgedUpdTimes as $time) {
+            if ($count > 0) {
+                $delta = $time - $lastTime;
                 $totalDelta += $delta;
                 $totalDeltaSquare += $delta*$delta;
-                $count++;
             }
-
-            // Next update should be now + mean - stdeviation
-            $mean = 0;
-            if ($count > 0) {
-                $mean = $totalDelta/$count;
-            }
-            $stdev = 0;
-            if ($count > 1) {
-                $stdev = sqrt(($count*$totalDeltaSquare - $totalDelta*$totalDelta)
-                              /($count * ($count - 1)));
-            }
-
-            // Cap the maximum update interval to 2 days for now (TODO make configurable)
-            $nextInterval = min($mean - min($stdev,$mean/2), 86400*2);
-
-            fof_log($feed['feed_title'] . ": Next feed update in "
-                    . $nextInterval . " seconds;"
-                    . " count=$count t=$totalDelta t2=$totalDeltaSquare"
-                    . " mean=$mean stdev=$stdev");
-
-            fof_db_feed_cache_set($feed_id, (int)round(time() + $nextInterval));
+            $lastTime = $time;
+            $count++;
         }
+
+        // Accumulate the times for the stored items
+        $result = fof_db_items_updated_list($feed_id);
+        while ($row = fof_db_get_row($result)) {
+            if ($count > 0) {
+                $delta = (float)($row['item_updated'] - $lastTime);
+                $totalDelta += $delta;
+                $totalDeltaSquare += $delta*$delta;
+            }
+            $count++;
+            $lastTime = $row['item_updated'];
+        }
+
+        // Accumulate the time for 'now' (to give the window something to grow on)
+        $delta = time() - $lastTime;
+        if ($delta > 0 && $count > 0) {
+            $totalDelta += $delta;
+            $totalDeltaSquare += $delta*$delta;
+            $count++;
+        }
+
+        $mean = 0;
+        if ($count > 0) {
+            $mean = $totalDelta/$count;
+        }
+        $stdev = 0;
+        if ($count > 1) {
+            $stdev = sqrt(($count*$totalDeltaSquare - $totalDelta*$totalDelta)
+                          /($count * ($count - 1)));
+        }
+       
+        // This algorithm is rife with fiddling, and I really need to generate metrics to test the efficacy
+        $now = time();
+        $nextInterval = $mean + $stdev*2/($count + 1);
+        $nextTime = min(max($lastTime + $nextInterval, $now + $stdev),
+                        $now + 86400/2);
+       
+	$lastInterval = $now - $lastTime; 
+        fof_log($feed['feed_title'] . ": Next feed update in "
+                . ($nextTime - $now) . " seconds;"
+                . " count=$count t=$totalDelta t2=$totalDeltaSquare"
+                . " mean=$mean stdev=$stdev");
+        if ($count_Added > 0) {
+                // In a perfect world, we want both of these numbers to be low
+                fof_log("DYNUPDATE_ADD $feed_id count $count_Added overstep $lastInterval");
+        } else {
+                fof_log("DYNUPDATE_NONE $feed_id since $lastInterval");
+        }
+        fof_db_feed_cache_set($feed_id, (int)round($nextTime));
     }
 
     // optionally purge old items -  if 'purge' is set we delete items that are not

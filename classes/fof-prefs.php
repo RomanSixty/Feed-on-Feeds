@@ -65,7 +65,7 @@ class FoF_Prefs
             "sharing" => "no",
             "feed_order" => "feed_title",
             "feed_direction" => "asc",
-            );
+        );
 
         $admin_defaults = array(
             "purge" => 30,
@@ -73,7 +73,7 @@ class FoF_Prefs
             "manualtimeout" => 15,
             "logging" => false,
             "match_similarity" => 90,
-            "dynupdates" => true,
+            "dynupdates" => false,
         );
 
         $this->stuff_array($this->prefs, $defaults);
