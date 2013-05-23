@@ -84,6 +84,8 @@ if ( ! empty($unread)) {
     document.title=<?php echo json_encode($page_title_js); ?>;
     what=<?php echo json_encode($what); ?>;
     when=<?php echo json_encode($when); ?>;
+    search=<?php echo json_encode($search); ?>;
+    feed=<?php echo json_encode($feed); ?>;
     starred=<?php echo json_encode($starred); ?>;
   </script>
 
@@ -107,7 +109,7 @@ if ( ! empty($unread)) {
     echo "</li>\n";
 
     echo '  <li' . ( ! empty($search) ? ' class="current-view"' : '') . '>';
-    echo '<a href="javascript:Element.toggle(\'search\');Field.focus(\'searchfield\');void(0);">Search</a>' . "\n";
+    echo '<a href="#" onclick="$(\'search\').toggle();$(\'searchfield\').focus();return false;">Search</a>' . "\n";
     echo '    <form action="." id="search"' . (empty($search) ? ' style="display:none"' : '') . ">\n";
     echo '      <input type="hidden" name="how" value="paged">' . "\n";
     echo '      <input type="hidden" name="what" value="' . (empty($what) || $what == 'unread' ? 'all' : htmlentities($what, ENT_QUOTES)) . "\">\n";
@@ -346,7 +348,7 @@ foreach ($columns as $col) {
 $what_id = array_map('fof_db_get_tag_by_name', $what_a);
 $t = 0;
 foreach ($feeds as $row) {
-    $view_contrib = array_intersect($what_id, $row['prefs']['tags']);
+    $view_contrib = array_intersect($what_id, $row['subscription_prefs']['tags']);
     $view_feed = (! empty($_GET['feed']) && $_GET['feed'] == $row['feed_id']);
     echo '<tr id="f' . $row['feed_id'] . '" class="feed' . (++$t % 2 ? ' odd-row' : '') . ((count($view_contrib) || $view_feed) ? ' current-view' : '') . "\">\n";
     echo fof_render_feed_row($row);

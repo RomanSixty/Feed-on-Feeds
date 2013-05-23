@@ -12,16 +12,29 @@
  *
  */
 
+/* these may be overridden in fof-config.php, but generally oughtn't be */
+defined('FOF_DB_PREFIX') || define('FOF_DB_PREFIX', 'fof_');
+defined('FOF_FEED_TABLE') || define('FOF_FEED_TABLE', FOF_DB_PREFIX . 'feed');
+defined('FOF_ITEM_TABLE') || define('FOF_ITEM_TABLE', FOF_DB_PREFIX . 'item');
+defined('FOF_ITEM_TAG_TABLE') || define('FOF_ITEM_TAG_TABLE', FOF_DB_PREFIX . 'item_tag');
+defined('FOF_SUBSCRIPTION_TABLE') || define('FOF_SUBSCRIPTION_TABLE', FOF_DB_PREFIX . 'subscription');
+defined('FOF_TAG_TABLE') || define('FOF_TAG_TABLE', FOF_DB_PREFIX . 'tag');
+defined('FOF_USER_TABLE') || define('FOF_USER_TABLE', FOF_DB_PREFIX . 'user');
+defined('FOF_VIEW_TABLE') || define('FOF_VIEW_TABLE', FOF_DB_PREFIX . 'view');
+defined('FOF_VIEW_STATE_TABLE') || define('FOF_VIEW_STATE_TABLE', FOF_DB_PREFIX . 'view_state');
+
 $FOF_FEED_TABLE = FOF_FEED_TABLE;
 $FOF_ITEM_TABLE = FOF_ITEM_TABLE;
 $FOF_ITEM_TAG_TABLE = FOF_ITEM_TAG_TABLE;
 $FOF_SUBSCRIPTION_TABLE = FOF_SUBSCRIPTION_TABLE;
 $FOF_TAG_TABLE = FOF_TAG_TABLE;
 $FOF_USER_TABLE = FOF_USER_TABLE;
+$FOF_VIEW_TABLE = FOF_VIEW_TABLE;
+$FOF_VIEW_STATE_TABLE = FOF_VIEW_STATE_TABLE;
 
 if (defined('USE_SQLITE')) {
     /* sqlite uses an additional table */
-    define('FOF_USER_LEVELS_TABLE', FOF_USER_TABLE . "_levels");
+    defined('FOF_USER_LEVELS_TABLE') || define('FOF_USER_LEVELS_TABLE', FOF_USER_TABLE . "_levels");
     $FOF_USER_LEVELS_TABLE = FOF_USER_LEVELS_TABLE;
 }
 
@@ -200,25 +213,6 @@ function fof_db_optimize()
 // Feed level stuff
 ////////////////////////////////////////////////////////////////////////////////
 
-function fof_db_feed_update_prefs($feed_id, $title, $alt_image)
-{
-    global $FOF_FEED_TABLE;
-    global $fof_connection;
-
-    fof_trace();
-
-    $query = "UPDATE $FOF_FEED_TABLE SET feed_title = :title, alt_image = :alt_image, feed_image_cache_date = :cache_date WHERE feed_id = :feed_id";
-    $statement = $fof_connection->prepare($query);
-    $statement->bindValue(':title', empty($title) ? "[no title]" : $title);
-    $statement->bindValue(':alt_image', $alt_image);
-    $statement->bindValue(':cache_date', 1);
-    $statement->bindValue(':feed_id', $feed_id);
-    $result = fof_db_statement_execute($statement);
-    $statement->closeCursor();
-
-    return $result;
-}
-
 function fof_db_feed_mark_cached($feed_id)
 {
     global $FOF_FEED_TABLE;
@@ -278,20 +272,89 @@ function fof_db_feed_update_metadata($feed_id, $title, $link, $description, $ima
     return $result;
 }
 
-/* XXX: user_id is unused */
-function fof_db_get_latest_item_age($user_id)
-{
-    global $FOF_ITEM_TABLE;
+/* returns iterator of most-recent items, by feed_id */
+function fof_db_get_latest_item_age($user_id=null, $feed_id=null) {
+    global $FOF_ITEM_TABLE, $FOF_SUBSCRIPTION_TABLE;
     global $fof_connection;
 
     fof_trace();
 
-    $query = "SELECT max(item_cached) AS max_date, i.feed_id AS id FROM $FOF_ITEM_TABLE i GROUP BY i.feed_id";
-    $statement = fof_db_query($query);
+    if ($user_id || $feed_id) {
+        $where = 'WHERE ';
+        if ($user_id)
+            $where .= 's.user_id = :user_id ';
+        if ($user_id && $feed_id)
+            $where .= 'AND ';
+        if ($feed_id)
+            $where .= 'i.feed_id = :feed_id ';
+    } else {
+        $where = '';
+    }
+
+    $query = "SELECT max(i.item_cached) AS max_date, i.feed_id AS id " .
+             "FROM $FOF_ITEM_TABLE i " .
+             ($user_id ? "JOIN $FOF_SUBSCRIPTION_TABLE s ON i.feed_id = s.feed_id " : '') .
+             $where .
+             "GROUP BY i.feed_id";
+    $statement = $fof_connection->prepare($query);
+    if ($user_id)
+        $statement->bindValue(':user_id', $user_id);
+    if ($feed_id)
+        $statement->bindValue(':feed_id', $feed_id);
+    $result = fof_db_statement_execute($statement);
 
     return $statement;
 }
 
+/* returns a summary of the number of items in a feed, collated by tag */
+function fof_db_feed_counts($user_id, $feed_id) {
+    global $FOF_ITEM_TABLE, $FOF_ITEM_TAG_TABLE, $FOF_TAG_TABLE;
+    global $fof_connection;
+    static $system_tags = array('unread', 'star', 'folded'); /* won't tally these under 'tagged' */
+    $counts = array();
+    $tagged = 0;
+
+    /* always want system tags to have a count */
+    foreach ($system_tags as $t)
+        $counts[$t] = 0;
+
+    /* get total items */
+    $query = "SELECT count(DISTINCT i.item_id) AS total " .
+             "FROM $FOF_ITEM_TABLE i " .
+                    "LEFT JOIN $FOF_ITEM_TAG_TABLE it ON it.item_id = i.item_id " .
+             "WHERE i.feed_id = :feed_id AND it.user_id = :user_id";
+    $statement = $fof_connection->prepare($query);
+    $statement->bindValue(':user_id', $user_id);
+    $statement->bindValue(':feed_id', $feed_id);
+    $result = fof_db_statement_execute($statement);
+    $total = fof_db_get_row($statement, 'total', TRUE);
+
+    /* get counts per tag */
+    $query = "SELECT t.tag_id, t.tag_name, COUNT(t.tag_name) AS tag_count " .
+             "FROM $FOF_ITEM_TABLE i " .
+                    "LEFT JOIN $FOF_ITEM_TAG_TABLE it ON it.item_id = i.item_id " .
+                    "LEFT JOIN $FOF_TAG_TABLE t ON t.tag_id = it.tag_id " .
+             "WHERE i.feed_id = :feed_id AND it.user_id = :user_id " .
+             "GROUP BY t.tag_id";
+    $statement = $fof_connection->prepare($query);
+    $statement->bindValue(':user_id', $user_id);
+    $statement->bindValue(':feed_id', $feed_id);
+    $result = fof_db_statement_execute($statement);
+    while ( ($row = fof_db_get_row($statement)) !== false ) {
+        $counts[$row['tag_name']] = $row['tag_count'];
+        if ( ! in_array($row['tag_name'], $system_tags)) {
+            $tagged += $row['tag_count'];
+        }
+    }
+
+    return array($total, $tagged, $counts);
+}
+
+/* Returns a row iterator of either all subscribed feeds for the user, or only those
+   subscribed feeds which are due for updating.
+   NOTE: Caller must invoke fof_db_subscription_feed_fix() on rows, to unpack
+   subscription preferences into feed data.
+*/
 function fof_db_get_subscriptions($user_id, $dueOnly=false)
 {
     global $FOF_FEED_TABLE, $FOF_SUBSCRIPTION_TABLE;
@@ -312,6 +375,46 @@ function fof_db_get_subscriptions($user_id, $dueOnly=false)
     $result = fof_db_statement_execute($statement);
 
     return $statement;
+}
+
+/* Fix subscription preferences into feed data array. */
+/* Given the array of values returned by querying at least
+   FOF_FEED_TABLE.*,FOF_SUBSCRIPTION_TABLE.subscription_prefs
+   this alters the array to map the unserialized subscription_prefs into
+   feed array elements.
+   Note: this is also called on item arrays needing prefs
+*/
+function fof_db_subscription_feed_fix(&$f) {
+    $f['subscription_prefs'] = unserialize($f['subscription_prefs']);
+    if (empty($f['subscription_prefs']))
+        $f['subscription_prefs'] = array();
+    if (empty($f['subscription_prefs']['tags']))
+        $f['subscription_prefs']['tags'] = array();
+    $f['alt_title'] = empty($f['subscription_prefs']['alt_title']) ? null : $f['subscription_prefs']['alt_title'];
+    $f['alt_image'] = empty($f['subscription_prefs']['alt_image']) ? null : $f['subscription_prefs']['alt_image'];
+    $f['display_title'] = ( ! empty($f['alt_title']) ) ? $f['alt_title'] : $f['feed_title'];
+    $f['display_image'] = ( ! empty($f['alt_image']) ) ? $f['alt_image'] : $f['feed_image'];
+}
+
+/* returns a feed array plus its subscription preferences */
+/* this calls fof_db_subscription_feed_fix so caller doesn't have to */
+function fof_db_subscription_feed_get($user_id, $feed_id) {
+    global $FOF_FEED_TABLE, $FOF_SUBSCRIPTION_TABLE;
+    global $fof_connection;
+
+    fof_trace();
+
+    $query = "SELECT f.*, s.subscription_prefs FROM $FOF_FEED_TABLE f, $FOF_SUBSCRIPTION_TABLE s WHERE s.user_id = :user_id AND s.feed_id = :feed_id AND s.feed_id = f.feed_id";
+    $statement = $fof_connection->prepare($query);
+    $statement->bindValue(':user_id', $user_id);
+    $statement->bindValue(':feed_id', $feed_id);
+    $result = fof_db_statement_execute($statement);
+
+    $r = fof_db_get_row($statement, NULL, TRUE);
+
+    fof_db_subscription_feed_fix($r);
+
+    return $r;
 }
 
 function fof_db_get_feeds_needing_attempt()
@@ -507,13 +610,31 @@ function fof_db_is_subscribed($user_id, $feed_url)
 
     fof_trace();
 
-    $query = "SELECT s.feed_id" .
-                " FROM $FOF_FEED_TABLE f, $FOF_SUBSCRIPTION_TABLE s" .
-                " WHERE feed_url = :feed_url" .
-                    " AND s.feed_id = f.feed_id" .
-                    " AND s.user_id = :user_id;";
+    $query = "SELECT s.feed_id FROM $FOF_SUBSCRIPTION_TABLE s, $FOF_FEED_TABLE f" .
+                " WHERE f.feed_url = :feed_url" .
+                " AND f.feed_id = s.feed_id" .
+                " AND s.user_id = :user_id;";
     $statement = $fof_connection->prepare($query);
     $statement->bindValue(':feed_url', $feed_url);
+    $statement->bindValue(':user_id', $user_id);
+    $result = fof_db_statement_execute($statement);
+    $row = fof_db_get_row($statement, NULL, TRUE);
+    if ( ! empty($row)) {
+        return true;
+    }
+
+    return false;
+}
+
+function fof_db_is_subscribed_id($user_id, $feed_id) {
+    global $FOF_SUBSCRIPTION_TABLE;
+    global $fof_connection;
+
+    fof_trace();
+
+    $query = "SELECT feed_id FROM $FOF_SUBSCRIPTION_TABLE WHERE feed_id = :feed_id AND user_id = :user_id;";
+    $statement = $fof_connection->prepare($query);
+    $statement->bindValue(':feed_id', $feed_id);
     $statement->bindValue(':user_id', $user_id);
     $result = fof_db_statement_execute($statement);
     $row = fof_db_get_row($statement, NULL, TRUE);
@@ -561,7 +682,7 @@ function fof_db_add_feed($url, $title, $link, $description)
 
     fof_trace();
 
-    /* XXX: not sure why these weren't implemented as default values in feed table */
+    /* FIXME: just store these as empty here */
     if (empty($title)) $title = "[no title]";
     if (empty($link)) $link = "[no link]";
     if (empty($description)) $description = "[no description]";
@@ -578,11 +699,10 @@ function fof_db_add_feed($url, $title, $link, $description)
     /*
         It would be nice to use:
             return $fof_connection->lastInsertId();
-        But it has problems:
-            not reliable between pdo drivers
-            is a race condition
-        So just grab the id of what we put in..
-        FIXME: I bet there's a sane way of doing this in one transaction.
+        FIXME: okay, the problems I thought existed with that aren't quite so
+            major; some pdo drivers (like postgres) will need some extra detail
+            to support it, but otherwise it ought to work fine.
+        But for now, just grab the id of what we put in..
     */
 
     $query = "SELECT feed_id FROM $FOF_FEED_TABLE WHERE feed_url = :url AND feed_title = :title AND feed_link = :link AND feed_description = :description";
@@ -827,7 +947,6 @@ function fof_db_get_items($user_id=1, $feed=NULL, $what='unread', $when=NULL, $s
     return $all_items;
 }
 
-
 function fof_db_get_item($user_id, $item_id)
 {
     global $FOF_FEED_TABLE, $FOF_ITEM_TABLE, $FOF_ITEM_TAG_TABLE, $FOF_TAG_TABLE;
@@ -836,28 +955,27 @@ function fof_db_get_item($user_id, $item_id)
 
     fof_trace();
 
-    $query = "SELECT f.feed_image AS feed_image," .
-                   " f.feed_title AS feed_title," .
-                   " f.feed_link AS feed_link," .
-                   " f.feed_description AS feed_description," .
-                   " i.item_id AS item_id," .
-                   " i.item_link AS item_link," .
-                   " i.item_title AS item_title," .
-                   " i.item_cached," .
-                   " i.item_published," .
-                   " i.item_updated," .
-                   " i.item_content AS item_content" .
-            " FROM $FOF_FEED_TABLE f, $FOF_ITEM_TABLE i" .
-            " WHERE i.feed_id = f.feed_id" .
-                " AND i.item_id = :item_id";
+    $quere = "SELECT i.*, " .
+                   " f.feed_title, f.feed_image, " .
+                   " f.feed_description, f.feed_link " .
+            ($user_id ? ", s.subscription_prefs " : '') .
+            " FROM $FOF_ITEM_TABLE i " .
+            " JOIN $FOF_FEED_TABLE f ON i.feed_id = f.feed_id " .
+            ($user_id ? "JOIN $FOF_SUBSCRIPTION_TABLE s ON i.feed_id = s.feed_id AND s.user_id = :user_id " : '') .
+            " WHERE i.item_id = :item_id";
     $statement = $fof_connection->prepare($query);
     $statement->bindValue(':item_id', $item_id);
+    if ($user_id) {
+        $statement->bindValue(':user_id', $user_id);
+    }
     $result = fof_db_statement_execute($statement);
     $item = fof_db_get_row($statement, NULL, TRUE);
 
     $item['tags'] = array();
 
     if ($user_id) {
+        fof_db_subscription_feed_fix($item);
+
         $query = "SELECT t.tag_name".
                 " FROM $FOF_TAG_TABLE t, $FOF_ITEM_TAG_TABLE it" .
                 " WHERE t.tag_id = it.tag_id" .
@@ -1034,8 +1152,8 @@ function fof_db_get_subscription_to_tags()
     return $r;
 }
 
-function fof_db_tag_feed($user_id, $feed_id, $tag_id)
-{
+/* returns the per-user preferences for the feed */
+function fof_db_subscription_prefs_get($user_id, $feed_id) {
     global $FOF_SUBSCRIPTION_TABLE;
     global $fof_connection;
 
@@ -1047,45 +1165,80 @@ function fof_db_tag_feed($user_id, $feed_id, $tag_id)
     $statement->bindValue(':user_id', $user_id);
     $result = fof_db_statement_execute($statement);
     $prefs = unserialize(fof_db_get_row($statement, 'subscription_prefs', TRUE));
+    if (empty($prefs))
+        $prefs = array('tags' => array());
+    if (empty($prefs['tags']))
+        $prefs['tags'] = array();
+    return $prefs;
+}
 
-    if ( ! is_array($prefs['tags']) || ! in_array($tag_id, $prefs['tags'])) {
+/* store subscription prefs */
+function fof_db_subscription_prefs_set($user_id, $feed_id, $prefs) {
+    global $FOF_SUBSCRIPTION_TABLE;
+    global $fof_connection;
+
+    fof_trace();
+
+    $query = "UPDATE $FOF_SUBSCRIPTION_TABLE SET subscription_prefs = :prefs WHERE feed_id = :feed_id AND user_id = :user_id";
+    $statement = $fof_connection->prepare($query);
+    $statement->bindValue(':user_id', $user_id);
+    $statement->bindValue(':feed_id', $feed_id);
+    $statement->bindValue(':prefs', serialize($prefs));
+    $result = fof_db_statement_execute($statement);
+    $statement->closeCursor();
+
+    return $result;
+}
+
+/* set a custom title for a subscription */
+function fof_db_subscription_title_set($user_id, $feed_id, $alt_title) {
+    fof_trace();
+
+    $prefs = fof_db_subscription_prefs_get($user_id, $feed_id);
+
+    if (empty($alt_title)) {
+        unset($prefs['alt_title']);
+    } else {
+        $prefs['alt_title'] = $alt_title;
+    }
+
+    return fof_db_subscription_prefs_set($user_id, $feed_id, $prefs);
+}
+
+function fof_db_subscription_image_set($user_id, $feed_id, $alt_image) {
+    fof_trace();
+
+    $prefs = fof_db_subscription_prefs_get($user_id, $feed_id);
+
+    if (empty($alt_image)) {
+        unset($prefs['alt_image']);
+    } else {
+        $prefs['alt_image'] = $alt_image;
+    }
+
+    return fof_db_subscription_prefs_set($user_id, $feed_id, $prefs);
+}
+
+function fof_db_subscription_tag_add($user_id, $feed_id, $tag_id) {
+    fof_trace();
+
+    $prefs = fof_db_subscription_prefs_get($user_id, $feed_id);
+
+    if ( ! in_array($tag_id, $prefs['tags'])) {
         $prefs['tags'][] = $tag_id;
     }
 
-    $query = "UPDATE $FOF_SUBSCRIPTION_TABLE SET subscription_prefs = :prefs WHERE feed_id = :feed_id AND user_id = :user_id";
-    $statement = $fof_connection->prepare($query);
-    $statement->bindValue(':prefs', serialize($prefs));
-    $statement->bindValue(':user_id', $user_id);
-    $statement->bindValue(':feed_id', $feed_id);
-    $result = fof_db_statement_execute($statement);
-    $statement->closeCursor();
+    return fof_db_subscription_prefs_set($user_id, $feed_id, $prefs);
 }
 
-function fof_db_untag_feed($user_id, $feed_id, $tag_id)
-{
-    global $FOF_SUBSCRIPTION_TABLE;
-    global $fof_connection;
-
+function fof_db_subscription_tag_remove($user_id, $feed_id, $tag_id) {
     fof_trace();
 
-    $query = "SELECT subscription_prefs FROM $FOF_SUBSCRIPTION_TABLE WHERE feed_id = :feed_id AND user_id = :user_id";
-    $statement = $fof_connection->prepare($query);
-    $statement->bindValue(':feed_id', $feed_id);
-    $statement->bindValue(':user_id', $user_id);
-    $result = fof_db_statement_execute($statement);
-    $prefs = unserialize(fof_db_get_row($statement, 'subscription_prefs', TRUE));
+    $prefs = fof_db_subscription_prefs_get($user_id, $feed_id);
 
-    if (is_array($prefs['tags'])) {
-        $prefs['tags'] = array_diff($prefs['tags'], array($tag_id));
-    }
+    $prefs['tags'] = array_diff($prefs['tags'], array($tag_id));
 
-    $query = "UPDATE $FOF_SUBSCRIPTION_TABLE SET subscription_prefs = :prefs WHERE feed_id = :feed_id AND user_id = :user_id";
-    $statement = $fof_connection->prepare($query);
-    $statement->bindValue(':prefs', serialize($prefs));
-    $statement->bindValue(':feed_id', $feed_id);
-    $statement->bindValue(':user_id', $user_id);
-    $result = fof_db_statement_execute($statement);
-    $statement->closeCursor();
+    return fof_db_subscription_prefs_set($user_id, $feed_id, $prefs);
 }
 
 function fof_db_get_item_tags($user_id, $item_id)
@@ -1173,21 +1326,52 @@ function fof_db_get_tags($user_id)
     return $statement;
 }
 
-function fof_db_get_tag_id_map()
-{
+function fof_db_get_tag_name_map($tags=null) {
     global $FOF_TAG_TABLE;
     global $fof_connection;
-    $tags = array();
+    static $tag_name_to_id = null;
 
     fof_trace();
 
-    $query = "SELECT * FROM $FOF_TAG_TABLE";
-    $statement = fof_db_query($query);
-    while (($row = fof_db_get_row($statement)) !== false) {
-        $tags[$row['tag_id']] = $row['tag_name'];
+    if ($tag_name_to_id === null) {
+        $tag_name_to_id = array();
+        $query = "SELECT * FROM $FOF_TAG_TABLE";
+        $statement = fof_db_query($query);
+        while (($row = fof_db_get_row($statement)) !== false)
+            $tag_name_to_id[$row['tag_name']] = $row['tag_id'];
     }
 
-    return $tags;
+    if ($tags === null)
+        return $tag_names;
+
+    $r = array();
+    foreach ($tags as $t)
+        $r[] = $tag_name_to_id[$t];
+    return $r;
+}
+
+function fof_db_get_tag_id_map($tags=null) {
+    global $FOF_TAG_TABLE;
+    global $fof_connection;
+    static $tag_id_to_name = null;
+
+    fof_trace();
+
+    if ($tag_id_to_name === null) {
+        $tag_id_to_name = array();
+        $query = "SELECT * FROM $FOF_TAG_TABLE";
+        $statement = fof_db_query($query);
+        while (($row = fof_db_get_row($statement)) !== false)
+            $tag_id_to_name[$row['tag_id']] = $row['tag_name'];
+    }
+
+    if ($tags === null)
+        return $tag_id_to_name;
+
+    $r = array();
+    foreach ($tags as $t)
+        $r[] = $tag_id_to_name[$t];
+    return $r;
 }
 
 function fof_db_create_tag($tag_name)
@@ -1212,7 +1396,7 @@ function fof_db_create_tag($tag_name)
     return fof_db_get_row($statement, 'tag_id', TRUE);
 }
 
-/* XXX: also why doesn't this just return (or take) an array */
+/* XXX: why doesn't this just return (or take) an array */
 function fof_db_get_tag_by_name($tags)
 {
     global $FOF_TAG_TABLE;
@@ -1464,6 +1648,162 @@ function fof_db_untag_items($user_id, $tag_id, $items)
     $statement->closeCursor();
 }
 
+
+////////////////////////////////////////////////////////////////////////////////
+// View stuff
+// This facilitates persisting the presentation settings for a collection of
+// items generated from a given set of tags.
+////////////////////////////////////////////////////////////////////////////////
+
+/* return a view which matches the set of feeds and tags */
+function fof_db_view_get($user_id, $tag_ids, $feed_ids) {
+    global $FOF_VIEW_STATE_TABLE, $FOF_VIEW_TABLE;
+    global $fof_connection;
+
+    fof_trace();
+
+    if (empty($tag_ids))
+        $tag_ids = array();
+    if (empty($feed_ids))
+        $feed_ids = array();
+    if ( ! is_array($tag_ids))
+        $tag_ids = array($tag_ids);
+    if ( ! is_array($feed_ids))
+        $feed_ids = array($feed_ids);
+
+    $constituent_count = count($tag_ids) + count($feed_ids);
+
+    /*
+        Well this is more awkward than I want it to be...
+        $q1 gets a list of view_ids which match at least all of the criteria,
+        but which might also have more set members.
+        The main query then winnows through those view_ids for the one with the
+        correct number of constituents.
+    */
+    $q1 = "SELECT view_id FROM $FOF_VIEW_STATE_TABLE vs WHERE vs.user_id = :user_id AND (vs.tag_id IN (" . implode(',', $tag_ids) . ") OR vs.feed_id IN (" . implode(',', $feed_ids) . ")) GROUP BY vs.view_id HAVING COUNT(vs.view_id) = " . $constituent_count;
+    $query = "SELECT vs.view_id, v.view_settings FROM $FOF_VIEW_STATE_TABLE vs JOIN $FOF_VIEW_TABLE v ON v.view_id = vs.view_id WHERE vs.view_id IN (" . $q1 . ") GROUP BY vs.view_id HAVING COUNT(vs.view_id) = " . $constituent_count;
+    $statement = $fof_connection->prepare($query);
+    $statement->bindValue(':user_id', $user_id);
+    $result = fof_db_statement_execute($statement);
+
+    $view_row = fof_db_get_row($statement, NULL, TRUE);
+
+    if (empty($view_row))
+        $view_row = array('view_id' => null, 'view_settings' => array());
+    $view_row['view_settings'] = empty($view_row['view_settings']) ? array() : unserialize($view_row['view_settings']);
+    return $view_row;
+}
+
+/*  return the view preferences for a given set of sources */
+function fof_db_view_settings_get($user_id, $tag_ids, $feed_ids) {
+    $view_row = fof_db_view_get($user_id, $tag_ids, $feed_ids);
+    return $view_row['view_settings'];
+}
+
+/*  return the view id for a given set of sources */
+function fof_db_view_id_get($user_id, $tag_ids, $feed_ids) {
+    $view_row = fof_db_view_get($user_id, $tag_ids, $feed_ids);
+    return $view_row['view_id'];
+}
+
+/* creates a new view and returns its id */
+function fof_db_view_create($settings) {
+    global $FOF_VIEW_TABLE;
+    global $fof_connection;
+
+    fof_trace();
+
+    $query = "INSERT INTO $FOF_VIEW_TABLE (view_settings) VALUES (:view_settings)";
+    $statement = $fof_connection->prepare($query);
+    $statement->bindValue(':view_settings', serialize($settings));
+    $result = fof_db_statement_execute($statement);
+
+    $view_id = $fof_connection->lastInsertId();
+
+    return $view_id;
+}
+
+function fof_db_view_update($view_id, $settings) {
+    global $FOF_VIEW_TABLE;
+    global $fof_connection;
+
+    fof_trace();
+
+    $query = "UPDATE $FOF_VIEW_TABLE SET view_settings = :view_settings WHERE view_id = :view_id";
+    $statement = $fof_connection->prepare($query);
+    $statement->bindValue(':view_settings', serialize($settings));
+    $statement->bindValue(':view_id', $view_id);
+    $result = fof_db_statement_execute($statement);
+
+    return $result;
+}
+
+/*  set the view preferences for a given set of sources */
+function fof_db_view_settings_set($user_id, $tag_ids, $feed_ids, $settings) {
+    global $FOF_VIEW_STATE_TABLE;
+    global $fof_connection;
+
+    fof_trace();
+
+    $fof_connection->beginTransaction();
+
+    /* first check if view exists already */
+    $view_id = fof_db_view_id_get($user_id, $tag_ids, $feed_ids);
+    if (empty($view_id)) {
+        fof_log('Creating new view set: tag_ids(' . implode(',', $tag_ids) . ') feed_ids(' . implode(',', $feed_ids) . ')');
+
+        /* no existing view, so create a new one */
+        $view_id = fof_db_view_create($settings);
+
+        /* and map the sources-state to it */
+        $query = "INSERT INTO $FOF_VIEW_STATE_TABLE (user_id, view_id, tag_id) VALUES (:user_id, :view_id, :tag_id)";
+        $statement = $fof_connection->prepare($query);
+        foreach ($tag_ids as $tag_id) {
+            $statement->bindValue(':user_id', $user_id);
+            $statement->bindValue(':view_id', $view_id);
+            $statement->bindValue(':tag_id', $tag_id);
+            $result = fof_db_statement_execute($statement);
+        }
+
+        $query = "INSERT INTO $FOF_VIEW_STATE_TABLE (user_id, view_id, feed_id) VALUES (:user_id, :view_id, :feed_id)";
+        $statement = $fof_connection->prepare($query);
+        foreach ($feed_ids as $feed_id) {
+            $statement->bindValue(':user_id', $user_id);
+            $statement->bindValue(':view_id', $view_id);
+            $statement->bindValue(':feed_id', $feed_id);
+            $result = fof_db_statement_execute($statement);
+        }
+    } else {
+        fof_db_view_update($view_id, $settings);
+    }
+
+    $fof_connection->commit();
+}
+
+/* expunge a source-state view */
+function fof_db_view_expunge($user_id, $tag_ids, $feed_ids) {
+    global $FOF_VIEW_STATE_TABLE, $FOF_VIEW_TABLE;
+    global $fof_connection;
+
+    fof_trace();
+
+    $view_id = fof_db_view_id_get($user_id, $tag_ids, $feed_ids);
+    if ( ! empty($view_id) ) {
+        $fof_connection->beginTransaction();
+
+        $query = "DELETE FROM $FOF_VIEW_STATE_TABLE WHERE view_id = :view_id";
+        $statement = $fof_connection->prepare($query);
+        $statement->bindValue(':view_id', $view_id);
+        $result = fof_db_statement_execute($statement);
+
+        $query = "DELETE FROM $FOF_VIEW_TABLE WHERE view_id = :view_id";
+        $statement = $fof_connection->prepare($query);
+        $statement->bindValue(':view_id', $view_id);
+        $result = fof_db_statement_execute($statement);
+
+        $fof_connection->commit();
+    }
+}
 
 ////////////////////////////////////////////////////////////////////////////////
 // User stuff

@@ -72,6 +72,51 @@ if ( ! empty($_POST['update_subscribed_sources'])) {
     exit();
 }
 
+/* returns a list of tags for a feed, with markup */
+if ( ! empty($_POST['subscription_tag_list'])) {
+    fof_set_content_type();
+    $feed_id = $_POST['subscription_tag_list'];
+    $feed_row = fof_get_feed(fof_current_user(), $feed_id);
+    if (empty($feed_row)) {
+        header('Status: 404 Not Found');
+        echo 'No data for feed.';
+        exit();
+    }
+    echo "\n";
+    foreach ($feed_row['tags'] as $tag) {
+        echo '		<li>'
+            . $tag
+            . ' <a href="#" onclick="subscription_tag_modify(' . htmlentities(implode(',', array(json_encode($feed_id), json_encode($tag), json_encode('delete'))), ENT_QUOTES) . '); return false;">'
+            . '[x]'
+            . '</a>'
+            . '</li>'
+            . "\n";
+    }
+    echo "	";
+
+    exit();
+}
+
+/* modify a user's feed subscription */
+if ( ! empty($_POST['subscription_tag'])) {
+    if (empty($_POST['feed'])) {
+        header('Status: 400 Bad Request');
+        echo 'Incomplete data.';
+        exit();
+    }
+    $tag = $_POST['subscription_tag'];
+    $feed_id = $_POST['feed'];
+
+    if ( ! empty($_POST['delete'])) {
+        fof_untag_feed(fof_current_user(), $feed_id, $tag);
+    } else {
+        fof_tag_feed(fof_current_user(), $feed_id, $tag);
+    }
+
+    exit();
+}
+
+
 header('Status: 400 Bad Request');
 echo 'Unknown request.';
 ?>

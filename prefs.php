@@ -56,7 +56,9 @@ if(isset($_POST['changed']))
     $title = $_POST['title'];
     $alt_image = $_POST['alt_image'];
 
-    fof_db_feed_update_prefs($feed_id, $title, $alt_image);
+    fof_db_subscription_title_set(fof_current_user(), $feed_id, $title);
+    fof_db_subscription_image_set(fof_current_user(), $feed_id, $alt_image);
+
     $feed = fof_db_get_feed_by_id($feed_id);
     $message .= " Updated feed settings of '" . $feed['feed_title'] . "'.";
 }

@@ -106,11 +106,13 @@ function fof_install_create_index_query($table_name, $index_name, $index_def) {
     return NULL;
 }
 
+
 /* define all tables as arrays */
 /* most of the fiddly driver-specific quirks are finagled in here */
 function fof_install_schema() {
     $tables = array();
     $indices = array();
+    $extras = array();
 
     /* different drivers prefer different types */
     if (defined('USE_MYSQL')) {
@@ -165,7 +167,7 @@ function fof_install_schema() {
     $tables[FOF_ITEM_TABLE][] = "item_content TEXT NOT NULL";
     if (defined('USE_MYSQL')) {
         $tables[FOF_ITEM_TABLE][] = "PRIMARY KEY (item_id)";
-        $tables[FOF_ITEM_TABLE][] = "KEY feed_id (feed_id)";
+        $tables[FOF_ITEM_TABLE][] = "FOREIGN KEY feed_id REFERENCES " . FOF_FEED_TABLE . " (feed_id) ON UPDATE CASCADE ON DELETE CASCADE";
         $tables[FOF_ITEM_TABLE][] = "KEY item_guid ( item_guid(255) )";
         $tables[FOF_ITEM_TABLE][] = "KEY feed_id_item_cached ( feed_id, item_cached )";
         $tables[FOF_ITEM_TABLE][] = "KEY feed_id_item_updated ( feed_id, item_updated )";
@@ -186,6 +188,11 @@ function fof_install_schema() {
     $tables[FOF_ITEM_TAG_TABLE][] = "item_id $driver_int_type NOT NULL DEFAULT '0' REFERENCES " . FOF_ITEM_TABLE . " ( item_id ) ON UPDATE CASCADE ON DELETE CASCADE";
     $tables[FOF_ITEM_TAG_TABLE][] = "tag_id $driver_int_type NOT NULL DEFAULT '0' REFERENCES " . FOF_TAG_TABLE . " ( tag_id ) ON UPDATE CASCADE ON DELETE CASCADE";
     $tables[FOF_ITEM_TAG_TABLE][] = "PRIMARY KEY ( user_id, item_id, tag_id )";
+    if (defined('USE_MYSQL')) {
+        $tables[FOF_ITEM_TAG_TABLE][] = "FOREIGN KEY (user_id) REFERENCES " . FOF_USER_TABLE . " (user_id) ON UPDATE CASCADE ON DELETE CASCADE";
+        $tables[FOF_ITEM_TAG_TABLE][] = "FOREIGN KEY (item_id) REFERENCES " . FOF_ITEM_TABLE . " (item_id) ON UPDATE CASCADE ON DELETE CASCADE";
+        $tables[FOF_ITEM_TAG_TABLE][] = "FOREIGN KEY (tag_id) REFERENCES " . FOF_TAG_TABLE . " (tag_id) ON UPDATE CASCADE ON DELETE CASCADE";
+    }
 
 
     /* FOF_SUBSCRIPTION_TABLE */
@@ -194,6 +201,70 @@ function fof_install_schema() {
     $tables[FOF_SUBSCRIPTION_TABLE][] = "user_id $driver_int_type NOT NULL DEFAULT '0' REFERENCES " . FOF_USER_TABLE . " ( user_id ) ON UPDATE CASCADE ON DELETE CASCADE";
     $tables[FOF_SUBSCRIPTION_TABLE][] = "subscription_prefs TEXT";
     $tables[FOF_SUBSCRIPTION_TABLE][] = "PRIMARY KEY ( feed_id, user_id )";
+    if (defined('USE_MYSQL')) {
+        $tables[FOF_SUBSCRIPTION_TABLE][] = "FOREIGN KEY (feed_id) REFERENCES " . FOF_FEED_TABLE . " (feed_id) ON UPDATE CASCADE ON DELETE CASCADE";
+        $tables[FOF_SUBSCRIPTION_TABLE][] = "FOREIGN KEY (user_id) REFERENCES " . FOF_USER_TABLE . " (user_id) ON UPDATE CASCADE ON DELETE CASCADE";
+    }
+
+
+    /* FOF_VIEW_TABLE */
+    /* Stores the details about the preferred methods of displaying a collection of items. */
+    /* columns */
+    if (defined('USE_MYSQL')) {
+        $tables[FOF_VIEW_TABLE][] = "view_id $driver_int_type NOT NULL AUTO_INCREMENT";
+    } else if (defined('USE_SQLITE')) {
+        $tables[FOF_VIEW_TABLE][] = "view_id $driver_int_type PRIMARY KEY AUTOINCREMENT NOT NULL";
+    }
+    $tables[FOF_VIEW_TABLE][] = "view_settings TEXT";
+    if (defined('USE_MYSQL')) {
+        $tables[FOF_VIEW_TABLE][] = "PRIMARY KEY (view_id)";
+    }
+
+    /* FOF_VIEW_STATE_TABLE */
+    /* Associates a group of feed/tags with a view. */
+    /* columns */
+    $tables[FOF_VIEW_STATE_TABLE][] = "user_id $driver_int_type NOT NULL REFERENCES " . FOF_USER_TABLE . " (user_id) ON UPDATE CASCADE ON DELETE CASCADE";
+    $tables[FOF_VIEW_STATE_TABLE][] = "feed_id $driver_int_type REFERENCES " . FOF_FEED_TABLE . " (feed_id) ON UPDATE CASCADE ON DELETE CASCADE";
+    $tables[FOF_VIEW_STATE_TABLE][] = "tag_id $driver_int_type REFERENCES " . FOF_TAG_TABLE . " (tag_id) ON UPDATE CASCADE ON DELETE CASCADE";
+    $tables[FOF_VIEW_STATE_TABLE][] = "view_id $driver_int_type NOT NULL REFERENCES " . FOF_VIEW_TABLE . " (view_id) ON UPDATE CASCADE ON DELETE CASCADE";
+    $tables[FOF_VIEW_STATE_TABLE][] = "CHECK ((feed_id IS NULL) != (tag_id IS NULL))";
+    if (defined('USE_MYSQL')) {
+        $tables[FOF_VIEW_STATE_TABLE][] = "FOREIGN KEY (user_id) REFERENCES " . FOF_USER_TABLE . " (user_id) ON UPDATE CASCADE ON DELETE CASCADE";
+        $tables[FOF_VIEW_STATE_TABLE][] = "FOREIGN KEY (feed_id) REFERENCES " . FOF_FEED_TABLE . " (feed_id) ON UPDATE CASCADE ON DELETE CASCADE";
+        $tables[FOF_VIEW_STATE_TABLE][] = "FOREIGN KEY (tag_id) REFERENCES " . FOF_TAG_TABLE . " (tag_id) ON UPDATE CASCADE ON DELETE CASCADE";
+        $tables[FOF_VIEW_STATE_TABLE][] = "FOREIGN KEY (view_id) REFERENCES " . FOF_VIEW_TABLE . " (view_id) ON UPDATE CASCADE ON DELETE CASCADE";
+    }
+    /* N.B. MySQL doesn't actually honor any CHECK expression, so this xor-null constraint needs to be enforced with a trigger. */
+    if (defined('USE_MYSQL')) {
+        $extras[FOF_VIEW_STATE_TABLE][] = "CREATE PROCEDURE constrain_null_xor (IN id1 $driver_int_type, IN id2 $driver_int_type, IN action VARCHAR(16), IN place VARCHAR(64))
+        DETERMINISTIC
+        SQL SECURITY INVOKER
+        COMMENT 'Ensure that one but not both ids are set.'
+        BEGIN
+        DECLARE msg TEXT;
+            IF ((id1 IS NULL) == (id2 IS NULL)) THEN
+                SET msg := CONCAT('xor-null constraint failed in ', action, ' on ', place);
+                SIGNAL SQLSTATE '23513' SET MESSAGE_TEXT = msg;
+            END IF;
+        END";
+        $extras[FOF_VIEW_STATE_TABLE][] = "CREATE TRIGGER 'xor_null_before_insert' BEFORE INSERT ON " . FOF_VIEW_STATE_TABLE . "
+        FOR EACH ROW
+        BEGIN
+            CALL constrain_null_xor(NEW.feed_id, NEW.tag_id, 'INSERT', '" . FOF_VIEW_STATE_TABLE . "');
+        END";
+        $extras[FOF_VIEW_STATE_TABLE][] = "CREATE TRIGGER 'xor_null_before_update' BEFORE UPDATE ON " . FOF_VIEW_STATE_TABLE . "
+        FOR EACH ROW
+        BEGIN
+            CALL constrain_null_xor(NEW.feed_id, NEW.tag_id, 'UPDATE', '" . FOF_VIEW_STATE_TABLE . "');
+        END";
+    }
+    /* If a tag or feed is deleted, purge any view states which included them. */
+    $extras[FOF_VIEW_STATE_TABLE][] = "CREATE TRIGGER cascade_view_delete AFTER DELETE ON " . FOF_VIEW_STATE_TABLE . "
+    FOR EACH ROW
+    BEGIN
+        DELETE FROM " . FOF_VIEW_STATE_TABLE . " WHERE view_id = OLD.view_id;
+        DELETE FROM " . FOF_VIEW_TABLE . " WHERE view_id = OLD.view_id;
+    END";
 
 
     /* FOF_TAG_TABLE */
@@ -244,14 +315,14 @@ function fof_install_schema() {
         $tables[FOF_USER_TABLE][] = "PRIMARY KEY ( user_id )";
     }
 
-    return array($tables, $indices);
+    return array($tables, $indices, $extras);
 }
 
 
 /* given a schema array, returns an array of queries to define the database */
 /* if exec is set, execute the statements, to create the database */
 function fof_install_database($schema, $exec=0) {
-    list($tables, $indices) = $schema;
+    list($tables, $indices, $extras) = $schema;
 
     try {
         $query_history = array();
@@ -278,6 +349,22 @@ function fof_install_database($schema, $exec=0) {
                             echo "<br><span>table $table_name index $index_name ";
                             if (fof_db_exec($query) === false) {
                                 echo "<span class='fail>FAIL</span>";
+                            } else {
+                                echo "<span class='pass'>OK</span>";
+                            }
+                            echo "</span>\n";
+                        }
+                    }
+                }
+            }
+            if (isset($extras[$table_name]) && is_array($extras[$table_name])) {
+                foreach ($extras[$table_name] as $query) {
+                    if ( ! empty($query) ) {
+                        $query_history[] = $query;
+                        if ($exec) {
+                            echo "<br><span>table $table_name extra ... ";
+                            if (fof_db_exec($query) === false) {
+                                echo "<span class='fail'>FAIL</span>";
                             } else {
                                 echo "<span class='pass'>OK</span>";
                             }
@@ -457,6 +544,21 @@ function fof_install_user_exists($user='admin') {
         $rows = $statement->fetchAll();
     } catch (PDOException $e) {
         echo "Cannot select user: <pre>" . $e->GetMessage() . "</pre>";
+        exit();
+    }
+    return ( ! empty($rows));
+}
+
+/* checks if an admin-level user exists */
+function fof_install_user_level_exists($level='admin') {
+    global $fof_connection;
+
+    $query = "SELECT * FROM " . FOF_USER_TABLE . " WHERE user_level = " . $fof_connection->quote($level);
+    try {
+        $statement = fof_db_query($query);
+        $rows = $statement->fetchAll();
+    } catch (PDOException $e) {
+        echo "Could not check for admin user: <pre>" . $e->GetMessage() . "</pre>";
         exit();
     }
     return ( ! empty($rows));

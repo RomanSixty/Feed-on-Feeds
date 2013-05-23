@@ -37,6 +37,8 @@ if(isset($_GET['which']))
 {
     $which = ($sharing == "all" || $sharing == "all_tagged") ? $_GET['which'] : "shared " . $_GET['which'];
     $extratitle = " items tagged " . $_GET['which'];
+} else {
+    $extratitle = '';
 }
 
 $feed = NULL;

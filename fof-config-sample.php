@@ -40,16 +40,7 @@ define('FOF_UPDATE_TIME_LIMIT', 60 * 10);
 // The rest you should not need to change
 
 // DB table names
-
-define('FOF_DB_PREFIX', "fof_");
-
-define('FOF_FEED_TABLE', FOF_DB_PREFIX . "feed");
-define('FOF_ITEM_TABLE', FOF_DB_PREFIX . "item");
-define('FOF_ITEM_TAG_TABLE', FOF_DB_PREFIX . "item_tag");
-define('FOF_SUBSCRIPTION_TABLE', FOF_DB_PREFIX . "subscription");
-define('FOF_TAG_TABLE', FOF_DB_PREFIX . "tag");
-define('FOF_USER_TABLE', FOF_DB_PREFIX . "user");
-
+//define('FOF_DB_PREFIX', "fof_");
 
 // Find ourselves and the cache dir
 
