@@ -174,6 +174,7 @@ function fof_install_schema() {
     if (defined('USE_SQLITE')) {
         $indices[FOF_ITEM_TABLE]['feed_id_idx'] = array('INDEX', 'feed_id');
         $indices[FOF_ITEM_TABLE]['item_guid_idx'] = array('INDEX', 'item_guid');
+        $indices[FOF_ITEM_TABLE]['item_title_idx'] = array('INDEX', 'item_title');
         $indices[FOF_ITEM_TABLE]['feed_id_item_cached_idx'] = array('INDEX', 'feed_id, item_cached');
         $indices[FOF_ITEM_TABLE]['feed_id_item_updated_idx'] = array('INDEX', 'feed_id, item_updated');
     }
@@ -294,8 +295,8 @@ function fof_install_database($schema, $exec=0) {
 }
 
 /* migrate any old tables to new versions */
-/* FIXME: this is mysql-specific... */
-/* but since only old databases could be on mysql, this should be okay for now */
+/* sqlite updates only include those since sqlite support was possible... */
+/* but since databases prior to that could only be on mysql, this should be okay for now */
 function fof_install_database_update_old_tables() {
     if (defined('USE_MYSQL')) {
         try {
@@ -354,10 +355,32 @@ function fof_install_database_update_old_tables() {
 
                 echo "Done.<hr>";
             }
+
+            $query = "SHOW INDEXES FROM " . FOF_ITEM_TABLE . " WHERE key_name LIKE 'item_title'";
+            if ( count(fof_db_query($query)->fetchAll()) == 0 ) {
+                echo "Upgrading " . FOF_ITEM_TABLE . " 'item_title'...";
+
+                $query = "ALTER TABLE " . FOF_ITEM_TABLE . "ADD KEY 'item_title' ('item_title'(255))";
+                fof_db_exec($query);
+
+                echo "Done.<hr>";
+            }
+
         } catch (PDOException $e) {
             die('Cannot migrate table: <pre>' . $e->GetMessage() . '</pre>');
         }
     } /* USE_MYSQL */
+
+    if (defined('USE_SQLITE')) {
+        $query = "SELECT * FROM sqlite_master WHERE type='index' AND tbl_name='" . FOF_ITEM_TABLE . "' AND name = 'item_title_idx'";
+        if ( count(fof_db_query($query)->fetchAll()) == 0 ) {
+            echo "Upgrading " . FOF_ITEM_TABLE . " 'item_title'...";
+
+            $query = "CREATE INDEX item_title_idx ON " . FOF_ITEM_TABLE . " ( item_title )";
+
+            echo "Done.<hr>";
+        }
+    } /* USE_SQLITE */
 }
 
 /* install initial values into database */

@@ -932,6 +932,7 @@ function fof_db_items_delete($items)
     $statement->closeCursor();
 }
 
+/* Used for similarity matching. */
 function fof_db_items_duplicate_list()
 {
     global $FOF_ITEM_TABLE;
@@ -950,6 +951,7 @@ function fof_db_items_duplicate_list()
     return $statement;
 }
 
+/* Used for dynamic update statistics. */
 function fof_db_items_updated_list($feed_id)
 {
     global $FOF_ITEM_TABLE;

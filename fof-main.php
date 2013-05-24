@@ -1094,8 +1094,8 @@ function fof_update_feed($id)
         $nextInterval = $mean + $stdev*2/($count + 1);
         $nextTime = min(max($lastTime + $nextInterval, $now + $stdev),
                         $now + 86400/2);
-       
-	$lastInterval = $now - $lastTime; 
+
+        $lastInterval = $now - $lastTime; 
         fof_log($feed['feed_title'] . ": Next feed update in "
                 . ($nextTime - $now) . " seconds;"
                 . " count=$count t=$totalDelta t2=$totalDeltaSquare"
