@@ -39,7 +39,6 @@ $welcomecontent .= ' | <a href="http://feedonfeeds.com/">about</a>';
 
 echo '<div id="welcome" class="banner ontop">' . $welcomecontent . "</div>\n";
 echo '<div id="welcome-spacer" class="banner">' . $welcomecontent . "</div>\n";
-echo '<span class="clearer"></span>' . "\n";
 echo '<div id="feed-actions"><a href="add.php"><b>Add Feeds</b></a> / ';
 if ($sidebar_style == 'fancy')
     echo '<a href="#" title="Update all subscribed feeds" onclick="' . htmlentities('throb(); new Ajax.Request("feed-action.php", {method:"post", parameters:{"update_subscribed_sources": true}});', ENT_QUOTES) . '"><b>Update Feeds</b></a>';

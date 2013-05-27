@@ -672,7 +672,7 @@ function fof_url($path='.', $query_variables=array(), $fragment=NULL) {
             $qv[] = urlencode($k) . '=' . urlencode($v);
 
     if ( ! empty($qv) )
-        $url .= '?' . implode('&', $qv);
+        $url .= '?' . implode('&amp;', $qv);
 
     if ( ! empty($fragment) )
         $url .= '#' . urlencode($fragment);
