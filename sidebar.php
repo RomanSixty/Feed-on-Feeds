@@ -39,7 +39,7 @@ $welcomecontent .= ' | <a href="http://feedonfeeds.com/">about</a>';
 
 echo '<div id="welcome" class="banner ontop">' . $welcomecontent . "</div>\n";
 echo '<div id="welcome-spacer" class="banner">' . $welcomecontent . "</div>\n";
-echo '<br class="clearer">' . "\n";
+echo '<span class="clearer"></span>' . "\n";
 echo '<div id="feed-actions"><a href="add.php"><b>Add Feeds</b></a> / ';
 if ($sidebar_style == 'fancy')
     echo '<a href="#" title="Update all subscribed feeds" onclick="' . htmlentities('throb(); new Ajax.Request("feed-action.php", {method:"post", parameters:{"update_subscribed_sources": true}});', ENT_QUOTES) . '"><b>Update Feeds</b></a>';
@@ -187,7 +187,7 @@ function fof_sidebar_tags_fancy() {
         echo "</thead>\n";
         echo "<tbody>\n";
         echo implode("\n", $taglines);
-        echo "\n</tbody>\n</table>\n</div>\n<!--tags end-->\n<br>\n\n";
+        echo "\n</tbody>\n</table>\n</div>\n<!--tags end-->\n\n\n";
     }
 }
 
@@ -260,7 +260,6 @@ function fof_sidebar_tags_default() {
     <?php
     }
     ?>
-    <br>
 
 <?php
 }
