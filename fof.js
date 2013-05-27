@@ -618,7 +618,7 @@ function completeDrag(e)
 
         $('sidebar').style.width=newWidth+'px';
         $('handle').style.left=newWidth+'px';
-        $('items').style.marginLeft=(newWidth+20)+'px';
+        $('items').style.marginLeft=(newWidth+10)+'px';
         $('item-display-controls').style.left=(newWidth+10)+'px';
         $('welcome').style.width=(newWidth-30)+'px';
 

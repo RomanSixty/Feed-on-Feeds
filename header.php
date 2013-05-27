@@ -53,7 +53,7 @@ $unread_count = fof_db_tag_count(fof_current_user(), 'unread');
             left:<?php echo $width ?>px;
         }
         #items {
-            margin-left: <?php echo $width+20 ?>px;
+            margin-left: <?php echo $width+10 ?>px;
         }
         #item-display-controls { left: <?php echo $width + 10 ?>px; }
         #welcome { width: <?php echo $width-30 ?>px; }

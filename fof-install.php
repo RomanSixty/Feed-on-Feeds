@@ -360,7 +360,7 @@ function fof_install_database_update_old_tables() {
             if ( count(fof_db_query($query)->fetchAll()) == 0 ) {
                 echo "Upgrading " . FOF_ITEM_TABLE . " 'item_title'...";
 
-                $query = "ALTER TABLE " . FOF_ITEM_TABLE . "ADD KEY 'item_title' ('item_title'(255))";
+                $query = "ALTER TABLE " . FOF_ITEM_TABLE . " ADD KEY item_title (item_title(255))";
                 fof_db_exec($query);
 
                 echo "Done.<hr>";

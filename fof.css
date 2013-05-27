@@ -76,7 +76,7 @@ p
 #nav
 {
     font-size: .8em;
-    padding-left: 2em;
+    padding-left: 0em;
     list-style: none;
 }
 
@@ -119,7 +119,8 @@ p
 }
 
 #display-summary {
-    margin: 1em;
+    margin: 0px 1ex 1ex;
+    font-size: small;
 }
 
 .odd-row
@@ -128,7 +129,7 @@ p
 }
 
 .current-view {
-    background: #aaa;
+    background: #ccc;
     border: 1px #999;
 }
 
@@ -191,8 +192,7 @@ h2
 .item
 {
     border: 2px solid #ddd;
-    margin: 10px;
-    margin-bottom: 20px;
+    margin: 0px 4px 1ex;
     clear: both;
     overflow: hidden;
 }

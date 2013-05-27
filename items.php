@@ -154,9 +154,9 @@ if ( ! empty($items)) {
 }
 
 ?>
+<div id="end-of-items"></div>
 		</form>
 
-<div id="end-of-items"></div>
 
 <?php
     echo $links;
