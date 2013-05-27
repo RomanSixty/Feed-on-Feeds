@@ -125,6 +125,7 @@ p
 #display-summary {
     margin: 0px 1ex 1ex 4px;
     font-size: small;
+    clear: both;
 }
 
 .odd-row

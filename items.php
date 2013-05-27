@@ -98,8 +98,6 @@ $title = fof_view_title($feed, $what, $when, $which, $howmany, $search, $itemcou
 </ul>
 </div>
 
-<br class="clearer">
-
 <div id="display-summary"><?php echo $title; ?></div>
 
 <?php
