@@ -24,9 +24,9 @@ FeedOnFeeds requires:
 Installation
 
 To install, simply download a snapshot from the gitweb site, or (better yet)
-clone this git repository to wherever you want it, with:
+clone this git repository to wherever you want it, with (for example):
 
-    git clone http://git.beesbuzz.biz/FeedOnFeeds.git
+    git clone http://git.beesbuzz.biz/FeedOnFeeds.git -o fof
 
 Then copy fof-config-sample.php to fof-config.php and edit it as appropriate
 for your setup. If you're on shared hosting, be sure to point FOF_DATA_PATH to
@@ -47,7 +47,7 @@ Setting up scheduled updates
 FeedOnFeeds works best if you have it set to automatically update your feeds
 on-the-fly. The best way to do this is to set up a cron job like so:
 
-* * * * * curl http://example.com/fof/update-quiet.php
+    * * * * * curl http://example.com/fof/update-quiet.php
 
 Don't worry about updates occurring too frequently - FeedOnFeeds will only
 update feeds which are due for an update. By default it will update every feed
