@@ -200,10 +200,11 @@ function fof_db_get_item_count ( $user_id, $what = 'all', $feed = null, $search 
 
 	case 'tagged':
 	    $folded_id = fof_db_get_tag_by_name($user_id, 'folded');
-	  
+	    if($folded) {
 	    $query .= " AND $FOF_ITEM_TAG_TABLE.tag_id != 1
 	    		            AND $FOF_ITEM_TAG_TABLE.tag_id != 2
 	    		            AND $FOF_ITEM_TAG_TABLE.tag_id = $folded_id";
+	    }
 	    break;
 
 	default:
