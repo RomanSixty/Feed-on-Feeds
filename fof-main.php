@@ -1011,11 +1011,15 @@ function fof_update_feed($id)
             $item_id = $item->get_id();
             $id = fof_db_find_item($feed_id, $item_id);
 
+            foreach ($fof_item_prefilters as $filter)
+                list($link, $title, $content) = $filter($item, $link, $title, $content);
+            if (!$link) {
+                // Some feeds don't furnish an item link...
+                $link = $feed['feed_link'];
+            }
+
             if ($id == NULL) {
                 $n++;
-
-                foreach ($fof_item_prefilters as $filter)
-                    list($link, $title, $content) = $filter($item, $link, $title, $content);
 
                 $id = fof_db_add_item($feed_id, $item_id, $link, $title, $content, time(), $date, $date);
                 fof_apply_tags($feed_id, $id);
