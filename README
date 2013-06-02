@@ -28,7 +28,7 @@ clone this git repository to wherever you want it, with (for example):
 
     git clone http://git.beesbuzz.biz/FeedOnFeeds.git -o fof
 
-Then copy fof-config-sample.php to fof-config.php and edit it as appropriate
+Then copy fof-config.php.dist to fof-config.php and edit it as appropriate
 for your setup. If you're on shared hosting, be sure to point FOF_DATA_PATH to
 somewhere in your home directory.
 
