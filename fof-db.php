@@ -231,7 +231,7 @@ function fof_db_get_item_count ( $user_id, $what = 'all', $feed = null, $search 
 
     if ( !empty ( $feed ) )
       $query .= " HAVING id = $feed";
-
+	#echo $query;
     return(fof_safe_query ( $query, $args ));
 }
 
@@ -408,16 +408,23 @@ function fof_db_get_items($user_id=1, $feed=NULL, $what="unread", $when=NULL, $s
         $where .= sprintf("AND i.item_published > %d and i.item_published < %d ", $begin, $end);
     }
 
-    if($what != "all")
-    {
-        $tags = explode(' ', $what);
-        $in = '"' . implode('","', $tags) . '"';
+    switch($what) {
+    case 'all' : break;
+    case 'smallfeeds':
+        $from  .= ", $FOF_ITEM_TAG_TABLE it ";
+        $where .= " AND i.item_id = it.item_id AND it.tag_id = 1 ";
+        $where .= "AND f.feed_id IN (select i2.feed_id from item i2 JOIN item_tag it2 ON i2.item_id = it2.item_id AND it2.tag_id = 1 GROUP BY i2.feed_id HAVING count(*) < 5) ";
+        break;
+    default    :
+            $tags = split(" ", $what);
+        $in = implode(", ", array_fill(0, count($tags), "'%s'"));
         $from .= ", $FOF_TAG_TABLE t, $FOF_ITEM_TAG_TABLE it ";
         $where .= sprintf("AND it.user_id = %d ", $user_id);
         $where .= "AND it.tag_id = t.tag_id AND ( t.tag_name IN ( $in ) ) AND i.item_id = it.item_id ";
         $group = sprintf("GROUP BY i.item_id HAVING COUNT( i.item_id ) = %d ", count($tags));
         $args = array_merge($args, $tags);
     }
+
 
     if(!is_null($search) && $search != "")
     {
