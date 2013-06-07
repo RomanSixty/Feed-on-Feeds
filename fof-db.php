@@ -967,7 +967,7 @@ function fof_db_get_item($user_id, $item_id)
 
     fof_trace();
 
-    $quere = "SELECT i.*, " .
+    $query = "SELECT i.*, " .
                    " f.feed_title, f.feed_image, " .
                    " f.feed_description, f.feed_link " .
             ($user_id ? ", s.subscription_prefs " : '') .
