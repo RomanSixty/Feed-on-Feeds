@@ -1694,6 +1694,13 @@ function fof_db_view_get($user_id, $tag_ids, $feed_ids) {
         The main query then winnows through those view_ids for the one with the
         correct number of constituents.
     */
+    /*
+       also I guess MySQL doesn't like empty IN clauses, so we have to ensure
+       there's always something in there by adding these '-1's which ought
+       never actually appear as ids (because autoincrement).
+     */
+    $tag_ids[] = '-1';
+    $feed_ids[] = '-1';
     $q1 = "SELECT view_id FROM $FOF_VIEW_STATE_TABLE vs WHERE vs.user_id = :user_id AND (vs.tag_id IN (" . implode(',', $tag_ids) . ") OR vs.feed_id IN (" . implode(',', $feed_ids) . ")) GROUP BY vs.view_id HAVING COUNT(vs.view_id) = " . $constituent_count;
     $query = "SELECT vs.view_id, v.view_settings FROM $FOF_VIEW_STATE_TABLE vs JOIN $FOF_VIEW_TABLE v ON v.view_id = vs.view_id WHERE vs.view_id IN (" . $q1 . ") GROUP BY vs.view_id HAVING COUNT(vs.view_id) = " . $constituent_count;
     $statement = $fof_connection->prepare($query);

@@ -1090,5 +1090,5 @@ function view_order_set(what,feed,order) {
 	var url = "view-action.php";
 	var params = { "view_order": order, "view_feed": feed, "view_what": what };
 	var options = { method: "post", parameters: params, onComplete: unthrob };
-	new Ajax.Updater($("view_settings_button"), url, options);
+	new Ajax.Updater($("view-settings-button"), url, options);
 }

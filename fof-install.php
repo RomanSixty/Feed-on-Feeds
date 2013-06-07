@@ -167,7 +167,7 @@ function fof_install_schema() {
     $tables[FOF_ITEM_TABLE][] = "item_content TEXT NOT NULL";
     if (defined('USE_MYSQL')) {
         $tables[FOF_ITEM_TABLE][] = "PRIMARY KEY (item_id)";
-        $tables[FOF_ITEM_TABLE][] = "FOREIGN KEY feed_id REFERENCES " . FOF_FEED_TABLE . " (feed_id) ON UPDATE CASCADE ON DELETE CASCADE";
+        $tables[FOF_ITEM_TABLE][] = "FOREIGN KEY (feed_id) REFERENCES " . FOF_FEED_TABLE . " (feed_id) ON UPDATE CASCADE ON DELETE CASCADE";
         $tables[FOF_ITEM_TABLE][] = "KEY item_guid ( item_guid(255) )";
         $tables[FOF_ITEM_TABLE][] = "KEY feed_id_item_cached ( feed_id, item_cached )";
         $tables[FOF_ITEM_TABLE][] = "KEY feed_id_item_updated ( feed_id, item_updated )";
@@ -243,7 +243,7 @@ function fof_install_schema() {
         COMMENT 'Ensure that one but not both ids are set.'
         BEGIN
         DECLARE msg TEXT;
-            IF ((id1 IS NULL) == (id2 IS NULL)) THEN
+            IF ((id1 IS NULL) = (id2 IS NULL)) THEN
                 SET msg := CONCAT('xor-null constraint failed in ', action, ' on ', place);
                 SIGNAL SQLSTATE '23513' SET MESSAGE_TEXT = msg;
             END IF;
