@@ -50,6 +50,7 @@ function fof_render_get_key_($array, $key, $default=NULL) {
 	return (empty($array[$key]) ? $default : $array[$key]);
 }
 
+/* FIXME: use display_* fields if set */
 function fof_render_item($item, $include_div=true)
 {
     global $fof_asset;
@@ -97,8 +98,8 @@ function fof_render_item($item, $include_div=true)
 
 <div class="header">
 	<span class="controls">
-		<a class="uparrow" href="javascript:hide_body('<?php echo $item_id ?>')">fold &uarr;</a>
-		<a class="downarrow" href="javascript:show_body('<?php echo $item_id ?>')">unfold &darr;</a>
+		<a class="uparrow" href="#" onclick="hide_body('<?php echo $item_id ?>');return false;">fold &uarr;</a>
+		<a class="downarrow" href="#" onclick="show_body('<?php echo $item_id ?>');return false;">unfold &darr;</a>
 		<a href="#" onclick="ajax_mark_read('<?php echo $item_id ?>'); return false;">mark read</a>
 	</span>
 	<h1 <?php if($unread) echo "class='unread-item'" ?>>

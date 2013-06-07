@@ -155,7 +155,7 @@ else
 
 <h2>Checking admin user...</h2>
 <?php
-if ( ! fof_install_user_exists('admin')) {
+if ( ! fof_install_user_level_exists('admin')) {
 ?>
 
 You now need to choose an initial password for the 'admin' account:<br>
