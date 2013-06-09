@@ -52,6 +52,12 @@ fof_set_content_type();
             .fail { color: red; }
             .pass { color: green; }
             .warn { color: #a60; }
+            .exists {
+                margin:.25em auto;
+                padding:0;
+                border:0;
+                font-size:70%;
+            }
         </style>
     </head>
 

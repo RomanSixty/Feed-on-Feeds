@@ -13,6 +13,15 @@ $fof_installer = true;
 /* Pull in the fof core, config will be parsed and database will be connected. */
 require_once('fof-main.php');
 
+/* different drivers prefer different types */
+if (defined('USE_MYSQL')) {
+    define('SQL_DRIVER_INT_TYPE', 'INT(11)');
+} else if (defined('USE_SQLITE')) {
+    define('SQL_DRIVER_INT_TYPE', 'INTEGER');
+} else {
+    throw new Exception('Unimplemented pdo driver.');
+}
+
 /* parses version string out of assorted curl extension responses */
 /* from SimplePie */
 function get_curl_version() {
@@ -69,17 +78,15 @@ function fof_install_cachedir() {
 }
 
 
-/*
-   SQLite and MySQL speak slightly different CREATE dialects, mostly concerning
-   primary keys and indices, so schema generation has been rendered into a
-   rudimentary templated format, to avoid duplicating each statement for each
-   driver.
-   This was thrown together off-the-cuff -- there is assuredly a far more
-   mature solution to this problem in existence somewhere..
- */
-
 if ( ! defined('MYSQL_ENGINE')) define('MYSQL_ENGINE', 'MyISAM');
-/* generates a query string to create a table, given an array of columns */
+/** Generate a query string to create a table, given an array of columns.
+    SQLite and MySQL speak slightly different CREATE dialects, mostly concerning
+    primary keys and indices, so schema generation has been rendered into a
+    rudimentary templated format, to avoid duplicating each statement for each
+    driver.
+    This was thrown together off-the-cuff -- there is assuredly a far more
+    mature solution to this problem in existence somewhere..
+ */
 function fof_install_create_table_query($table_name, $column_array) {
     $query = "CREATE TABLE IF NOT EXISTS $table_name (\n  ";
     $query .= implode(",\n  ", $column_array);
@@ -91,53 +98,63 @@ function fof_install_create_table_query($table_name, $column_array) {
     return $query . ';';
 }
 
-/* generates a query string to create an index, given a table, an index, and an array defining the index */
+/** Generate a query string to create an index on a table.
+    This assumes that the table already exists.
+    N.B. SQLite index names will have '_idx' postfixed automatically
+ */
 function fof_install_create_index_query($table_name, $index_name, $index_def) {
     /* unpack the index definition */
     list($idx_type, $idx_val) = $index_def;
 
     if (defined('USE_MYSQL')) {
-        /* mysql defines indexes in table creation */
-    } else if (defined('USE_SQLITE')) {
+        str_replace('INDEX', 'KEY', $idx_type);
+        $query = "ALTER TABLE $table_name ADD KEY '$index_name' ($idx_val)";
+        return $query;
+    }
+    if (defined('USE_SQLITE')) {
+        $index_name = $index_name . '_idx';
         $query = "CREATE $idx_type IF NOT EXISTS $index_name ON $table_name ( $idx_val );";
         return $query;
     }
-
-    return NULL;
+    throw new Exception('Query not implemented for this pdo driver.');
 }
 
+/** Generate a query to create a foreign key reference on a column.
+ */
+function fof_install_create_reference_query($table_name, $column_name, $reference_def) {
+    list($ref_table, $ref_column) = $reference_def;
+    if (defined('USE_MYSQL')) {
+        $query = "ALTER TABLE " . $table_name . " ADD FOREIGN KEY(" . $column_name . ") REFERENCES " . $ref_table . " (" . $ref_column . ") ON DELETE CASCADE ON UPDATE CASCADE";
+        return $query;
+    }
+    if (defined('USE_SQLITE')) {
+        /* I guess this isn't possible? */
+    }
+    throw new Exception('Query not implemented for this pdo driver.');
+}
 
 /* define all tables as arrays */
 /* most of the fiddly driver-specific quirks are finagled in here */
 function fof_install_schema() {
     $tables = array();
     $indices = array();
-    $extras = array();
-
-    /* different drivers prefer different types */
-    if (defined('USE_MYSQL')) {
-        $driver_int_type = 'INT(11)';
-    } else if (defined('USE_SQLITE')) {
-        $driver_int_type = 'INTEGER';
-    }
 
     /* FOF_FEED_TABLE *
     /* columns */
     if (defined('USE_MYSQL')) {
-        $tables[FOF_FEED_TABLE][] = "feed_id $driver_int_type NOT NULL AUTO_INCREMENT";
+        $tables[FOF_FEED_TABLE][] = "feed_id " . SQL_DRIVER_INT_TYPE . " NOT NULL AUTO_INCREMENT";
     } else if (defined('USE_SQLITE')) {
-        $tables[FOF_FEED_TABLE][] = "feed_id $driver_int_type PRIMARY KEY AUTOINCREMENT NOT NULL";
+        $tables[FOF_FEED_TABLE][] = "feed_id " . SQL_DRIVER_INT_TYPE . " PRIMARY KEY AUTOINCREMENT NOT NULL";
     }
     $tables[FOF_FEED_TABLE][] = "feed_url TEXT NOT NULL";
     $tables[FOF_FEED_TABLE][] = "feed_title TEXT NOT NULL";
     $tables[FOF_FEED_TABLE][] = "feed_link TEXT NOT NULL";
     $tables[FOF_FEED_TABLE][] = "feed_description TEXT NOT NULL";
     $tables[FOF_FEED_TABLE][] = "feed_image TEXT";
-    $tables[FOF_FEED_TABLE][] = "alt_image TEXT";
-    $tables[FOF_FEED_TABLE][] = "feed_image_cache_date $driver_int_type DEFAULT '0'";
-    $tables[FOF_FEED_TABLE][] = "feed_cache_date $driver_int_type DEFAULT '0'";
-    $tables[FOF_FEED_TABLE][] = "feed_cache_attempt_date $driver_int_type DEFAULT '0'";
-    $tables[FOF_FEED_TABLE][] = "feed_cache_next_attempt $driver_int_type DEFAULT '0'";
+    $tables[FOF_FEED_TABLE][] = "feed_image_cache_date " . SQL_DRIVER_INT_TYPE . " DEFAULT '0'";
+    $tables[FOF_FEED_TABLE][] = "feed_cache_date " . SQL_DRIVER_INT_TYPE . " DEFAULT '0'";
+    $tables[FOF_FEED_TABLE][] = "feed_cache_attempt_date " . SQL_DRIVER_INT_TYPE . " DEFAULT '0'";
+    $tables[FOF_FEED_TABLE][] = "feed_cache_next_attempt " . SQL_DRIVER_INT_TYPE . " DEFAULT '0'";
     $tables[FOF_FEED_TABLE][] = "feed_cache TEXT";
     if (defined('USE_MYSQL')) {
         $tables[FOF_FEED_TABLE][] = "PRIMARY KEY ( feed_id )";
@@ -146,23 +163,23 @@ function fof_install_schema() {
 
     /* indices */
     if (defined('USE_SQLITE')) {
-        $indices[FOF_FEED_TABLE]['feed_cache_next_attempt_idx'] = array('INDEX', 'feed_cache_next_attempt');
+        $indices[FOF_FEED_TABLE]['feed_cache_next_attempt'] = array('INDEX', 'feed_cache_next_attempt');
     }
 
 
     /* FOF_ITEM_TABLE */
     /* columns */
     if (defined('USE_MYSQL')) {
-        $tables[FOF_ITEM_TABLE][] = "item_id $driver_int_type NOT NULL AUTO_INCREMENT";
+        $tables[FOF_ITEM_TABLE][] = "item_id " . SQL_DRIVER_INT_TYPE . " NOT NULL AUTO_INCREMENT";
     } else if (defined('USE_SQLITE')) {
-        $tables[FOF_ITEM_TABLE][] = "item_id $driver_int_type PRIMARY KEY AUTOINCREMENT NOT NULL";
+        $tables[FOF_ITEM_TABLE][] = "item_id " . SQL_DRIVER_INT_TYPE . " PRIMARY KEY AUTOINCREMENT NOT NULL";
     }
-    $tables[FOF_ITEM_TABLE][] = "feed_id $driver_int_type NOT NULL DEFAULT '0' REFERENCES " . FOF_FEED_TABLE . " ( feed_id ) ON UPDATE CASCADE ON DELETE CASCADE";
+    $tables[FOF_ITEM_TABLE][] = "feed_id " . SQL_DRIVER_INT_TYPE . " NOT NULL DEFAULT '0' REFERENCES " . FOF_FEED_TABLE . " ( feed_id ) ON UPDATE CASCADE ON DELETE CASCADE";
     $tables[FOF_ITEM_TABLE][] = "item_guid TEXT NOT NULL";
     $tables[FOF_ITEM_TABLE][] = "item_link TEXT NOT NULL";
-    $tables[FOF_ITEM_TABLE][] = "item_cached $driver_int_type NOT NULL DEFAULT '0'";
-    $tables[FOF_ITEM_TABLE][] = "item_published $driver_int_type NOT NULL DEFAULT '0'";
-    $tables[FOF_ITEM_TABLE][] = "item_updated $driver_int_type NOT NULL DEFAULT '0'";
+    $tables[FOF_ITEM_TABLE][] = "item_cached " . SQL_DRIVER_INT_TYPE . " NOT NULL DEFAULT '0'";
+    $tables[FOF_ITEM_TABLE][] = "item_published " . SQL_DRIVER_INT_TYPE . " NOT NULL DEFAULT '0'";
+    $tables[FOF_ITEM_TABLE][] = "item_updated " . SQL_DRIVER_INT_TYPE . " NOT NULL DEFAULT '0'";
     $tables[FOF_ITEM_TABLE][] = "item_title TEXT NOT NULL";
     $tables[FOF_ITEM_TABLE][] = "item_content TEXT NOT NULL";
     if (defined('USE_MYSQL')) {
@@ -175,19 +192,19 @@ function fof_install_schema() {
 
     /* indices */
     if (defined('USE_SQLITE')) {
-        $indices[FOF_ITEM_TABLE]['feed_id_idx'] = array('INDEX', 'feed_id');
-        $indices[FOF_ITEM_TABLE]['item_guid_idx'] = array('INDEX', 'item_guid');
-        $indices[FOF_ITEM_TABLE]['item_title_idx'] = array('INDEX', 'item_title');
-        $indices[FOF_ITEM_TABLE]['feed_id_item_cached_idx'] = array('INDEX', 'feed_id, item_cached');
-        $indices[FOF_ITEM_TABLE]['feed_id_item_updated_idx'] = array('INDEX', 'feed_id, item_updated');
+        $indices[FOF_ITEM_TABLE]['feed_id'] = array('INDEX', 'feed_id');
+        $indices[FOF_ITEM_TABLE]['item_guid'] = array('INDEX', 'item_guid');
+        $indices[FOF_ITEM_TABLE]['item_title'] = array('INDEX', 'item_title');
+        $indices[FOF_ITEM_TABLE]['feed_id_item_cached'] = array('INDEX', 'feed_id, item_cached');
+        $indices[FOF_ITEM_TABLE]['feed_id_item_updated'] = array('INDEX', 'feed_id, item_updated');
     }
 
 
     /* FOF_ITEM_TAG_TABLE */
     /* columns */
-    $tables[FOF_ITEM_TAG_TABLE][] = "user_id $driver_int_type NOT NULL DEFAULT '0' REFERENCES " . FOF_USER_TABLE . " ( user_id ) ON UPDATE CASCADE ON DELETE CASCADE";
-    $tables[FOF_ITEM_TAG_TABLE][] = "item_id $driver_int_type NOT NULL DEFAULT '0' REFERENCES " . FOF_ITEM_TABLE . " ( item_id ) ON UPDATE CASCADE ON DELETE CASCADE";
-    $tables[FOF_ITEM_TAG_TABLE][] = "tag_id $driver_int_type NOT NULL DEFAULT '0' REFERENCES " . FOF_TAG_TABLE . " ( tag_id ) ON UPDATE CASCADE ON DELETE CASCADE";
+    $tables[FOF_ITEM_TAG_TABLE][] = "user_id " . SQL_DRIVER_INT_TYPE . " NOT NULL DEFAULT '0' REFERENCES " . FOF_USER_TABLE . " ( user_id ) ON UPDATE CASCADE ON DELETE CASCADE";
+    $tables[FOF_ITEM_TAG_TABLE][] = "item_id " . SQL_DRIVER_INT_TYPE . " NOT NULL DEFAULT '0' REFERENCES " . FOF_ITEM_TABLE . " ( item_id ) ON UPDATE CASCADE ON DELETE CASCADE";
+    $tables[FOF_ITEM_TAG_TABLE][] = "tag_id " . SQL_DRIVER_INT_TYPE . " NOT NULL DEFAULT '0' REFERENCES " . FOF_TAG_TABLE . " ( tag_id ) ON UPDATE CASCADE ON DELETE CASCADE";
     $tables[FOF_ITEM_TAG_TABLE][] = "PRIMARY KEY ( user_id, item_id, tag_id )";
     if (defined('USE_MYSQL')) {
         $tables[FOF_ITEM_TAG_TABLE][] = "FOREIGN KEY (user_id) REFERENCES " . FOF_USER_TABLE . " (user_id) ON UPDATE CASCADE ON DELETE CASCADE";
@@ -198,8 +215,8 @@ function fof_install_schema() {
 
     /* FOF_SUBSCRIPTION_TABLE */
     /* columns */
-    $tables[FOF_SUBSCRIPTION_TABLE][] = "feed_id $driver_int_type NOT NULL DEFAULT '0' REFERENCES " . FOF_FEED_TABLE . " ( feed_id ) ON UPDATE CASCADE ON DELETE CASCADE";
-    $tables[FOF_SUBSCRIPTION_TABLE][] = "user_id $driver_int_type NOT NULL DEFAULT '0' REFERENCES " . FOF_USER_TABLE . " ( user_id ) ON UPDATE CASCADE ON DELETE CASCADE";
+    $tables[FOF_SUBSCRIPTION_TABLE][] = "feed_id " . SQL_DRIVER_INT_TYPE . " NOT NULL DEFAULT '0' REFERENCES " . FOF_FEED_TABLE . " ( feed_id ) ON UPDATE CASCADE ON DELETE CASCADE";
+    $tables[FOF_SUBSCRIPTION_TABLE][] = "user_id " . SQL_DRIVER_INT_TYPE . " NOT NULL DEFAULT '0' REFERENCES " . FOF_USER_TABLE . " ( user_id ) ON UPDATE CASCADE ON DELETE CASCADE";
     $tables[FOF_SUBSCRIPTION_TABLE][] = "subscription_prefs TEXT";
     $tables[FOF_SUBSCRIPTION_TABLE][] = "PRIMARY KEY ( feed_id, user_id )";
     if (defined('USE_MYSQL')) {
@@ -212,22 +229,29 @@ function fof_install_schema() {
     /* Stores the details about the preferred methods of displaying a collection of items. */
     /* columns */
     if (defined('USE_MYSQL')) {
-        $tables[FOF_VIEW_TABLE][] = "view_id $driver_int_type NOT NULL AUTO_INCREMENT";
+        $tables[FOF_VIEW_TABLE][] = "view_id " . SQL_DRIVER_INT_TYPE . " NOT NULL AUTO_INCREMENT";
     } else if (defined('USE_SQLITE')) {
-        $tables[FOF_VIEW_TABLE][] = "view_id $driver_int_type PRIMARY KEY AUTOINCREMENT NOT NULL";
+        $tables[FOF_VIEW_TABLE][] = "view_id " . SQL_DRIVER_INT_TYPE . " PRIMARY KEY AUTOINCREMENT NOT NULL";
     }
     $tables[FOF_VIEW_TABLE][] = "view_settings TEXT";
     if (defined('USE_MYSQL')) {
         $tables[FOF_VIEW_TABLE][] = "PRIMARY KEY (view_id)";
     }
 
+
     /* FOF_VIEW_STATE_TABLE */
     /* Associates a group of feed/tags with a view. */
+    /*
+        This table also has triggers.  They will be created in the update
+        section below, as it's easier to check if they exist via script than
+        to craft a driver-portable create-if-not-exists statement here.
+    */
+
     /* columns */
-    $tables[FOF_VIEW_STATE_TABLE][] = "user_id $driver_int_type NOT NULL REFERENCES " . FOF_USER_TABLE . " (user_id) ON UPDATE CASCADE ON DELETE CASCADE";
-    $tables[FOF_VIEW_STATE_TABLE][] = "feed_id $driver_int_type REFERENCES " . FOF_FEED_TABLE . " (feed_id) ON UPDATE CASCADE ON DELETE CASCADE";
-    $tables[FOF_VIEW_STATE_TABLE][] = "tag_id $driver_int_type REFERENCES " . FOF_TAG_TABLE . " (tag_id) ON UPDATE CASCADE ON DELETE CASCADE";
-    $tables[FOF_VIEW_STATE_TABLE][] = "view_id $driver_int_type NOT NULL REFERENCES " . FOF_VIEW_TABLE . " (view_id) ON UPDATE CASCADE ON DELETE CASCADE";
+    $tables[FOF_VIEW_STATE_TABLE][] = "user_id " . SQL_DRIVER_INT_TYPE . " NOT NULL REFERENCES " . FOF_USER_TABLE . " (user_id) ON UPDATE CASCADE ON DELETE CASCADE";
+    $tables[FOF_VIEW_STATE_TABLE][] = "feed_id " . SQL_DRIVER_INT_TYPE . " REFERENCES " . FOF_FEED_TABLE . " (feed_id) ON UPDATE CASCADE ON DELETE CASCADE";
+    $tables[FOF_VIEW_STATE_TABLE][] = "tag_id " . SQL_DRIVER_INT_TYPE . " REFERENCES " . FOF_TAG_TABLE . " (tag_id) ON UPDATE CASCADE ON DELETE CASCADE";
+    $tables[FOF_VIEW_STATE_TABLE][] = "view_id " . SQL_DRIVER_INT_TYPE . " NOT NULL REFERENCES " . FOF_VIEW_TABLE . " (view_id) ON UPDATE CASCADE ON DELETE CASCADE";
     $tables[FOF_VIEW_STATE_TABLE][] = "CHECK ((feed_id IS NULL) != (tag_id IS NULL))";
     if (defined('USE_MYSQL')) {
         $tables[FOF_VIEW_STATE_TABLE][] = "FOREIGN KEY (user_id) REFERENCES " . FOF_USER_TABLE . " (user_id) ON UPDATE CASCADE ON DELETE CASCADE";
@@ -235,45 +259,13 @@ function fof_install_schema() {
         $tables[FOF_VIEW_STATE_TABLE][] = "FOREIGN KEY (tag_id) REFERENCES " . FOF_TAG_TABLE . " (tag_id) ON UPDATE CASCADE ON DELETE CASCADE";
         $tables[FOF_VIEW_STATE_TABLE][] = "FOREIGN KEY (view_id) REFERENCES " . FOF_VIEW_TABLE . " (view_id) ON UPDATE CASCADE ON DELETE CASCADE";
     }
-    /* N.B. MySQL doesn't actually honor any CHECK expression, so this xor-null constraint needs to be enforced with a trigger. */
-    if (defined('USE_MYSQL')) {
-        $extras[FOF_VIEW_STATE_TABLE][] = "CREATE PROCEDURE constrain_null_xor (IN id1 $driver_int_type, IN id2 $driver_int_type, IN action VARCHAR(16), IN place VARCHAR(64))
-        DETERMINISTIC
-        SQL SECURITY INVOKER
-        COMMENT 'Ensure that one but not both ids are set.'
-        BEGIN
-        DECLARE msg TEXT;
-            IF ((id1 IS NULL) = (id2 IS NULL)) THEN
-                SET msg := CONCAT('xor-null constraint failed in ', action, ' on ', place);
-                SIGNAL SQLSTATE '23513' SET MESSAGE_TEXT = msg;
-            END IF;
-        END";
-        $extras[FOF_VIEW_STATE_TABLE][] = "CREATE TRIGGER 'xor_null_before_insert' BEFORE INSERT ON " . FOF_VIEW_STATE_TABLE . "
-        FOR EACH ROW
-        BEGIN
-            CALL constrain_null_xor(NEW.feed_id, NEW.tag_id, 'INSERT', '" . FOF_VIEW_STATE_TABLE . "');
-        END";
-        $extras[FOF_VIEW_STATE_TABLE][] = "CREATE TRIGGER 'xor_null_before_update' BEFORE UPDATE ON " . FOF_VIEW_STATE_TABLE . "
-        FOR EACH ROW
-        BEGIN
-            CALL constrain_null_xor(NEW.feed_id, NEW.tag_id, 'UPDATE', '" . FOF_VIEW_STATE_TABLE . "');
-        END";
-    }
-    /* If a tag or feed is deleted, purge any view states which included them. */
-    $extras[FOF_VIEW_STATE_TABLE][] = "CREATE TRIGGER cascade_view_delete AFTER DELETE ON " . FOF_VIEW_STATE_TABLE . "
-    FOR EACH ROW
-    BEGIN
-        DELETE FROM " . FOF_VIEW_STATE_TABLE . " WHERE view_id = OLD.view_id;
-        DELETE FROM " . FOF_VIEW_TABLE . " WHERE view_id = OLD.view_id;
-    END";
-
 
     /* FOF_TAG_TABLE */
     /* columns */
     if (defined('USE_MYSQL')) {
-        $tables[FOF_TAG_TABLE][] = "tag_id $driver_int_type NOT NULL AUTO_INCREMENT";
+        $tables[FOF_TAG_TABLE][] = "tag_id " . SQL_DRIVER_INT_TYPE . " NOT NULL AUTO_INCREMENT";
     } else if (defined('USE_SQLITE')) {
-        $tables[FOF_TAG_TABLE][] = "tag_id $driver_int_type PRIMARY KEY AUTOINCREMENT NOT NULL";
+        $tables[FOF_TAG_TABLE][] = "tag_id " . SQL_DRIVER_INT_TYPE . " PRIMARY KEY AUTOINCREMENT NOT NULL";
     }
     $tables[FOF_TAG_TABLE][] = "tag_name CHAR(100) NOT NULL DEFAULT ''";
     if (defined('USE_MYSQL')) {
@@ -283,7 +275,7 @@ function fof_install_schema() {
 
     /* indices */
     if (defined('USE_SQLITE')) {
-        $indices[FOF_TAG_TABLE]['tag_name_idx'] = array('UNIQUE INDEX', 'tag_name');
+        $indices[FOF_TAG_TABLE]['tag_name'] = array('UNIQUE INDEX', 'tag_name');
     }
 
 
@@ -293,16 +285,16 @@ function fof_install_schema() {
     if (defined('USE_SQLITE')) {
         $tables[FOF_USER_LEVELS_TABLE][] = "seq INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL";
         $tables[FOF_USER_LEVELS_TABLE][] = "level TEXT NOT NULL";
-        $indices[FOF_USER_LEVELS_TABLE]['level_idx'] = array('UNIQUE INDEX', 'level');
+        $indices[FOF_USER_LEVELS_TABLE]['level'] = array('UNIQUE INDEX', 'level');
     }
 
 
     /* FOF_USER_TABLE */
     /* columns */
     if (defined('USE_MYSQL')) {
-        $tables[FOF_USER_TABLE][] = "user_id $driver_int_type NOT NULL";
+        $tables[FOF_USER_TABLE][] = "user_id " . SQL_DRIVER_INT_TYPE . " NOT NULL";
     } else if (defined('USE_SQLITE')) {
-        $tables[FOF_USER_TABLE][] = "user_id $driver_int_type PRIMARY KEY AUTOINCREMENT NOT NULL";
+        $tables[FOF_USER_TABLE][] = "user_id " . SQL_DRIVER_INT_TYPE . " PRIMARY KEY AUTOINCREMENT NOT NULL";
     }
     $tables[FOF_USER_TABLE][] = "user_name VARCHAR(100) NOT NULL DEFAULT ''";
     $tables[FOF_USER_TABLE][] = "user_password_hash VARCHAR(32) NOT NULL DEFAULT ''";
@@ -316,14 +308,14 @@ function fof_install_schema() {
         $tables[FOF_USER_TABLE][] = "PRIMARY KEY ( user_id )";
     }
 
-    return array($tables, $indices, $extras);
+    return array($tables, $indices);
 }
 
 
 /* given a schema array, returns an array of queries to define the database */
 /* if exec is set, execute the statements, to create the database */
 function fof_install_database($schema, $exec=0) {
-    list($tables, $indices, $extras) = $schema;
+    list($tables, $indices) = $schema;
 
     try {
         $query_history = array();
@@ -358,22 +350,6 @@ function fof_install_database($schema, $exec=0) {
                     }
                 }
             }
-            if (isset($extras[$table_name]) && is_array($extras[$table_name])) {
-                foreach ($extras[$table_name] as $query) {
-                    if ( ! empty($query) ) {
-                        $query_history[] = $query;
-                        if ($exec) {
-                            echo "<br><span>table $table_name extra ... ";
-                            if (fof_db_exec($query) === false) {
-                                echo "<span class='fail'>FAIL</span>";
-                            } else {
-                                echo "<span class='pass'>OK</span>";
-                            }
-                            echo "</span>\n";
-                        }
-                    }
-                }
-            }
         }
     } catch (PDOException $e) {
         echo "<span class='fail'>[<code>$query</code>] <pre>" . $e->GetMessage() . "</pre></span>\n";
@@ -382,93 +358,329 @@ function fof_install_database($schema, $exec=0) {
     return array_filter($query_history);
 }
 
-/* migrate any old tables to new versions */
-/* sqlite updates only include those since sqlite support was possible... */
-/* but since databases prior to that could only be on mysql, this should be okay for now */
-function fof_install_database_update_old_tables() {
+/** Determine if a column exists in a table.
+ */
+function fof_install_database_column_exists($table, $name) {
     if (defined('USE_MYSQL')) {
-        try {
-            $query = "SHOW COLUMNS FROM " . FOF_FEED_TABLE . " LIKE 'feed_image_cache_date'";
-            if ( count(fof_db_query($query)->fetchAll()) == 0 ) {
-                echo "Upgrading " . FOF_FEED_TABLE . ": 'feed_image_cache_date'... ";
-
-                $query = "ALTER TABLE " . FOF_FEED_TABLE . " ADD 'feed_image_cache_date' INT DEFAULT '0' AFTER 'feed_image'";
-                fof_db_exec($query);
-
-                echo "Done.<hr>";
-            }
-
-            $query = "SHOW COLUMNS FROM " . FOF_USER_TABLE . " LIKE 'user_password_hash'";
-            if ( count(fof_db_query($query)->fetchAll()) == 0 ) {
-                echo "Upgrading " . FOF_USER_TABLE . ": 'user_password_hash'... ";
-
-                $query = "ALTER TABLE " . FOF_USER_TABLE . " CHANGE 'user_password' 'user_password_hash' VARCHAR(32) NOT NULL";
-                fof_db_exec($query);
-
-                $query = "UPDATE " . FOF_USER_TABLE . " SET user_password_hash = md5(concat(user_password_hash, user_name))";
-                fof_db_exec($query);
-
-                echo "Done.<hr>";
-            }
-
-            $query = "SHOW COLUMNS FROM " . FOF_FEED_TABLE . " LIKE 'feed_cache_attempt_date'";
-            if ( count(fof_db_query($query)->fetchAll()) == 0 ) {
-                echo "Upgrading " . FOF_FEED_TABLE . ": 'feed_cache_attempt_date'... ";
-
-                $query = "ALTER TABLE " . FOF_FEED_TABLE . " ADD 'feed_cache_attempt_date' INT DEFAULT '0' AFTER 'feed_cache_date'";
-                fof_db_exec($query);
-
-                echo "Done.<hr>";
-            }
-
-            $query = "SHOW COLUMNS FROM " . FOF_FEED_TABLE . " LIKE 'feed_cache_next_attempt'";
-            if ( count(fof_db_query($query)->fetchAll()) == 0 ) {
-                echo "Upgrading " . FOF_FEED_TABLE . ": 'feed_cache_next_attempt'... ";
-
-                $query = "ALTER TABLE " . FOF_FEED_TABLE . " ADD 'feed_cache_next_attempt' INT DEFAULT '0'";
-                fof_db_exec($query);
-
-                $query = "ALTER TABLE " . FOF_FEED_TABLE . " ADD KEY 'feed_cache_next_attempt' ('feed_cache_next_attempt')";
-                fof_db_exec($query);
-
-                echo "Done.<hr>";
-            }
-
-            $query = "SHOW INDEXES FROM " . FOF_ITEM_TABLE . " WHERE key_name LIKE 'feed_id_item_updated'";
-            if ( count(fof_db_query($query)->fetchAll()) == 0 ) {
-                echo "Upgrading " . FOF_ITEM_TABLE . " 'feed_id_item_updated'... ";
-
-                $query = "ALTER TABLE " . FOF_ITEM_TABLE . " ADD KEY 'feed_id_item_updated' ('feed_id', 'item_updated')";
-                fof_db_exec($query);
-
-                echo "Done.<hr>";
-            }
-
-            $query = "SHOW INDEXES FROM " . FOF_ITEM_TABLE . " WHERE key_name LIKE 'item_title'";
-            if ( count(fof_db_query($query)->fetchAll()) == 0 ) {
-                echo "Upgrading " . FOF_ITEM_TABLE . " 'item_title'...";
-
-                $query = "ALTER TABLE " . FOF_ITEM_TABLE . " ADD KEY item_title (item_title(255))";
-                fof_db_exec($query);
-
-                echo "Done.<hr>";
-            }
-
-        } catch (PDOException $e) {
-            die('Cannot migrate table: <pre>' . $e->GetMessage() . '</pre>');
-        }
-    } /* USE_MYSQL */
-
+        $query = "SHOW COLUMNS FROM " . $table . " LIKE '" . $name . "'";
+        $statement = fof_db_query($query);
+        $column = fof_db_get_row($statement, NULL, TRUE);
+        return ! empty($column);
+    }
     if (defined('USE_SQLITE')) {
-        $query = "SELECT * FROM sqlite_master WHERE type='index' AND tbl_name='" . FOF_ITEM_TABLE . "' AND name = 'item_title_idx'";
-        if ( count(fof_db_query($query)->fetchAll()) == 0 ) {
-            echo "Upgrading " . FOF_ITEM_TABLE . " 'item_title'...";
-
-            $query = "CREATE INDEX item_title_idx ON " . FOF_ITEM_TABLE . " ( item_title )";
-
-            echo "Done.<hr>";
+        $query = "PRAGMA table_info(" . $table . ")";
+        $statement = fof_db_query($query);
+        while (($column = fof_db_get_row($statement, 'name')) !== false) {
+            if ($column == $name) {
+                $statement->closeCursor();
+                return true;
+            }
         }
-    } /* USE_SQLITE */
+        return false;
+    }
+    throw new Exception('Query not implemented for this pdo driver.');
+}
+
+/** Update queries if column doesn't exist.
+ */
+function fof_install_migrate_column(&$queries, $table, $column, $what) {
+    if ( ! is_array($what))
+        $what = array($what);
+
+    $desc = array($table, $column, 'column');
+    if ( ! fof_install_database_column_exists($table, $column)) {
+        foreach ($what as $n => $q) {
+            if (is_string($n))
+                $desc[] = $n;
+            $queries[implode('.', $desc)] = $q;
+        }
+    } else {
+        echo '<div class="exists">' . implode('.', $desc) . ' is up to date.</div>' . "\n";
+    }
+}
+
+/** Determine if an index exists on a table.
+    N.B. This requires a per-backend naming convention: SQLite index names shall
+    be postfixed with '_idx'.  This is enacted by the index creation
+    function fof_install_create_index_query().
+ */
+function fof_install_database_index_exists($table, $index) {
+    if (defined('USE_MYSQL')) {
+        $query = "SHOW INDEXES FROM " . $table . " WHERE key_name LIKE '" . $index . "'";
+        $statement = fof_db_query($query);
+        $row = fof_db_get_row($statement, NULL, TRUE);
+        return ! empty($row);
+    }
+    if (defined('USE_SQLITE')) {
+        $index = $index . "_idx";
+        $query = "SELECT * FROM sqlite_master WHERE type='index' AND tbl_name='" . $table . "' AND name = '" . $index . "'";
+        $statement = fof_db_query($query);
+        $row = fof_db_get_row($statement, NULL, TRUE);
+        return ! empty($row);
+    }
+    throw new Exception('Query not implemented for this pdo driver.');
+}
+
+/** Update queries if index doesn't exist.
+ */
+function fof_install_migrate_index(&$queries, $table, $index, $what) {
+    if ( ! is_array($what))
+        $what = array($what);
+
+    $desc = array($table, $index, 'index');
+    if ( ! fof_install_database_index_exists($table, $index)) {
+        foreach ($what as $n => $q) {
+            if (is_string($n))
+                $desc[] = $n;
+            $queries[implode('.', $desc)] = $q;
+        }
+    } else {
+        echo '<div class="exists">' . implode('.', $desc) . ' is up to date.</div>' . "\n";
+    }
+}
+
+/** Determine if a stored procedure exists.
+ */
+function fof_install_database_procedure_exists($proc) {
+    if (defined('USE_MYSQL')) {
+        $query = "SELECT * FROM INFORMATION_SCHEMA.ROUTINES WHERE ROUTINE_TYPE='PROCEDURE' AND ROUTINE_SCHEMA='" . FOF_DB_DBNAME . "' AND ROUTINE_NAME LIKE '" . $proc . "'";
+        $statement = fof_db_query($query);
+        $row = fof_db_get_row($statement, NULL, TRUE);
+        return ! empty($row);
+    }
+    throw new Exception('Query not implemented for this pdo driver.');
+}
+
+/** Determine if a trigger exists.
+ */
+function fof_install_database_trigger_exists($table, $trigger) {
+    if (defined('USE_MYSQL')) {
+        $query = "SELECT * FROM INFORMATION_SCHEMA.TRIGGERS WHERE EVENT_OBJECT_TABLE='" . $table . "' AND TRIGGER_NAME='" . $trigger ."'";
+        $statement = fof_db_query($query);
+        $row = fof_db_get_row($statement, NULL, TRUE);
+        return ! empty($row);
+    }
+    if (defined('USE_SQLITE')) {
+        $query = "SELECT * FROM sqlite_master WHERE type='trigger' AND tbl_name='" . $table . "' AND name='" . $trigger . "'";
+        $statement = fof_db_query($query);
+        $row = fof_db_get_row($statement, NULL, TRUE);
+        return ! empty($row);
+    }
+    throw new Exception('Query not implemented for this pdo driver.');
+}
+
+/** Determine if a foreign key exists.
+ */
+function fof_install_database_reference_exists($table, $column) {
+    if (defined('USE_MYSQL')) {
+        $query = "SELECT * FROM INFORMATION_SCHEMA.KEY_COLUMN_USAGE WHERE CONSTRAINT_SCHEMA='" . FOF_DB_DBNAME . "' AND TABLE_NAME='" . $table . "' AND COLUMN_NAME='" . $column . "' AND CONSTRAINT_NAME NOT LIKE 'PRIMARY'";
+
+        $statement = fof_db_query($query);
+        $row = fof_db_get_row($statement, NULL, TRUE);
+        return ! empty($row);
+    }
+    if (defined('USE_SQLITE')) {
+        $query = "PRAGMA foreign_key_list('" . $table . "')";
+        $statement = fof_db_query($query);
+        while (($row = fof_db_get_row($statement)) !== false) {
+            if ($row['from'] == $column) {
+                $statement->closeCursor();
+                return true;
+            }
+        }
+        return false;
+    }
+    throw new Exception('Query not implemented for this pdo driver.');
+}
+
+/** Update queries if reference doesn't exist.
+ */
+function fof_install_migrate_reference(&$queries, $table, $index, $what) {
+    if ( ! is_array($what))
+        $what = array($what);
+
+    $desc = array($table, $index, 'reference');
+    if ( ! fof_install_database_reference_exists($table, $index)) {
+        foreach ($what as $n => $q) {
+            if (is_string($n))
+                $desc[] = $n;
+            $queries[implode('.', $desc)] = $q;
+        }
+    } else {
+        echo '<div class="exists">' . implode('.', $desc) . ' is up to date.</div>' . "\n";
+    }
+}
+
+/** Ensure tables are up to date.
+    FIXME: A lot of this is duplicated from table creation, it'd be nice to
+    coalesce them.
+*/
+function fof_install_database_update_old_tables() {
+    $queries = array();
+
+    try {
+    /* triggers */
+        if (defined('USE_MYSQL')) {
+            /*
+                N.B. MySQL doesn't actually honor any CHECK expressions, so the
+                xor-null constraint on the view_state tableneeds to be enforced
+                via a trigger and a procedure.
+            */
+            if ( ! fof_install_database_procedure_exists('constrain_null_xor')) {
+                $queries[FOF_VIEW_STATE_TABLE . '.constrain_null_xor.procedure'] = "CREATE PROCEDURE constrain_null_xor (IN id1 " . SQL_DRIVER_INT_TYPE . ", IN id2 " . SQL_DRIVER_INT_TYPE . ", IN action VARCHAR(16), IN place VARCHAR(64))
+DETERMINISTIC
+SQL SECURITY INVOKER
+COMMENT 'Ensure that one but not both ids are set.'
+BEGIN
+DECLARE msg TEXT;
+    IF ((id1 IS NULL) = (id2 IS NULL)) THEN
+        SET msg := CONCAT('xor-null constraint failed in ', action, ' on ', place);
+        SIGNAL SQLSTATE '23513' SET MESSAGE_TEXT = msg;
+    END IF;
+END";
+            } else {
+                echo '<div class="exists">constrain_null_xor procedure is up to date.</div>' . "\n";
+            }
+
+            if ( ! fof_install_database_trigger_exists(FOF_VIEW_STATE_TABLE, 'xor_null_before_insert')) {
+                $queries[FOF_VIEW_STATE_TABLE . '.xor_null_before_insert.trigger'] = "CREATE TRIGGER xor_null_before_insert BEFORE INSERT ON " . FOF_VIEW_STATE_TABLE . "
+FOR EACH ROW
+BEGIN
+    CALL constrain_null_xor(NEW.feed_id, NEW.tag_id, 'INSERT', '" . FOF_VIEW_STATE_TABLE . "');
+END";
+            } else {
+                echo '<div class="exists">' . FOF_VIEW_STATE_TABLE . ' before_insert_trigger is up to date.</div>' . "\n";
+            }
+
+            if ( ! fof_install_database_trigger_exists(FOF_VIEW_STATE_TABLE, 'xor_null_before_update')) {
+                $queries[FOF_VIEW_STATE_TABLE . '.xor_null_before_update.trigger'] = "CREATE TRIGGER xor_null_before_update BEFORE UPDATE ON " . FOF_VIEW_STATE_TABLE . "
+FOR EACH ROW
+BEGIN
+    CALL constrain_null_xor(NEW.feed_id, NEW.tag_id, 'UPDATE', '" . FOF_VIEW_STATE_TABLE . "');
+END";
+            } else {
+                echo '<div class="exists">' . FOF_VIEW_STATE_TABLE . 'before_update_trigger is up to date.</div>';
+            }
+        } /* USE_MYSQL */
+
+        /* If a tag or feed is deleted, purge any view states which included them. */
+        if ( ! fof_install_database_trigger_exists(FOF_VIEW_STATE_TABLE, 'cascade_view_delete')) {
+            $queries[FOF_VIEW_STATE_TABLE . '.cascade_view_delete.trigger'] = "CREATE TRIGGER cascade_view_delete AFTER DELETE ON " . FOF_VIEW_STATE_TABLE . "
+FOR EACH ROW
+BEGIN
+    DELETE FROM " . FOF_VIEW_STATE_TABLE . " WHERE view_id = OLD.view_id;
+    DELETE FROM " . FOF_VIEW_TABLE . " WHERE view_id = OLD.view_id;
+END";
+        } else {
+            echo '<div class="exists">' . FOF_VIEW_STATE_TABLE . ' after_delete_trigger is up to date.</div>' . "\n";
+        }
+
+
+    /* FOF_USER_TABLE */
+        fof_install_migrate_column($queries, FOF_USER_TABLE, 'user_password_hash', array(
+            'rename' => "ALTER TABLE " . FOF_USER_TABLE . " CHANGE user_password user_password_hash VARCHAR(32) NOT NULL",
+            'convert' => "UPDATE " . FOF_USER_TABLE . " SET 'user_password_hash' = md5(concat(user_password_hash, user_name))"
+        ));
+
+    /* FOF_FEED_TABLE */
+        fof_install_migrate_column($queries, FOF_FEED_TABLE, 'feed_image_cache_date', array(
+            'add' => "ALTER TABLE " . FOF_FEED_TABLE . " ADD 'feed_image_cache_date' " . SQL_DRIVER_INT_TYPE . " DEFAULT 0 AFTER feed_image"
+        ));
+
+        fof_install_migrate_column($queries, FOF_FEED_TABLE, 'feed_cache_attempt_date', array(
+            'add' => "ALTER TABLE " . FOF_FEED_TABLE . " ADD 'feed_cache_attempt_date' " . SQL_DRIVER_INT_TYPE . " DEFAULT '0' AFTER 'feed_cache_date'"
+        ));
+
+        fof_install_migrate_column($queries, FOF_FEED_TABLE, 'feed_cache_next_attempt', array(
+            'add' => "ALTER TABLE " . FOF_FEED_TABLE . " ADD 'feed_cache_next_attempt' " . SQL_DRIVER_INT_TYPE . " DEFAULT '0' AFTER 'feed_cache_attempt_date'"
+        ));
+
+        fof_install_migrate_index($queries, FOF_FEED_TABLE, 'feed_cache_next_attempt', array(
+            'add' => fof_install_create_index_query(FOF_FEED_TABLE, 'feed_cache_next_attempt', array('INDEX', 'feed_cache_next_attempt'))
+        ));
+
+        if ( ! defined('USE_SQLITE')) {
+            /*  SQLite cannot drop columns without creating a new table, copying
+                data, dropping the old table, and renaming the new one...
+                A few unused columns won't hurt anything for a while.
+            */
+            if ( fof_install_database_column_exists(FOF_FEED_TABLE, 'alt_image')) {
+                $queries[FOF_FEED_TABLE . '.alt_image.drop'] = "ALTER TABLE " . FOF_FEED_TABLE . " DROP COLUMN alt_image";
+            } else {
+                echo '<div class="exists">' . FOF_FEED_TABLE . '.' . 'alt_image' . ' is up to date.</div>' . "\n";
+            }
+        }
+
+    /* FOF_ITEM_TABLE */
+        fof_install_migrate_index($queries, FOF_ITEM_TABLE, 'feed_id_item_updated', array(
+            'add' => fof_install_create_index_query(FOF_ITEM_TABLE, 'feed_id_item_updated', array('INDEX', 'feed_id, item_updated'))
+        ));
+
+        fof_install_migrate_index($queries, FOF_ITEM_TABLE, 'item_title', array(
+            'add' => fof_install_create_index_query(FOF_ITEM_TABLE, 'item_title', array('INDEX', 'item_title(255)'))
+        ));
+
+        fof_install_migrate_reference($queries, FOF_ITEM_TABLE, 'feed_id', array(
+            'add' => fof_install_create_reference_query(FOF_ITEM_TABLE, 'feed_id', array(FOF_FEED_TABLE, 'feed_id'))
+        ));
+
+    /* FOF_ITEM_TAG_TABLE */
+        fof_install_migrate_reference($queries, FOF_ITEM_TAG_TABLE, 'user_id', array(
+            'add' => fof_install_create_reference_query(FOF_ITEM_TAG_TABLE, 'user_id', array(FOF_USER_TABLE, 'user_id'))
+        ));
+
+        fof_install_migrate_reference($queries, FOF_ITEM_TAG_TABLE, 'item_id', array(
+            'add' => fof_install_create_reference_query(FOF_ITEM_TAG_TABLE, 'item_id', array(FOF_ITEM_TABLE, 'item_id'))
+        ));
+
+        fof_install_migrate_reference($queries, FOF_ITEM_TAG_TABLE, 'tag_id', array(
+            'add' => fof_install_create_reference_query(FOF_ITEM_TAG_TABLE, 'tag_id', array(FOF_TAG_TABLE, 'tag_id'))
+        ));
+
+    /* FOF_SUBSCRIPTION_TABLE */
+        fof_install_migrate_reference($queries, FOF_SUBSCRIPTION_TABLE, 'user_id', array(
+            'add' => fof_install_create_reference_query(FOF_SUBSCRIPTION_TABLE, 'user_id', array(FOF_USER_TABLE, 'user_id'))
+        ));
+
+        fof_install_migrate_reference($queries, FOF_SUBSCRIPTION_TABLE, 'feed_id', array(
+            'add' => fof_install_create_reference_query(FOF_SUBSCRIPTION_TABLE, 'feed_id', array(FOF_FEED_TABLE, 'feed_id'))
+        ));
+
+    /* FOF_VIEW_STATE_TABLE */
+        fof_install_migrate_reference($queries, FOF_VIEW_STATE_TABLE, 'user_id', array(
+            'add' => fof_install_create_reference_query(FOF_VIEW_STATE_TABLE, 'user_id', array(FOF_USER_TABLE, 'user_id'))
+        ));
+
+        fof_install_migrate_reference($queries, FOF_VIEW_STATE_TABLE, 'feed_id', array(
+            'add' => fof_install_create_reference_query(FOF_VIEW_STATE_TABLE, 'feed_id', array(FOF_FEED_TABLE, 'feed_id'))
+        ));
+
+        fof_install_migrate_reference($queries, FOF_VIEW_STATE_TABLE, 'tag_id', array(
+            'add' =>fof_install_create_reference_query(FOF_VIEW_STATE_TABLE, 'tag_id', array(FOF_TAG_TABLE, 'tag_id'))
+        ));
+
+        fof_install_migrate_reference($queries, FOF_VIEW_STATE_TABLE, 'view_id', array(
+            'add' => fof_install_create_reference_query(FOF_VIEW_STATE_TABLE, 'view_id', array(FOF_VIEW_TABLE, 'view_id'))
+        ));
+
+        echo '<span>' . count($queries) . ' updates needed.</span>' . "\n";
+
+        $i = 1;
+        $j = count($queries);
+        foreach ($queries as $what => $query) {
+            echo '<div class="update">[' . $i++ . '/' . $j . '] Updating ' . $what . ': ';
+            $result = fof_db_exec($query);
+            if ($result) {
+                echo '<span class="pass">OK</span>';
+            } else {
+                echo '<span class="fail">FAIL</span>';
+            }
+            echo "</div>\n";
+        }
+
+    } catch (PDOException $e) {
+        echo "<span class='fail'>Cannot upgrade table: [<code>$query</code>] <pre>" . $e->GetMessage() . "</pre></span>\n";
+    }
 }
 
 /* install initial values into database */
