@@ -969,7 +969,7 @@ function fof_db_get_items($user_id=1, $feed=NULL, $what='unread', $when=NULL, $s
 
 function fof_db_get_item($user_id, $item_id)
 {
-    global $FOF_FEED_TABLE, $FOF_ITEM_TABLE, $FOF_ITEM_TAG_TABLE, $FOF_TAG_TABLE;
+    global $FOF_FEED_TABLE, $FOF_ITEM_TABLE, $FOF_SUBSCRIPTION_TABLE, $FOF_ITEM_TAG_TABLE, $FOF_TAG_TABLE;
     global $fof_connection;
     $item = array();
 
