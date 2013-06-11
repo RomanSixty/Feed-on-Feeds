@@ -875,11 +875,14 @@ function fof_db_get_items($user_id=1, $feed=NULL, $what='unread', $when=NULL, $s
     global $fof_connection;
     $all_items = array();
 
+    if ($order != 'asc' && $order != 'desc')
+        $order = 'desc';
+
     fof_trace();
 
     $prefs = fof_prefs();
 
-    $select = "SELECT i.*, f.*";
+    $select = "SELECT i.*, f.*, s.subscription_prefs";
 
     $from = " FROM $FOF_FEED_TABLE f, $FOF_ITEM_TABLE i, $FOF_SUBSCRIPTION_TABLE s";
     if ($what != 'all') {
@@ -916,7 +919,7 @@ function fof_db_get_items($user_id=1, $feed=NULL, $what='unread', $when=NULL, $s
         $where .= " AND (i.item_title LIKE $search_q OR i.item_content LIKE $search_q )";
     }
 
-    $order_by = " ORDER BY i.item_published DESC";
+    $order_by = " ORDER BY i.item_published " . strtoupper($order);
     if (is_numeric($start)) {
         $order_by .= " LIMIT " . $start . ", " . ((is_numeric($limit)) ? $limit : $prefs['howmany']);
     }
@@ -933,6 +936,7 @@ function fof_db_get_items($user_id=1, $feed=NULL, $what='unread', $when=NULL, $s
     $idx = 0;
     while ( ($row = fof_db_get_row($statement)) !== FALSE ) {
         fof_log(__FUNCTION__ . " collecting item_id:" . $row['item_id'] . " idx:$idx");
+        fof_db_subscription_feed_fix($row); /* feed prefs are included, so decode them */
         $item_ids_q[] = $fof_connection->quote($row['item_id']);
         $lookup[$row['item_id']] = $idx;
         $all_items[$idx] = $row;
@@ -971,9 +975,7 @@ function fof_db_get_item($user_id, $item_id)
 
     fof_trace();
 
-    $query = "SELECT i.*, " .
-                   " f.feed_title, f.feed_image, " .
-                   " f.feed_description, f.feed_link " .
+    $query = "SELECT i.*, f.*" .
             ($user_id ? ", s.subscription_prefs " : '') .
             " FROM $FOF_ITEM_TABLE i " .
             " JOIN $FOF_FEED_TABLE f ON i.feed_id = f.feed_id " .

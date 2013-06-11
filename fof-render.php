@@ -50,7 +50,6 @@ function fof_render_get_key_($array, $key, $default=NULL) {
 	return (empty($array[$key]) ? $default : $array[$key]);
 }
 
-/* FIXME: use display_* fields if set */
 function fof_render_item($item, $include_div=true)
 {
     global $fof_asset;
@@ -58,10 +57,10 @@ function fof_render_item($item, $include_div=true)
 	$feed_link = fof_render_get_key_($item, 'feed_link');
 	if ($feed_link == "[no link]")
 	    $feed_link = $item['feed_url'];
-	$feed_title = fof_render_get_key_($item, 'feed_title');
+	$feed_title = fof_render_get_key_($item, 'display_title');
 	if ($feed_title == "[no title]")
 	    $feed_title = $feed_link;
-	$feed_image = fof_render_get_key_($item, 'alt_image', fof_render_get_key_($item, 'feed_image'));
+	$feed_image = fof_render_get_key_($item, 'display_image', $fof_asset['feed_icon']);
 	$feed_description = fof_render_get_key_($item, 'feed_description');
 
 	$item_link = fof_render_get_key_($item, 'item_link');
