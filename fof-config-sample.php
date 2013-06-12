@@ -34,6 +34,7 @@ define('FOF_SUBSCRIPTION_TABLE', FOF_DB_PREFIX . "subscription");
 define('FOF_TAG_TABLE', FOF_DB_PREFIX . "tag");
 define('FOF_USER_TABLE', FOF_DB_PREFIX . "user");
 
+define('FOF_SMALL_FEED_AMOUNT',5);
 
 // Find ourselves and the cache dir
 
