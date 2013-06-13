@@ -451,7 +451,7 @@ function fof_get_feeds($user_id, $order = 'feed_title', $direction = 'asc')
     /* tally up all items */
     $result = fof_db_get_item_count($user_id);
     while ( ($row = fof_db_get_row($result)) !== false ) {
-        $i = $feeds_index[$row['id']];
+        $i = $feeds_index[$row['feed_id']];
         $feeds[$i]['feed_items'] += $row['count'];
         $feeds[$i]['feed_read'] += $row['count'];
     }
@@ -459,7 +459,7 @@ function fof_get_feeds($user_id, $order = 'feed_title', $direction = 'asc')
     /* tally up unread items */
     $result = fof_db_get_item_count($user_id, 'unread');
     while ( ($row = fof_db_get_row($result)) !== false ) {
-        $i = $feeds_index[$row['id']];
+        $i = $feeds_index[$row['feed_id']];
         $feeds[$i]['feed_unread'] += $row['count'];
         $feeds[$i]['feed_read'] -= $row['count'];
     }
@@ -467,21 +467,21 @@ function fof_get_feeds($user_id, $order = 'feed_title', $direction = 'asc')
     /* tally up starred items */
     $result = fof_db_get_item_count($user_id, 'starred');
     while ( ($row = fof_db_get_row($result)) !== false ) {
-        $i = $feeds_index[$row['id']];
+        $i = $feeds_index[$row['feed_id']];
         $feeds[$i]['feed_starred'] += $row['count'];
     }
 
     /* tally up tags which aren't system-tags */
     $result = fof_db_get_item_count($user_id, 'tagged');
     while ( ($row = fof_db_get_row($result)) !== false ) {
-        $i = $feeds_index[$row['id']];
+        $i = $feeds_index[$row['feed_id']];
         $feeds[$i]['feed_tagged'] += $row['count'];
     }
 
     /* find most recent item for each feed */
     $result = fof_db_get_latest_item_age($user_id);
     while ( ($row = fof_db_get_row($result)) !== false ) {
-        $i = $feeds_index[$row['id']];
+        $i = $feeds_index[$row['feed_id']];
         $feeds[$i]['max_date'] = $row['max_date'];
         list($feeds[$i]['lateststr'], $feeds[$i]['lateststrabbr']) = fof_nice_time_stamp($row['max_date']);
     }

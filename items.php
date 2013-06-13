@@ -59,9 +59,11 @@ if (empty($order)) {
 
 
 $itemcount = 0;
-$result = fof_db_get_item_count(fof_current_user(), $what, $feed, $search);
-while ($cnt = fof_db_get_row($result, 'count'))
-    $itemcount += $cnt;
+$statement = fof_db_get_item_count(fof_current_user(), $what, $feed, $search);
+while (($row = fof_db_get_row($statement)) !== false) {
+    // fof_log('feed:' . $row['feed_id'] . ' count:' . $row['count']);
+    $itemcount += $row['count'];
+}
 
 $title = fof_view_title($feed, $what, $when, $which, $howmany, $search, $itemcount);
 
