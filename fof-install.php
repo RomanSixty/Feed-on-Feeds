@@ -108,7 +108,7 @@ function fof_install_create_index_query($table_name, $index_name, $index_def) {
 
     if (defined('USE_MYSQL')) {
         str_replace('INDEX', 'KEY', $idx_type);
-        $query = "ALTER TABLE $table_name ADD KEY '$index_name' ($idx_val)";
+        $query = "ALTER TABLE $table_name ADD KEY $index_name ($idx_val)";
         return $query;
     }
     if (defined('USE_SQLITE')) {
@@ -559,7 +559,7 @@ BEGIN
     CALL constrain_null_xor(NEW.feed_id, NEW.tag_id, 'UPDATE', '" . FOF_VIEW_STATE_TABLE . "');
 END";
             } else {
-                echo '<div class="exists">' . FOF_VIEW_STATE_TABLE . 'before_update_trigger is up to date.</div>';
+                echo '<div class="exists">' . FOF_VIEW_STATE_TABLE . ' before_update_trigger is up to date.</div>' . "\n";
             }
         } /* USE_MYSQL */
 
@@ -670,8 +670,8 @@ END";
         foreach ($queries as $what => $query) {
             echo '<div class="update">[' . $i++ . '/' . $j . '] Updating ' . $what . ': ';
             $result = fof_db_exec($query);
-            if ($result) {
-                echo '<span class="pass">OK</span>';
+            if ($result !== false) {
+                echo '<span class="pass" title="' . $result . ' rows affected">OK</span>';
             } else {
                 echo '<span class="fail">FAIL</span>';
             }
