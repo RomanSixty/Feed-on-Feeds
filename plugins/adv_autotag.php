@@ -7,7 +7,7 @@ function fof_adv_autotag ( $link, $title, $content )
 	$tags = array();
 
     $prefs = fof_prefs();
-    $autotag = $prefs [ 'adv_autotag' ];
+    $autotag = empty($prefs['adv_autotag']) ? NULL : $prefs['adv_autotag'];
 
 	if ( $autotag )
 	{
@@ -98,6 +98,8 @@ function edit_prefs_adv_autotag ( $prefs )
 		</tr>';
 
 	$aa_prefs = $prefs -> get ( 'adv_autotag' );
+	if (empty($aa_prefs))
+	    $aa_prefs = array();
 
 	$count = 0;
 
@@ -105,23 +107,23 @@ function edit_prefs_adv_autotag ( $prefs )
 	{
 		echo '<tr>
 			<td>
-				<select name="aa_pref['.$count.'][what]">
+				<select name="aa_pref[' . $count . '][what]">
 					<option value="item_content"' . ($p['what'] == 'item_content' ? ' selected="selected"' : '') . '>Post Title or Content</option>
 					<option value="item_title"'   . ($p['what'] == 'item_title'   ? ' selected="selected"' : '') . '>Post Title</option>
 				</select>
 			</td>
 			<td>
-				<select name="aa_pref['.$count.'][op]">
+				<select name="aa_pref[' . $count . '][op]">
 					<option value="contains"' . ($p['op'] == 'contains' ? ' selected="selected"' : '') . '>contains</option>
 					<option value="is"'       . ($p['op'] == 'is'       ? ' selected="selected"' : '') . '>is</option>
 					<option value="regex"'    . ($p['op'] == 'regex'    ? ' selected="selected"' : '') . '>regex</option>
 				</select>
 			</td>
 			<td>
-				<input type="text" name="aa_pref['.$count.'][filter]" size="40" value="' . htmlspecialchars($p['filter']) . '" />
+				<input type="text" name="aa_pref[' . $count . '][filter]" size="40" value="' . htmlspecialchars($p['filter']) . '" />
 			</td>
 			<td>
-				<input type="text" name="aa_pref['.$count.'][tag]" value="' . htmlspecialchars($p['tag']) . '" />
+				<input type="text" name="aa_pref[' . $count . '][tag]" value="' . htmlspecialchars($p['tag']) . '" />
 			</td>
 		</tr>';
 
@@ -130,23 +132,23 @@ function edit_prefs_adv_autotag ( $prefs )
 
 	echo '<tr>
 			<td>
-				<select name="aa_pref[<?php echo $count; ?>][what]">
+				<select name="aa_pref[' . $count . '][what]">
 					<option value="item_content">Post Title or Content</option>
 					<option value="item_title">Post Title</option>
 				</select>
 			</td>
 			<td>
-				<select name="aa_pref[<?php echo $count; ?>][op]">
+				<select name="aa_pref[' . $count . '][op]">
 					<option value="contains">contains</option>
 					<option value="is">is</option>
 					<option value="regex">regex</option>
 				</select>
 			</td>
 			<td>
-				<input type="text" name="aa_pref[<?php echo $count; ?>][filter]" size="40" value="" />
+				<input type="text" name="aa_pref[' . $count . '][filter]" size="40" value="" />
 			</td>
 			<td>
-				<input type="text" name="aa_pref[<?php echo $count; ?>][tag]" value="" />
+				<input type="text" name="aa_pref[' . $count . '][tag]" value="" />
 			</td>
 		</tr>
 	</table>

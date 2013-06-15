@@ -12,356 +12,356 @@
  *
  */
 
-include_once("fof-main.php");
+include_once('fof-main.php');
 
 fof_set_content_type();
 
-?>
-<img id="throbber" src="image/throbber.gif" align="left" style="position: fixed; left: 0; top: 0; display: none;">
+/* quell warnings */
+function fof_sidebar_get_key_($array, $key, $default=NULL) {
+    if ( ! empty($array[$key]))
+        return $array[$key];
+    return $default;
+}
 
-<center id="welcome">Welcome <b><?php echo $fof_user_name ?></b>! <a href="prefs.php">prefs</a> | <a href="logout.php">log out</a> | <a href="http://feedonfeeds.com/">about</a></center>
-<br>
-<center><a href="add.php"><b>Add Feeds</b></a> / <a href="update.php"><b>Update Feeds</b></a></center>
+$sidebar_style = $fof_prefs_obj->get('sidebar_style');
+/* honor old pref, if user hasn't saved new-style yet */
+if (empty($sidebar_style) && $fof_prefs_obj->get('simple_sidebar'))
+    $sidebar_style = 'simple';
+
+?>
+<img id="throbber" src="<?php echo $fof_asset['throbber_image']; ?>" align="left" style="display: none;" />
+<?php
+$welcomecontent = '<span>Welcome, <span class="userid">' . $fof_user_name . '</span>!</span>';
+$welcomecontent .= ' | <a href="prefs.php">prefs</a>';
+if ( ! defined('FOF_AUTH_EXTERNAL'))
+    $welcomecontent .= ' | <a href="logout.php">log out</a>';
+$welcomecontent .= ' | <a href="http://feedonfeeds.com/">about</a>';
+
+echo '<div id="welcome" class="banner ontop">' . $welcomecontent . "</div>\n";
+echo '<div id="welcome-spacer" class="banner">' . $welcomecontent . "</div>\n";
+echo '<br class="clearer">' . "\n";
+echo '<div id="feed-actions"><a href="add.php"><b>Add Feeds</b></a> / ';
+if ($sidebar_style == 'fancy')
+    echo '<a href="#" title="Update all subscribed feeds" onclick="' . htmlentities('throb(); new Ajax.Request("feed-action.php", {method:"post", parameters:{"update_subscribed_sources": true}});', ENT_QUOTES) . '"><b>Update Feeds</b></a>';
+else
+    echo '<a href="update.php"><b>Update Feeds</b></a>';
+echo '</div>' . "\n";
+?>
 
 <ul id="nav">
-
 <?php
 
 $order = $fof_prefs_obj->get('feed_order');
 $direction = $fof_prefs_obj->get('feed_direction');
 $sharing = $fof_prefs_obj->get('sharing');
 
-if(!isset($_GET['what']))
-{
-    $what = "unread";
-}
-else
-{
-    $what = $_GET['what'];
-}
-
-$when = $_GET['when'];
-
-$search = $_GET['search'];
-
-echo "<script>what='$what'; when='$when';</script>";
-
+/* these parameters control highlighting of the active view */
+$what = fof_sidebar_get_key_($_GET, 'what', 'unread');
+$what_a = explode(' ', $what);
+$when = fof_sidebar_get_key_($_GET, 'when');
+$search = fof_sidebar_get_key_($_GET, 'search');
+$feed = fof_sidebar_get_key_($_GET, 'feed');
 
 $feeds = fof_get_feeds(fof_current_user(), $order, $direction);
 
-foreach($feeds as $row)
-{
-    $n++;
-    $unread += $row['feed_unread'];
-    $starred += $row['feed_starred'];
-    $total += $row['feed_items'];
-}
-
-if($unread)
-{
-    echo "<script>document.title = 'Feed on Feeds ($unread)';</script>";
-}
-else
-{
-    echo "<script>document.title = 'Feed on Feeds';</script>";
-}
-
-echo "<script>starred = $starred;</script>";
-
-?>
-
-<li <?php if($what == "unread") echo "style='background: #ddd'" ?> ><a href=".?what=unread&how=paged"><font color=red><b>Unread <?php if($unread) echo "($unread)" ?></b></font></a> [<a href=".?what=unread">unpaged</a>]</li>
-<li <?php if($what == "star") echo "style='background: #ddd'" ?> ><a href=".?what=star&how=paged"><img src="image/star-on.gif" border="0" height="10" width="10"> Starred <span id="starredcount"><?php if($starred) echo "($starred)" ?></span></a> [<a href=".?what=star">unpaged</a>]</li>
-<li <?php if($what == "all" && isset($when)) echo "style='background: #ddd'" ?> ><a href=".?what=all&when=today">&lt; Today</a></li>
-<li <?php if($what == "all" && !isset($when)) echo "style='background: #ddd'" ?> ><a href=".?what=all&how=paged">All Items <?php if($total) echo "($total)" ?></a></li>
-<li <?php if(isset($search)) echo "style='background: #ddd'" ?> ><a href="javascript:Element.toggle('search'); Field.focus('searchfield');void(0);">Search</a>
-<form action="." id="search" <?php if(!isset($search)) echo 'style="display: none"' ?>>
-<input type="hidden" name="how" value="paged">
-<input id="searchfield" name="search" value="<?php echo $search?>">
-<?php
-	if($what == "unread" || empty ($what))
-		echo "<input type='hidden' name='what' value='all'>";
-	else
-		echo "<input type='hidden' name='what' value='$what'>";
-?>
-<?php if(!empty($_GET['when'])) echo "<input type='hidden' name='what' value='${_GET['when']}'>" ?>
-</form>
-</li>
-</ul>
-
-<?php
-
-$tags = fof_get_tags(fof_current_user());
-
+$unread = 0;
+$starred = 0;
+$total = 0;
 $n = 0;
-
-foreach($tags as $tag)
-{
-    $tag_id = $tag['tag_id'];
-    if($tag_id == 1 || $tag_id == 2) continue;
+foreach ($feeds as $row) {
     $n++;
+    $unread += fof_sidebar_get_key_($row, 'feed_unread', 0);
+    $starred += fof_sidebar_get_key_($row, 'feed_starred', 0);
+    $total += fof_sidebar_get_key_($row, 'feed_items', 0);
 }
 
-if($n)
-{
+$page_title_js = 'Feed on Feeds';
+if ( ! empty($unread)) {
+    $page_title_js .= " ($unread)";
+}
 ?>
-
-<div id="tags">
-
-<table cellspacing="0" cellpadding="1" border="0" id="taglist">
-
-<tr class="heading">
-<td><span class="unread">#</span></td><td>tag name</td><td>untag</td>
-<?php if ($sharing == 'all_tagged') { ?><td>shared page</td><?php } ?>
-
-</tr>
+  <script>
+    document.title=<?php echo json_encode($page_title_js); ?>;
+    what=<?php echo json_encode($what); ?>;
+    when=<?php echo json_encode($when); ?>;
+    search=<?php echo json_encode($search); ?>;
+    feed=<?php echo json_encode($feed); ?>;
+    starred=<?php echo json_encode($starred); ?>;
+  </script>
 
 <?php
-foreach($tags as $tag)
-{
-   $tag_name = $tag['tag_name'];
-   $tag_id = $tag['tag_id'];
-   $count = $tag['count'];
-   $unread = $tag['unread'];
+    echo '  <li' . (empty($feed) && $what == 'unread' ? " class='current-view'" : '') . '>';
+    echo '<a href="' . fof_url('.', array('what'=>'unread', 'how'=>'paged')) . '"><span style="color:red"><b>Unread' . ($unread ? " ($unread)" : '') . '</b></span></a>';
+    echo ' [<a href="' . fof_url('.', array('what'=>'unread', 'how'=>'unpaged')) . '">unpaged</a>]';
+    echo "</li>\n";
 
-   if($tag_id == 1 || $tag_id == 2 || $tag_name == "folded") continue;
+    echo '  <li' . (empty($feed) && $what == 'star' ? " class='current-view'" : '') . '>';
+    echo '<a href="' . fof_url('.', array('what'=>'star', 'how'=>'paged')). '"><img class="star-icon-small" src="' . $fof_asset['star_on_image'] . '" /> Starred <span id="starredcount">' . ($starred ? "($starred)" : '') . '</span></a>';
+    echo ' [<a href="' . fof_url('.', array('what'=>'star', 'how'=>'unpaged')). '">unpaged</a>]';
+    echo "</li>\n";
 
-   if(++$t % 2)
-   {
-      print "<tr class=\"odd-row\">";
-   }
-   else
-   {
-      print "<tr>";
-   }
+    echo '  <li' . (empty($feed) && $what == 'all' && isset($when) ? " class='current-view'" : '') . '>';
+    echo '<a href="' . fof_url('.', array('what'=>'all', 'when'=>'today')). '">&lt; Today</a>';
+    echo "</li>\n";
 
-   print "<td>";
-   if($unread) print "<a class='unread' href='.?what=$tag_name+unread&how=paged'>$unread</a>/";
-   print "<a href='.?what=$tag_name&how=paged'>$count</a></td>";
-   print "<td><b><a href='.?what=$tag_name&how=paged'>$tag_name</a></b></td>";
-   print "<td><a href=\"#\" title=\"untag all items\" onclick=\"if(confirm('Untag all [$tag_name] items --are you SURE?')) { delete_tag('$tag_name'); return false; }  else { return false; }\">[x]</a></td>";
+    echo '  <li' . (empty($feed) && $what == 'all' && empty($when) ? " class='current-view'" : '') . '>';
+    echo '<a href="' . fof_url('.', array('what'=>'all', 'how'=>'paged')) . '">All Items' . ($total ? "($total)" : '') . "</a>";
+    echo "</li>\n";
 
-   if ($sharing == 'all_tagged')
-   {
-      print "<td><a href=\"./shared.php?user=$fof_user_id&which=$tag_name&how=paged\">[$tag_name]</a>";
-   }
-
-   print "</tr>";
-}
-
-
+    echo '  <li' . ( ! empty($search) ? ' class="current-view"' : '') . '>';
+    echo '<a href="#" onclick="$(\'search\').toggle();$(\'searchfield\').focus();return false;">Search</a>' . "\n";
+    echo '    <form action="." id="search"' . (empty($search) ? ' style="display:none"' : '') . ">\n";
+    echo '      <input type="hidden" name="how" value="paged">' . "\n";
+    echo '      <input type="hidden" name="what" value="' . (empty($what) || $what == 'unread' ? 'all' : htmlentities($what, ENT_QUOTES)) . "\">\n";
+    if ( ! empty($when))
+        echo '      <input type="hidden" name="when" value="' . htmlentities($when, ENT_QUOTES) . "\">\n";
+    echo '      <input id="searchfield" name="search" value="' . htmlentities($search, ENT_QUOTES) . "\">\n";
+    echo "    </form>\n";
+    echo "  </li>\n";
 ?>
-
-</table>
-
-</div>
-
-<br>
-
-<?php } ?>
-
-
-<div id="feeds">
-
-<div id="feedlist">
-
-<table cellspacing="0" cellpadding="1" border="0">
-
-<tr class="heading">
+</ul>
+<!--nav end-->
 
 <?php
+function fof_sidebar_tags_fancy() {
+    global $fof_asset;
+    global $sharing;
+    global $what_a;
 
-$title["feed_age"] = "sort by last update time";
-$title["max_date"] = "sort by last new item";
-$title["feed_unread"] = "sort by number of unread items";
-$title["feed_url"] = "sort by feed URL";
-$title["feed_title"] = "sort by feed title";
+    $taglines = array();
+    $n = 0;
+    foreach (fof_get_tags(fof_current_user()) as $tag) {
+        if (in_array($tag['tag_name'], array('unread', 'star', 'folded')))
+            continue;
 
-$name["feed_age"] = "age";
-$name["max_date"] = "latest";
-$name["feed_unread"] = "#";
-$name["feed_url"] = "feed";
-$name["feed_title"] = "title";
+        $tag_name_html = htmlentities($tag['tag_name']);
+        $tag_name_json = htmlentities(json_encode($tag['tag_name']), ENT_QUOTES);
 
-$simple_sidebar = $fof_prefs_obj->get('simple_sidebar');
+        $tag_view_unread_url = fof_url('.', array('what'=>implode(' ', array($tag['tag_name'], 'unread')), 'how'=>'paged'));
+        $tag_view_all_url = fof_url('.', array('what'=>$tag['tag_name'], 'how'=>'paged'));
 
-if($simple_sidebar)
-{
-    $columns = array("feed_unread", "feed_title");
+        $tagline = '	<tr class="tag' . (++$n % 2 ? ' odd-row' : '') . (in_array($tag['tag_name'], $what_a) ? ' current-view' : '') . '" id="tagid_' . $tag['tag_id']. '">';
+
+        $tagline .= '<td class="source"><img src="' . ( empty($tag['tag_icon']) ? $fof_asset['tag_icon'] : $tag['tag_icon']) . '" class="feed-icon" /></td>';
+        $tagline .= '<td class="latest"></td>';
+
+        $tagline .= '<td class="unread"><span class="unread">';
+        if ($tag['unread'])
+            $tagline .= '<a class="unread" href="' . $tag_view_unread_url . '" title="' . $tag['unread'] . ' unread items">' . $tag['unread'] . '</a>';
+        $tagline .= '</span></td>';
+
+        $tagline .= '<td class="title"><a href="' . ($tag['unread'] ? $tag_view_unread_url : $tag_view_all_url) . '" title="' . ($tag['unread'] ? ($tag['unread'] . ' new of ') : '') . $tag['count'] . ' total items">' . $tag['tag_name'] . '</a></td>';
+
+        $tagline .= '<td class="controls">';
+        $tagline .= '<ul class="feedmenu"><li>';
+        $tagline .= '<a href="#" title="tag controls">&Delta;</a>';
+        $tagline .=   '<ul>';
+        $tagline .=     '<li><a href="' . $tag_view_all_url . '" title="' . $tag['count'] . ' total items">View all items</a></li>';
+        $tagline .=     '<li><a href="#" title="update all source feeds" onclick="return sb_update_tag_sources(' . $tag_name_json . ');">Update contributing feeds</a></li>';
+        $tagline .=     '<li><a href="#" title="mark all read" onclick="return sb_mark_tag_read(' . $tag_name_json . ')">Mark all items as read</a></li>';
+        $tagline .=     '<li><a href="#" title="untag all items" onclick="return sb_del_tag_conf(' . $tag_name_json . ');">Delete tag from all items</a></li>';
+        $tagline .=   '</ul>';
+        $tagline .= '</li></ul>';
+        $tagline .= '</td>';
+
+        if ($sharing == 'all_tagged')
+            $tagline .= '<td class="sharing"><a href="' . fof_url('./shared.php', array('user'=>fof_current_user(), 'which'=>$tag_name_html, 'how'=>'paged')) . '">' . $tag['tag_name'] . '</a></td>';
+
+        $tagline .= '</tr>';
+
+        $taglines[] = $tagline;
+    }
+
+    /* headers */
+    if ( ! empty($taglines)) {
+        echo "<div id=\"tags\">\n";
+        echo "<table cellspacing=\"0\" cellpadding=\"1\" border=\"0\" class=\"taglist\">\n";
+        echo "<thead>\n";
+        echo '	<tr class="heading">';
+        echo '<th class="source"></th>';
+        echo '<th class="latest" style="visibility:hidden;">latest&darr;</th>';
+        echo '<th class="unread"><span class="unread">#</span></th>';
+        echo '<th class="title">tag name</th>';
+        echo '<th class="controls"><span></span></th>';
+        if ($sharing == 'all_tagged')
+            echo '<th class="sharing">shared page</th>';
+        echo "</tr>\n";
+        echo "</thead>\n";
+        echo "<tbody>\n";
+        echo implode("\n", $taglines);
+        echo "\n</tbody>\n</table>\n</div>\n<!--tags end-->\n<br>\n\n";
+    }
 }
+
+function fof_sidebar_tags_default() {
+    global $sharing;
+    global $what_a;
+
+    $unread_id = fof_db_get_tag_by_name('unread');
+    $star_id = fof_db_get_tag_by_name('star');
+    $folded_id = fof_db_get_tag_by_name('folded');
+
+    $tags = fof_get_tags(fof_current_user());
+    $taglines = array();
+    $n = 0;
+    foreach ($tags as $tag) {
+        $tag_id = $tag['tag_id'];
+        if ($tag_id == $unread_id
+        ||  $tag_id == $star_id
+        ||  $tag_id == $folded_id)
+            continue;
+
+        $tagline = '';
+
+        $tag_name = $tag['tag_name'];
+        $tag_name_html = htmlentities($tag_name);
+        $tag_name_json = htmlentities(json_encode($tag_name), ENT_QUOTES);
+
+        $count = $tag['count'];
+        $unread = $tag['unread'];
+
+        $tag_classes = array();
+        if (++$n % 2)
+            $tag_classes[] = 'odd-row';
+        if (in_array($tag_name, $what_a))
+            $tag_classes[] = 'current-view';
+        $tag_classes = implode(' ', $tag_classes);
+        if ( ! empty($tag_classes))
+            $tag_classes = ' class="' . $tag_classes . '"';
+
+        $tagline .= '    <tr' . $tag_classes . '>';
+
+        $tagline .= '<td class="unread">';
+        if ($unread)
+            $tagline .= '<a class="unread" href="' . fof_url('.', array('what' => "$tag_name unread", 'how' => 'paged')) . "\">$unread</a>/";
+        $tagline .= '<a href="' . fof_url('.', array('what' => $tag_name, 'how' => 'paged')) . "\">$count</a>";
+        $tagline .= '</td>';
+
+        $tagline .= '<td class="title"><b><a href="' . fof_url('.', array('what' => $tag_name, 'how' => 'paged')). '">' . $tag_name_html . '</a></b></td>';
+
+        $tagline .= '<td class="controls"><a href="#" title="untag all items" onclick="return sb_del_tag_conf(' . $tag_name_json . ');">[x]</a></td>';
+
+        if ($sharing == 'all_tagged')
+            $tagline .= '<td class="sharing"><a href="' . fof_url('./shared.php', array('user' => $fof_user_id, 'which' => $tag_name, 'how' => 'paged')) . '">[' . $tag_name_html . ']</a>';
+
+        $tagline .= '</tr>';
+
+        $taglines[] = $tagline;
+    }
+
+    if ( ! empty($taglines)) { ?>
+    <div id="tags">
+      <table cellspacing="0" cellpadding="1" border="0" id="taglist">
+        <tr class="heading"><td><span class="unread">#</span></td><td class="title">tag name</td><td class="controls">untag</td><?php if ($sharing == 'all_tagged') echo '<td class="sharing">shared page</td>'; ?></tr>
+    <?php
+        echo implode("\n", $taglines);
+    ?>
+      </table>
+    </div>
+    <!--tags end-->
+    <?php
+    }
+    ?>
+    <br>
+
+<?php
+}
+
+if (function_exists('fof_sidebar_tags_' . $sidebar_style))
+    call_user_func('fof_sidebar_tags_' . $sidebar_style);
 else
-{
-    $columns = array("feed_age", "max_date", "feed_unread", "feed_url", "feed_title");
-}
+    fof_sidebar_tags_default();
 
-foreach ($columns as $col)
-{
-    if($col == $order)
-    {
-        $url = "return change_feed_order('$col', '" . ($direction == "asc" ? "desc" : "asc") . "')";
-    }
-    else
-    {
-        $url = "return change_feed_order('$col', 'asc')";
-    }
-
-    echo "<td";
-
-    if($col == "feed_unread")
-        echo " style=\"text-align: right\"";
-
-    echo "><nobr><a href='#' title='$title[$col]' onclick=\"$url\">";
-
-    if($col == "feed_unread")
-    {
-        echo "<span class=\"unread\">#</span>";
-    }
-    else
-    {
-        echo $name[$col];
-    }
-
-    if($col == $order)
-    {
-        echo ($direction == "asc") ? "&darr;" : "&uarr;";
-    }
-
-    echo "</a></nobr></td>";
-}
 
 ?>
-
-<td></td>
-</tr>
-
+<div id="feeds">
+  <table cellspacing="0" cellpadding="1" border="0">
+    <thead>
+      <tr class="heading">
 <?php
 
-foreach($feeds as $row)
-{
-   $id = $row['feed_id'];
-   $url = $row['feed_url'];
-   $title = $row['feed_title'];
-   $image = $row['feed_image'];
-   $link = $row['feed_link'];
-   $description = $row['feed_description'];
-   $age = $row['feed_age'];
-   $unread = $row['feed_unread'];
-   $starred = $row['feed_starred'];
-   $tagged = $row['feed_tagged'];
-   $items = $row['feed_items'];
-   $agestr = $row['agestr'];
-   $agestrabbr = $row['agestrabbr'];
-   $lateststr = $row['lateststr'];
-   $lateststrabbr = $row['lateststrabbr'];
+/* all possible columns */
+$title = array('feed_age' => 'sort by last update time',
+               'max_date' => 'sort by last new item',
+               'feed_unread' => 'sort by number of unread items',
+               'feed_url' => 'sort by feed URL',
+               'feed_title' => 'sort by feed title',
+               'null' => ''
+              );
 
+$name = array('feed_age' => 'age',
+              'max_date' => 'latest',
+              'feed_unread' => '<span class="unread">#</span>',
+              'feed_url' => 'feed',
+              'feed_title' => 'title',
+              'null' => ''
+             );
 
-   if(++$t % 2)
-   {
-      print "<tr class=\"odd-row\">";
-   }
-   else
-   {
-      print "<tr>";
-   }
+$column_class = array('feed_age' => 'update',
+                      'max_date' => 'latest',
+                      'feed_unread' => 'unread',
+                      'feed_url' => 'source',
+                      'feed_title' => 'title'
+                     );
 
-   $u = ".?feed=$id&amp;how=paged";
-   $u2 = ".?feed=$id&amp;what=all&amp;how=paged";
+switch ($sidebar_style) {
+    case 'simple':
+        $columns = array('feed_url', 'feed_unread', 'feed_title');
+        break;
 
-   if($simple_sidebar)
-   {
-      print "<td align='center'>";
-      if($image && $fof_prefs_obj->get('favicons'))
-      {
-         print "<a href=\"$url\" title=\"feed\"><img src='" . $image . "' width='16' height='16' border='0' /></a>";
-      }
-      else
-      {
-         print "<a href=\"$url\" title=\"feed\"><img src='image/feed-icon.png' width='16' height='16' border='0' /></a>";
-      }
-      print "</td>";
-      print '<td>';
-      if($unread)
-      {
-        print "<a href=\"$u\">$title</a> ($unread)";
-      }
-      else
-      {
-        print "<a href=\"$u2\">$title</a>";
-      }
-      print '</td>';
+    case 'fancy':
+        $columns = array('null', 'max_date', 'feed_unread', 'feed_title');
+        break;
 
-      $stitle = htmlspecialchars(addslashes($title));
-      print '<td>';
-      print " <a href=\"delete.php?feed=$id\" title=\"delete\" onclick=\"return confirm('Unsubscribe [$stitle] --are you SURE?')\">[x]</a>";
-      print '</td>';
-   }
-   else
-   {
-      print "<td style=\"text-align: right\"><span title=\"$agestr\" id=\"${id}-agestr\">$agestrabbr</span></td>";
-
-      print "<td style=\"text-align: right\"><span title=\"$lateststr\" id=\"${id}-lateststr\">$lateststrabbr</span></td>";
-
-      print "<td style=\"text-align: right\" class=\"nowrap\" id=\"${id}-items\">";
-
-      if($unread)
-      {
-         print "<a class=\"unread\" title=\"new items\" href=\"$u\">$unread</a>/";
-      }
-
-      print "<a href=\"$u2\" title=\"all items, $starred starred, $tagged tagged\">$items</a>";
-
-      print "</td>";
-
-      print "<td align='center'>";
-      if($image && $fof_prefs_obj->get('favicons'))
-      {
-         print "<a href=\"$url\" title=\"feed\"><img src='" . $image . "' width='16' height='16' border='0' /></a>";
-      }
-      else
-      {
-         print "<a href=\"$url\" title=\"feed\"><img src='image/feed-icon.png' width='16' height='16' border='0' /></a>";
-      }
-      print "</td>";
-
-      print "<td>";
-      print "<a href=\"$link\" title=\"home page\"><b>$title</b></a></td>";
-
-      print "<td><nobr>";
-
-      print "<a href=\"update.php?feed=$id\" title=\"update\">u</a>";
-      $stitle = htmlspecialchars(addslashes($title));
-      print " <a href=\"#\" title=\"mark all read\" onclick=\"if(confirm('Mark all [$stitle] items as read --are you SURE?')) { mark_feed_read($id); return false; }  else { return false; }\">m</a>";
-      print " <a href=\"delete.php?feed=$id\" title=\"delete\" onclick=\"return confirm('Unsubscribe [$stitle] --are you SURE?')\">d</a>";
-   }
-
-   print "</nobr></td>";
-
-   print "</tr>";
+    default:
+        $columns = array('feed_age', 'max_date', 'feed_unread', 'feed_url', 'feed_title');
 }
 
+foreach ($columns as $col) {
+    if ($col == $order)
+        $feed_order_toggle = $direction == 'asc' ? 'desc' : 'asc';
+    else
+        $feed_order_toggle = 'asc';
+    $onclick = "return change_feed_order('$col', '$feed_order_toggle')";
+
+    echo '		<th';
+    if ( ! empty($column_class[$col])) {
+        echo ' class="' . $column_class[$col] . '"';
+    }
+    echo '>';
+
+    echo '<span class="nowrap"><a href="#" title="' . $title[$col] . '" onclick="' . $onclick . '">';
+    echo $name[$col];
+
+    if ($col == $order)
+        echo $direction == 'asc' ? '&darr;' : '&uarr;';
+
+    echo "</a></span></th>\n";
+}
 ?>
-
-</table>
-
-</div>
-
-</div>
-
-
+        <th class="controls"></th>
+      </tr>
+    </thead>
+    <tbody>
 <?php
 
-$order = $_GET['order'];
-$direction = $_GET['direction'];
-
-if(!isset($order))
-{
-   $order = "title";
-}
-
-if(!isset($direction))
-{
-   $direction = "asc";
+$what_id = array_map('fof_db_get_tag_by_name', $what_a);
+$t = 0;
+foreach ($feeds as $row) {
+    $view_contrib = array_intersect($what_id, $row['subscription_prefs']['tags']);
+    $view_feed = (! empty($_GET['feed']) && $_GET['feed'] == $row['feed_id']);
+    echo '<tr id="f' . $row['feed_id'] . '" class="feed' . (++$t % 2 ? ' odd-row' : '') . ((count($view_contrib) || $view_feed) ? ' current-view' : '') . "\">\n";
+    echo fof_render_feed_row($row);
+    echo "</tr>\n";
 }
 
 ?>
-
+    </tbody>
+  </table>
+</div>
+<!--sidebar end-->
+<?php
+    /* ??? */
+    $order = fof_sidebar_get_key_($_GET, 'order', 'title');
+    $direction = fof_sidebar_get_key_($_GET, 'direction', 'asc');
+?>
