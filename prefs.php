@@ -56,7 +56,9 @@ if(isset($_POST['changed']))
     $title = $_POST['title'];
     $alt_image = $_POST['alt_image'];
 
-    fof_db_feed_update_prefs($feed_id, $title, $alt_image);
+    fof_db_subscription_title_set(fof_current_user(), $feed_id, $title);
+    fof_db_subscription_image_set(fof_current_user(), $feed_id, $alt_image);
+
     $feed = fof_db_get_feed_by_id($feed_id);
     $message .= " Updated feed settings of '" . $feed['feed_title'] . "'.";
 }
@@ -318,24 +320,25 @@ foreach ( $plugins as $plugin )
 <div style="border: 1px solid black; margin: 10px; padding: 10px; font-size: 12px; font-family: verdana, arial;">
 <table cellpadding="3" cellspacing="0">
 <?php
+/* reuse $feeds from sidebar.php */
 foreach($feeds as $row)
 {
     $id = $row['feed_id'];
     $anchor = 'feed_row_' . $id;
 
     $url = $row['feed_url'];
-    $title = htmlentities(fof_prefs_get_key_($row, 'feed_title'), ENT_QUOTES);
-    $alt_image = htmlentities(fof_prefs_get_key_($row, 'alt_image'), ENT_QUOTES);
-    $description = fof_prefs_get_key_($row, 'feed_description');
-    $tags = fof_prefs_get_key_($row, 'tags', array());
+    $title = htmlentities($row['display_title'], ENT_QUOTES);
+    $alt_image = htmlentities($row['alt_image'], ENT_QUOTES);
+    $description = $row['feed_description'];
+    $tags = $row['tags'];
 
     echo '<tr' . (++$t % 2 ? ' class="odd-row"' : '') . ">\n";
 
-    if ($prefs->get('favicons')) {
-        $feed_image = fof_prefs_get_key_($row, 'feed_image', 'image/feed-icon.png');
-    } else {
+    if ($prefs->get('favicons'))
+        $feed_image = $row['display_image'];
+    if (empty($feed_image))
         $feed_image = 'image/feed-icon.png';
-    }
+
     echo "  <td><a href=\"$url\" title=\"feed\" name=\"$anchor\"><img src='$feed_image' width='16' height='16' border='0' /></a></td>";
 
     echo "  <td>

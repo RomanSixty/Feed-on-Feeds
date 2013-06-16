@@ -57,10 +57,10 @@ function fof_render_item($item, $include_div=true)
 	$feed_link = fof_render_get_key_($item, 'feed_link');
 	if ($feed_link == "[no link]")
 	    $feed_link = $item['feed_url'];
-	$feed_title = fof_render_get_key_($item, 'feed_title');
+	$feed_title = fof_render_get_key_($item, 'display_title');
 	if ($feed_title == "[no title]")
 	    $feed_title = $feed_link;
-	$feed_image = fof_render_get_key_($item, 'alt_image', fof_render_get_key_($item, 'feed_image'));
+	$feed_image = fof_render_get_key_($item, 'display_image', $fof_asset['feed_icon']);
 	$feed_description = fof_render_get_key_($item, 'feed_description');
 
 	$item_link = fof_render_get_key_($item, 'item_link');
@@ -97,8 +97,8 @@ function fof_render_item($item, $include_div=true)
 
 <div class="header">
 	<span class="controls">
-		<a class="uparrow" href="javascript:hide_body('<?php echo $item_id ?>')">fold &uarr;</a>
-		<a class="downarrow" href="javascript:show_body('<?php echo $item_id ?>')">unfold &darr;</a>
+		<a class="uparrow" href="#" onclick="hide_body('<?php echo $item_id ?>');return false;">fold &uarr;</a>
+		<a class="downarrow" href="#" onclick="show_body('<?php echo $item_id ?>');return false;">unfold &darr;</a>
 		<a href="#" onclick="ajax_mark_read('<?php echo $item_id ?>'); return false;">mark read</a>
 	</span>
 	<h1 <?php if($unread) echo "class='unread-item'" ?>>

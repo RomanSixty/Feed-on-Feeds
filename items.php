@@ -15,8 +15,18 @@
 include_once('fof-main.php');
 include_once('fof-render.php');
 
+$feed = (isset($_GET['feed'])) ? $_GET['feed'] : NULL;
 $what = (isset($_GET['what'])) ? $_GET['what'] : NULL;
+$when = (isset($_GET['when'])) ? $_GET['when'] : NULL;
 $how = (isset($_GET['how'])) ? $_GET['how'] : NULL;
+$howmany = (isset($_GET['howmany'])) ? $_GET['howmany'] : NULL;
+$search = (isset($_GET['search'])) ? $_GET['search'] : NULL;
+$order = (isset($_GET['order'])) ? $_GET['order'] : NULL;
+
+/* ignore invalid orderings */
+if ( ! in_array($order, array('asc', 'desc'))) {
+    $order = NULL;
+}
 
 /* default to viewing unread items */
 if (empty($what)) {
@@ -31,20 +41,29 @@ $which = (isset($_GET['which'])) ? $_GET['which'] : NULL;
 if (isset($how) && $how == 'paged' && ! isset($which)) {
     $which = 0;
 }
-$order = (isset($_GET['order'])) ? $_GET['order'] : $fof_prefs_obj->get('order');
-if ($order != 'desc' && $order != 'asc')
-    $order = 'desc';
 
-$feed = (isset($_GET['feed'])) ? $_GET['feed'] : NULL;
-$when = (isset($_GET['when'])) ? $_GET['when'] : NULL;
-$howmany = (isset($_GET['howmany'])) ? $_GET['howmany'] : NULL;
-$search = (isset($_GET['search'])) ? $_GET['search'] : NULL;
-$noedit = (isset($_GET['noedit'])) ? $_GET['noedit'] : NULL;
+/*  Sort items as specified in url parameters, or view settings,
+    or as per user preferences, or descending if something is really amiss.
+ */
+$view_settings = fof_db_view_settings_get(fof_current_user(), fof_db_get_tag_name_map(explode(' ', $what)), $feed);
+if (empty($order)) {
+    if ( ! empty($view_settings['order'])) {
+        $order = $view_settings['order'];
+    } else {
+        $order = $fof_prefs_obj->get('order');
+    }
+}
+if (empty($order)) {
+    $order = 'desc';
+}
+
 
 $itemcount = 0;
-$result = fof_db_get_item_count(fof_current_user(), $what, $feed, $search);
-while ($cnt = fof_db_get_row($result, 'count'))
-    $itemcount += $cnt;
+$statement = fof_db_get_item_count(fof_current_user(), $what, $feed, $search);
+while (($row = fof_db_get_row($statement)) !== false) {
+    // fof_log('feed:' . $row['feed_id'] . ' count:' . $row['count']);
+    $itemcount += $row['count'];
+}
 
 $title = fof_view_title($feed, $what, $when, $which, $howmany, $search, $itemcount);
 
@@ -55,11 +74,37 @@ $title = fof_view_title($feed, $what, $when, $which, $howmany, $search, $itemcou
 <?php
     $item_controls = '';
 
+    /* the current view settings */
     $qv = array('feed' => $feed,
                 'what' => $what,
                 'when' => $when,
                 'how' => $how,
-                'howmany' => $howmany);
+                'howmany' => $howmany,
+                'search' => $search);
+
+    $set_view_button = '&hearts;';
+    $item_controls .= '	<li id="view-settings-button">';
+    if (! empty($search)) {
+        $item_controls .= '<span class="unavailable" title="Sorry, collections of items which involve search terms cannot currently store custom orderings.">';
+        $item_controls .= $set_view_button;
+        $item_controls .= '</span>';
+    } else if ( ! empty($view_settings['order']) && $view_settings['order'] == $order ) {
+        $item_controls .= '<span class="custom" title="The current sort order is already remembered for this collection of items.">';
+        $item_controls .= $set_view_button;
+        $item_controls .= '</span>';
+    } else if ($order == $fof_prefs_obj->get('order') && empty($view_settings['order'])) {
+        $item_controls .= '<span class="default" title="Your default sort order is already being used for this collection of items.">';
+        $item_controls .= $set_view_button;
+        $item_controls .= '</span>';
+    } else {
+        $view_settings_store_js = htmlentities('view_order_set(' . implode(',', array(json_encode($what), json_encode($feed), json_encode($order))) . ');return false;', ENT_QUOTES);
+        $item_controls .= '<span class="remember">';
+        $item_controls .= '<a href="#" title="Remember this ordering, whenever you view this collection of items. (A collection is a unique combination of feed and/or tags.)" onclick="' . $view_settings_store_js . '">';
+        $item_controls .= $set_view_button;
+        $item_controls .= '</a>';
+        $item_controls .= '</span>';
+    }
+    $item_controls .= '</li>';
 
     $item_controls .= '	<li class="orderby">';
     if ($order == 'asc')
@@ -77,15 +122,15 @@ $title = fof_view_title($feed, $what, $when, $which, $howmany, $search, $itemcou
         $item_controls .= '</a>';
     $item_controls .= "</li>\n";
 
-    $item_controls .= '	<li><a href="javascript:flag_all();mark_read()"><strong>Mark all read</strong></a></li>';
-    $item_controls .= '	<li><a href="javascript:flag_all()">Flag all</a></li>';
-    $item_controls .= '	<li><a href="javascript:unflag_all()">Unflag all</a></li>';
-    $item_controls .= '	<li><a href="javascript:toggle_all()">Toggle all</a></li>';
-    $item_controls .= '	<li><a href="javascript:mark_read()"><strong>Mark flagged read</strong></a></li>';
-    $item_controls .= '	<li><a href="javascript:mark_unread()">Mark flagged unread</a></li>';
-    $item_controls .= '	<li><a href="javascript:show_all()">Show all</a></li>';
-    $item_controls .= '	<li><a href="javascript:hide_all()">Hide all</a></li>';
-    $item_controls .= '	<li><a href="javascript:untag_all()">Untag all</a></li>';
+    $item_controls .= '	<li><a href="#" onclick="flag_all();mark_read();return false;"><strong>Mark all read</strong></a></li>';
+    $item_controls .= '	<li><a href="#" onclick="flag_all();return false;">Flag all</a></li>';
+    $item_controls .= '	<li><a href="#" onclick="unflag_all();return false;">Unflag all</a></li>';
+    $item_controls .= '	<li><a href="#" onclick="toggle_all();return false;">Toggle all</a></li>';
+    $item_controls .= '	<li><a href="#" onclick="mark_read();return false;"><strong>Mark flagged read</strong></a></li>';
+    $item_controls .= '	<li><a href="#" onclick="mark_unread();return false;">Mark flagged unread</a></li>';
+    $item_controls .= '	<li><a href="#" onclick="show_all();return false;">Show all</a></li>';
+    $item_controls .= '	<li><a href="#" onclick="hide_all();return false;">Hide all</a></li>';
+    $item_controls .= '	<li><a href="#" onclick="untag_all();return false;">Untag all</a></li>';
 
     echo $item_controls;
 ?>

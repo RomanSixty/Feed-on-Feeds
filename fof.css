@@ -343,6 +343,14 @@ h2
     padding: 0;
 }
 
+#view-settings-button .unavailable {
+    color: #999;
+}
+#view-settings-button .custom {
+    color: #090;
+}
+
+
 #keyboard-legend {
     position: fixed;
     top: 40px;

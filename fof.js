@@ -3,6 +3,8 @@ var curPos = 0;
 var drag = false;
 var what;
 var when;
+var search;
+var feed;
 
 var firstItem;
 var item;
@@ -27,6 +29,7 @@ pendingUpdates.work = function() {
         var feed_element = $$("#sidebar #feeds #f" + id)[0];
         var feed_icon_element = $$("#sidebar #feeds #f" + id + " img.feed-icon")[0];
         feed_icon_element.replace("<img class=\"feed-icon\" src=\"image/spinner.gif\" title=\"update pending\" />");
+        // FIXME: assetize busy spinner
 
         var params = { "update_feedid": id };
         var options = { method: "post", parameters: params, onComplete: complete };
@@ -913,13 +916,13 @@ function refreshlist()
 {
     throb();
 
-    var url = 'sidebar.php';
-    var params = { "what": what };
+    var params = {}; // persist view details
+    if (feed !== null) params["feed"] = feed;
+    if (what !== null) params["what"] = what;
+    if (when !== null) params["when"] = when;
+    if (search !== null) params["search"] = search;
 
-    if (when != null)
-        params["when"] = when;
-
-    new Ajax.Updater($('sidebar'), url, {method: 'get', parameters: params, evalScripts: true });
+    new Ajax.Updater($("sidebar"), "sidebar.php", {method: "get", parameters: params, evalScripts: true });
 }
 
 function throb()
@@ -1080,4 +1083,12 @@ function sb_readall_feed(id) {
     var feed_icon_element = $$("#sidebar #feeds #f" + id + " img.feed-icon")[0];
     feed_icon_element.replace("<img class=\"feed-icon\" src=\"image/spinner.gif\" title=\"update pending\" />");
     new Ajax.Updater( { success: feed_element, failure: feed_icon_element }, url, options);
+}
+
+function view_order_set(what,feed,order) {
+	throb();
+	var url = "view-action.php";
+	var params = { "view_order": order, "view_feed": feed, "view_what": what };
+	var options = { method: "post", parameters: params, onComplete: unthrob };
+	new Ajax.Updater($("view-settings-button"), url, options);
 }

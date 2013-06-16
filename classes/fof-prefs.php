@@ -72,7 +72,7 @@ class FoF_Prefs
             "autotimeout" => 30,
             "manualtimeout" => 15,
             "logging" => false,
-            "match_similarity" => 90,
+            "match_similarity" => "",
             "dynupdates" => false,
         );
 
