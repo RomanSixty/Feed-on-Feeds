@@ -29,8 +29,9 @@ it as appropriate for your setup. If you're on shared hosting, be sure
 to point FOF_DATA_PATH to somewhere in your home directory.
 
 After that, point a web browser to install.php; For example, if you've
-installed it at http://example.com/fof, go to http://example.com/fof/
-install.php.
+installed it at http://example.com/fof, go to
+http://example.com/fof/install.php and then everything should be set
+up automatically.
 
 Upgrading
 
