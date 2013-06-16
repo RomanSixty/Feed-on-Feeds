@@ -11,6 +11,7 @@
  * Distributed under the GPL - see LICENSE
  *
  */
+require_once('fof-asset.php');
 require_once('autoloader.php');
 require_once('simplepie/SimplePie.php');
 
@@ -23,6 +24,6 @@ if(file_exists($filename = "./cache/" . md5($_GET[i]) . ".spi"))
 }
 else
 {
-    header("Location: image/feed-icon.png");
+    header("Location: " . $fof_asset['feed_icon']);
 }
 ?>

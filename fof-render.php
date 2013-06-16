@@ -12,9 +12,13 @@
  *
  */
 
+require_once('fof-asset.php');
+
 // From Brian Suda @ http://suda.co.uk/projects/SEHL/
 
 function do_highlight($full_body, $q, $class){
+    $full_body_hl = "";
+
 	/* seperate tags and data from the HTML file INCLUDING comments, avoiding HTML in the comments */
 	$pat = '/((<[^!][\/]*?[^<>]*?>)([^<]*))|<!---->|<!--(.*?)-->|((<!--[ \r\n\t]*?)(.*?)[ \r\n\t]*?-->([^<]*))/si';
 	preg_match_all($pat,$full_body,$tag_matches);
@@ -41,56 +45,62 @@ function do_highlight($full_body, $q, $class){
 	return $full_body_hl;
 }
 
+/* quell warnings */
+function fof_render_get_key_($array, $key, $default=NULL) {
+	return (empty($array[$key]) ? $default : $array[$key]);
+}
 
-function fof_render_item($item)
+function fof_render_item($item, $include_div=true)
 {
-    $items = true;
+    global $fof_asset;
 
-	$feed_link = $item['feed_link'];
-	$feed_title = $item['feed_title'];
-	$feed_image = empty ( $item [ 'alt_image' ] )
-	            ? $item [ 'feed_image' ]
-	            : $item [ 'alt_image' ];
+	$feed_link = fof_render_get_key_($item, 'feed_link');
+	if ($feed_link == "[no link]")
+	    $feed_link = $item['feed_url'];
+	$feed_title = fof_render_get_key_($item, 'display_title');
+	if ($feed_title == "[no title]")
+	    $feed_title = $feed_link;
+	$feed_image = fof_render_get_key_($item, 'display_image', $fof_asset['feed_icon']);
+	$feed_description = fof_render_get_key_($item, 'feed_description');
 
-	$feed_description = $item['feed_description'];
-
-	$item_link = $item['item_link'];
-	$item_id = $item['item_id'];
-	$item_title = $item['item_title'];
-	$item_content = $item['item_content'];
-	$item_read = $item['item_read'];
+	$item_link = fof_render_get_key_($item, 'item_link');
+	$item_id = fof_render_get_key_($item, 'item_id');
+	$item_title = fof_render_get_key_($item, 'item_title', '[no title]');
+	$item_content = fof_render_get_key_($item, 'item_content');
+	$item_read = fof_render_get_key_($item, 'item_read');
 
 	$prefs = fof_prefs();
-	$offset = $prefs['tzoffset'];
+	$offset = fof_render_get_key_($prefs, 'tzoffset') * 60 * 60;
 
-	$item_published = gmdate("Y-n-d g:ia", $item['item_published'] + $offset*60*60);
-	$item_cached = gmdate("Y-n-d g:ia", $item['item_cached'] + $offset*60*60);
-	$item_updated = gmdate("Y-n-d g:ia", $item['item_updated'] + $offset*60*60);
+	$item_published = gmdate("Y-n-d g:ia", $item['item_published'] + $offset);
+	$item_cached = gmdate("Y-n-d g:ia", $item['item_cached'] + $offset);
+	$item_updated = gmdate("Y-n-d g:ia", $item['item_updated'] + $offset);
 
-	if(!$item_title) $item_title = "[no title]";
-
-	if($_GET['search'])
+	if ( ! empty($_GET['search']))
 	{
 		$item_content = do_highlight("<span>$item_content</span>", $_GET['search'], "highlight");
 		$item_title = do_highlight("<span>$item_title</span>", $_GET['search'], "highlight");
 	}
 
-    $tags = $item['tags'];
+    $tags = fof_render_get_key_($item, 'tags', array());
 
 	$star = in_array("star", $tags) ? true : false;
-	$star_image = $star ? "image/star-on.gif" : "image/star-off.gif";
+	$star_image = $star ? $fof_asset['star_on_image'] : $fof_asset['star_off_image'];
 
 	$unread = in_array("unread", $tags) ? true : false;
+
+	$folded = in_array('folded', $tags) ? true : false;
+	if ($include_div) {
+		echo '<div class="item ' . ($folded ? 'hidden' : 'shown') . '" id="i' . $item_id . '" onclick="return itemClicked(event)">' . "\n";
+	}
 ?>
 
 <div class="header">
-
 	<span class="controls">
-		<a class='uparrow' href='javascript:hide_body("<?php echo $item_id ?>")'>fold &uarr;</a>
-		<a class='downarrow' href='javascript:show_body("<?php echo $item_id ?>")'>unfold &darr;</a>
-		<a href="" onclick="ajax_mark_read(<?php echo $item_id ?>); return false;">mark read</a>
+		<a class="uparrow" href="#" onclick="hide_body('<?php echo $item_id ?>');return false;">fold &uarr;</a>
+		<a class="downarrow" href="#" onclick="show_body('<?php echo $item_id ?>');return false;">unfold &darr;</a>
+		<a href="#" onclick="ajax_mark_read('<?php echo $item_id ?>'); return false;">mark read</a>
 	</span>
-
 	<h1 <?php if($unread) echo "class='unread-item'" ?>>
 		<input type="checkbox"
 			   name="c<?php echo $item_id ?>"
@@ -99,97 +109,63 @@ function fof_render_item($item)
 			   ondblclick="flag_upto('c<?php echo $item_id?>');"
 			   onclick="return checkbox(event);"
 			   title="shift-click or double-click to flag all items up to this one" />
-		<img height="16"
-			 width="16"
-             class="<?php if (!$star) echo 'un'; ?>starred"
-			 src="<?php echo $star_image ?>"
-			 id="fav<?php echo $item_id ?>"
-			 onclick="return toggle_favorite('<?php echo $item_id ?>')" />
+<?php
+    echo '		<img id="fav' . $item_id . '" class="' . ($star ? '' : 'un') . 'starred" src="' . $star_image . '" onclick="return toggle_favorite(' . $item_id . ')" />' . "\n";
+?>
 		<script>
 			document.getElementById('fav<?php echo $item_id ?>').star = <?php if($star) echo 'true'; else echo 'false'; ?>;
 		</script>
-		<a href="<?php echo $item_link ?>">
-			<?php echo $item_title ?>
-		</a>
+<?php
+	echo "		<a href=\"$item_link\"" . (fof_render_get_key_($prefs, 'item_target') ? ' target="_blank"' : '') . ">$item_title</a>\n";
+?>
 	</h1>
 
 	<span class="tags">
-
 <?php
-	if($tags)
-	{
-		foreach($tags as $tag)
-		{
-			if($tag == "unread" || $tag == "star" || $tag == "folded") continue;
+	/* show non-system tags */
+	foreach (array_diff($tags, array('unread', 'star', 'folded')) as $tag) {
+		echo '		<a href="' . fof_url('.', array('what' => $tag)) . '">' . htmlentities($tag) . '</a>';
+		echo '		<a href="#" class="untag" title="remove ' . htmlentities('"' . $tag . '"') . ' tag" onclick="return remove_tag(' . $item_id . ',' . htmlentities(json_encode($tag), ENT_QUOTES) . ');">[x]</a>' . "\n";
+	}
 ?>
-    		<a href="?what=<?php echo $tag ?>"><?php echo $tag ?></a>
-
-    		<a href="<?php echo $tag ?>" class="untag" onclick="return remove_tag('<?php echo $item_id ?>', '<?php echo $tag ?>');">[x]</a>
-<?php
-		}
-    }
-?>
-
-		<a href="" onclick="document.getElementById('addtag<?php echo $item_id ?>').style.display = ''; this.style.display = 'none'; return false;">add tag</a>
-
+		<a href="#" onclick="return itemTagAddShow('<?php echo $item_id; ?>', this);">add tag</a>
 		<div id="addtag<?php echo $item_id ?>" style="display: none !important">
-			<input onfocus="this.value=''"
-				   onkeypress="if(event.keyCode == 13) add_tag('<?php echo $item_id ?>', document.getElementById('tag<?php echo $item_id ?>').value);"
-				   type="text"
-				   id="tag<?php echo $item_id ?>"
-				   size="12"
-				   value="enter tag here" />
-			<input type="button"
-				   name="add tag"
-				   value="tag"
-				   onclick="add_tag('<?php echo $item_id ?>', document.getElementById('tag<?php echo $item_id ?>').value);" />
+			<input onfocus="this.value=''" onkeypress="itemTagAdd('<?php echo $item_id; ?>', event.keyCode);" type="text" id="tag<?php echo $item_id ?>" size="12" value="enter tag here" />
+			<input type="button" name="add tag" value="tag" onclick="itemTagAdd('<?php echo $item_id; ?>');" />
 		</div>
+	</span>
 
-    </span>
+	<span class="dash"> - </span>
 
-    <span class="dash"> - </span>
+	<h2>
+<?php
+		if ( $feed_image && $prefs [ 'favicons' ] )
+			echo '		<img class="feed-icon" src="' . $feed_image . '" />' . "\n";
+?>
+		<a href="<?php echo $feed_link ?>" title="<?php echo htmlspecialchars($feed_description); ?>"><?php echo $feed_title; ?></a>
+	</h2>
 
-    <h2>
-    	<?php
-	    	$prefs = fof_prefs();
-
-	    	if ( $feed_image && $prefs [ 'favicons' ] )
-	    		echo '<img src="'.$feed_image.'" height="16" width="16" border="0" />';
-   		?>
-    	<a href="<?php echo $feed_link ?>" title="<?php echo htmlspecialchars ( $feed_description ); ?>"><?php echo $feed_title ?>
-    	</a>
-    </h2>
-
-	<span class="meta">on <?php echo $item_published ?></span>
-
+	<span class="meta published">on <?php echo $item_published ?></span>
 </div>
-
 
 <div class="body"><?php echo $item_content ?></div>
 
 <?php
     $widgets = fof_get_widgets($item);
 
-    $widgets[] = '<a href="" onclick="ajax_mark_read('.$item_id.'); return false;">mark read</a>';
+    $widgets[] = '<a href="#" onclick="return ajax_mark_read(\'' . $item_id . '\');">mark read</a>';
 
-    if($widgets) {
-?>
-
-<div class="clearer"></div>
-
-<div class="widgets">
-
-<?php
-    foreach($widgets as $widget)
-    {
-        echo "<span class='widget'>$widget</span> ";
+    if ( ! empty($widgets)) {
+        echo '<div class="clearer"></div>' . "\n";
+        echo '<div class="widgets">';
+        foreach ($widgets as $widget) {
+            echo '<span class="widget">' . $widget . "</span>";
+        }
+        echo "</div>\n";
     }
-?>
 
-</div>
-
-<?php } ?>
-
-<?php
+    if ($include_div) {
+        echo "</div>\n";
+    }
 }
 ?>

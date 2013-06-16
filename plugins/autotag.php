@@ -8,7 +8,7 @@ function fof_autotag($link, $title, $content)
 	$tags = array();
 	
     $prefs = fof_prefs();
-    $autotag = $prefs['plugin_autotag_tags'];
+    $autotag = empty($prefs['plugin_autotag_tags']) ? NULL : $prefs['plugin_autotag_tags'];
 
 	if($autotag)
 	{

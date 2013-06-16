@@ -12,65 +12,59 @@
  *
  */
 
-include("header.php");
+include('header.php');
 
-print("<br>");
-
-$feed = $_GET['feed'];
-$feeds = array();
+echo "<br>\n";
 
 $p =& FoF_Prefs::instance();
 $admin_prefs = $p->admin_prefs;
 
-if($feed)
-{
-    $feed = fof_db_get_feed_by_id($feed);
-    $feeds[] = $feed;
-}
-else
-{
-    if($fof_user_id == 1)
-    {
-        $result = fof_db_get_feeds('WHERE feed_cache_next_attempt < UNIX_TIMESTAMP()');
-    }
-    else
-    {
-        $result = fof_db_get_subscriptions(fof_current_user(),true);
-    }
-    while($feed = fof_db_get_row($result))
-    {
-        if(((time() - $feed["feed_cache_date"]) < ($admin_prefs["manualtimeout"] * 60)))
-        {
-            $title = $feed['feed_title'];
-            list($timestamp, ) = fof_nice_time_stamp($feed['feed_cache_date']);
+$feeds = array();
 
-            print "$title was just updated $timestamp!<br>";
-        } else if (time() < $feed["feed_cache_next_attempt"]) {
+if ( ! empty($_GET['feed'])) {
+    $feed = fof_db_get_feed_by_id($_GET['feed']);
+    if (empty($feed)) {
+        $feed_status = "<span style=\"color:red\">Error: unknown feed '" . $_GET['feed'] . "'</span>";
+    } else {
+        $feeds[] = $feed;
+        $feed_status = " is waiting to update...";
+    }
+    echo '<div id="feed_id_' . $feed['feed_id'] . '">'
+        . fof_render_feed_link($feed) . ' ' . $feed_status
+        . "</div>\n";
+} else {
+    if ($fof_user_id == 1) {
+        $result = fof_db_get_feeds_needing_attempt();
+    } else {
+        $result = fof_db_get_subscriptions(fof_current_user(), true);
+    }
+
+    while ( ($feed = fof_db_get_row($result)) !== false ) {
+        if ( (time() - $feed['feed_cache_date']) < ($admin_prefs['manualtimeout'] * 60) ) {
+            list($timestamp, ) = fof_nice_time_stamp($feed['feed_cache_date']);
+            $feed_status = " was just updated $timestamp!";
+        } else if (time() < $feed['feed_cache_next_attempt']) {
             list($timestamp, ) = fof_nice_time_stamp($feed['feed_cache_next_attempt']);
-	    print "$title isn't due for an update for " . fof_nice_time_stamp($timestamp) . "<br>";
-	}
-        else
-        {
+            $feed_status = " isn't due for an update for $timestamp.";
+        } else {
             $feeds[] = $feed;
+            $feed_status = " is waiting to update...";
         }
+        echo '<div id="feed_id_' . $feed['feed_id'] . '">'
+            . fof_render_feed_link($feed) . ' ' . $feed_status
+            . "</div>\n";
     }
 }
 
 $feeds = fof_multi_sort($feeds, 'feed_cache_attempt_date', false);
 
-print("<script>\nwindow.onload = ajaxupdate;\nfeedslist = [");
-
-foreach($feeds as $feed)
-{
-	$title = $feed['feed_title'];
-	$id = $feed['feed_id'];
-
-    $feedjson[] = "{'id': $id, 'title': '" . addslashes($title) . "'}";
+$feedjson = array();
+foreach ($feeds as $feed) {
+    $feedjson[] = json_encode(array('id' => $feed['feed_id'], 'title' => $feed['feed_title']));
 }
 
-print(join($feedjson, ", "));
-print("];\n</script>");
+echo "<script>\nwindow.onload = ajaxupdate;\nfeedslist = [ " . implode(', ', $feedjson) . " ];\n</script>\n";
 
-include("footer.php");
+include('footer.php');
 ?>
 

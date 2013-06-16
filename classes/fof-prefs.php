@@ -20,36 +20,34 @@ class FoF_Prefs
 
     function FoF_Prefs($user_id)
     {
-        global $FOF_USER_TABLE;
+        $this->user_id = $user_id;
 
-	$this->user_id = $user_id;
-
-        $result = fof_safe_query("select user_prefs from $FOF_USER_TABLE where user_id = %d", $user_id);
-        $prefs = unserialize( fof_db_get_row ( $result, 'user_prefs' ));
-        if(!is_array($prefs)) $prefs = array();
+        $prefs = fof_db_prefs_get($user_id);
+        if ( ! is_array($prefs))
+            $prefs = array();
         $this->prefs = $prefs;
 
-        if($user_id != 1)
+        if ($user_id != 1)
         {
-	    $result = fof_safe_query("select user_prefs from $FOF_USER_TABLE where user_id = 1");
-	    $admin_prefs = unserialize( fof_db_get_row ( $result, 'user_prefs' ));
-	    if(!is_array($admin_prefs)) $admin_prefs = array();
-	    $this->admin_prefs = $admin_prefs;
+            $admin_prefs = fof_db_prefs_get(1);
+            if ( ! is_array($admin_prefs))
+                $admin_prefs = array();
+            $this->admin_prefs = $admin_prefs;
         }
         else
         {
-	    $this->admin_prefs = $prefs;
+            $this->admin_prefs = $prefs;
         }
 
         $this->populate_defaults();
 
         if($user_id == 1)
         {
-	    $this->prefs = array_merge($this->prefs, $this->admin_prefs);
+            $this->prefs = array_merge($this->prefs, $this->admin_prefs);
         }
     }
 
-    static function &instance()
+    public static function &instance()
     {
         static $instance;
         if(!isset($instance)) $instance = new FoF_Prefs(fof_current_user());
@@ -92,7 +90,9 @@ class FoF_Prefs
 
     function get($k)
     {
-        return $this->prefs[$k];
+        if (isset($this->prefs[$k]))
+            return $this->prefs[$k];
+        return null;
     }
 
     function set($k, $v)
