@@ -1,15 +1,15 @@
 About
 
-FeedOnFeeds is a lightweight server-based RSS aggregator and reader, allowing
-you to keep up with syndicated content (blogs, comics, and so forth) without
-having to keep track of what you've read. Being server-based means all of your
-feeds and history are kept in one place, and being lightweight means you can
-install it pretty much anywhere without needing a fancy dedicated server or the
-like.
+FeedOnFeeds is a lightweight server-based RSS aggregator and reader,
+allowing you to keep up with syndicated content (blogs, comics, and so
+forth) without having to keep track of what you've read. Being
+server-based means all of your feeds and history are kept in one
+place, and being lightweight means you can install it pretty much
+anywhere without needing a fancy dedicated server or the like.
 
-FeedOnFeeds was originally written by Steve Minutillo; this fork strives to
-stay up-to-date with changes to PHP while improving security, multiuser
-support, and overall design.
+FeedOnFeeds was originally written by Steve Minutillo; this fork
+strives to stay up-to-date with changes to PHP while improving
+security, multiuser support, and overall design.
 
 Requirements
 
@@ -23,14 +23,10 @@ FeedOnFeeds requires:
 
 Installation
 
-To install, simply download a snapshot from the gitweb site, or (better yet)
-clone this git repository to wherever you want it, with (for example):
-
-    git clone http://git.beesbuzz.biz/FeedOnFeeds.git -o fof
-
-Then copy fof-config.php.dist to fof-config.php and edit it as appropriate
-for your setup. If you're on shared hosting, be sure to point FOF_DATA_PATH to
-somewhere in your home directory.
+To install, simply download a snapshot or clone from your favorite git
+repository.  Then copy fof-config.php.dist to fof-config.php and edit
+it as appropriate for your setup. If you're on shared hosting, be sure
+to point FOF_DATA_PATH to somewhere in your home directory.
 
 After that, point a web browser to install.php; For example, if you've
 installed it at http://example.com/fof, go to http://example.com/fof/
@@ -38,22 +34,23 @@ install.php.
 
 Upgrading
 
-Upgrading to a newer FeedOnFeeds usually just involves downloading a new
-snapshot or issuing a git pull, and then pointing a browser at upgrade.php
-again.
+Upgrading to a newer FeedOnFeeds usually just involves downloading a
+new snapshot or issuing a git pull, and then pointing a browser at
+install.php again.
 
 Setting up scheduled updates
 
-FeedOnFeeds works best if you have it set to automatically update your feeds
-on-the-fly. The best way to do this is to set up a cron job like so:
+FeedOnFeeds works best if you have it set to automatically update your
+feeds on-the-fly. The best way to do this is to set up a cron job like
+so:
 
     * * * * * curl http://example.com/fof/update-quiet.php
 
-Don't worry about updates occurring too frequently - FeedOnFeeds will only
-update feeds which are due for an update. By default it will update every feed
-once an hour, but if you enable dynamic update intervals in the admin
-preferences, it will adjust the polling update for feeds based on their
-historical update frequencies.
+Don't worry about updates occurring too frequently - FeedOnFeeds will
+only update feeds which are due for an update. By default it will
+update every feed at most once an hour, but if you enable dynamic
+update intervals in the admin preferences, it will adjust the polling
+update for feeds based on their historical update frequencies.
 
 Legal
 
