@@ -104,8 +104,16 @@ else
 
     $mysql_ok = extension_loaded('pdo_mysql');
     $sqlite_ok = extension_loaded('pdo_sqlite');
-    $compat_fatal |= fof_install_compat_notice($sqlite_ok, "SQLite", "Your PHP installation does not support the SQLite database.", "This is not required if another database is available.");
-    $compat_fatal |= fof_install_compat_notice($mysql_ok, "MySQL", "Your PHP installation does not support the MySQL database.", "This is not required if another database is available.");
+    $compat_fatal |= fof_install_compat_notice($sqlite_ok,
+                                               "SQLite",
+                                               "Your PHP installation does not support the SQLite database" . (defined('USE_SQLITE') ? ", but you have configured Feed on Feeds to use this database!" : "."),
+                                               defined('USE_SQLITE') ? "PHP will need to support this database, or you must configure a different one." : "This is not required if another database is available.",
+                                               defined('USE_SQLITE'));
+    $compat_fatal |= fof_install_compat_notice($mysql_ok,
+                                               "MySQL",
+                                               "Your PHP installation does not support the MySQL database" . (defined('USE_MYSQL') ? ", but you have configured Feed on Feeds to use this database!" : "."),
+                                               defined('USE_MYSQL') ? "PHP will need to support this database, or you must configure a different one." : "This is not required if another database is available.",
+                                               defined('USE_MYSQL'));
     $compat_fatal |= fof_install_compat_notice($sqlite_ok || $mysql_ok, "PDO database", "Your PHP installation is missing a supported PDO database extension!", "This is required by Feed on Feeds.", 1);
 
     $curl_ok = (extension_loaded('curl') && version_compare(get_curl_version(), VERSION_REQUIRED_CURL, '>='));

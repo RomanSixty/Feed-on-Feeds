@@ -78,7 +78,6 @@ function fof_install_cachedir() {
 }
 
 
-if ( ! defined('MYSQL_ENGINE')) define('MYSQL_ENGINE', 'MyISAM');
 /** Generate a query string to create a table, given an array of columns.
     SQLite and MySQL speak slightly different CREATE dialects, mostly concerning
     primary keys and indices, so schema generation has been rendered into a
@@ -108,7 +107,7 @@ function fof_install_create_index_query($table_name, $index_name, $index_def) {
 
     if (defined('USE_MYSQL')) {
         str_replace('INDEX', 'KEY', $idx_type);
-        $query = "ALTER TABLE $table_name ADD KEY '$index_name' ($idx_val)";
+        $query = "ALTER TABLE $table_name ADD KEY $index_name ($idx_val)";
         return $query;
     }
     if (defined('USE_SQLITE')) {
@@ -496,6 +495,11 @@ function fof_install_database_reference_exists($table, $column) {
 /** Update queries if reference doesn't exist.
  */
 function fof_install_migrate_reference(&$queries, $table, $index, $what) {
+    if (defined('USE_MYSQL') && MYSQL_ENGINE == 'MyISAM') {
+        /* MyISAM tables don't support foreign keys */
+        return;
+    }
+
     if ( ! is_array($what))
         $what = array($what);
 
@@ -520,11 +524,15 @@ function fof_install_database_update_old_tables() {
 
     try {
     /* triggers */
-        if (defined('USE_MYSQL')) {
+        if (defined('USE_MYSQL') && MYSQL_ENGINE != 'MyISAM') {
             /*
                 N.B. MySQL doesn't actually honor any CHECK expressions, so the
                 xor-null constraint on the view_state tableneeds to be enforced
                 via a trigger and a procedure.
+                If MyISAM tables are being used, though, constraints aren't
+                supported at all, so just skip all of this and hope for the
+                best.  This affords a means to run when full administrative
+                control over the database isn't available.
             */
             if ( ! fof_install_database_procedure_exists('constrain_null_xor')) {
                 $queries[FOF_VIEW_STATE_TABLE . '.constrain_null_xor.procedure'] = "CREATE PROCEDURE constrain_null_xor (IN id1 " . SQL_DRIVER_INT_TYPE . ", IN id2 " . SQL_DRIVER_INT_TYPE . ", IN action VARCHAR(16), IN place VARCHAR(64))
@@ -559,9 +567,9 @@ BEGIN
     CALL constrain_null_xor(NEW.feed_id, NEW.tag_id, 'UPDATE', '" . FOF_VIEW_STATE_TABLE . "');
 END";
             } else {
-                echo '<div class="exists">' . FOF_VIEW_STATE_TABLE . 'before_update_trigger is up to date.</div>';
+                echo '<div class="exists">' . FOF_VIEW_STATE_TABLE . ' before_update_trigger is up to date.</div>' . "\n";
             }
-        } /* USE_MYSQL */
+        } /* USE_MYSQL && ! MyISAM */
 
         /* If a tag or feed is deleted, purge any view states which included them. */
         if ( ! fof_install_database_trigger_exists(FOF_VIEW_STATE_TABLE, 'cascade_view_delete')) {
@@ -670,8 +678,8 @@ END";
         foreach ($queries as $what => $query) {
             echo '<div class="update">[' . $i++ . '/' . $j . '] Updating ' . $what . ': ';
             $result = fof_db_exec($query);
-            if ($result) {
-                echo '<span class="pass">OK</span>';
+            if ($result !== false) {
+                echo '<span class="pass" title="' . $result . ' rows affected">OK</span>';
             } else {
                 echo '<span class="fail">FAIL</span>';
             }
