@@ -30,6 +30,9 @@ define('FOF_DB_DBNAME', "database");
 // define('USE_MYSQL', 1);
 // define('USE_SQLITE', 1);
 
+// Some database setups may not allow triggers; uncomment this if you need to avoid installing them.
+// define('SQL_NO_TRIGGERS', 1);
+
 // define('FOF_AUTH_EXTERNAL',1); // trust server auth to manage users
 // define('FOF_AUTH_EXTERNAL_ONLY', 1); // never fall back to internal user/passwords
 // define('FOF_AUTH_EXTERNAL_ADD', 1); // create user->id mappings automatically

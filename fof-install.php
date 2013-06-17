@@ -127,7 +127,12 @@ function fof_install_create_reference_query($table_name, $column_name, $referenc
         return $query;
     }
     if (defined('USE_SQLITE')) {
-        /* I guess this isn't possible? */
+        /*
+            I guess this isn't possible without creating a new table, migrating
+            the data, then dropping the old table.
+            FIXME: Supporting this is going to be ugly.
+        */
+        return NULL;
     }
     throw new Exception('Query not implemented for this pdo driver.');
 }
@@ -524,64 +529,54 @@ function fof_install_database_update_old_tables() {
 
     try {
     /* triggers */
-        if (defined('USE_MYSQL') && MYSQL_ENGINE != 'MyISAM') {
+        if ( ! defined('SQL_NO_TRIGGERS')) {
             /*
-                N.B. MySQL doesn't actually honor any CHECK expressions, so the
-                xor-null constraint on the view_state tableneeds to be enforced
-                via a trigger and a procedure.
-                If MyISAM tables are being used, though, constraints aren't
-                supported at all, so just skip all of this and hope for the
-                best.  This affords a means to run when full administrative
-                control over the database isn't available.
+                Some setups might not allow triggers, so skip installing them
+                entirely if that situation has been declared.
             */
-            if ( ! fof_install_database_procedure_exists('constrain_null_xor')) {
-                $queries[FOF_VIEW_STATE_TABLE . '.constrain_null_xor.procedure'] = "CREATE PROCEDURE constrain_null_xor (IN id1 " . SQL_DRIVER_INT_TYPE . ", IN id2 " . SQL_DRIVER_INT_TYPE . ", IN action VARCHAR(16), IN place VARCHAR(64))
-DETERMINISTIC
-SQL SECURITY INVOKER
-COMMENT 'Ensure that one but not both ids are set.'
+            if (defined('USE_MYSQL')) {
+                /*
+                    N.B. MySQL doesn't actually honor any CHECK expressions, so
+                    the xor-null constraint on the view_state table needs to be
+                    enforced via a trigger.
+                */
+                if ( ! fof_install_database_trigger_exists(FOF_VIEW_STATE_TABLE, 'xor_null_before_insert')) {
+                    $queries[FOF_VIEW_STATE_TABLE . '.xor_null_before_insert.trigger'] = "CREATE TRIGGER xor_null_before_insert BEFORE INSERT ON " . FOF_VIEW_STATE_TABLE . "
+FOR EACH ROW
 BEGIN
-DECLARE msg TEXT;
-    IF ((id1 IS NULL) = (id2 IS NULL)) THEN
-        SET msg := CONCAT('xor-null constraint failed in ', action, ' on ', place);
-        SIGNAL SQLSTATE '23513' SET MESSAGE_TEXT = msg;
+    IF ((NEW.feed_id IS NULL) = (NEW.tag_id IS NULL)) THEN
+        SIGNAL SQLSTATE '23513' SET MESSAGE_TEXT = 'xor-null constraint failed in INSERT on " . FOF_VIEW_STATE_TABLE . "';
     END IF;
 END";
-            } else {
-                echo '<div class="exists">constrain_null_xor procedure is up to date.</div>' . "\n";
-            }
+                } else {
+                    echo '<div class="exists">' . FOF_VIEW_STATE_TABLE . ' before_insert_trigger is up to date.</div>' . "\n";
+                }
 
-            if ( ! fof_install_database_trigger_exists(FOF_VIEW_STATE_TABLE, 'xor_null_before_insert')) {
-                $queries[FOF_VIEW_STATE_TABLE . '.xor_null_before_insert.trigger'] = "CREATE TRIGGER xor_null_before_insert BEFORE INSERT ON " . FOF_VIEW_STATE_TABLE . "
+                if ( ! fof_install_database_trigger_exists(FOF_VIEW_STATE_TABLE, 'xor_null_before_update')) {
+                    $queries[FOF_VIEW_STATE_TABLE . '.xor_null_before_update.trigger'] = "CREATE TRIGGER xor_null_before_update BEFORE UPDATE ON " . FOF_VIEW_STATE_TABLE . "
 FOR EACH ROW
 BEGIN
-    CALL constrain_null_xor(NEW.feed_id, NEW.tag_id, 'INSERT', '" . FOF_VIEW_STATE_TABLE . "');
+    IF ((NEW.feed_id IS NULL) = (NEW.tag_id IS NULL)) THEN
+        SIGNAL SQLSTATE '23513' SET MESSAGE_TEXT = 'xor-null constraint failed in UPDATE on " . FOF_VIEW_STATE_TABLE . "';
+    END IF;
 END";
-            } else {
-                echo '<div class="exists">' . FOF_VIEW_STATE_TABLE . ' before_insert_trigger is up to date.</div>' . "\n";
-            }
+                } else {
+                    echo '<div class="exists">' . FOF_VIEW_STATE_TABLE . ' before_update_trigger is up to date.</div>' . "\n";
+                }
+            } /* USE_MYSQL */
 
-            if ( ! fof_install_database_trigger_exists(FOF_VIEW_STATE_TABLE, 'xor_null_before_update')) {
-                $queries[FOF_VIEW_STATE_TABLE . '.xor_null_before_update.trigger'] = "CREATE TRIGGER xor_null_before_update BEFORE UPDATE ON " . FOF_VIEW_STATE_TABLE . "
-FOR EACH ROW
-BEGIN
-    CALL constrain_null_xor(NEW.feed_id, NEW.tag_id, 'UPDATE', '" . FOF_VIEW_STATE_TABLE . "');
-END";
-            } else {
-                echo '<div class="exists">' . FOF_VIEW_STATE_TABLE . ' before_update_trigger is up to date.</div>' . "\n";
-            }
-        } /* USE_MYSQL && ! MyISAM */
-
-        /* If a tag or feed is deleted, purge any view states which included them. */
-        if ( ! fof_install_database_trigger_exists(FOF_VIEW_STATE_TABLE, 'cascade_view_delete')) {
-            $queries[FOF_VIEW_STATE_TABLE . '.cascade_view_delete.trigger'] = "CREATE TRIGGER cascade_view_delete AFTER DELETE ON " . FOF_VIEW_STATE_TABLE . "
+            /* If a tag or feed is deleted, purge any view states which included them. */
+            if ( ! fof_install_database_trigger_exists(FOF_VIEW_STATE_TABLE, 'cascade_view_delete')) {
+                $queries[FOF_VIEW_STATE_TABLE . '.cascade_view_delete.trigger'] = "CREATE TRIGGER cascade_view_delete AFTER DELETE ON " . FOF_VIEW_STATE_TABLE . "
 FOR EACH ROW
 BEGIN
     DELETE FROM " . FOF_VIEW_STATE_TABLE . " WHERE view_id = OLD.view_id;
     DELETE FROM " . FOF_VIEW_TABLE . " WHERE view_id = OLD.view_id;
 END";
-        } else {
-            echo '<div class="exists">' . FOF_VIEW_STATE_TABLE . ' after_delete_trigger is up to date.</div>' . "\n";
-        }
+            } else {
+                echo '<div class="exists">' . FOF_VIEW_STATE_TABLE . ' after_delete_trigger is up to date.</div>' . "\n";
+            }
+        } /* SQL_NO_TRIGGERS */
 
 
     /* FOF_USER_TABLE */
@@ -670,6 +665,8 @@ END";
         fof_install_migrate_reference($queries, FOF_VIEW_STATE_TABLE, 'view_id', array(
             'add' => fof_install_create_reference_query(FOF_VIEW_STATE_TABLE, 'view_id', array(FOF_VIEW_TABLE, 'view_id'))
         ));
+
+        $queries = array_filter($queries); /* SQLite may generate some empty queries, as it can't yet alter references.. */
 
         echo '<span>' . count($queries) . ' updates needed.</span>' . "\n";
 
