@@ -91,7 +91,7 @@ function fof_install_create_table_query($table_name, $column_array) {
     $query .= implode(",\n  ", $column_array);
     $query .= "\n)";
     if (defined('USE_MYSQL')) {
-        $query .= "ENGINE=" . MYSQL_ENGINE . " DEFAULT CHARSET=UTF8";
+        $query .= " ENGINE=" . MYSQL_ENGINE . " DEFAULT CHARSET=UTF8";
     }
 
     return $query . ';';
@@ -319,6 +319,7 @@ function fof_install_schema() {
 /* given a schema array, returns an array of queries to define the database */
 /* if exec is set, execute the statements, to create the database */
 function fof_install_database($schema, $exec=0) {
+    global $fof_connection;
     list($tables, $indices) = $schema;
 
     try {
@@ -329,7 +330,7 @@ function fof_install_database($schema, $exec=0) {
                 $query_history[] = $query;
                 if ($exec) {
                     echo "<br><span>table $table_name ";
-                        if (fof_db_exec($query) === false) {
+                        if ($fof_connection->exec($query) === false) {
                             echo "<span class='fail'>FAIL</span>";
                         } else {
                             echo "<span class='pass'>OK</span>";
@@ -344,7 +345,7 @@ function fof_install_database($schema, $exec=0) {
                         $query_history[] = $query;
                         if ($exec) {
                             echo "<br><span>table $table_name index $index_name ";
-                            if (fof_db_exec($query) === false) {
+                            if ($fof_connection->exec($query) === false) {
                                 echo "<span class='fail>FAIL</span>";
                             } else {
                                 echo "<span class='pass'>OK</span>";
@@ -365,15 +366,17 @@ function fof_install_database($schema, $exec=0) {
 /** Determine if a column exists in a table.
  */
 function fof_install_database_column_exists($table, $name) {
+    global $fof_connection;
+
     if (defined('USE_MYSQL')) {
         $query = "SHOW COLUMNS FROM " . $table . " LIKE '" . $name . "'";
-        $statement = fof_db_query($query);
+        $statement = $fof_connection->query($query);
         $column = fof_db_get_row($statement, NULL, TRUE);
         return ! empty($column);
     }
     if (defined('USE_SQLITE')) {
         $query = "PRAGMA table_info(" . $table . ")";
-        $statement = fof_db_query($query);
+        $statement = $fof_connection->query($query);
         while (($column = fof_db_get_row($statement, 'name')) !== false) {
             if ($column == $name) {
                 $statement->closeCursor();
@@ -409,16 +412,18 @@ function fof_install_migrate_column(&$queries, $table, $column, $what) {
     function fof_install_create_index_query().
  */
 function fof_install_database_index_exists($table, $index) {
+    global $fof_connection;
+
     if (defined('USE_MYSQL')) {
         $query = "SHOW INDEXES FROM " . $table . " WHERE key_name LIKE '" . $index . "'";
-        $statement = fof_db_query($query);
+        $statement = $fof_connection->query($query);
         $row = fof_db_get_row($statement, NULL, TRUE);
         return ! empty($row);
     }
     if (defined('USE_SQLITE')) {
         $index = $index . "_idx";
         $query = "SELECT * FROM sqlite_master WHERE type='index' AND tbl_name='" . $table . "' AND name = '" . $index . "'";
-        $statement = fof_db_query($query);
+        $statement = $fof_connection->query($query);
         $row = fof_db_get_row($statement, NULL, TRUE);
         return ! empty($row);
     }
@@ -446,9 +451,11 @@ function fof_install_migrate_index(&$queries, $table, $index, $what) {
 /** Determine if a stored procedure exists.
  */
 function fof_install_database_procedure_exists($proc) {
+    global $fof_connection;
+
     if (defined('USE_MYSQL')) {
         $query = "SELECT * FROM INFORMATION_SCHEMA.ROUTINES WHERE ROUTINE_TYPE='PROCEDURE' AND ROUTINE_SCHEMA='" . FOF_DB_DBNAME . "' AND ROUTINE_NAME LIKE '" . $proc . "'";
-        $statement = fof_db_query($query);
+        $statement = $fof_connection->query($query);
         $row = fof_db_get_row($statement, NULL, TRUE);
         return ! empty($row);
     }
@@ -458,15 +465,17 @@ function fof_install_database_procedure_exists($proc) {
 /** Determine if a trigger exists.
  */
 function fof_install_database_trigger_exists($table, $trigger) {
+    global $fof_connection;
+
     if (defined('USE_MYSQL')) {
         $query = "SELECT * FROM INFORMATION_SCHEMA.TRIGGERS WHERE EVENT_OBJECT_TABLE='" . $table . "' AND TRIGGER_NAME='" . $trigger ."'";
-        $statement = fof_db_query($query);
+        $statement = $fof_connection->query($query);
         $row = fof_db_get_row($statement, NULL, TRUE);
         return ! empty($row);
     }
     if (defined('USE_SQLITE')) {
         $query = "SELECT * FROM sqlite_master WHERE type='trigger' AND tbl_name='" . $table . "' AND name='" . $trigger . "'";
-        $statement = fof_db_query($query);
+        $statement = $fof_connection->query($query);
         $row = fof_db_get_row($statement, NULL, TRUE);
         return ! empty($row);
     }
@@ -476,16 +485,18 @@ function fof_install_database_trigger_exists($table, $trigger) {
 /** Determine if a foreign key exists.
  */
 function fof_install_database_reference_exists($table, $column) {
+    global $fof_connection;
+
     if (defined('USE_MYSQL')) {
         $query = "SELECT * FROM INFORMATION_SCHEMA.KEY_COLUMN_USAGE WHERE CONSTRAINT_SCHEMA='" . FOF_DB_DBNAME . "' AND TABLE_NAME='" . $table . "' AND COLUMN_NAME='" . $column . "' AND CONSTRAINT_NAME NOT LIKE 'PRIMARY'";
 
-        $statement = fof_db_query($query);
+        $statement = $fof_connection->query($query);
         $row = fof_db_get_row($statement, NULL, TRUE);
         return ! empty($row);
     }
     if (defined('USE_SQLITE')) {
         $query = "PRAGMA foreign_key_list('" . $table . "')";
-        $statement = fof_db_query($query);
+        $statement = $fof_connection->query($query);
         while (($row = fof_db_get_row($statement)) !== false) {
             if ($row['from'] == $column) {
                 $statement->closeCursor();
@@ -525,6 +536,7 @@ function fof_install_migrate_reference(&$queries, $table, $index, $what) {
     coalesce them.
 */
 function fof_install_database_update_old_tables() {
+    global $fof_connection;
     $queries = array();
 
     try {
@@ -674,7 +686,7 @@ END";
         $j = count($queries);
         foreach ($queries as $what => $query) {
             echo '<div class="update">[' . $i++ . '/' . $j . '] Updating ' . $what . ': ';
-            $result = fof_db_exec($query);
+            $result = $fof_connection->exec($query);
             if ($result !== false) {
                 echo '<span class="pass" title="' . $result . ' rows affected">OK</span>';
             } else {
@@ -690,6 +702,8 @@ END";
 
 /* install initial values into database */
 function fof_install_database_populate() {
+    global $fof_connection;
+
     if (defined('USE_SQLITE')) {
         /* populate user level table */
         echo "<br>Populating " . FOF_USER_LEVELS_TABLE . "... \n";
@@ -698,15 +712,15 @@ function fof_install_database_populate() {
         $entries[] = array('level' => 'user');
 
         $query_insert = "INSERT INTO " . FOF_USER_LEVELS_TABLE . " ( level ) VALUES ( :level )";
-        $statement_insert = fof_db_statement_prepare($query_insert);
+        $statement_insert = $fof_connection->prepare($query_insert);
 
         $query_check = "SELECT * FROM " . FOF_USER_LEVELS_TABLE . " WHERE level = :level";
-        $statement_check = fof_db_statement_prepare($query_check);
+        $statement_check = $fof_connection->prepare($query_check);
 
         foreach ($entries as $entry) {
             try {
                 echo "<br><span>" . $entry['level'];
-                $result_check = fof_db_statement_execute($statement_check, $entry);
+                $result_check = $statement_check->execute($entry);
                 $rows_check = $statement_check->fetchAll();
             } catch (PDOException $e) {
                 echo "Cannot check " . $entry['level'] . " [<code>$query_check</code>] <pre>" . $e->GetMessage() . "</pre>\n";
@@ -716,7 +730,7 @@ function fof_install_database_populate() {
                 echo " <span class='pass'>exists</span>";
             } else {
                 try {
-                    if (($result_insert = fof_db_statement_execute($statement_insert, $entry)) !== false) {
+                    if (($result_insert = $statement_insert->execute($entry)) !== false) {
                         echo " <span class='pass'>added</span>";
                     } else {
                         echo " <span class='fail'>failed</span>";
@@ -740,15 +754,15 @@ function fof_install_database_populate() {
     $entries[] = array('tag_name' => 'folded');
 
     $query_insert = "INSERT INTO " . FOF_TAG_TABLE . " ( tag_name ) VALUES ( :tag_name )";
-    $statement_insert = fof_db_statement_prepare($query_insert);
+    $statement_insert = $fof_connection->prepare($query_insert);
 
     $query_check = "SELECT * FROM " . FOF_TAG_TABLE . " WHERE tag_name = :tag_name";
-    $statement_check = fof_db_statement_prepare($query_check);
+    $statement_check = $fof_connection->prepare($query_check);
 
     foreach ($entries as $entry) {
         try {
             echo "<br><span>" . $entry['tag_name'];
-            $result_check = fof_db_statement_execute($statement_check, $entry);
+            $result_check = $statement_check->execute($entry);
             $rows_check = $statement_check->fetchAll();
         } catch (PDOException $e) {
             echo "Cannot check " . $entry['tag_name'] . " [<code>$query_check</code>] <pre>" . $e->GetMessage() . "</pre>\n";
@@ -758,7 +772,7 @@ function fof_install_database_populate() {
             echo " <span class='pass'>exists</span>";
         } else {
             try {
-                if (($result_insert = fof_db_statement_execute($statement_insert, $entry)) !== false) {
+                if (($result_insert = $statement_insert->execute($entry)) !== false) {
                     echo " <span class='pass'>added</span>";
                 } else {
                     echo " <span class='fail'>failed</span>";
@@ -780,7 +794,7 @@ function fof_install_user_exists($user='admin') {
     $query = "SELECT * FROM " . FOF_USER_TABLE . " WHERE user_name = " . $fof_connection->quote($user);
 
     try {
-        $statement = fof_db_query($query);
+        $statement = $fof_connection->query($query);
         $rows = $statement->fetchAll();
     } catch (PDOException $e) {
         echo "Cannot select user: <pre>" . $e->GetMessage() . "</pre>";
@@ -795,7 +809,7 @@ function fof_install_user_level_exists($level='admin') {
 
     $query = "SELECT * FROM " . FOF_USER_TABLE . " WHERE user_level = " . $fof_connection->quote($level);
     try {
-        $statement = fof_db_query($query);
+        $statement = $fof_connection->query($query);
         $rows = $statement->fetchAll();
     } catch (PDOException $e) {
         echo "Could not check for admin user: <pre>" . $e->GetMessage() . "</pre>";

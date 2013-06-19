@@ -43,7 +43,7 @@ if ( ! empty($_GET['really']))
     );
     try {
         foreach($queries as $query) {
-            fof_db_exec($query);
+            $fof_connection->exec($query);
         }
     } catch (PDOException $e) {
         die('Cannot drop table: <pre>' . $e->GetMessage() . '</pre>');

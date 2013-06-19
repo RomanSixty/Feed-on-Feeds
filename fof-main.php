@@ -35,7 +35,7 @@ require_once('fof-asset.php');
 require_once('fof-db.php');
 require_once('classes/fof-prefs.php');
 
-fof_db_connect();
+fof_db_connect(empty($fof_installer) ? false : $fof_installer);
 
 if (empty($fof_installer)) {
     if (empty($fof_no_login)) {
@@ -91,6 +91,40 @@ function fof_log($message, $topic='debug')
     fwrite($log, date('r') . " [$topic] $message\n");
 }
 
+/** Assemble a shorthand trace of calls at current state.
+    For debugging purposes.
+*/
+function fof_stacktrace($skip_frames=0, $include_args=true) {
+    $trace = '';
+    $opts = $include_args ? 0 : DEBUG_BACKTRACE_IGNORE_ARGS;
+    $bt = array_reverse(array_slice(debug_backtrace($opts), 1 + $skip_frames));
+    $prev_file = null;
+    foreach ($bt as $frame) {
+        $trace .= '>';
+        $file = empty($frame['file']) ? '?' : basename($frame['file']);
+        $line = empty($frame['line']) ? '?' : $frame['line'];
+        $func = (empty($frame['class']) ? '' : $frame['class']) .
+                (empty($frame['type']) ? '' : $frame['type']) .
+                (empty($frame['function']) ? '?' : $frame['function']);
+        if ($file != $prev_file) {
+            $trace .= $file . ':';
+            $prev_file = $file;
+        }
+        $trace .= $line . ':' . $func;
+    }
+    if ($include_args) {
+        $last_frame = end($bt);
+        $args = array();
+        foreach ($last_frame['args'] as $k => $v)
+            $args[] = var_export($v, true);
+        $trace .= '(' . implode(', ', $args) . ')';
+    } else {
+        $trace .= '()';
+    }
+
+    return $trace;
+}
+
 /* deeper log, for debugging */
 function fof_trace($message=NULL) {
     global $fof_tracelog;
@@ -98,19 +132,12 @@ function fof_trace($message=NULL) {
     if (empty($fof_tracelog))
         return;
 
-    $bt = debug_backtrace();
-    $frame = $bt[1];
-    $first_frame = end($bt);
+    $trace = fof_stacktrace(1, true);
 
-    $args = array();
-    foreach ($frame['args'] as $k=>$v)
-        $args[] = var_export($v,true);
+    if ( ! empty($message))
+        $trace .= ': ' . $message;
 
-    $where = basename($first_frame['file']) . '>' . basename($frame['file']) . ':' . $frame['line'] . ':' . $frame['function'] . '(' . implode(', ', $args) . ')';
-
-    if (isset($message))
-        $where .= ': ' . $message;
-    fof_log($where, 'trace');
+    fof_log($trace, 'trace');
 }
 
 function fof_authenticate($user_name, $user_password_hash)
