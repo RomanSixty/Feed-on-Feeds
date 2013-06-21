@@ -75,8 +75,12 @@ function fof_db_query_log_cb($query_string, $elapsed_time, $result, $rows_affect
 
     $msg .= $query_string;
 
-    if ( ! empty($parameters))
-        $msg .= ' { ' . implode(' ', $parameters) . '}';
+    if ( ! empty($parameters)) {
+        $msg .= ' {';
+        foreach ($parameters as $k => $v)
+            $msg .= " '$k':'$v'";
+        $msg .= ' }';
+    }
 
     if ( ! is_null($rows_affected))
         $msg .= sprintf(' (%d rows affected)', $rows_affected);

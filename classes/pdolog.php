@@ -66,13 +66,7 @@ class PDOStatementLog extends PDOStatement {
 		$result = parent::execute($input_parameters);
 		$time += microtime(true);
 
-		$parameters = array();
-		if ( ! is_array($input_parameters))
-			$input_parameters = array();
-		foreach (array_merge($this->parameters, $input_parameters) as $k => $v)
-			$parameters[] = "'$k':'$v'";
-
-		call_user_func(PDOLog::$logfn, $this->queryString, $time, $result, $this->rowCount(), $parameters);
+		call_user_func(PDOLog::$logfn, $this->queryString, $time, $result, $this->rowCount(), is_null($input_parameters) ? $this->parameters : $input_parameters);
 		return $result;
 	}
 }
