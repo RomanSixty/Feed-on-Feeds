@@ -69,6 +69,7 @@ class FoF_Prefs
 
         $admin_defaults = array(
             "purge" => 30,
+            "purge_grace" => 0,
             "autotimeout" => 30,
             "manualtimeout" => 15,
             "logging" => false,

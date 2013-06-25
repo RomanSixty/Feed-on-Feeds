@@ -83,7 +83,7 @@ if (fof_is_admin()) {
 	$sub_statement = fof_db_get_subscribed_users($feed_id);
 	$users = fof_db_get_users();
 	while (($subscriber = fof_db_get_row($sub_statement, 'user_id')) !== false) {
-		echo '<li>' . $users[$subscriber] . ' (' . $subscriber . ')</li>' . "\n";
+		echo '<li>' . $users[$subscriber]['user_name'] . ' (' . $subscriber . ')</li>' . "\n";
 	}
 	echo '</ul>' . "\n";
 	echo '</div>' . "\n";
@@ -94,8 +94,25 @@ if (fof_is_admin()) {
 	die();
 }
 
-$feed_row = fof_get_feed(fof_current_user(), $feed_id);
+if (fof_is_admin() && ! fof_db_is_subscribed_id(fof_current_user(), $feed_id)) {
+	/* fof_get_feed expects a subscription, so shirk that and just populate overall stats */
+	$feed_row = fof_db_get_feed_by_id($feed_id);
+	fof_db_subscription_feed_fix($feed_row);
+	list($feed_row['feed_items'], $feed_row['feed_tagged'], $counts) = fof_db_feed_counts(fof_current_user(), $feed_id);
+	$feed_row = array_merge(array('tags'=>array(), 'feed_unread'=>0, 'feed_read'=>0, 'feed_starred'=>0, 'feed_age'=>$feed_row['feed_cache_date']), $feed_row);
+	list($feed_row['agestr'], $feed_row['agestrabbr']) = fof_nice_time_stamp($feed_row['feed_cache_date']);
+	$max_stmt = fof_db_get_latest_item_age(fof_current_user(), $feed_id);
+	$feed_row['max_date'] = fof_db_get_row($max_stmt, 'max_date', TRUE);
+	list($feed_row['lateststr'], $feed_row['lateststrabbr']) = fof_nice_time_stamp($feed_row['max_date']);
 
+	/* not subscribed, so no subscription preferences to change.. */
+	$admin_view = true;
+} else {
+	$feed_row = fof_get_feed(fof_current_user(), $feed_id);
+	$admin_view = false;
+}
+
+if ( ! $admin_view) {
 ?>
 <script>
 function subscription_tags_refresh(feed) {
@@ -117,6 +134,9 @@ document.observe("dom:loaded", function() {
 	subscription_tags_refresh(<?php echo json_encode($feed_id); ?>);
 });
 </script>
+<?php
+}
+?>
 
 <form method="post" action="">
 
@@ -128,36 +148,54 @@ document.observe("dom:loaded", function() {
 		</li>
 		<li>
 			Site URL: '<?php echo $feed_row['feed_link']; ?>'
-		</li
+		</li>
 		<li>
 			Description: '<?php echo $feed_row['feed_description']; ?>'
 		</li>
 		<li>
 			Title: '<?php echo $feed_row['feed_title']; ?>'
 		</li>
+<?php
+if ( ! $admin_view) {
+?>
 		<li>
 			Custom Title: 
 			<input type="text" name="alt_title" value="<?php echo htmlentities($feed_row['alt_title'], ENT_QUOTES); ?>" size="50" />
 		</li>
+<?php
+}
+?>
 		<li>
 			Image:
 			<img class="feed-icon" src="<?php echo htmlentities($feed_row['feed_image'], ENT_QUOTES); ?>" />
 		</li>
+<?php
+if ( ! $admin_view) {
+?>
 		<li>
 			Custom Image: 
 			<input type="text" name="alt_image" value="<?php echo htmlentities($feed_row['alt_image'], ENT_QUOTES); ?>" size="50" />
 			&nbsp;
 			<img class="feed-icon" src="<?php echo htmlentities($feed_row['alt_image'], ENT_QUOTES); ?>" />
 		</li>
+<?php
+}
+?>
 	</ul>
 	<span>
+<?php
+if ( ! $admin_view) {
+?>
 		<input type="submit" value="Update" />
+<?php
+}
+?>
 	</span>
 </div>
 
 <div id="counts">
 	<h2>Item Counts</h2>
-	<ul id="counts">
+	<ul>
 		<li>Items: <?php echo $feed_row['feed_items']; ?></li>
 		<li>Read: <?php echo $feed_row['feed_read']; ?></li>
 		<li>Unread: <?php echo $feed_row['feed_unread']; ?></li>
@@ -165,6 +203,43 @@ document.observe("dom:loaded", function() {
 		<li>Tagged: <?php echo $feed_row['feed_tagged']; ?></li>
 	</ul>
 </div>
+
+<div id="history">
+	<h2>Item History</h2>
+	<div>New items per day (today at left)</div>
+	<span>
+<?php
+/*	This will be nicer when rendered as a graph.
+*/
+$history = fof_db_feed_history($feed_id);
+if (empty($history))
+	echo '(No items in feed.)';
+else {
+	if ( ! empty($fof_admin_prefs['purge'])) {
+		$recent = array_slice($history, 0, $fof_admin_prefs['purge'], true);
+		$purgeable = array_slice($history, $fof_admin_prefs['purge'], NULL, true);
+		echo '<span class="recent">' . implode(' ', $recent) . '</span>|';
+		echo '<span class="purgeable">' . implode(' ', $purgeable) . '</span>';
+	} else {
+		echo implode(' ', $history);
+	}
+}
+echo "\n";
+?>
+	</span>
+</div>
+<?php
+if ( ! empty($fof_admin_prefs['purge'])) {
+	echo '<div id="purge">' . "\n";
+	echo '<h2>Purge Potential</h2>' . "\n";
+	/* NOTE: not accurate, don't know how many items were listed in latest feed fetch */
+	$purge_statement = fof_db_items_purge_list($feed_id, $fof_admin_prefs['purge'], $fof_admin_prefs['purge_grace'], array('folded'));
+	$purge_items = $purge_statement->fetchAll();
+	$purge_count = count($purge_items);
+	echo '<div>' . ($purge_count ? $purge_count : 'No') . ' item' . ($purge_count == 1 ? '' : 's') . ' likely to be purged on next update.</div>' . "\n";
+	echo '</div>' . "\n";
+}
+?>
 
 <div id="times">
 	<h2>Dates</h2>
@@ -190,6 +265,9 @@ if ($now >= $feed_row['feed_cache_next_attempt']) {
 	</ul>
 </div>
 
+<?php
+if ( ! $admin_view) {
+?>
 <div id="feedtags">
 	<h2>Tags Automatically Applied to Items from this Feed</h2>
 	<ul>
@@ -199,6 +277,9 @@ if ($now >= $feed_row['feed_cache_next_attempt']) {
 		<input type="text" size="10" id="new_tag" /><input type="button" value="Tag Feed" onclick="subscription_tag_modify(<?php echo htmlentities(implode(',', array(json_encode($feed_id), '$("new_tag").value', json_encode('add'))), ENT_QUOTES); ?>); $(&quot;new_tag&quot;).value = &quot;&quot;; return false;"/>
 	</span>
 </div>
+<?php
+}
+?>
 
 </form>
 

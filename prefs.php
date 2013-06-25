@@ -28,11 +28,12 @@ $message = "";
 if(fof_is_admin() && isset($_POST['adminprefs']))
 {
     $prefs->set('purge', $_POST['purge']);
+    $prefs->set('purge_grace', $_POST['purge_grace']);
     $prefs->set('manualtimeout', $_POST['manualtimeout']);
     $prefs->set('autotimeout', $_POST['autotimeout']);
-    $prefs->set('logging', $_POST['logging']);
+    $prefs->set('logging', empty($_POST['logging']) ? null : $_POST['logging']);
     $prefs->set('blacklist', $_POST['blacklist']);
-    $prefs->set('dynupdates', $_POST['dynupdates']);
+    $prefs->set('dynupdates', empty($_POST['dynupdates']) ? null : $_POST['dynupdates']);
     $prefs->set('match_similarity', $_POST['match_similarity']);
 
     $prefs->save();
@@ -44,7 +45,7 @@ if(fof_is_admin() && isset($_POST['adminprefs']))
         $log_file = (empty($fof_installer) ? 'fof.log' : 'fof-install.log');
         $log = @fopen(implode(DIRECTORY_SEPARATOR, array($log_path, $log_file)), 'a');
 
-        if ($log) {
+        if ($log === false) {
             $message .= ' Warning: could not write to log file!';
         }
     }
@@ -378,6 +379,7 @@ foreach($feeds as $row)
 <form method="post" action="prefs.php#adminprefs" style="border: 1px solid black; margin: 10px; padding: 10px;">
 Enable logging? <input type=checkbox name="logging" <?=$prefs->get('logging')?"checked":'' ?>><br><br>
 Purge read items after <input size="4" type="text" name=purge value="<?=$prefs->get('purge')?>"> days (leave blank to never purge)<br><br>
+When purging read items, keep at least <input size="4" type="text" name="purge_grace" value="<?php echo $prefs->get('purge_grace'); ?>"> items per feed, even if they're old.<br><br>
 Allow automatic feed updates every <input size="4" type="text" name=autotimeout value="<?=$prefs->get('autotimeout')?>"> minutes<br><br>
 Allow manual feed updates every <input size="4" type="text" name=manualtimeout value="<?=$prefs->get('manualtimeout')?>"> minutes<br><br>
 Use dynamic update intervals based on each feed's own update rate <input type="checkbox" name="dynupdates" value="1" <?=$prefs->get('dynupdates')?'checked':''?>><br><br>

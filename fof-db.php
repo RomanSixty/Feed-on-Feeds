@@ -271,7 +271,7 @@ function fof_db_get_latest_item_age($user_id=null, $feed_id=null) {
     items with tags, and the count of items per tag.
 */
 function fof_db_feed_counts($user_id, $feed_id) {
-    global $FOF_ITEM_TABLE, $FOF_ITEM_TAG_TABLE, $FOF_TAG_TABLE;
+    global $FOF_ITEM_TABLE, $FOF_ITEM_TAG_TABLE, $FOF_SUBSCRIPTION_TABLE, $FOF_TAG_TABLE;
     global $fof_connection;
     static $system_tags = array('unread', 'star', 'folded'); /* won't tally these under 'tagged' */
     $counts = array();
@@ -284,8 +284,8 @@ function fof_db_feed_counts($user_id, $feed_id) {
     /* get total items */
     $query = "SELECT count(DISTINCT i.item_id) AS total " .
              "FROM $FOF_ITEM_TABLE i " .
-                    "LEFT JOIN $FOF_ITEM_TAG_TABLE it ON it.item_id = i.item_id " .
-             "WHERE i.feed_id = :feed_id AND it.user_id = :user_id";
+                    "LEFT JOIN $FOF_SUBSCRIPTION_TABLE s ON s.feed_id = i.feed_id " .
+             "WHERE i.feed_id = :feed_id AND s.user_id = :user_id";
     $statement = $fof_connection->prepare($query);
     $statement->bindValue(':user_id', $user_id);
     $statement->bindValue(':feed_id', $feed_id);
@@ -347,7 +347,8 @@ function fof_db_get_subscriptions($user_id, $dueOnly=false)
     but will initialize entries to null if not present.
 */
 function fof_db_subscription_feed_fix(&$f) {
-    $f['subscription_prefs'] = unserialize($f['subscription_prefs']);
+    if ( ! empty($f['subscription_prefs']))
+        $f['subscription_prefs'] = unserialize($f['subscription_prefs']);
     if (empty($f['subscription_prefs']))
         $f['subscription_prefs'] = array();
     if (empty($f['subscription_prefs']['tags']))
@@ -682,6 +683,39 @@ function fof_db_feed_cache_set($feed_id, $next_attempt)
     $statement->closeCursor();
 }
 
+/** Return an array representing a feed's activity.
+    Array contains the number of items added to the feed, indexed by days-ago.
+
+    FIXME: there probably ought to be an offset to midnight or something in
+    here somewhere, but it's just a rough overview
+*/
+function fof_db_feed_history($feed_id) {
+    global $FOF_ITEM_TABLE;
+    global $fof_connection;
+
+    $history = array();
+    $today_day = floor( time() / (60 * 60 * 24) );
+
+    $query = "SELECT item_updated FROM $FOF_ITEM_TABLE WHERE feed_id = :feed_id";
+    $statement = $fof_connection->prepare($query);
+    $statement->bindValue(':feed_id', $feed_id);
+    $statement->execute();
+    while (($item_updated = fof_db_get_row($statement, 'item_updated')) !== false) {
+        $item_day = floor($item_updated / (60 * 60 * 24));
+        $days_ago = $today_day - $item_day;
+        if (empty($history[$days_ago]))
+            $history[$days_ago] = 1;
+        else
+            $history[$days_ago]++;
+    }
+    end($history);
+    $last = key($history);
+    reset($history);
+    if ( ! empty($last))
+        $history = array_merge(array_fill(0, $last, 0), $history);
+    return $history;
+}
+
 ////////////////////////////////////////////////////////////////////////////////
 // Item level stuff
 ////////////////////////////////////////////////////////////////////////////////
@@ -882,22 +916,75 @@ function fof_db_get_item($user_id, $item_id)
     return $item;
 }
 
-function fof_db_items_purge_list($feed_id, $purge_days)
-{
-    global $FOF_ITEM_TABLE, $FOF_ITEM_TAG_TABLE;
+/** Return a row iterator over any items from $feed_id which are older than
+    $purge_days and are not tagged (excepting $ignore_tag_names) by any users.
+    Does not include any items which would be in the remaining $purge_grace
+    items of feed, regardless of age.
+*/
+function fof_db_items_purge_list($feed_id, $purge_days, $purge_grace=0, $ignore_tag_names=array()) {
+    global $FOF_ITEM_TABLE, $FOF_TAG_TABLE, $FOF_ITEM_TAG_TABLE;
     global $fof_connection;
 
     fof_trace();
 
     $purge_secs = $purge_days * 24 * 60 * 60;
-    $query = "SELECT i.item_id FROM $FOF_ITEM_TABLE i" .
-            " LEFT JOIN $FOF_ITEM_TAG_TABLE t ON i.item_id = t.item_id" .
-            " WHERE tag_id IS NULL" .
-                " AND feed_id = :feed_id" .
-                " AND i.item_cached <= :purge_time";
+
+    $ignore_tag_names_q = array();
+    foreach ($ignore_tag_names as $tagname) {
+        $ignore_tag_names_q[] = $fof_connection->quote($tagname);
+    }
+
+    /*  We're interested in items (from a specific feed, and last updated before
+        the given timestamp) which either lack tags entirely, or which are
+        tagged /solely/ with the tags we've specified.
+
+        We begin by getting all of the item_ids from the item table which have
+        either no tag_id in the item-tag table, or have one of the specified
+        tag_names.  Then, from that set, we remove any item_ids which exist in
+        the item-tag table which are tagged with anything other than our allowed
+        tag_names.
+
+        This doesn't use set-difference operations because MySQL doesn't know
+        what those are.
+
+        This could probably be optimized.
+    */
+
+    $query = "SELECT DISTINCT i.item_id FROM $FOF_ITEM_TABLE i" .
+            " LEFT JOIN $FOF_ITEM_TAG_TABLE it USING (item_id)" .
+            " LEFT JOIN $FOF_TAG_TABLE t USING (tag_id)" .
+            " WHERE i.feed_id = :feed_id" .
+                " AND i.item_updated < :purge_before" .
+                " AND (tag_id IS NULL" .
+             (empty($ignore_tag_names_q) ? '' : (" OR t.tag_name IN (" . implode(',', $ignore_tag_names_q) . ")")) .
+             ")";
+    if ( ! empty($ignore_tag_names_q))
+        $query .= " AND i.item_id NOT IN (" .
+                    " SELECT DISTINCT it.item_id FROM $FOF_ITEM_TAG_TABLE it" .
+                    " LEFT JOIN $FOF_ITEM_TABLE i USING (item_id)" .
+                    " LEFT JOIN $FOF_TAG_TABLE t USING (tag_id)" .
+                    " WHERE feed_id = :feed_id" .
+                        " AND i.item_updated < :purge_before" .
+                        " AND t.tag_name NOT IN (" . implode(',', $ignore_tag_names_q) . ")" .
+                " )";
+    $query .= " ORDER BY i.item_updated";
+
+    /*  We need to include a LIMIT of as many as the driver can return,
+        because some drivers don't understand OFFSET without a LIMIT.
+    */
+    if (defined('USE_MYSQL'))
+        $query .= ' LIMIT 18446744073709551610'; /* unsigned bigint max */
+    else if (defined('USE_SQLITE'))
+        $query .= ' LIMIT -1';
+    else
+        throw new Exception('missing implementation');
+
+    /*  Leave some items. */
+    $query .= " OFFSET " . $purge_grace;
+
     $statement = $fof_connection->prepare($query);
-    $statement->bindValue(":feed_id", $feed_id);
-    $statement->bindValue(":purge_time", time() - $purge_secs);
+    $statement->bindValue(':feed_id', $feed_id);
+    $statement->bindValue(':purge_before', time() - $purge_secs);
     $result = $statement->execute();
 
     return $statement;
@@ -916,15 +1003,26 @@ function fof_db_items_delete($items)
     if ( ! is_array($items))
         $items = array($items);
 
+    $items = array_filter($items);
+
+    if (empty($items))
+        return;
+
     $items_q = array();
     foreach($items as $item) {
         $items_q[] = $fof_connection->quote($item);
     }
 
-    $query = "DELETE FROM $FOF_ITEM_TABLE WHERE item_id IN (" . (count($items_q) ? implode(', ', $items_q) : "''") . ")";
-    $statement = $fof_connection->prepare($query);
-    $result = $statement->execute();
-    $statement->closeCursor();
+    $fof_connection->beginTransaction();
+
+    $query = "DELETE FROM $FOF_ITEM_TABLE WHERE item_id IN (" . implode(',', $items_q) . ")";
+    $result = $fof_connection->exec($query);
+
+    /* ON DELETE CASCADE */
+    $query = "DELETE FROM $FOF_ITEM_TAG_TABLE WHERE item_id IN (" . implode(',', $items_q) . ")";
+    $result = $fof_connection->exec($query);
+
+    $fof_connection->commit();
 }
 
 /* Used for similarity matching. */

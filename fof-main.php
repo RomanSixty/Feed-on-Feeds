@@ -428,7 +428,7 @@ function fof_get_feed($user_id, $feed_id) {
     $feed['lateststr'] = '';
     $feed['lateststrabbr'] = '';
     $statement = fof_db_get_latest_item_age($user_id, $feed_id);
-    $feed['max_date'] = fof_db_get_row($statement, 'max_date', NULL);
+    $feed['max_date'] = fof_db_get_row($statement, 'max_date', TRUE);
     list($feed['lateststr'], $feed['lateststrabbr']) = fof_nice_time_stamp($feed['max_date']);
 
     return $feed;
@@ -876,8 +876,6 @@ function fof_update_feed($id)
     static $blacklist = null;
     static $admin_prefs = null;
 
-    $ids = array();
-
     if ($blacklist === null) {
         $p =& FoF_Prefs::instance();
         $admin_prefs = $p->admin_prefs;
@@ -927,8 +925,11 @@ function fof_update_feed($id)
     $purgedUpdTimes = array();
     $count_Added = 0;
 
+    $items_in_feed = 0;
     if ($rss->get_items()) {
         foreach ($rss->get_items() as $item) {
+            $items_in_feed++;
+
             $title = $item->get_title();
 
             foreach ($blacklist as $bl)
@@ -979,8 +980,6 @@ function fof_update_feed($id)
             } else {
                 fof_db_update_item($feed_id, $item_id, $link, time());
             }
-
-            $ids[] = $id;
         }
     }
 
@@ -1057,28 +1056,38 @@ function fof_update_feed($id)
         fof_db_feed_cache_set($feed_id, (int)round($nextTime));
     }
 
-    // optionally purge old items -  if 'purge' is set we delete items that are not
-    // unread or starred, not currently in the feed or within sizeof(feed) items
-    // of being in the feed, and are over 'purge' many days old
-
-    $ndelete = 0;
     $delete = array();
 
-    if ( ! empty($admin_prefs['purge']) )
-    {
-        $purge = $admin_prefs [ 'purge' ];
+    /*  If 'purge' preference is set, we delete any items that are not tagged by
+        by anything other than 'folded', are older than 'purge' days, and are
+        not one of the most recent 'purge_grace' items in the feed.
 
-        fof_log('purge is ' . $purge);
+        FIXME: behavior question: should auto-tagged feeds purge items with
+               their auto-tags set?
+    */
+    if ( ! empty($admin_prefs['purge']) ) {
+        /*  Always keep at least as many items as feed provides, or as set by
+            preferences.
+        */
+        $grace = $items_in_feed;
+        if ( ! empty($admin_prefs['purge_grace']))
+            $grace = max($grace, $admin_prefs['purge_grace']);
 
-        $result = fof_db_items_purge_list($feed_id, $purge);
+        /* It's okay to purge 'folded' items. */
+        $ignore_tags = array('folded');
 
-        while($row = fof_db_get_row($result)) {
+        fof_log('purge is ' . $admin_prefs['purge']);
+
+        $result = fof_db_items_purge_list($feed_id, $admin_prefs['purge'], $grace, $ignore_tags);
+
+        while(($row = fof_db_get_row($result)) !== false) {
             $delete[] = $row['item_id'];
         }
-
-        fof_db_items_delete($delete);
     }
 
+    /*  If 'match_similarity' preference is set, we delete any items with
+        matching titles and similar content.
+    */
     if ( ! empty($admin_prefs['match_similarity'])) {
         $threshold = $admin_prefs['match_similarity'];
 
@@ -1095,18 +1104,12 @@ function fof_update_feed($id)
         }
     }
 
-    if (count( $delete )) {
-        fof_db_items_delete($delete);
-        fof_db_tag_delete($delete);
-    }
-
-    $ndelete += count ( $delete );
+    fof_db_items_delete($delete);
 
     fof_db_feed_mark_cached($feed_id);
 
-    $log = "feed update complete, $n new items, $ndelete items purged";
-    if($admin_prefs['purge'] == "")
-    {
+    $log = "feed update complete, $n new items, " . count($delete) . " items purged";
+    if (empty($admin_prefs['purge'])) {
         $log .= " (purging disabled)";
     }
     fof_log($log, "update");
