@@ -129,11 +129,14 @@ if ( ! empty($_GET['feed_history'])) {
         'title' => 'Feed History',
         'description' => 'Items added to feed.',
         'min_items' => max(31, $fof_prefs_obj->admin_prefs['purge'] + 7),
+        'max_items' => 366,
         'label_zero'=>'&#8593; today',
         'label_x'=>'days ago &#8594;'
     );
-    if ( ! empty($fof_prefs_obj->admin_prefs['purge']))
+    if ( ! empty($fof_prefs_obj->admin_prefs['purge'])) {
         $options['shade_over'] = $fof_prefs_obj->admin_prefs['purge'];
+        $options['max_items'] = min($options['max_items'], ceil($fof_prefs_obj->admin_prefs['purge'] * SVGHistogram::PHI));
+    }
 
     $graph = new SVGHistogram($options);
 

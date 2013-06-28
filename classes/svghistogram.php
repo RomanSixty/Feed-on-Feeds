@@ -5,10 +5,15 @@
 
 	Derived from code copyright (C) 2002 J. David Eisenberg under GPL
 */
+
+define('SVGHistogramPHI', (1 + sqrt(5)) / 2);
 class SVGHistogram {
+	const PHI = SVGHistogramPHI;
+
 	var $options = array(
 		'frame_color' => null,
 		'min_items' => '100',
+		'max_items' => null,
 		'title' => '',
 		'description' => '',
 		'bar_width' => 5,
@@ -132,6 +137,29 @@ class SVGHistogram {
 		return $bar;
 	}
 
+	/** Draw an indicator of more-but-unrendered items.
+	*/
+	protected function svg_spillage($count, $sum, $max) {
+		if (empty($count)
+		||  empty($this->options['max_items']))
+			return '';
+
+		$points = array();
+		$x = $this->options['max_items'] * $this->options['bar_width'];
+		$points[] = $x . ',0';
+		$points[] = $x . ',' . $this->options['bar_height'];
+		$points[] = ($x + ceil($this->options['bar_width'] * self::PHI)) . ',' . round($this->options['bar_height'] / 2);
+		$spill ='<polygon';
+		$spill .= ' id="spillage"';
+		$spill .= ' fill="' . $this->value_to_color(($count / $sum) / $max) . '"';
+		$spill .= ' stroke="none"';
+		$spill .= ' points="' . implode(' ', $points) . ',"';
+		$spill .= ' />' . "\n";
+
+		return $spill;
+	}
+
+
 	protected function svg_label_zero($width, $height) {
 		if (empty($this->options['label_zero']))
 			return '';
@@ -163,14 +191,26 @@ class SVGHistogram {
 		$height = $this->options['bar_height'];
 		$height += $no_labels ? 2 : ($this->options['label_height'] + 6);
 		$width = ($count < $this->options['min_items'] ? $this->options['min_items'] : $count) * $this->options['bar_width'];
+		if ( ! empty($this->options['max_items'])) {
+			$max_width = $this->options['max_items'] * $this->options['bar_width'];
+			$width = $max_width + ceil($this->options['bar_width'] * self::PHI);
+		}
 
 		echo $this->svg_header($width, $height);
 
-		$max = max($values);
+		$spilt_count = 0;
+		$spilt_sum = 0;
+		$max = $count ? max($values) : 0;
 		foreach ($values as $ord => $val) {
-			echo '	' . $this->svg_bar($ord, $val, $max) . "\n";
+			if ( ! empty($this->options['max_items'])
+			&&  $ord >= $this->options['max_items']) {
+				$spilt_count ++;
+				$spilt_sum += $val;
+			} else {
+				echo '	' . $this->svg_bar($ord, $val, $max) . "\n";
+			}
 		}
-
+		echo $this->svg_spillage($spilt_count, $spilt_sum, $max);
 		echo $this->svg_frame($width, $height);
 		echo $this->svg_ticks($width, $height);
 		echo $this->svg_shade($width, $height);
