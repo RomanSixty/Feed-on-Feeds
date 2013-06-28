@@ -116,6 +116,31 @@ if ( ! empty($_POST['subscription_tag'])) {
     exit();
 }
 
+/** Serve out an SVG image showing a feed's activity history.
+*/
+if ( ! empty($_GET['feed_history'])) {
+    include_once('classes/svghistogram.php');
+
+    fof_set_content_type('image/svg+xml');
+
+    $history = fof_db_feed_history($_GET['feed_history']);
+
+    $options = array(
+        'title' => 'Feed History',
+        'description' => 'Items added to feed.',
+        'min_items' => max(31, $fof_prefs_obj->admin_prefs['purge'] + 7),
+        'label_zero'=>'&#8593; today',
+        'label_x'=>'days ago &#8594;'
+    );
+    if ( ! empty($fof_prefs_obj->admin_prefs['purge']))
+        $options['shade_over'] = $fof_prefs_obj->admin_prefs['purge'];
+
+    $graph = new SVGHistogram($options);
+
+    $graph->render($history);
+
+    exit();
+}
 
 header('Status: 400 Bad Request');
 echo 'Unknown request.';

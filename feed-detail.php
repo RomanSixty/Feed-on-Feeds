@@ -207,26 +207,9 @@ if ( ! $admin_view) {
 <div id="history">
 	<h2>Item History</h2>
 	<div>New items per day (today at left)</div>
-	<span>
-<?php
-/*	This will be nicer when rendered as a graph.
-*/
-$history = fof_db_feed_history($feed_id);
-if (empty($history))
-	echo '(No items in feed.)';
-else {
-	if ( ! empty($fof_admin_prefs['purge'])) {
-		$recent = array_slice($history, 0, $fof_admin_prefs['purge'], true);
-		$purgeable = array_slice($history, $fof_admin_prefs['purge'], NULL, true);
-		echo '<span class="recent">' . implode(' ', $recent) . '</span>|';
-		echo '<span class="purgeable">' . implode(' ', $purgeable) . '</span>';
-	} else {
-		echo implode(' ', $history);
-	}
-}
-echo "\n";
-?>
-	</span>
+	<div>
+	    <img src="feed-action.php?feed_history=<?php echo $feed_id; ?>" />
+	</div>
 </div>
 <?php
 if ( ! empty($fof_admin_prefs['purge'])) {
