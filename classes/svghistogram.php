@@ -16,8 +16,8 @@ class SVGHistogram {
 		'max_items' => null,
 		'title' => '',
 		'description' => '',
-		'bar_width' => 5,
-		'bar_height' => 20,
+		'bar_width' => 20,
+		'bar_height' => 100,
 		'tick_every' => 7,
 		'shade_over' => null,
 		'shade_color' => 'red',
@@ -63,7 +63,7 @@ class SVGHistogram {
 		if (empty($this->options['frame_color']))
 			return '';
 
-		$frame .= '	<g id="frame">' . "\n"; 
+		$frame .= '	<g id="frame">' . "\n";
 		$frame .= '		<rect x="0.5px" y="0.5px" width="' . ($width - 1) . 'px" height="' . ($this->options['bar_height'] - 1) . 'px" fill="none" stroke="' . $this->options['frame_color'] . '" />' . "\n";
 		$frame .= '	</g>' . "\n";
 
@@ -79,7 +79,7 @@ class SVGHistogram {
 		$tick_spacing = $this->options['tick_every'] * $this->options['bar_width'];
 		$tick_paths = array();
 		for ($i = $tick_spacing; $i < $width; $i += $tick_spacing) {
-			$tick_paths[] = sprintf('M %d %d v %d', $i, ($this->options['bar_height'] - 2), 4); 
+			$tick_paths[] = sprintf('M %d %d v %d', $i, ($this->options['bar_height'] - 2), 4);
 		}
 		$ticks = '	<g id="ticks">' . "\n";
 		$ticks .= '		<path d="' . implode(' ', $tick_paths) . '" stroke="gray" fill="none" stroke-width="0.5px" />' . "\n";
