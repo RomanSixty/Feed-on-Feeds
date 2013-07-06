@@ -85,6 +85,14 @@ function fof_log($message, $topic='debug')
     if ( ! $log)
         return;
 
+	// log topic restriction?
+	if ( ! empty($fof_prefs_obj->admin_prefs['log_topics'])) {
+		$topic_restriction = explode(' ', $fof_prefs_obj->admin_prefs['log_topics']);
+
+		if ( ! in_array($topic, $topic_restriction))
+			return;
+	}
+
     $message = str_replace ("\n", "\\n", $message);
     $message = str_replace ("\r", "\\r", $message);
 
@@ -1035,14 +1043,14 @@ function fof_update_feed($id)
             $stdev = sqrt(($count*$totalDeltaSquare - $totalDelta*$totalDelta)
                           /($count * ($count - 1)));
         }
-       
+
         // This algorithm is rife with fiddling, and I really need to generate metrics to test the efficacy
         $now = time();
         $nextInterval = $mean + $stdev*2/($count + 1);
         $nextTime = min(max($lastTime + $nextInterval, $now + $stdev),
                         $now + 86400/2);
 
-        $lastInterval = $now - $lastTime; 
+        $lastInterval = $now - $lastTime;
         fof_log($feed['feed_title'] . ": Next feed update in "
                 . ($nextTime - $now) . " seconds;"
                 . " count=$count t=$totalDelta t2=$totalDeltaSquare"
