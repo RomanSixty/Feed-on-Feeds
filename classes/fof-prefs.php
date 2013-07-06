@@ -18,7 +18,7 @@ class FoF_Prefs
     var $prefs;
     var $admin_prefs;
 
-    function FoF_Prefs($user_id)
+    function __construct($user_id)
     {
         $this->user_id = $user_id;
 
