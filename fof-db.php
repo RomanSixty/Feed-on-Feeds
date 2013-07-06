@@ -969,18 +969,20 @@ function fof_db_items_purge_list($feed_id, $purge_days, $purge_grace=0, $ignore_
                 " )";
     $query .= " ORDER BY i.item_updated";
 
-    /*  We need to include a LIMIT of as many as the driver can return,
-        because some drivers don't understand OFFSET without a LIMIT.
-    */
-    if (defined('USE_MYSQL'))
-        $query .= ' LIMIT 18446744073709551610'; /* unsigned bigint max */
-    else if (defined('USE_SQLITE'))
-        $query .= ' LIMIT -1';
-    else
-        throw new Exception('missing implementation');
+	if ( ! empty($purge_grace)) {
+		/*  We need to include a LIMIT of as many as the driver can return,
+			because some drivers don't understand OFFSET without a LIMIT.
+		*/
+		if (defined('USE_MYSQL'))
+			$query .= ' LIMIT 18446744073709551610'; /* unsigned bigint max */
+		else if (defined('USE_SQLITE'))
+			$query .= ' LIMIT -1';
+		else
+			throw new Exception('missing implementation');
 
-    /*  Leave some items. */
-    $query .= " OFFSET " . $purge_grace;
+		/*  Leave some items. */
+		$query .= ' OFFSET ' . $purge_grace;
+	}
 
     $statement = $fof_connection->prepare($query);
     $statement->bindValue(':feed_id', $feed_id);
@@ -992,7 +994,7 @@ function fof_db_items_purge_list($feed_id, $purge_days, $purge_grace=0, $ignore_
 
 function fof_db_items_delete($items)
 {
-    global $FOF_ITEM_TABLE;
+    global $FOF_ITEM_TABLE, $FOF_ITEM_TAG_TABLE;
     global $fof_connection;
 
     fof_trace();
