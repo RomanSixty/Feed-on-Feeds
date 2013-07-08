@@ -193,6 +193,8 @@ if ( ! $admin_view) {
 	</span>
 </div>
 
+</form>
+
 <div id="counts">
 	<h2>Item Counts</h2>
 	<ul>
@@ -251,20 +253,26 @@ if ($now >= $feed_row['feed_cache_next_attempt']) {
 <?php
 if ( ! $admin_view) {
 ?>
+<form method="post" action="">
+
 <div id="feedtags">
 	<h2>Tags Automatically Applied to Items from this Feed</h2>
 	<ul>
 		<li><img class="feed-icon" src="<?php echo $fof_asset['busy_icon']; ?>" /> Tags loading...</li>
 	</ul>
 	<span>
-		<input type="text" size="10" id="new_tag" /><input type="button" value="Tag Feed" onclick="subscription_tag_modify(<?php echo htmlentities(implode(',', array(json_encode($feed_id), '$("new_tag").value', json_encode('add'))), ENT_QUOTES); ?>); $(&quot;new_tag&quot;).value = &quot;&quot;; return false;"/>
+<?php
+$addtag_js = htmlentities('subscription_tag_modify(' . implode(',', array(json_encode($feed_id), '$("new_tag").value', json_encode('add'))) . '); $("new_tag").value = ""; return false;', ENT_QUOTES);
+?>
+		<input type="text" size="10" id="new_tag" onkeypress="if (event.keyCode == 13) { <?php echo $addtag_js; ?> }" /><input type="button" value="Tag Feed" onclick="<?php echo $addtag_js; ?>"/>
 	</span>
 </div>
+
+</form>
+
 <?php
 }
 ?>
-
-</form>
 
 <?php
 include('footer.php');
