@@ -32,6 +32,7 @@ if(fof_is_admin() && isset($_POST['adminprefs']))
     $prefs->set('manualtimeout', $_POST['manualtimeout']);
     $prefs->set('autotimeout', $_POST['autotimeout']);
     $prefs->set('logging', empty($_POST['logging']) ? null : $_POST['logging']);
+    $prefs->set('log_topics', empty($_POST['log_topics']) ? null : $_POST['log_topics']);
     $prefs->set('blacklist', $_POST['blacklist']);
     $prefs->set('dynupdates', empty($_POST['dynupdates']) ? null : $_POST['dynupdates']);
     $prefs->set('match_similarity', $_POST['match_similarity']);
@@ -377,7 +378,7 @@ foreach($feeds as $row)
 
 <br><h1 id="adminprefs">Feed on Feeds - Admin Options</h1>
 <form method="post" action="prefs.php#adminprefs" style="border: 1px solid black; margin: 10px; padding: 10px;">
-Enable logging? <input type=checkbox name="logging" <?=$prefs->get('logging')?"checked":'' ?>><br><br>
+Enable logging? <input type=checkbox name="logging" <?=$prefs->get('logging')?"checked":'' ?>> Log Topic Restriction (space separated): <input type="text" name="log_topics" value="<?=$prefs->get('log_topics') ?>"><br><br>
 Purge read items after <input size="4" type="text" name=purge value="<?=$prefs->get('purge')?>"> days (leave blank to never purge)<br><br>
 When purging read items, keep at least <input size="4" type="text" name="purge_grace" value="<?php echo $prefs->get('purge_grace'); ?>"> items per feed, even if they're old.<br><br>
 Allow automatic feed updates every <input size="4" type="text" name=autotimeout value="<?=$prefs->get('autotimeout')?>"> minutes<br><br>

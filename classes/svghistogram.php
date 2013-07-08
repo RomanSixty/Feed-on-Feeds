@@ -19,8 +19,8 @@ class SVGHistogram {
 		'spill_caption' => 'Not shown: %2$d items over %1$d more days',
 		'title' => '',
 		'description' => '',
-		'bar_width' => 5,
-		'bar_height' => 20,
+		'bar_width' => 20,
+		'bar_height' => 100,
 		'bar_caption' => '%1$d days ago, %2$d items',
 		'tick_every' => 7,
 		'shade_over' => null,
@@ -82,7 +82,7 @@ class SVGHistogram {
 		if (empty($options['frame_color']))
 			return '';
 
-		$frame .= '	<g id="frame">' . "\n"; 
+		$frame .= '	<g id="frame">' . "\n";
 		$frame .= '		<rect x="0.5px" y="0.5px" width="' . ($width - 1) . 'px" height="' . ($options['bar_height'] - 1) . 'px" fill="none" stroke="' . $options['frame_color'] . '" />' . "\n";
 		$frame .= '	</g>' . "\n";
 
