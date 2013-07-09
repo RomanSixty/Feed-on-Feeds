@@ -14,7 +14,6 @@
 /*
 	FIXME:
 		add form fallbacks for ajax actions
-		add keyup handlers for ajax field submissions
 */
 
 require_once('fof-main.php');
@@ -60,6 +59,14 @@ if (isset($_POST['alt_image'])) {
 		}
 	} else {
 		$messages[] = '<span class="error">Failed to set custom image!</span>';
+	}
+}
+
+if (isset($_POST['new_tag'])) {
+	if (fof_tag_feed(fof_current_user(), $feed_id, $_POST['new_tag'])) {
+		$messages[] = 'Feed will now be tagged with "' . $_POST['new_tag'] . '"';
+	} else {
+		$messages[] = '<span class="error">Failed to set tag on feed!</span>';
 	}
 }
 
@@ -112,7 +119,9 @@ if (fof_is_admin() && ! fof_db_is_subscribed_id(fof_current_user(), $feed_id)) {
 	$admin_view = false;
 }
 
-if ( ! $admin_view) {
+/* only include the update scripts if subscribed */
+if ( ! $admin_view || fof_db_is_subscribed_id(fof_current_user(), $feed_id)) {
+	$feed_id_js = json_encode($feed_id);
 ?>
 <script>
 function subscription_tags_refresh(feed) {
@@ -131,7 +140,23 @@ function subscription_tag_modify(feed, tag, action) {
 	new Ajax.Request("feed-action.php", {method: "post", parameters: params, onComplete: complete});
 }
 document.observe("dom:loaded", function() {
-	subscription_tags_refresh(<?php echo json_encode($feed_id); ?>);
+	subscription_tags_refresh(<?php echo $feed_id_js; ?>);
+});
+document.observe("dom:loaded", function() {
+	$('new_tag').observe("keypress", function(event) {
+		if (event.keyCode == Event.KEY_RETURN) {
+			subscription_tag_modify(<?php echo $feed_id_js; ?>, this.value, "add");
+			this.clear();
+			return false;
+		}
+	});
+});
+document.observe("dom:loaded", function() {
+	$('new_tag').next('input[type="button"]').observe("click", function(event) {
+		subscription_tag_modify(<?php echo $feed_id_js; ?>, $('new_tag').value, "add");
+		$('new_tag').clear();
+		return false;
+	});
 });
 </script>
 <?php
@@ -262,9 +287,12 @@ if ( ! $admin_view) {
 	</ul>
 	<span>
 <?php
-$addtag_js = htmlentities('subscription_tag_modify(' . implode(',', array(json_encode($feed_id), '$("new_tag").value', json_encode('add'))) . '); $("new_tag").value = ""; return false;', ENT_QUOTES);
+	/*
+	* As far as I can tell, the observe event attached on domload (above) ought to handle this, but without the inline keyCode check here, it seems to still try to submit the form on carriage-return.
+	* Perhaps someone better-versed in clientside js can iron this out.
+	*/
 ?>
-		<input type="text" size="10" id="new_tag" onkeypress="if (event.keyCode == 13) { <?php echo $addtag_js; ?> }" /><input type="button" value="Tag Feed" onclick="<?php echo $addtag_js; ?>"/>
+		<input type="text" size="10" id="new_tag" onkeypress="if (event.keyCode == Event.KEY_RETURN) return false;" /><input type="button" value="Tag Feed" />
 	</span>
 </div>
 
