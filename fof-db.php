@@ -205,6 +205,28 @@ function fof_db_feed_mark_attempted_cache($feed_id)
     return $result;
 }
 
+/** Store the status of the most recent update of a feed.
+*/
+function fof_db_feed_update_attempt_status($feed_id, $status) {
+    global $FOF_FEED_TABLE;
+    global $fof_connection;
+
+    fof_trace();
+
+    $query = "UPDATE $FOF_FEED_TABLE SET feed_cache_last_attempt_status = :status WHERE feed_id = :feed_id";
+    $statement = $fof_connection->prepare($query);
+    $statement->bindValue(':feed_id', $feed_id);
+    if (empty($status)) {
+        $statement->bindValue(':status', NULL, PDO::PARAM_NULL);
+    } else {
+        $statement->bindValue(':status', $status);
+    }
+    $result = $statement->execute();
+    $statement->closeCursor();
+
+    return $result;
+}
+
 /** Store the various data which describes a feed.
 */
 function fof_db_feed_update_metadata($feed_id, $title, $link, $description, $image, $image_cache_date)

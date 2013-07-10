@@ -159,7 +159,8 @@ function fof_install_schema() {
     $tables[FOF_FEED_TABLE][] = "feed_cache_date " . SQL_DRIVER_INT_TYPE . " DEFAULT '0'";
     $tables[FOF_FEED_TABLE][] = "feed_cache_attempt_date " . SQL_DRIVER_INT_TYPE . " DEFAULT '0'";
     $tables[FOF_FEED_TABLE][] = "feed_cache_next_attempt " . SQL_DRIVER_INT_TYPE . " DEFAULT '0'";
-    $tables[FOF_FEED_TABLE][] = "feed_cache TEXT";
+    $tables[FOF_FEED_TABLE][] = "feed_cache TEXT"; /* FIXME: unused column? */
+    $tables[FOF_FEED_TABLE][] = "feed_cache_last_attempt_status TEXT";
     if (defined('USE_MYSQL')) {
         $tables[FOF_FEED_TABLE][] = "PRIMARY KEY ( feed_id )";
         $tables[FOF_FEED_TABLE][] = "KEY feed_cache_next_attempt ( feed_cache_next_attempt )";
@@ -612,6 +613,10 @@ END";
 
         fof_install_migrate_index($queries, FOF_FEED_TABLE, 'feed_cache_next_attempt', array(
             'add' => fof_install_create_index_query(FOF_FEED_TABLE, 'feed_cache_next_attempt', array('INDEX', 'feed_cache_next_attempt'))
+        ));
+
+        fof_install_migrate_column($queries, FOF_FEED_TABLE, 'feed_cache_last_attempt_status', array(
+            'add' => "ALTER TABLE " . FOF_FEED_TABLE . " ADD 'feed_cache_last_attempt_status' TEXT AFTER 'feed_cache_next_attempt'"
         ));
 
         if ( ! defined('USE_SQLITE')) {

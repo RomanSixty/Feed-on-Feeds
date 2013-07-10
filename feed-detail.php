@@ -259,6 +259,11 @@ if ( ! empty($fof_admin_prefs['purge'])) {
 		<li>Image cached:  <?php echo pretty_time($feed_row['feed_image_cache_date']); ?>
 </li>
 		<li>Last update attempt: <?php echo pretty_time($feed_row['feed_cache_attempt_date']); ?></li>
+<?php
+if ( ! empty($feed_row['feed_cache_last_attempt_status'])) {
+	echo '<li><img class="feed-icon" src="' . $fof_asset['alert_icon'] . '" />&nbsp;Last update attempt was not successful: <span>' . $feed_row['feed_cache_last_attempt_status'] . '</span></li>' . "\n";
+}
+?>
 		<li>Next attempt: 
 <?php
 $now = time();

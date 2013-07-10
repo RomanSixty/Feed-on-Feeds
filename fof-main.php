@@ -756,8 +756,8 @@ function fof_subscribe($user_id, $url, $unread='today') {
     if (empty($feed)) {
         /* raw url does not exist, try cooking it with simplepie */
         if ( ($rss = fof_parse($url)) === false
-        ||   isset($rss->error) ) {
-            $rss_error = (isset($rss) && isset($rss->error)) ? $rss->error : '';
+        ||   $rss->error() ) {
+            $rss_error = (isset($rss) && $rss->error()) ? $rss->error() : '';
             return "<span style=\"color:red\">Error: <b>Failed to subscribe to '$url'</b>"
                    . (!empty($rss_error) ? ": $rss_error</span> <span><a href=\"http://feedvalidator.org/check?url=" . urlencode($url) . "\">try to validate it?</a>" : "")
                    . "</span><br>\n";
@@ -810,6 +810,8 @@ function fof_mark_item_unread($feed_id, $id)
     fof_db_mark_item_unread($users, $id);
 }
 
+/** Let SimplePie process a feed URL.
+ */
 function fof_parse($url)
 {
     if (empty($url)) {
@@ -823,30 +825,39 @@ function fof_parse($url)
     $pie = new SimplePie();
     $pie->set_cache_location(dirname(__FILE__).'/cache');
     $pie->set_cache_duration($admin_prefs["manualtimeout"] * 60);
-    $pie->set_feed_url($url);
     $pie->remove_div(true);
+
+    $pie->set_feed_url($url);
     $pie->init();
 
-    if ( $pie -> error() )
-    {
+    /* A feed might contain data before the <?xml declaration, which will cause
+     * SimplePie to fail to parse it.
+     * In case of an error in parsing, retry after trying to fetch and scrub the
+     * feed data.
+     * XXX: What error does this case report?  Could probably check for that,
+     * and only try the scrubbing when it makes sense.
+     */
+    if ($pie->error()) {
+        fof_log('failed to parse feed url ' . $url . ': ' . $pie->error());
+
         if ( ($data = file_get_contents($url)) === false) {
             fof_log("failed to fetch '$url'");
-            return false;
+            return $pie;
         }
 
         $data = preg_replace ( '~.*<\?xml~sim', '<?xml', $data );
 
         #file_put_contents ('/tmp/text.xml',$data);
 
-        unset ( $pie );
+        unset($pie);
 
         $pie = new SimplePie();
         $pie->set_cache_location(dirname(__FILE__).'/cache');
         $pie->set_cache_duration($admin_prefs["manualtimeout"] * 60);
         $pie->remove_div(true);
 
-        $pie -> set_raw_data ( $data );
-        $pie -> init();
+        $pie->set_raw_data($data);
+        $pie->init();
     }
 
     return $pie;
@@ -904,11 +915,13 @@ function fof_update_feed($id)
     fof_db_feed_mark_attempted_cache($id);
 
     if ( ($rss = fof_parse($feed['feed_url'])) === false
-    ||   isset($rss->error) ) {
-        $rss_error = (isset($rss) && isset($rss->error)) ? $rss->error : 'unknown error';
+    ||   $rss->error() ) {
+        $rss_error = (isset($rss) && $rss->error()) ? $rss->error() : 'unknown error';
+        fof_db_feed_update_attempt_status($id, $rss_error);
         fof_log("feed update failed feed_id:$id url:'" . $feed['feed_url'] . "': " . $rss_error);
         return array(0, "Error: <b>failed to parse feed '" . $feed['feed_url'] . "'</b>: $rss_error");
     }
+    fof_db_feed_update_attempt_status($id, NULL);
 
     $feed_image = $feed['feed_image'];
     $feed_image_cache_date = $feed['feed_image_cache_date'];
@@ -1368,6 +1381,12 @@ function fof_render_feed_row($f) {
     if (empty($image))
         $image = $fof_asset['feed_icon'];
 
+    /* however, if a feed failed to update, show an alert */
+    if ( ! empty($f['feed_cache_last_attempt_status']))
+        $image = $fof_asset['alert_icon'];
+
+    $image_html = '<img class="feed-icon" src="' . htmlentities($image, ENT_QUOTES) . '"' . (empty($f['feed_cache_last_attempt_status']) ? '' : (' title="Last update attempt was not successful." alt="' . htmlentities($f['feed_cache_last_attempt_status'], ENT_QUOTES) . '"')) . '>';
+
     $unread = empty($f['feed_unread']) ? 0 : $f['feed_unread'];
     $items = empty($f['feed_items']) ? 0 : $f['feed_items'];
     $starred = empty($f['feed_starred']) ? 0 : $f['feed_starred'];
@@ -1379,7 +1398,7 @@ function fof_render_feed_row($f) {
 
     switch ($fof_prefs_obj->get('sidebar_style')) {
         case 'simple': /* feed_url feed_unread feed_title */
-            $out .= '	<td class="source"><a href="' . $f['feed_url'] . '" title="feed"><img class="feed-icon" src="' . $image . '" /</a></td>' . "\n";
+            $out .= '	<td class="source"><a href="' . $f['feed_url'] . '" title="feed">' . $image_html . '</a></td>' . "\n";
 
             $out .= '	<td class="unread">' . (empty($unread) ? '' : $unread) . '</td>';
 
@@ -1390,7 +1409,7 @@ function fof_render_feed_row($f) {
             break;
 
         case 'fancy': /* feed_url max_date feed_unread feed_title */
-            $out .= '	<td class="source"><a href="' . $link . '" title="site"' . ($fof_prefs_obj->get('item_target') ? ' target="_blank"' : '') . '><img class="feed-icon" src="' . $image . '" /></a></td>' . "\n";
+            $out .= '	<td class="source"><a href="' . $link . '" title="site"' . ($fof_prefs_obj->get('item_target') ? ' target="_blank"' : '') . '>' . $image_html . '</a></td>' . "\n";
 
             $out .= '	<td class="latest"><span title="' . $f['lateststr'] . '" id="' . $f['feed_id'] . '-lateststr">' . $f['lateststrabbr'] . '</span></td>' . "\n";
 
@@ -1430,7 +1449,7 @@ function fof_render_feed_row($f) {
             $out .= '<a href="' . $feed_view_all_url . '" title="all items, ' . $starred . ' starred, ' . $tagged . ' tagged">' . $items . '</a>';
             $out .= '</td>' . "\n";
 
-            $out .= '	<td class="source"><a href="' . $f['feed_url'] . '"><img class="feed-icon" src="' . $image .'" ></a>' . "\n";
+            $out .= '	<td class="source"><a href="' . $f['feed_url'] . '">' . $image_html . '</a>' . "\n";
 
             $out .= '	<td class="title"><a href="' . $link . '" title="home page"' . ($fof_prefs_obj->get('item_target') ? ' target="_blank"' : '') . '><b>' . $title . '</b></a></td>' . "\n";
 
