@@ -595,20 +595,20 @@ END";
     /* FOF_USER_TABLE */
         fof_install_migrate_column($queries, FOF_USER_TABLE, 'user_password_hash', array(
             'rename' => "ALTER TABLE " . FOF_USER_TABLE . " CHANGE user_password user_password_hash VARCHAR(32) NOT NULL",
-            'convert' => "UPDATE " . FOF_USER_TABLE . " SET 'user_password_hash' = md5(concat(user_password_hash, user_name))"
+            'convert' => "UPDATE " . FOF_USER_TABLE . " SET user_password_hash = md5(concat(user_password_hash, user_name))"
         ));
 
     /* FOF_FEED_TABLE */
         fof_install_migrate_column($queries, FOF_FEED_TABLE, 'feed_image_cache_date', array(
-            'add' => "ALTER TABLE " . FOF_FEED_TABLE . " ADD 'feed_image_cache_date' " . SQL_DRIVER_INT_TYPE . " DEFAULT 0 AFTER feed_image"
+            'add' => "ALTER TABLE " . FOF_FEED_TABLE . " ADD feed_image_cache_date " . SQL_DRIVER_INT_TYPE . " DEFAULT 0 AFTER feed_image"
         ));
 
         fof_install_migrate_column($queries, FOF_FEED_TABLE, 'feed_cache_attempt_date', array(
-            'add' => "ALTER TABLE " . FOF_FEED_TABLE . " ADD 'feed_cache_attempt_date' " . SQL_DRIVER_INT_TYPE . " DEFAULT '0' AFTER 'feed_cache_date'"
+            'add' => "ALTER TABLE " . FOF_FEED_TABLE . " ADD feed_cache_attempt_date " . SQL_DRIVER_INT_TYPE . " DEFAULT '0' AFTER feed_cache_date"
         ));
 
         fof_install_migrate_column($queries, FOF_FEED_TABLE, 'feed_cache_next_attempt', array(
-            'add' => "ALTER TABLE " . FOF_FEED_TABLE . " ADD 'feed_cache_next_attempt' " . SQL_DRIVER_INT_TYPE . " DEFAULT '0' AFTER 'feed_cache_attempt_date'"
+            'add' => "ALTER TABLE " . FOF_FEED_TABLE . " ADD feed_cache_next_attempt " . SQL_DRIVER_INT_TYPE . " DEFAULT '0' AFTER feed_cache_attempt_date"
         ));
 
         fof_install_migrate_index($queries, FOF_FEED_TABLE, 'feed_cache_next_attempt', array(
@@ -616,7 +616,7 @@ END";
         ));
 
         fof_install_migrate_column($queries, FOF_FEED_TABLE, 'feed_cache_last_attempt_status', array(
-            'add' => "ALTER TABLE " . FOF_FEED_TABLE . " ADD 'feed_cache_last_attempt_status' TEXT AFTER 'feed_cache_next_attempt'"
+            'add' => "ALTER TABLE " . FOF_FEED_TABLE . " ADD feed_cache_last_attempt_status TEXT AFTER feed_cache_next_attempt"
         ));
 
         if ( ! defined('USE_SQLITE')) {
