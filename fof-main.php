@@ -21,6 +21,8 @@
         $fof_tracelog -- enables ridiculous logging for debugging
 */
 
+defined('FEED_IMAGE_CACHE_REFRESH_SECS') || define('FEED_IMAGE_CACHE_REFRESH_SECS', (7 * 24 * 60 * 60));
+
 /* quiet warnings, default to UTC */
 date_default_timezone_set('UTC');
 
@@ -926,10 +928,27 @@ function fof_update_feed($id)
     $feed_image = $feed['feed_image'];
     $feed_image_cache_date = $feed['feed_image_cache_date'];
 
-    // cached favicon older than a week?
-    if ( $feed [ 'feed_image_cache_date' ] < time() - ( 7*24*60*60 ) ) {
-        $feed_image = fof_get_favicon($feed['feed_link']);
-        $feed_image_cache_date = time();
+    /* periodically update the feed's image */
+    if (($feed['feed_image_cache_date'] + FEED_IMAGE_CACHE_REFRESH_SECS) < time()) {
+        /*
+            Feed images tend to be larger and less-square than favicons, but
+            are more likely to be directly related to the feed, so are being
+            given the first chance at representing the feed.
+            Perhaps the prioritization should be configurable by preference,
+            or check the dimensions and prefer a favicon if feedimage is over
+            some size?
+         */
+        $feed_image_url = $rss->get_image_url();
+        if ( ! empty($feed_image_url)
+        &&  ($new_feed_image = fof_cache_feed_image($feed_image_url)) !== false ) {
+            /* Use the image specified by the feed, if we can get it. */
+            $feed_image = $new_feed_image;
+            $feed_image_cache_date = time();
+        } else if ( ($new_feed_image = fof_get_favicon($feed['feed_link'])) !== false ) {
+            /* Use the feed site's favicon, if we can. */
+            $feed_image = $new_feed_image;
+            $feed_image_cache_date = time();
+        }
     }
 
     $feed_title = $rss->get_title();
@@ -1337,26 +1356,89 @@ function fof_repair_drain_bamage()
     }
 }
 
-// grab a favicon from $url and cache it
-function fof_get_favicon ( $url )
-{
-    $request = 'http://fvicon.com/' . urlencode($url) . '?format=gif&width=16&height=16&canAudit=false';
 
-    $reflector = new ReflectionClass('SimplePie_File');
-    $sp = $reflector->newInstanceArgs(array($request));
+/** Fetch the specified image, cache it, and return its cached name.
+*/
+function fof_cache_feed_image($url) {
+    $pie_file = new SimplePie_File($url);
 
-    if ( $sp -> success )
-    {
-        /* XXX: seems like this ought to check the result somehow... */
-
-        $data = $sp -> body;
-        $path = join(DIRECTORY_SEPARATOR, array('cache', md5($data) . '.png'));
-        file_put_contents(join(DIRECTORY_SEPARATOR, array(dirname(__FILE__), $path)), $data);
-    } else {
-        $path = join(DIRECTORY_SEPARATOR, array('image', 'feed-icon.png'));
+    /* did something go wrong */
+    if ($pie_file->success !== true) {
+        fof_log('failed to retrieve image url:' . $url . ' error:' . $pie_file->error);
+        return false;
     }
 
-    return $path;
+    /* did we get any response other than a success */
+    if ($pie_file->status_code !== 200) {
+        fof_log('failed to retrieve image url:' . $url . ' status_code:' . $pie_file->status_code);
+        return false;
+    }
+
+    /* did we get nothing */
+    if (empty($pie_file->body)) {
+        fof_log('got empty content from url:' . $url);
+        return false;
+    }
+
+    /* did we get an image */
+    list($media_type, ) = explode(';', $pie_file->headers['content-type'], 2);
+    list($type, $subtype) = explode('/', $media_type, 2);
+    if (strcasecmp($type, 'image') !== 0) {
+        fof_log('did not get an image from url:' . $url . ' content-type:' . $media_type);
+        return false;
+    }
+
+    /* what kind of image is it? */
+    /* strip any query component from the url */
+    list($url, ) = explode('?', $url);
+    /* and hope there's a file extension to extract */
+    $ext = pathinfo($url, PATHINFO_EXTENSION);
+    if (empty($ext)) {
+        /* if not, improvise from the provided media-type */
+        /* FIXME: also use media-type if the extension doesn't map to an image type */
+        list($ext, ) = explode('+', $subtype, 2);
+    }
+
+    /* where to cache the image */
+    $filename_parts = array(dirname(__FILE__), 'cache', (md5($pie_file->body) . '.' . $ext));
+    file_put_contents(implode(DIRECTORY_SEPARATOR, $filename_parts), $pie_file->body);
+
+    array_shift($filename_parts); /* remove the absolute path before returning */
+    return implode(DIRECTORY_SEPARATOR, $filename_parts);
+}
+
+
+/** Fetch the favicon for a url, cache it, and return its cached name.
+*/
+function fof_get_favicon($url) {
+
+    /* Use an external service for the heavy lifting here. */
+    $request = 'http://fvicon.com/' . urlencode($url) . '?format=gif&width=16&height=16&canAudit=false';
+
+    $sp = new SimplePie_File($request);
+
+    /* Verify the response is something we can use. */
+    if ($sp->success) {
+        /* bail entirely if response is unexpected */
+        if ($sp->status_code !== 200
+        ||  empty($sp->body))
+            return false;
+
+        /* ensure that we got some sort of image in return */
+        list($media_type, ) = explode(';', $sp->headers['content-type'], 2);
+        list($type, $subtype) = explode('/', $media_type, 2);
+        if (strcasecmp($type, 'image') === 0) {
+            /* XXX: uh.. saving as a png, but format in fvicon url is specified as gif? */
+            $filename_parts = array(dirname(__FILE__), 'cache', (md5($sp->body) . '.png'));
+            file_put_contents(implode(DIRECTORY_SEPARATOR, $filename_parts), $sp->body);
+
+            array_shift($filename_parts);
+            return implode(DIRECTORY_SEPARATOR, $filename_parts);
+        }
+    }
+
+    /* otherwise, return the generic feed icon asset */
+    return implode(DIRECTORY_SEPARATOR, array('image', $fof_asset['feed_icon']));
 }
 
 /* generate the contents of a tr element from a feed db row*/
