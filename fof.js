@@ -1052,7 +1052,7 @@ function sb_update_feed(id) {
     var url = "feed-action.php";
     var params = { "update_feedid": id };
     var complete = function() { unthrob(); };
-    var options = { method: "post", parameters: params, onSuccess: complete };
+    var options = { method: "post", parameters: params, onComplete: complete };
     var feed_element = $$("#sidebar #feeds #f" + id)[0];
     var feed_icon_element = $$("#sidebar #feeds #f" + id + " img.feed-icon")[0];
 

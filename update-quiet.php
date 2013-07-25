@@ -29,26 +29,21 @@ $result = fof_db_get_feeds_needing_attempt();
 
 $feeds = array();
 
-while($feed = fof_db_get_row($result))
-{
-    if((time() - $feed["feed_cache_date"]) > ($fof_admin_prefs["autotimeout"] * 60)
-	&& (time() > $feed["feed_cache_next_attempt"]))
-    {
-        $feeds[] = $feed;
-    }
-    else
-    {
-        fof_log("skipping $feed[feed_url]", "update");
-    }
+$now = time();
+while (($feed = fof_db_get_row($result)) !== false) {
+	if (($now - $feed['feed_cache_date']) > ($fof_admin_prefs['autotimeout'] * 60)
+	&&  ($now > $feed['feed_cache_next_attempt'])) {
+		$feeds[] = $feed;
+	} else {
+		fof_log("skipping $feed[feed_id] $feed[feed_url]", 'update');
+	}
 }
 
 $feeds = fof_multi_sort($feeds, 'feed_cache_attempt_date', false);
 
-foreach($feeds as $feed)
-{
-	$id = $feed['feed_id'];
-    fof_log("updating $feed[feed_url]", "update");
-	fof_update_feed($id);
+foreach ($feeds as $feed) {
+	fof_log("updating $feed[feed_id] $feed[feed_url]", 'update');
+	fof_update_feed($feed['feed_id']);
 }
 
 fof_log("optimizing database", "update");
