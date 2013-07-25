@@ -21,6 +21,8 @@
         $fof_tracelog -- enables ridiculous logging for debugging
 */
 
+defined('FEED_IMAGE_CACHE_REFRESH_SECS') || define('FEED_IMAGE_CACHE_REFRESH_SECS', (7 * 24 * 60 * 60));
+
 /* quiet warnings, default to UTC */
 date_default_timezone_set('UTC');
 
@@ -756,8 +758,8 @@ function fof_subscribe($user_id, $url, $unread='today') {
     if (empty($feed)) {
         /* raw url does not exist, try cooking it with simplepie */
         if ( ($rss = fof_parse($url)) === false
-        ||   isset($rss->error) ) {
-            $rss_error = (isset($rss) && isset($rss->error)) ? $rss->error : '';
+        ||   $rss->error() ) {
+            $rss_error = (isset($rss) && $rss->error()) ? $rss->error() : '';
             return "<span style=\"color:red\">Error: <b>Failed to subscribe to '$url'</b>"
                    . (!empty($rss_error) ? ": $rss_error</span> <span><a href=\"http://feedvalidator.org/check?url=" . urlencode($url) . "\">try to validate it?</a>" : "")
                    . "</span><br>\n";
@@ -810,6 +812,8 @@ function fof_mark_item_unread($feed_id, $id)
     fof_db_mark_item_unread($users, $id);
 }
 
+/** Let SimplePie process a feed URL.
+ */
 function fof_parse($url)
 {
     if (empty($url)) {
@@ -823,30 +827,39 @@ function fof_parse($url)
     $pie = new SimplePie();
     $pie->set_cache_location(dirname(__FILE__).'/cache');
     $pie->set_cache_duration($admin_prefs["manualtimeout"] * 60);
-    $pie->set_feed_url($url);
     $pie->remove_div(true);
+
+    $pie->set_feed_url($url);
     $pie->init();
 
-    if ( $pie -> error() )
-    {
+    /* A feed might contain data before the <?xml declaration, which will cause
+     * SimplePie to fail to parse it.
+     * In case of an error in parsing, retry after trying to fetch and scrub the
+     * feed data.
+     * XXX: What error does this case report?  Could probably check for that,
+     * and only try the scrubbing when it makes sense.
+     */
+    if ($pie->error()) {
+        fof_log('failed to parse feed url ' . $url . ': ' . $pie->error());
+
         if ( ($data = file_get_contents($url)) === false) {
             fof_log("failed to fetch '$url'");
-            return false;
+            return $pie;
         }
 
         $data = preg_replace ( '~.*<\?xml~sim', '<?xml', $data );
 
         #file_put_contents ('/tmp/text.xml',$data);
 
-        unset ( $pie );
+        unset($pie);
 
         $pie = new SimplePie();
         $pie->set_cache_location(dirname(__FILE__).'/cache');
         $pie->set_cache_duration($admin_prefs["manualtimeout"] * 60);
         $pie->remove_div(true);
 
-        $pie -> set_raw_data ( $data );
-        $pie -> init();
+        $pie->set_raw_data($data);
+        $pie->init();
     }
 
     return $pie;
@@ -904,19 +917,38 @@ function fof_update_feed($id)
     fof_db_feed_mark_attempted_cache($id);
 
     if ( ($rss = fof_parse($feed['feed_url'])) === false
-    ||   isset($rss->error) ) {
-        $rss_error = (isset($rss) && isset($rss->error)) ? $rss->error : 'unknown error';
+    ||   $rss->error() ) {
+        $rss_error = (isset($rss) && $rss->error()) ? $rss->error() : 'unknown error';
+        fof_db_feed_update_attempt_status($id, $rss_error);
         fof_log("feed update failed feed_id:$id url:'" . $feed['feed_url'] . "': " . $rss_error);
         return array(0, "Error: <b>failed to parse feed '" . $feed['feed_url'] . "'</b>: $rss_error");
     }
+    fof_db_feed_update_attempt_status($id, NULL);
 
     $feed_image = $feed['feed_image'];
     $feed_image_cache_date = $feed['feed_image_cache_date'];
 
-    // cached favicon older than a week?
-    if ( $feed [ 'feed_image_cache_date' ] < time() - ( 7*24*60*60 ) ) {
-        $feed_image = fof_get_favicon($feed['feed_link']);
-        $feed_image_cache_date = time();
+    /* periodically update the feed's image */
+    if (($feed['feed_image_cache_date'] + FEED_IMAGE_CACHE_REFRESH_SECS) < time()) {
+        /*
+            Feed images tend to be larger and less-square than favicons, but
+            are more likely to be directly related to the feed, so are being
+            given the first chance at representing the feed.
+            Perhaps the prioritization should be configurable by preference,
+            or check the dimensions and prefer a favicon if feedimage is over
+            some size?
+         */
+        $feed_image_url = $rss->get_image_url();
+        if ( ! empty($feed_image_url)
+        &&  ($new_feed_image = fof_cache_feed_image($feed_image_url)) !== false ) {
+            /* Use the image specified by the feed, if we can get it. */
+            $feed_image = $new_feed_image;
+            $feed_image_cache_date = time();
+        } else if ( ($new_feed_image = fof_get_favicon($feed['feed_link'])) !== false ) {
+            /* Use the feed site's favicon, if we can. */
+            $feed_image = $new_feed_image;
+            $feed_image_cache_date = time();
+        }
     }
 
     $feed_title = $rss->get_title();
@@ -1324,26 +1356,89 @@ function fof_repair_drain_bamage()
     }
 }
 
-// grab a favicon from $url and cache it
-function fof_get_favicon ( $url )
-{
-    $request = 'http://fvicon.com/' . urlencode($url) . '?format=gif&width=16&height=16&canAudit=false';
 
-    $reflector = new ReflectionClass('SimplePie_File');
-    $sp = $reflector->newInstanceArgs(array($request));
+/** Fetch the specified image, cache it, and return its cached name.
+*/
+function fof_cache_feed_image($url) {
+    $pie_file = new SimplePie_File($url);
 
-    if ( $sp -> success )
-    {
-        /* XXX: seems like this ought to check the result somehow... */
-
-        $data = $sp -> body;
-        $path = join(DIRECTORY_SEPARATOR, array('cache', md5($data) . '.png'));
-        file_put_contents(join(DIRECTORY_SEPARATOR, array(dirname(__FILE__), $path)), $data);
-    } else {
-        $path = join(DIRECTORY_SEPARATOR, array('image', 'feed-icon.png'));
+    /* did something go wrong */
+    if ($pie_file->success !== true) {
+        fof_log('failed to retrieve image url:' . $url . ' error:' . $pie_file->error);
+        return false;
     }
 
-    return $path;
+    /* did we get any response other than a success */
+    if ($pie_file->status_code !== 200) {
+        fof_log('failed to retrieve image url:' . $url . ' status_code:' . $pie_file->status_code);
+        return false;
+    }
+
+    /* did we get nothing */
+    if (empty($pie_file->body)) {
+        fof_log('got empty content from url:' . $url);
+        return false;
+    }
+
+    /* did we get an image */
+    list($media_type, ) = explode(';', $pie_file->headers['content-type'], 2);
+    list($type, $subtype) = explode('/', $media_type, 2);
+    if (strcasecmp($type, 'image') !== 0) {
+        fof_log('did not get an image from url:' . $url . ' content-type:' . $media_type);
+        return false;
+    }
+
+    /* what kind of image is it? */
+    /* strip any query component from the url */
+    list($url, ) = explode('?', $url);
+    /* and hope there's a file extension to extract */
+    $ext = pathinfo($url, PATHINFO_EXTENSION);
+    if (empty($ext)) {
+        /* if not, improvise from the provided media-type */
+        /* FIXME: also use media-type if the extension doesn't map to an image type */
+        list($ext, ) = explode('+', $subtype, 2);
+    }
+
+    /* where to cache the image */
+    $filename_parts = array(dirname(__FILE__), 'cache', (md5($pie_file->body) . '.' . $ext));
+    file_put_contents(implode(DIRECTORY_SEPARATOR, $filename_parts), $pie_file->body);
+
+    array_shift($filename_parts); /* remove the absolute path before returning */
+    return implode(DIRECTORY_SEPARATOR, $filename_parts);
+}
+
+
+/** Fetch the favicon for a url, cache it, and return its cached name.
+*/
+function fof_get_favicon($url) {
+
+    /* Use an external service for the heavy lifting here. */
+    $request = 'http://fvicon.com/' . urlencode($url) . '?format=gif&width=16&height=16&canAudit=false';
+
+    $sp = new SimplePie_File($request);
+
+    /* Verify the response is something we can use. */
+    if ($sp->success) {
+        /* bail entirely if response is unexpected */
+        if ($sp->status_code !== 200
+        ||  empty($sp->body))
+            return false;
+
+        /* ensure that we got some sort of image in return */
+        list($media_type, ) = explode(';', $sp->headers['content-type'], 2);
+        list($type, $subtype) = explode('/', $media_type, 2);
+        if (strcasecmp($type, 'image') === 0) {
+            /* XXX: uh.. saving as a png, but format in fvicon url is specified as gif? */
+            $filename_parts = array(dirname(__FILE__), 'cache', (md5($sp->body) . '.png'));
+            file_put_contents(implode(DIRECTORY_SEPARATOR, $filename_parts), $sp->body);
+
+            array_shift($filename_parts);
+            return implode(DIRECTORY_SEPARATOR, $filename_parts);
+        }
+    }
+
+    /* otherwise, return the generic feed icon asset */
+    return implode(DIRECTORY_SEPARATOR, array('image', $fof_asset['feed_icon']));
 }
 
 /* generate the contents of a tr element from a feed db row*/
@@ -1368,6 +1463,12 @@ function fof_render_feed_row($f) {
     if (empty($image))
         $image = $fof_asset['feed_icon'];
 
+    /* however, if a feed failed to update, show an alert */
+    if ( ! empty($f['feed_cache_last_attempt_status']))
+        $image = $fof_asset['alert_icon'];
+
+    $image_html = '<img class="feed-icon" src="' . htmlentities($image, ENT_QUOTES) . '"' . (empty($f['feed_cache_last_attempt_status']) ? '' : (' title="Last update attempt was not successful." alt="' . htmlentities($f['feed_cache_last_attempt_status'], ENT_QUOTES) . '"')) . '>';
+
     $unread = empty($f['feed_unread']) ? 0 : $f['feed_unread'];
     $items = empty($f['feed_items']) ? 0 : $f['feed_items'];
     $starred = empty($f['feed_starred']) ? 0 : $f['feed_starred'];
@@ -1379,7 +1480,7 @@ function fof_render_feed_row($f) {
 
     switch ($fof_prefs_obj->get('sidebar_style')) {
         case 'simple': /* feed_url feed_unread feed_title */
-            $out .= '	<td class="source"><a href="' . $f['feed_url'] . '" title="feed"><img class="feed-icon" src="' . $image . '" /</a></td>' . "\n";
+            $out .= '	<td class="source"><a href="' . $f['feed_url'] . '" title="feed">' . $image_html . '</a></td>' . "\n";
 
             $out .= '	<td class="unread">' . (empty($unread) ? '' : $unread) . '</td>';
 
@@ -1390,7 +1491,7 @@ function fof_render_feed_row($f) {
             break;
 
         case 'fancy': /* feed_url max_date feed_unread feed_title */
-            $out .= '	<td class="source"><a href="' . $link . '" title="site"' . ($fof_prefs_obj->get('item_target') ? ' target="_blank"' : '') . '><img class="feed-icon" src="' . $image . '" /></a></td>' . "\n";
+            $out .= '	<td class="source"><a href="' . $link . '" title="site"' . ($fof_prefs_obj->get('item_target') ? ' target="_blank"' : '') . '>' . $image_html . '</a></td>' . "\n";
 
             $out .= '	<td class="latest"><span title="' . $f['lateststr'] . '" id="' . $f['feed_id'] . '-lateststr">' . $f['lateststrabbr'] . '</span></td>' . "\n";
 
@@ -1430,7 +1531,7 @@ function fof_render_feed_row($f) {
             $out .= '<a href="' . $feed_view_all_url . '" title="all items, ' . $starred . ' starred, ' . $tagged . ' tagged">' . $items . '</a>';
             $out .= '</td>' . "\n";
 
-            $out .= '	<td class="source"><a href="' . $f['feed_url'] . '"><img class="feed-icon" src="' . $image .'" ></a>' . "\n";
+            $out .= '	<td class="source"><a href="' . $f['feed_url'] . '">' . $image_html . '</a>' . "\n";
 
             $out .= '	<td class="title"><a href="' . $link . '" title="home page"' . ($fof_prefs_obj->get('item_target') ? ' target="_blank"' : '') . '><b>' . $title . '</b></a></td>' . "\n";
 
