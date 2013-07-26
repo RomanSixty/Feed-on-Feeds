@@ -1411,8 +1411,18 @@ function fof_cache_feed_image($url) {
 /** Fetch the favicon for a url, cache it, and return its cached name.
 */
 function fof_get_favicon($url) {
+    include_once('classes/favicon.php');
 
-    /* Use an external service for the heavy lifting here. */
+    $favicon = new FavIcon($url);
+    $favicon = $favicon->getIcon();
+    if ( ! empty($favicon)) {
+        /* FIXME: FavIcon provides all this data already, but for now it's
+            easier to just let it fetch again, than to rearrange things.. */
+        return fof_cache_feed_image($favicon['href']);
+    }
+
+    /* and I guess fall back to external service if that didn't work */
+
     $request = 'http://fvicon.com/' . urlencode($url) . '?format=gif&width=16&height=16&canAudit=false';
 
     $sp = new SimplePie_File($request);
