@@ -53,7 +53,9 @@ class FavIcon {
 		data: icon file data
 	*/
 	function getIcon() {
-		list($first) = $this->favicons;
+		@list($first) = $this->favicons;
+		if (empty($first))
+			return null;
 		return $first;
 	}
 
@@ -89,26 +91,18 @@ class FavIcon {
 
 		if ($dom !== false) {
 			/* check all the links which relate to icons */
-			$http_head = $dom->getElementsByTagName('head');
-			if ($http_head && $http_head->item(0)) {
-				$links = $http_head->item(0)->getElementsByTagName('link');
-				if ($links) {
-
-					foreach ($dom->getElementsByTagName('head')->item(0)->getElementsByTagName('link') as $link) {
-						$relations = explode(' ', $link->getAttribute('rel'));
-						/* FIXME: case-insensitive in_array.. */
-						if (in_array('icon', array_map('strtolower', $relations))) {
-							$href = $link->getAttribute('href');
-							$href_absolute = $this->absolutize_url($href);
-							$icon = $this->validate_icon($href_absolute);
-							if ($icon !== null) {
-								if (empty($icon['type']))
-									$icon['type'] = $link->getAttribute('type');
-								if (empty($icon['sizes']))
-									$icon['sizes'] = $link->getAttribute('sizes');
-								$this->favicons[] = $icon;
-							}
-						}
+			foreach ($dom->getElementsByTagName('link') as $link) {
+				$relations = explode(' ', $link->getAttribute('rel'));
+				if (in_array('icon', array_map('strtolower', $relations))) {
+					$href = $link->getAttribute('href');
+					$href_absolute = $this->absolutize_url($href);
+					$icon = $this->validate_icon($href_absolute);
+					if ($icon !== null) {
+						if (empty($icon['type']))
+							$icon['type'] = $link->getAttribute('type');
+						if (empty($icon['sizes']))
+							$icon['sizes'] = $link->getAttribute('sizes');
+						$this->favicons[] = $icon;
 					}
 				}
 			}
@@ -145,15 +139,18 @@ class FavIcon {
 		when http wrappers follow redirects.
 	*/
 	static protected function header_findr($headers, $header=null) {
+		if (empty($headers))
+			return null;
+
 		end($headers);
 		while (key($headers) !== null) {
 			if ($header === null) {
-				list($proto, $code, $msg) = explode(' ', current($headers), 3);
-				list($protocol, $version) = explode('/', $proto, 2);
+				@list($proto, $code, $msg) = explode(' ', current($headers), 3);
+				@list($protocol, $version) = explode('/', $proto, 2);
 				if ($protocol === 'HTTP')
 					return current($headers);
 			} else {
-				list($name, $value) = explode(': ', current($headers), 2);
+				@list($name, $value) = explode(': ', current($headers), 2);
 				if (strcasecmp($header, $name) === 0)
 					return $value;
 			}
@@ -172,20 +169,36 @@ class FavIcon {
 
 		/* did we get a useful response */
 		$status = self::header_findr($http_response_header, null);
-		list ( , $status, ) = explode(' ', $status, 3);
+		@list ( , $status, ) = explode(' ', $status, 3);
 		$status = (integer)$status;
 		if ($status !== 200) {
 			trigger_error('icon resource \'' . $url . '\' returned ' . $status, E_USER_NOTICE);
 			return null;
 		}
 
+		if (empty($icon['data'])) {
+			trigger_error('icon resource \'' . $url . '\' is empty');
+			return null;
+		}
+
 		/* is it displayable */
 		$icon['type'] = self::header_findr($http_response_header, 'Content-Type');
-		list($icon['type'], ) = explode(';', $icon['type']);
-		list($type, $subtype) = explode('/', $icon['type'], 2);
+		@list($icon['type'], ) = explode(';', $icon['type']);
+		@list($type, $subtype) = explode('/', $icon['type'], 2);
 		if (strcasecmp($type, 'image') !== 0) {
-			trigger_error('icon resource \'' . $url . '\' is not an image', E_USER_NOTICE);
-			return null;
+			/*
+				Is their server possibly just sending the wrong content-type?
+				This turns out to be a fairly common problem with .ico files.
+				Double-check against magic mimetypes before giving up.
+			*/
+			$finfo = new finfo(FILEINFO_MIME);
+			@list($icon['type'], ) = explode(';', $finfo->buffer($icon['data']));
+			@list($type, $subtype) = explode('/', $icon['type'], 2);
+			if (strcasecmp($type, 'image') !== 0) {
+				/* really not an image */
+				trigger_error('icon resource \'' . $url . '\' is not an image', E_USER_NOTICE);
+				return null;
+			}
 		}
 
 		return $icon;
@@ -202,7 +215,7 @@ class FavIcon {
 		/* If there's no scheme, $url is just a path, so we need to fill in
 			the preambling parts from the site's url. */
 		$url_parts = array();
-		foreach (array('schema', 'user', 'pass', 'host', 'port') as $key) {
+		foreach (array('scheme', 'user', 'pass', 'host', 'port') as $key) {
 			if (empty($url_parts[$key])
 			&&  ! empty($this->site_url_parts[$key]))
 				$url_parts[$key] = $this->site_url_parts[$key];
@@ -219,9 +232,9 @@ class FavIcon {
 			if ($last_slash_pos === false) {
 				$base_path = '/';
 			} else {
-				$base_path = substr($this->site_url_parts['path'], 0, $last_slash_pos);
+				$base_path = substr($this->site_url_parts['path'], 0, $last_slash_pos + 1);
 			}
-			$url_parts['path'] = $base_path . $url_parts['path'];
+			$url_parts['path'] = $base_path . $url;
 		}
 
 		/* Put it all together. */

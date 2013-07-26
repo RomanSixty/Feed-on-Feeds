@@ -929,7 +929,9 @@ function fof_update_feed($id)
     $feed_image_cache_date = $feed['feed_image_cache_date'];
 
     /* periodically update the feed's image */
-    if (($feed['feed_image_cache_date'] + FEED_IMAGE_CACHE_REFRESH_SECS) < time()) {
+    /* or if cached image file does not exist */
+    if (($feed['feed_image_cache_date'] + FEED_IMAGE_CACHE_REFRESH_SECS) < time()
+    ||  ( ! empty($feed_image) && ! file_exists($feed_image))) {
         /*
             Feed images tend to be larger and less-square than favicons, but
             are more likely to be directly related to the feed, so are being
@@ -940,7 +942,7 @@ function fof_update_feed($id)
          */
         $feed_image_url = $rss->get_image_url();
         if ( ! empty($feed_image_url)
-        &&  ($new_feed_image = fof_cache_feed_image($feed_image_url)) !== false ) {
+        &&  ($new_feed_image = fof_cache_image_url($feed_image_url)) !== false ) {
             /* Use the image specified by the feed, if we can get it. */
             $feed_image = $new_feed_image;
             $feed_image_cache_date = time();
@@ -1359,7 +1361,7 @@ function fof_repair_drain_bamage()
 
 /** Fetch the specified image, cache it, and return its cached name.
 */
-function fof_cache_feed_image($url) {
+function fof_cache_image_url($url) {
     $pie_file = new SimplePie_File($url);
 
     /* did something go wrong */
@@ -1380,30 +1382,70 @@ function fof_cache_feed_image($url) {
         return false;
     }
 
-    /* did we get an image */
-    list($media_type, ) = explode(';', $pie_file->headers['content-type'], 2);
-    list($type, $subtype) = explode('/', $media_type, 2);
+    return fof_cache_image_data($url, $pie_file->headers['content-type'], $pie_file->body);
+}
+
+/** Store an image in our cache, returning the filename where the data now resides.
+    A nicer solution here would be to store the content-type bound to the data,
+    but there's no real server-agnostic way of doing that.
+*/
+function fof_cache_image_data($url, $content_type, $data) {
+    /* First, verify that the resource is actually an image.. */
+
+    if (empty($data) || empty($url)) {
+        fof_log('will not cache emptiness');
+        return false;
+    }
+
+    /* we don't care about the encoding, just the type */
+    @list($media_type, ) = explode(';', $content_type, 2);
+    @list($type, $subtype) = explode('/', $media_type, 2);
     if (strcasecmp($type, 'image') !== 0) {
         fof_log('did not get an image from url:' . $url . ' content-type:' . $media_type);
         return false;
     }
 
-    /* what kind of image is it? */
-    /* strip any query component from the url */
-    list($url, ) = explode('?', $url);
-    /* and hope there's a file extension to extract */
+    /* Now determine what sort of image it is, so we can use the correct
+        filename extension when we save it locally.
+    */
+    /* strip fragments and queries off the url to reveal the path */
+    @list($url, ) = explode('#', $url, 2);
+    @list($url, ) = explode('?', $url, 2);
+    /* and hope there is an extension to extract */
     $ext = pathinfo($url, PATHINFO_EXTENSION);
+
+    /* FIXME:
+        Ought to verify that the extension actually maps back onto an image
+        type, so that we don't end up saving, say, '.php' images.
+        I don't know of a lightweight nor portable means of accomplishing that,
+        though, so let's just blacklist some simple ones.
+    */
+    if (in_array(strtolower($ext), array('php', 'cgi', 'asp', 'aspx')))
+        $ext = null;
+
     if (empty($ext)) {
-        /* if not, improvise from the provided media-type */
-        /* FIXME: also use media-type if the extension doesn't map to an image type */
-        list($ext, ) = explode('+', $subtype, 2);
+        /* no extension?  try to improvise one from the content-type */
+        @list($ext, ) = explode('+', $subtype, 2);
+        if (empty($ext)) {
+            $ext = 'image';
+        }
     }
 
-    /* where to cache the image */
-    $filename_parts = array(dirname(__FILE__), 'cache', (md5($pie_file->body) . '.' . $ext));
-    file_put_contents(implode(DIRECTORY_SEPARATOR, $filename_parts), $pie_file->body);
+    /* where to cache image data */
+    $filename_parts = array(dirname(__FILE__), 'cache', (md5($data) . '.' . $ext));
 
-    array_shift($filename_parts); /* remove the absolute path before returning */
+    /* FIXME: detect and handle hugely-improbable collisions.. */
+
+    if (file_put_contents(implode(DIRECTORY_SEPARATOR, $filename_parts), $data) === false) {
+        fof_log('failed to write to ' . implode(DIRECTORY_SEPARATOR, $filename_parts));
+        return false;
+    }
+
+    /* remove the absolute path before returning the filename we cached info */
+    array_shift($filename_parts);
+
+    fof_log('cached image '. $url . ' as ' . implode(DIRECTORY_SEPARATOR, $filename_parts));
+
     return implode(DIRECTORY_SEPARATOR, $filename_parts);
 }
 
@@ -1416,10 +1458,10 @@ function fof_get_favicon($url) {
     $favicon = new FavIcon($url);
     $favicon = $favicon->getIcon();
     if ( ! empty($favicon)) {
-        /* FIXME: FavIcon provides all this data already, but for now it's
-            easier to just let it fetch again, than to rearrange things.. */
-        return fof_cache_feed_image($favicon['href']);
+        return fof_cache_image_data($favicon['href'], $favicon['type'], $favicon['data']);
     }
+
+    fof_log('internal FavIcon resolution failed!');
 
     /* and I guess fall back to external service if that didn't work */
 
