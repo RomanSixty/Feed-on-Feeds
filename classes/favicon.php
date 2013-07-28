@@ -28,6 +28,8 @@ class FavIcon {
 		$this->site_url_parts = parse_url($site_url);
 		$this->stream_context_options = array( 'http' => array() );
 		$this->stream_context_options['http']['user_agent'] = ($user_agent !== null) ? $user_agent : self::default_user_agent();
+		/* refuse compressed streams for now, as decompression isn't automatic */
+		$this->stream_context_options['http']['accept_encoding'] = "gzip;q=0, compress;q=0";
 
 		$this->links_from_site();
 
