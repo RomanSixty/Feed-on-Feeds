@@ -1457,40 +1457,12 @@ function fof_get_favicon($url) {
 
     $favicon = new FavIcon($url);
     $favicon = $favicon->getIcon();
-    if ( ! empty($favicon)) {
-        return fof_cache_image_data($favicon['href'], $favicon['type'], $favicon['data']);
+    if (empty($favicon)) {
+        fof_log('FavIcon resolution failed for ' . $url);
+        return false;
     }
 
-    fof_log('internal FavIcon resolution failed!');
-
-    /* and I guess fall back to external service if that didn't work */
-
-    $request = 'http://fvicon.com/' . urlencode($url) . '?format=gif&width=16&height=16&canAudit=false';
-
-    $sp = new SimplePie_File($request);
-
-    /* Verify the response is something we can use. */
-    if ($sp->success) {
-        /* bail entirely if response is unexpected */
-        if ($sp->status_code !== 200
-        ||  empty($sp->body))
-            return false;
-
-        /* ensure that we got some sort of image in return */
-        list($media_type, ) = explode(';', $sp->headers['content-type'], 2);
-        list($type, $subtype) = explode('/', $media_type, 2);
-        if (strcasecmp($type, 'image') === 0) {
-            /* XXX: uh.. saving as a png, but format in fvicon url is specified as gif? */
-            $filename_parts = array(dirname(__FILE__), 'cache', (md5($sp->body) . '.png'));
-            file_put_contents(implode(DIRECTORY_SEPARATOR, $filename_parts), $sp->body);
-
-            array_shift($filename_parts);
-            return implode(DIRECTORY_SEPARATOR, $filename_parts);
-        }
-    }
-
-    /* otherwise, return the generic feed icon asset */
-    return implode(DIRECTORY_SEPARATOR, array('image', $fof_asset['feed_icon']));
+    return fof_cache_image_data($favicon['href'], $favicon['type'], $favicon['data']);
 }
 
 /* generate the contents of a tr element from a feed db row*/
