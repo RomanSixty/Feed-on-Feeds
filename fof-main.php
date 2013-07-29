@@ -718,13 +718,14 @@ function fof_render_feed_link($row)
 
 function fof_opml_to_array($opml)
 {
+    // TODO: use an actual XML parser. I mean, SERIOUSLY?
     $rx = "/xmlurl=\"(.*?)\"/mi";
 
     if (preg_match_all($rx, $opml, $m))
     {
         for($i = 0; $i < count($m[0]) ; $i++)
         {
-            $r[] = $m[1][$i];
+            $r[] = html_entity_decode($m[1][$i]);
         }
     }
 
