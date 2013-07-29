@@ -1219,8 +1219,7 @@ function fof_apply_plugin_tags($feed_id, $item_id = NULL, $user_id = NULL)
     }
 }
 
-function fof_init_plugins()
-{
+function fof_init_plugins() {
     global $fof_item_filters, $fof_item_prefilters, $fof_tag_prefilters, $fof_plugin_prefs;
 
     $fof_item_filters = array();
@@ -1230,17 +1229,26 @@ function fof_init_plugins()
 
     $p =& FoF_Prefs::instance();
 
-    $dirlist = opendir(FOF_DIR . "/plugins");
-    while($file=readdir($dirlist))
-    {
-        if(preg_match('/\.php$/',$file) && !$p->get('plugin_' . substr($file, 0, -4)))
-        {
-            fof_log("including " . $file);
-            include(FOF_DIR . "/plugins/" . $file);
-        }
-    }
+    $plugin_dir = FOF_DIR . DIRECTORY_SEPARATOR . 'plugins';
 
-    closedir();
+    $active_plugins = array();
+    $dirlist = opendir($plugin_dir);
+    while (($file = readdir($dirlist)) !== false) {
+        $info = pathinfo($file);
+
+        if ($info['extension'] !== 'php'
+        ||  $info['filename'][0] === '.')
+            continue;
+
+        if ($p->get('plugin_' . $info['filename']))
+            continue;
+
+        $active_plugins[] = $info['filename'];
+
+        include($plugin_dir . DIRECTORY_SEPARATOR . $file);
+    }
+    closedir($dirlist);
+    fof_log('included plugins: ' . implode(', ', $active_plugins));
 }
 
 function fof_add_tag_prefilter($plugin, $function)
