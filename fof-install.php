@@ -691,7 +691,12 @@ END";
         $j = count($queries);
         foreach ($queries as $what => $query) {
             echo '<div class="update">[' . $i++ . '/' . $j . '] Updating ' . $what . ': ';
-            $result = $fof_connection->exec($query);
+            try {
+                $result = $fof_connection->exec($query);
+            } catch (PDOException $e) {
+                echo "<span class='fail'>Cannot upgrade table: [<code>$query</code>] <pre>" . $e->GetMessage() . "</pre></span>\n";
+                $result = false;
+            }
             if ($result !== false) {
                 echo '<span class="pass" title="' . $result . ' rows affected">OK</span>';
             } else {
