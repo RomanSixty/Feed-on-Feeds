@@ -47,12 +47,8 @@ define('FOF_UPDATE_TIME_LIMIT', 60 * 10);
 
 // Find ourselves and the cache dir
 
-if (!defined('DIR_SEP')) {
-	define('DIR_SEP', DIRECTORY_SEPARATOR);
-}
-
 if (!defined('FOF_DIR')) {
-    define('FOF_DIR', dirname(__FILE__) . DIR_SEP);
+    define('FOF_DIR', dirname(__FILE__));
 }
 
 ?>
