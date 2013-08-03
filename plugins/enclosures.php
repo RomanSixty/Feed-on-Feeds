@@ -17,13 +17,14 @@ function fof_enclosures($item, $link, $title, $content) {
 		else if ( ! empty($mimetype))
 			$show_handle .= " ($mimetype)";
 
+		/* skip empty enclosures */
+		$enclosure_link = $enclosure->get_link();
+		if (empty($enclosure_link))
+			continue;
+
 		/* Inline images. */
 		if ($medium === 'image'
 		||  $type === 'image') {
-
-			$link = $enclosure->get_link();
-			if (empty($link))
-				continue;
 
 			$description = $enclosure->get_description();
 			$title = htmlentities($enclosure->get_title(), ENT_QUOTES);
@@ -31,8 +32,8 @@ function fof_enclosures($item, $link, $title, $content) {
 			                $show_handle .
 			              '</a>' .
 			              '<div class="enclosure">' .
-			              '<a href="' . $link . '">' .
-			                '<img src="' . $link . '" title="' . $title . '" alt="" />' .
+			              '<a href="' . $enclosure_link . '">' .
+			                '<img src="' . $enclosure_link . '" title="' . $title . '" alt="" />' .
 			              '</a>' .
 			              (empty($description) ? '' : ('<p>' . $description . '</p>')) .
 			            '</div>' . "\n";
@@ -44,7 +45,7 @@ function fof_enclosures($item, $link, $title, $content) {
 			'audio' => 'plugins/place_audio.png',
 			'video' => 'plugins/place_video.png',
 			'mediaplayer' => 'plugins/mediaplayer.swf',
-			'alt' => $enclosure->get_link(),
+			'alt' => $enclosure_link(),
 		);
 
 		$enc_html[] = '<a href="#" onclick="show_enclosure(event); return false;" title="' . htmlentities($enclosure->get_title(), ENT_QUOTES) . '">' .
