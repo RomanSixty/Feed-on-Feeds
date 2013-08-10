@@ -1,47 +1,63 @@
 <?php
 
-fof_add_item_prefilter ( 'fof_enclosures' );
+fof_add_item_prefilter('fof_enclosures');
 
-function fof_enclosures ( $item, $link, $title, $content )
-{
-	$html = '';
+/** Appends item enclosures to end of incoming item content.
+*/
+function fof_enclosures($item, $link, $title, $content) {
+	$enc_html = array();
+	foreach ($item->get_enclosures() as $enclosure) {
+		$medium = $enclosure->get_medium();
+		@list($mimetype, $encoding) = explode(';', $enclosure->get_type());
+		@list($type, $subtype) = explode(',', $mimetype);
 
-	for ( $i = 0; $i <= 5; $i++ )
-		if ( ( $enclosure = $item -> get_enclosure ( $i ) ) && $enclosure -> get_link() )
-		{
-			switch ( $enclosure -> get_type() )
-			{
-				case 'image/jpeg':
-				case 'image/gif':
-				case 'image/png':
+		$show_handle = 'show enclosure';
+		if ( ! empty($medium))
+			$show_handle .= " ($medium)";
+		else if ( ! empty($mimetype))
+			$show_handle .= " ($mimetype)";
 
-					$html .= '<img src="' . $enclosure -> get_link() . '" alt="" />';
-					if ( $enclosure -> get_description ( $i ) ) $html .= '<p>' . $enclosure -> get_description ( $i ) . '</p>';
+		/* skip empty enclosures */
+		$enclosure_link = $enclosure->get_link();
+		if (empty($enclosure_link))
+			continue;
 
-					break;
+		/* Inline images. */
+		if ($medium === 'image'
+		||  $type === 'image') {
 
-				default:
-
-					$html .= '<br><br><a href="#" onclick="show_enclosure(event); return false;">show enclosure</a><div style="display: none" align="center" width="auto">';
-					$html .= '<p>' . $enclosure -> embed ( array (
-						'audio' => 'plugins/place_audio.png',
-						'video' => 'plugins/place_video.png',
-						'mediaplayer' => 'plugins/mediaplayer.swf',
-						'alt' => '<img src="plugins/mini_podcast.png" class="download" border="0" title="Download the Podcast (' . $enclosure->get_extension() . '; ' . $enclosure->get_size() . ' MB)" />',
-						'altclass' => 'download'
-					) ) . '</p>';
-					$html .= '<i align="center">(' . $enclosure -> get_type();
-
-					if ( $enclosure -> get_size() )
-						$html .= '; ' . $enclosure -> get_size() . ' MB';
-
-					$html .= ')</i>';
-					$html .= '</div>';
-			}
+			$description = $enclosure->get_description();
+			$title = htmlentities($enclosure->get_title(), ENT_QUOTES);
+			$enc_html[] = '<a href="#" onclick="show_enclosure(event); return false;" title="' . $title . '">' .
+			                $show_handle .
+			              '</a>' .
+			              '<div class="enclosure">' .
+			              '<a href="' . $enclosure_link . '">' .
+			                '<img src="' . $enclosure_link . '" title="' . $title . '" alt="" />' .
+			              '</a>' .
+			              (empty($description) ? '' : ('<p>' . $description . '</p>')) .
+			            '</div>' . "\n";
+			continue;
 		}
-		else
-			break;
 
-   return array ( $link, $title, $content . $html );
+		/* Anything else, let SimplePie deal embed. */
+		$embed_opts = array(
+			'audio' => 'plugins/place_audio.png',
+			'video' => 'plugins/place_video.png',
+			'mediaplayer' => 'plugins/mediaplayer.swf',
+			'alt' => $enclosure_link(),
+		);
+
+		$enc_html[] = '<a href="#" onclick="show_enclosure(event); return false;" title="' . htmlentities($enclosure->get_title(), ENT_QUOTES) . '">' .
+		                $show_handle .
+		              '</a>' .
+		              '<div class="enclosure" style="display:none;">' .
+		                '<div>' .
+		                  $enclosure->embed($embed_opts) .
+		                '</div>' .
+		              '</div>';
+	}
+
+	return array($link, $title, $content . implode($enc_html));
 }
 ?>
