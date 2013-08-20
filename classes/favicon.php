@@ -188,6 +188,11 @@ class FavIcon {
 		@list($icon['type'], ) = explode(';', $icon['type']);
 		@list($type, $subtype) = explode('/', $icon['type'], 2);
 		if (strcasecmp($type, 'image') !== 0) {
+                        if (!class_exists('finfo')) {
+                                fof_log("Couldn't find finfo class for favicons", "warning");
+                                return null;
+                        }
+
 			/*
 				Is their server possibly just sending the wrong content-type?
 				This turns out to be a fairly common problem with .ico files.
