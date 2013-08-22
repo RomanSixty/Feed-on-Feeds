@@ -758,14 +758,14 @@ function fof_db_find_item($feed_id, $item_guid)
     return fof_db_get_row($statement, 'item_id', TRUE);
 }
 
-function fof_db_add_item($feed_id, $guid, $link, $title, $content, $cached, $published, $updated)
+function fof_db_add_item($feed_id, $guid, $link, $title, $content, $cached, $published, $updated, $author)
 {
     global $FOF_ITEM_TABLE;
     global $fof_connection;
 
     fof_trace();
 
-    $query = "INSERT INTO $FOF_ITEM_TABLE (feed_id, item_link, item_guid, item_title, item_content, item_cached, item_published, item_updated) VALUES (:feed_id, :link, :guid, :title, :content, :cached, :published, :updated)";
+    $query = "INSERT INTO $FOF_ITEM_TABLE (feed_id, item_link, item_guid, item_title, item_content, item_cached, item_published, item_updated, item_author) VALUES (:feed_id, :link, :guid, :title, :content, :cached, :published, :updated, :author)";
     $statement = $fof_connection->prepare($query);
     $statement->bindValue(':feed_id', $feed_id);
     $statement->bindValue(':link', $link);
@@ -775,6 +775,7 @@ function fof_db_add_item($feed_id, $guid, $link, $title, $content, $cached, $pub
     $statement->bindValue(':cached', $cached);
     $statement->bindValue(':published', $published);
     $statement->bindValue(':updated', $updated);
+    $statement->bindValue(':author', $author);
     $result = $statement->execute();
     $statement->closeCursor();
 
@@ -783,16 +784,17 @@ function fof_db_add_item($feed_id, $guid, $link, $title, $content, $cached, $pub
     return $item_id;
 }
 
-function fof_db_update_item($feed_id, $guid, $link, $cached) {
+function fof_db_update_item($feed_id, $guid, $link, $cached, $author) {
     global $FOF_ITEM_TABLE;
     global $fof_connection;
 
-    $query = "UPDATE $FOF_ITEM_TABLE SET item_link = :item_link, item_cached = :item_cached WHERE feed_id = :feed_id and item_guid = :item_guid";
+    $query = "UPDATE $FOF_ITEM_TABLE SET item_link = :item_link, item_cached = :item_cached, item_author = :item_author WHERE feed_id = :feed_id and item_guid = :item_guid";
     $statement = $fof_connection->prepare($query);
     $statement->bindValue(':item_link', $link);
     $statement->bindValue(':item_cached', $cached);
     $statement->bindValue(':feed_id', $feed_id);
     $statement->bindValue(':item_guid', $guid);
+    $statement->bindValue(':item_author', $author);
     $result = $statement->execute();
 }
 
