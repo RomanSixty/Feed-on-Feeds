@@ -1043,7 +1043,6 @@ function fof_update_feed($id)
             } else {
                 fof_db_update_item($feed_id, $item_id, $link, time(), $author);
             }
-            echo "author = $author";
         }
     }
 
