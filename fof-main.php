@@ -1033,6 +1033,7 @@ function fof_update_feed($id)
                 fof_apply_tags($feed_id, $id);
                 $count_Added++;
 
+		// FIXME: what is this for?
                 $republished = false;
 
                 if ( ! $republished) {
