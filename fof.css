@@ -11,6 +11,10 @@ body {
     font-family: Georgia, serif;
 }
 
+h1 span.author {
+    font-size: x-small;
+}
+
 a img {
   border: 0;
 }

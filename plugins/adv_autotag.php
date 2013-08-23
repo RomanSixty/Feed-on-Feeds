@@ -2,7 +2,7 @@
 
 fof_add_tag_prefilter ( 'fof_adv_autotag', 'fof_adv_autotag' );
 
-function fof_adv_autotag ( $link, $title, $content )
+function fof_adv_autotag ( $link, $title, $content, $item )
 {
 	$tags = array();
 
@@ -23,6 +23,10 @@ function fof_adv_autotag ( $link, $title, $content )
 
 				case 'item_content':
 					$what = $title . ' ' . $content;
+					break;
+
+				case 'item_author':
+					$what = $item['item_author'];
 					break;
 			}
 
@@ -75,7 +79,7 @@ function save_prefs_adv_autotag ( $post )
 
 		foreach ( $items as $item )
 		{
-			$tags = fof_adv_autotag ( null, $item [ 'item_title' ], $item [ 'item_content' ] );
+			$tags = fof_adv_autotag ( null, $item [ 'item_title' ], $item [ 'item_content' ], $item );
 
 			if ( count ( $tags ) )
 				fof_tag_item ( fof_current_user(), $item [ 'item_id' ], $tags );
@@ -110,6 +114,7 @@ function edit_prefs_adv_autotag ( $prefs )
 				<select name="aa_pref[' . $count . '][what]">
 					<option value="item_content"' . ($p['what'] == 'item_content' ? ' selected="selected"' : '') . '>Post Title or Content</option>
 					<option value="item_title"'   . ($p['what'] == 'item_title'   ? ' selected="selected"' : '') . '>Post Title</option>
+					<option value="item_author"' . ($p['what'] == 'item_author' ? ' selected="selected"' : '') . '>Post Author</option>
 				</select>
 			</td>
 			<td>
@@ -135,6 +140,7 @@ function edit_prefs_adv_autotag ( $prefs )
 				<select name="aa_pref[' . $count . '][what]">
 					<option value="item_content">Post Title or Content</option>
 					<option value="item_title">Post Title</option>
+					<option value="item_author">Post Author</option>
 				</select>
 			</td>
 			<td>
