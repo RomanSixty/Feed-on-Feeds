@@ -646,7 +646,7 @@ END";
         ));
 
         fof_install_migrate_column($queries, FOF_ITEM_TABLE, 'item_author', array(
-            'add' => "ALTER TABLE " . FOF_ITEM_TABLE . " ADD COLUMN (item_author TEXT)"
+            'add' => "ALTER TABLE " . FOF_ITEM_TABLE . " ADD item_author TEXT AFTER item_content"
         ));
 
     /* FOF_ITEM_TAG_TABLE */
