@@ -790,17 +790,17 @@ function fof_subscribe($user_id, $url, $unread='today') {
     /* subscribe to the feed */
     fof_db_add_subscription($user_id, $feed['feed_id']);
 
-    /* set tags for user on any existing items */
-    fof_apply_plugin_tags($feed['feed_id'], NULL, $user_id);
-
     /* update the feed */
     list($n, $err) = fof_update_feed($new_feed_id);
     if ( ! empty($err))
         return "<span style=\"color:red\">$err</span><br>\n";
 
-    /* and set requested existing items unread */
+    /* set requested existing items unread */
     if ($unread != 'no')
         fof_db_mark_feed_unread($user_id, $feed['feed_id'], $unread);
+
+    /* set tags for user on any existing items */
+    fof_apply_plugin_tags($feed['feed_id'], NULL, $user_id);
 
     return "<span style=\"color:green\"><b>Subscribed to '" . fof_render_feed_link($feed) . "'.</b></span><br>\n";
 }
@@ -1229,7 +1229,8 @@ function fof_apply_plugin_tags($feed_id, $item_id = NULL, $user_id = NULL)
         {
             fof_log("considering $plugin $filter");
 
-            if ( empty( $userdata[$user]['prefs']['plugin_' . $plugin] ) )
+	    // FIXME: what is this condition trying to do?
+            //if ( empty( $userdata[$user]['prefs']['plugin_' . $plugin] ) )
             {
                 foreach($items as $item)
                 {
