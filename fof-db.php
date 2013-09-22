@@ -1695,6 +1695,28 @@ function fof_db_untag_items($user_id, $tag_id, $items)
     $statement->closeCursor();
 }
 
+// Remove all occurences of tag_ids from all items for user_id.
+function fof_db_untag_user_all($user_id, $tag_ids) {
+    global $FOF_ITEM_TAG_TABLE;
+    global $fof_connection;
+
+    fof_trace();
+
+    if ( ! is_array($tag_ids))
+        $tag_ids = array($tag_ids);
+    if (empty($tag_ids))
+        return false;
+    $query = "DELETE FROM $FOF_ITEM_TAG_TABLE WHERE user_id = :user_id AND tag_id IN ("
+           . (count($tag_ids) ? implode(', ', $tag_ids) : "''")
+           . ")";
+    $statement = $fof_connection->prepare($query);
+    $statement->bindValue(':user_id', $user_id);
+    $result = $statement->execute();
+    $statement->closeCursor();
+
+    return $result;
+}
+
 
 ////////////////////////////////////////////////////////////////////////////////
 // View stuff

@@ -346,19 +346,15 @@ function fof_untag_item($user_id, $item_id, $tag)
     fof_db_untag_items($user_id, $tag_id, $item_id);
 }
 
-function fof_untag($user_id, $tag)
-{
-    $tag_id = fof_db_get_tag_by_name($tag);
-
-    $result = fof_db_get_items($user_id, $feed_id, $tag, NULL, NULL);
-
-    $items = array();
-    foreach($result as $r)
-    {
-        $items[] = $r['item_id'];
+// remove all occurences of $tag from all items for $user_id
+function fof_untag($user_id, $tag) {
+    $tag_ids = fof_db_get_tag_name_map(array($tag));
+    if (empty($tag_ids)) {
+        fof_log('non-existent tag "' . $tag . '"');
+        return false;
     }
 
-    fof_db_untag_items($user_id, $tag_id, $items);
+    return fof_db_untag_user_all($user_id, $tag_ids);
 }
 
 function fof_nice_time_stamp($age)

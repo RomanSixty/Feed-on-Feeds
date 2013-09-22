@@ -51,7 +51,7 @@ if ( ! empty($_POST['view_order'])) {
 
 if ( ! empty($_POST['deltag']))
 {
-    fof_untag(fof_current_user(), $_REQUEST['deltag']);
+    fof_untag(fof_current_user(), $_POST['deltag']);
 }
 else if ( ! empty($_POST['feed']))
 {
