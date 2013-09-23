@@ -996,9 +996,11 @@ function fof_update_feed($id)
             $date = $item->get_date('U');
             $authors = $item->get_authors();
             $author = '';
-            foreach ($authors as $aobj) {
-                $author .= " " . $aobj->get_name() . " " . $aobj->get_email();
-            }
+	    if (is_array($authors)) {
+		foreach ($authors as $aobj) {
+		    $author .= " " . $aobj->get_name() . " " . $aobj->get_email();
+		}
+	    }
 
             // don't fetch entries older than the purge limit
             if ( ! $date ) {
