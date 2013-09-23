@@ -646,7 +646,7 @@ END";
         ));
 
         fof_install_migrate_column($queries, FOF_ITEM_TABLE, 'item_author', array(
-            'add' => "ALTER TABLE " . FOF_ITEM_TABLE . " ADD COLUMN (item_author TEXT)"
+            'add' => "ALTER TABLE " . FOF_ITEM_TABLE . " ADD item_author TEXT AFTER item_content"
         ));
 
     /* FOF_ITEM_TAG_TABLE */
@@ -696,7 +696,12 @@ END";
         $j = count($queries);
         foreach ($queries as $what => $query) {
             echo '<div class="update">[' . $i++ . '/' . $j . '] Updating ' . $what . ': ';
-            $result = $fof_connection->exec($query);
+            try {
+                $result = $fof_connection->exec($query);
+            } catch (PDOException $e) {
+                echo "<span class='fail'>Cannot upgrade table: [<code>$query</code>] <pre>" . $e->GetMessage() . "</pre></span>\n";
+                $result = false;
+            }
             if ($result !== false) {
                 echo '<span class="pass" title="' . $result . ' rows affected">OK</span>';
             } else {

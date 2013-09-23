@@ -346,19 +346,15 @@ function fof_untag_item($user_id, $item_id, $tag)
     fof_db_untag_items($user_id, $tag_id, $item_id);
 }
 
-function fof_untag($user_id, $tag)
-{
-    $tag_id = fof_db_get_tag_by_name($tag);
-
-    $result = fof_db_get_items($user_id, $feed_id, $tag, NULL, NULL);
-
-    $items = array();
-    foreach($result as $r)
-    {
-        $items[] = $r['item_id'];
+// remove all occurences of $tag from all items for $user_id
+function fof_untag($user_id, $tag) {
+    $tag_ids = fof_db_get_tag_name_map(array($tag));
+    if (empty($tag_ids)) {
+        fof_log('non-existent tag "' . $tag . '"');
+        return false;
     }
 
-    fof_db_untag_items($user_id, $tag_id, $items);
+    return fof_db_untag_user_all($user_id, $tag_ids);
 }
 
 function fof_nice_time_stamp($age)
@@ -996,7 +992,7 @@ function fof_update_feed($id)
             $date = $item->get_date('U');
             $authors = $item->get_authors();
             $author = '';
-	    if (is_array($authors)) {
+	    if ( !empty($authors) && is_array($authors)) {
 		foreach ($authors as $aobj) {
 		    $author .= " " . $aobj->get_name() . " " . $aobj->get_email();
 		}
@@ -1244,8 +1240,7 @@ function fof_apply_plugin_tags($feed_id, $item_id = NULL, $user_id = NULL)
     }
 }
 
-function fof_init_plugins()
-{
+function fof_init_plugins() {
     global $fof_item_filters, $fof_item_prefilters, $fof_tag_prefilters, $fof_plugin_prefs;
 
     $fof_item_filters = array();
@@ -1255,17 +1250,26 @@ function fof_init_plugins()
 
     $p =& FoF_Prefs::instance();
 
-    $dirlist = opendir(FOF_DIR . "/plugins");
-    while($file=readdir($dirlist))
-    {
-        if(preg_match('/\.php$/',$file) && !$p->get('plugin_' . substr($file, 0, -4)))
-        {
-            fof_log("including " . $file);
-            include(FOF_DIR . "/plugins/" . $file);
-        }
-    }
+    $plugin_dir = FOF_DIR . DIRECTORY_SEPARATOR . 'plugins';
 
-    closedir();
+    $active_plugins = array();
+    $dirlist = opendir($plugin_dir);
+    while (($file = readdir($dirlist)) !== false) {
+        $info = pathinfo($file);
+
+        if ($info['extension'] !== 'php'
+        ||  $info['filename'][0] === '.')
+            continue;
+
+        if ($p->get('plugin_' . $info['filename']))
+            continue;
+
+        $active_plugins[] = $info['filename'];
+
+        include($plugin_dir . DIRECTORY_SEPARATOR . $file);
+    }
+    closedir($dirlist);
+    fof_log('included plugins: ' . implode(', ', $active_plugins));
 }
 
 function fof_add_tag_prefilter($plugin, $function)
