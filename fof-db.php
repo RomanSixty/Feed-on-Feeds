@@ -1556,9 +1556,11 @@ function fof_db_mark_feed_unread($user_id, $feed_id, $what)
     }
 
     $items = array();
-    foreach($result as $r)
-    {
-        $items[] = $r['item_id'];
+    if($result) {
+    	foreach($result as $r)
+    	{
+        	$items[] = $r['item_id'];
+    	}
     }
 
     $tag_id = fof_db_get_tag_by_name('unread');
