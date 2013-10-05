@@ -81,11 +81,12 @@ function fof_log($message, $topic='debug')
     if ( ! isset($log)) {
         $log_path = (defined('FOF_DATA_PATH') ? FOF_DATA_PATH : '.');
         $log_file = (empty($fof_installer) ? 'fof.log' : 'fof-install.log');
-        $log = @fopen(implode(DIRECTORY_SEPARATOR, array($log_path, $log_file)), 'a');
+	$log_fullpath = implode(DIRECTORY_SEPARATOR, array($log_path, $log_file));
+        $log = fopen($log_fullpath, 'a');
     }
 
     if ( ! $log)
-        return;
+        die("FATAL: couldn't open logfile $log_fullpath");
 
 	// log topic restriction?
 	if ( ! empty($fof_prefs_obj->admin_prefs['log_topics'])) {
@@ -345,19 +346,15 @@ function fof_untag_item($user_id, $item_id, $tag)
     fof_db_untag_items($user_id, $tag_id, $item_id);
 }
 
-function fof_untag($user_id, $tag)
-{
-    $tag_id = fof_db_get_tag_by_name($tag);
-
-    $result = fof_db_get_items($user_id, $feed_id, $tag, NULL, NULL);
-
-    $items = array();
-    foreach($result as $r)
-    {
-        $items[] = $r['item_id'];
+// remove all occurences of $tag from all items for $user_id
+function fof_untag($user_id, $tag) {
+    $tag_ids = fof_db_get_tag_name_map(array($tag));
+    if (empty($tag_ids)) {
+        fof_log('non-existent tag "' . $tag . '"');
+        return false;
     }
 
-    fof_db_untag_items($user_id, $tag_id, $items);
+    return fof_db_untag_user_all($user_id, $tag_ids);
 }
 
 function fof_nice_time_stamp($age)
@@ -789,17 +786,17 @@ function fof_subscribe($user_id, $url, $unread='today') {
     /* subscribe to the feed */
     fof_db_add_subscription($user_id, $feed['feed_id']);
 
-    /* set tags for user on any existing items */
-    fof_apply_plugin_tags($feed['feed_id'], NULL, $user_id);
-
     /* update the feed */
     list($n, $err) = fof_update_feed($new_feed_id);
     if ( ! empty($err))
         return "<span style=\"color:red\">$err</span><br>\n";
 
-    /* and set requested existing items unread */
+    /* set requested existing items unread */
     if ($unread != 'no')
         fof_db_mark_feed_unread($user_id, $feed['feed_id'], $unread);
+
+    /* set tags for user on any existing items */
+    fof_apply_plugin_tags($feed['feed_id'], NULL, $user_id);
 
     return "<span style=\"color:green\"><b>Subscribed to '" . fof_render_feed_link($feed) . "'.</b></span><br>\n";
 }
@@ -900,22 +897,26 @@ function fof_update_feed($id)
     static $blacklist = null;
     static $admin_prefs = null;
 
+    fof_log("fof_update_feed($id)");
+
     if ($blacklist === null) {
         $p =& FoF_Prefs::instance();
         $admin_prefs = $p->admin_prefs;
         $blacklist = preg_split('/(\r\n|\r|\n)/', isset($admin_prefs['blacklist']) ? $admin_prefs['blacklist'] : NULL, -1, PREG_SPLIT_NO_EMPTY);
     }
 
-    if (empty($id))
+    if (empty($id)) {
+        fof_log("Empty feed ID", "update");
         return array(0, '');
+    }
 
     $feed = fof_db_get_feed_by_id($id);
     if (empty($feed)) {
-        fof_log("no such feed '$id'");
+        fof_log("no such feed '$id'", "update");
         return array(0, "Error: <b>no such feed '$id'</b>");
     }
 
-    fof_log("updating feed_id:$id url:'" . $feed['feed_url'] . "'");
+    fof_log("updating feed_id:$id url:'" . $feed['feed_url'] . "'", "update");
 
     fof_db_feed_mark_attempted_cache($id);
 
@@ -923,7 +924,7 @@ function fof_update_feed($id)
     ||   $rss->error() ) {
         $rss_error = (isset($rss) && $rss->error()) ? $rss->error() : 'unknown error';
         fof_db_feed_update_attempt_status($id, $rss_error);
-        fof_log("feed update failed feed_id:$id url:'" . $feed['feed_url'] . "': " . $rss_error);
+        fof_log("feed update failed feed_id:$id url:'" . $feed['feed_url'] . "': " . $rss_error, "update");
         return array(0, "Error: <b>failed to parse feed '" . $feed['feed_url'] . "'</b>: $rss_error");
     }
     fof_db_feed_update_attempt_status($id, NULL);
@@ -961,7 +962,9 @@ function fof_update_feed($id)
     $feed_description = $rss->get_description();
 
     /* set the feed's current information */
-    fof_db_feed_update_metadata($id, $feed_title, $feed_link, $feed_description, $feed_image, $feed_image_cache_date);
+    fof_db_feed_update_metadata($id, $feed_title, $feed_link,
+                                $feed_description,
+                                $feed_image, $feed_image_cache_date);
 
     $feed_id = $feed['feed_id'];
     $n = 0;
@@ -977,22 +980,32 @@ function fof_update_feed($id)
 
             $title = $item->get_title();
 
-            foreach ($blacklist as $bl)
-                if (stristr($title, $bl) !== false)
+            foreach ($blacklist as $bl) {
+                if (stristr($title, $bl) !== false) {
+                    fof_log("$id: Item title \"$title\" contained blacklisted term \"$bl\"", "update");
                     continue 2;
+                }
+            }
 
             $link = $item->get_permalink();
             $content = $item->get_content();
             $date = $item->get_date('U');
-
-            if (empty($date))
-                $date = time();
+            $authors = $item->get_authors();
+            $author = '';
+	    if ( !empty($authors) && is_array($authors)) {
+		foreach ($authors as $aobj) {
+		    $author .= " " . $aobj->get_name() . " " . $aobj->get_email();
+		}
+	    }
 
             // don't fetch entries older than the purge limit
             if ( ! $date ) {
+                // Item didn't come with a date, so synthesize one
                 $date = time();
+                fof_log("$id: item $link had no date; synthesizing", "update");
             } elseif ( ! empty($admin_prefs['purge'])
-            &&   $date <= ( time() - $admin_prefs['purge'] * 24 * 3600 ) ) {
+                       && $date <= ( time() - $admin_prefs['purge'] * 24 * 3600 ) ) {
+                fof_log("$id: item $link is older than cutoff", "update");
                 $purgedUpdTimes[] = $date;
                 continue;
             }
@@ -1001,20 +1014,24 @@ function fof_update_feed($id)
             $item_id = $item->get_id();
             $id = fof_db_find_item($feed_id, $item_id);
 
-            foreach ($fof_item_prefilters as $filter)
+            foreach ($fof_item_prefilters as $filter) {
                 list($link, $title, $content) = $filter($item, $link, $title, $content);
+            }
+
             if (!$link) {
                 // Some feeds don't furnish an item link...
+                fof_log("$id: Item had no link; synthesizing", "update");
                 $link = $feed['feed_link'];
             }
 
             if ($id == NULL) {
                 $n++;
 
-                $id = fof_db_add_item($feed_id, $item_id, $link, $title, $content, time(), $date, $date);
+                $id = fof_db_add_item($feed_id, $item_id, $link, $title, $content, time(), $date, $date, $author);
                 fof_apply_tags($feed_id, $id);
                 $count_Added++;
 
+		// FIXME: what is this for?
                 $republished = false;
 
                 if ( ! $republished) {
@@ -1023,7 +1040,7 @@ function fof_update_feed($id)
 
                 fof_apply_plugin_tags($feed_id, $id, NULL);
             } else {
-                fof_db_update_item($feed_id, $item_id, $link, time());
+                fof_db_update_item($feed_id, $item_id, $link, time(), $author);
             }
         }
     }
@@ -1210,11 +1227,12 @@ function fof_apply_plugin_tags($feed_id, $item_id = NULL, $user_id = NULL)
         {
             fof_log("considering $plugin $filter");
 
-            if ( empty( $userdata[$user]['prefs']['plugin_' . $plugin] ) )
+	    // FIXME: what is this condition trying to do?
+            //if ( empty( $userdata[$user]['prefs']['plugin_' . $plugin] ) )
             {
                 foreach($items as $item)
                 {
-                    $tags = $filter($item['item_link'], $item['item_title'], $item['item_content']);
+                    $tags = $filter($item['item_link'], $item['item_title'], $item['item_content'], $item);
                     fof_tag_item($user, $item['item_id'], $tags);
                 }
             }
