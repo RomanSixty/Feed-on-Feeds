@@ -187,6 +187,7 @@ function fof_install_schema() {
     $tables[FOF_ITEM_TABLE][] = "item_updated " . SQL_DRIVER_INT_TYPE . " NOT NULL DEFAULT '0'";
     $tables[FOF_ITEM_TABLE][] = "item_title TEXT NOT NULL";
     $tables[FOF_ITEM_TABLE][] = "item_content TEXT NOT NULL";
+    $tables[FOF_ITEM_TABLE][] = "item_author TEXT";
     if (defined('USE_MYSQL')) {
         $tables[FOF_ITEM_TABLE][] = "PRIMARY KEY (item_id)";
         $tables[FOF_ITEM_TABLE][] = "FOREIGN KEY (feed_id) REFERENCES " . FOF_FEED_TABLE . " (feed_id) ON UPDATE CASCADE ON DELETE CASCADE";
@@ -642,6 +643,10 @@ END";
 
         fof_install_migrate_reference($queries, FOF_ITEM_TABLE, 'feed_id', array(
             'add' => fof_install_create_reference_query(FOF_ITEM_TABLE, 'feed_id', array(FOF_FEED_TABLE, 'feed_id'))
+        ));
+
+        fof_install_migrate_column($queries, FOF_ITEM_TABLE, 'item_author', array(
+            'add' => "ALTER TABLE " . FOF_ITEM_TABLE . " ADD item_author TEXT AFTER item_content"
         ));
 
     /* FOF_ITEM_TAG_TABLE */

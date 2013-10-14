@@ -66,6 +66,7 @@ function fof_render_item($item, $include_div=true)
 	$item_link = fof_render_get_key_($item, 'item_link');
 	$item_id = fof_render_get_key_($item, 'item_id');
 	$item_title = fof_render_get_key_($item, 'item_title', '[no title]');
+        $item_author = fof_render_get_key_($item, 'item_author', '');
 	$item_content = fof_render_get_key_($item, 'item_content');
 	$item_read = fof_render_get_key_($item, 'item_read');
 
@@ -117,6 +118,9 @@ function fof_render_item($item, $include_div=true)
 		</script>
 <?php
 	echo "		<a href=\"$item_link\"" . (fof_render_get_key_($prefs, 'item_target') ? ' target="_blank"' : '') . ">$item_title</a>\n";
+        if ($item_author) {
+            echo '<span class="author">' . htmlentities($item_author) . '</span>';
+        }
 ?>
 	</h1>
 
