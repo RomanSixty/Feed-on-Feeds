@@ -31,7 +31,7 @@ if (isset($_POST["user_name"]) && isset($_POST["user_password"]))
     $user_password_hash = fof_db_user_password_hash($_POST['user_password'], $_POST['user_name']);
     if (fof_authenticate($_POST['user_name'], $user_password_hash))
     {
-        header("Location: .");
+        header("Location: " . $_SERVER["REQUEST_URI"]);
         exit();
     }
     else
