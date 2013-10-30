@@ -22,6 +22,7 @@
 */
 
 defined('FEED_IMAGE_CACHE_REFRESH_SECS') || define('FEED_IMAGE_CACHE_REFRESH_SECS', (7 * 24 * 60 * 60));
+session_start();
 
 /* quiet warnings, default to UTC */
 date_default_timezone_set('UTC');
@@ -158,8 +159,8 @@ function fof_authenticate($user_name, $user_password_hash)
     if (fof_db_authenticate_hash($user_name, $user_password_hash))
     {
         $user_login_expire_time = time() + (60 * 60 * 24 * 365 * 10); /* 10 years */
-        setcookie('user_name', $fof_user_name, $user_login_expire_time);
-        setcookie('user_password_hash', $user_password_hash, $user_login_expire_time);
+        $_SESSION["user_name"] = $fof_user_name;
+	$_SESSION["user_password_hash"] = $user_password_hash;
         return true;
     }
 
@@ -195,24 +196,25 @@ function require_user()
 
     if ( ! isset($_COOKIE['user_name']) || ! isset($_COOKIE['user_password_hash']))
     {
-        header('Location: login.php');
+        include('login.php');
         exit();
     }
 
-    $user_name = $_COOKIE['user_name'];
-    $user_password_hash = $_COOKIE['user_password_hash'];
+    $user_name = $_SESSION["user_name"];
+    $user_password_hash = $_SESSION["user_password_hash"];
 
     if ( ! fof_authenticate($user_name, $user_password_hash))
     {
-        header('Location: login.php');
+        include('login.php');
         exit();
     }
 }
 
 function fof_logout()
 {
-    setcookie('user_name', '', time());
-    setcookie('user_password_hash', '', time());
+    unset($_SESSION["user_name"]);
+    unset($_SESSION["user_password_hash"]);
+    session_destroy();
 }
 
 function fof_current_user()
