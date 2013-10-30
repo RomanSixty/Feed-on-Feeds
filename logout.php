@@ -17,6 +17,6 @@ include_once("fof-main.php");
 
 fof_logout();
 
-header("Location: login.php");
+header("Location: .");
 
 ?>
