@@ -123,6 +123,8 @@ else
     $compat_fatal |= fof_install_compat_notice(extension_loaded('iconv'), "iconv", "Your PHP installation is missing the iconv extension!", "The number of international languages that Feed on Feeds can handle will be reduced.");
     $compat_fatal |= fof_install_compat_notice(extension_loaded('mbstring'), "mbstring", "Your PHP installation is missing the mbstring extension!", "The number of international languages that Feed on Feeds can handle will be reduced.");
 
+    $compat_fatal |= fof_install_compat_notice(class_exists('finfo'), 'fileinfo', 'Your PHP installation is missing the fileinfo extension!', 'Some feed\'s icons may not be displayed.');
+
     if ($compat_fatal) {
         echo "</div></body></html>";
         exit();

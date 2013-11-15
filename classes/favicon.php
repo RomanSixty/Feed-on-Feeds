@@ -6,7 +6,7 @@
 */
 class FavIcon {
 	const VERSION = '1.0';
-	const BUILD = '20130725000000';
+	const BUILD = '20131115000000';
 	const SRC_URL = '';
 
 	static protected function default_user_agent() {
@@ -188,23 +188,34 @@ class FavIcon {
 		@list($icon['type'], ) = explode(';', $icon['type']);
 		@list($type, $subtype) = explode('/', $icon['type'], 2);
 		if (strcasecmp($type, 'image') !== 0) {
-                        if (!class_exists('finfo')) {
-                                fof_log("Couldn't find finfo class for favicons", "warning");
-                                return null;
-                        }
+			if (class_exists('finfo')) {
+				/*
+					Is their server possibly just sending the wrong content-type?
+					This turns out to be a fairly common problem with .ico files.
+					Double-check against magic mimetypes before giving up.
+				*/
+				$finfo = new finfo(FILEINFO_MIME);
+				@list($icon['type'], ) = explode(';', $finfo->buffer($icon['data']));
+				@list($type, $subtype) = explode('/', $icon['type'], 2);
+				if (strcasecmp($type, 'image') !== 0) {
+					/* really not an image */
+					trigger_error('icon resource \'' . $url . '\' is not an image', E_USER_NOTICE);
+					return null;
+				}
+			} else {
+				/* allow common extensions */
+				$ext = pathinfo(parse_url($url,  PHP_URL_PATH), PATHINFO_EXTENSION);
+				switch ($ext) {
+				case 'ico':
+				case 'gif':
+				case 'png':
+				case 'jpg':
+					break;
 
-			/*
-				Is their server possibly just sending the wrong content-type?
-				This turns out to be a fairly common problem with .ico files.
-				Double-check against magic mimetypes before giving up.
-			*/
-			$finfo = new finfo(FILEINFO_MIME);
-			@list($icon['type'], ) = explode(';', $finfo->buffer($icon['data']));
-			@list($type, $subtype) = explode('/', $icon['type'], 2);
-			if (strcasecmp($type, 'image') !== 0) {
-				/* really not an image */
-				trigger_error('icon resource \'' . $url . '\' is not an image', E_USER_NOTICE);
-				return null;
+				default:
+					trigger_error('icon resource \'' . $url . '\' has non-image type \'' . $icon['type'] . '\'', E_USER_NOTICE);
+					return null;
+				}
 			}
 		}
 
@@ -229,7 +240,7 @@ class FavIcon {
 		}
 
 		/* If it starts with a /, it's a complete path. */
-		if ($url[0] === '/') {
+		if ( ! empty($url) && $url[0] === '/') {
 			$url_parts['path'] = $url;
 		} else {
 			/* Otherwise, we need to tack this relative path on to the site's
