@@ -922,7 +922,10 @@ function fof_update_feed($id)
 
     if ( ($rss = fof_parse($feed['feed_url'])) === false
     ||   $rss->error() ) {
-        $rss_error = (isset($rss) && $rss->error()) ? $rss->error() : 'unknown error';
+        if ($rss !== false)
+            $rss_error = $rss->error();
+        if (empty($rss_error))
+            $rss_error = 'unknown error';
         fof_db_feed_update_attempt_status($id, $rss_error);
         fof_log("feed update failed feed_id:$id url:'" . $feed['feed_url'] . "': " . $rss_error, "update");
         return array(0, "Error: <b>failed to parse feed '" . $feed['feed_url'] . "'</b>: $rss_error");
