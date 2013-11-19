@@ -982,51 +982,58 @@ function fof_update_feed($id)
             $items_in_feed++;
 
             $title = $item->get_title();
-
             foreach ($blacklist as $bl) {
                 if (stristr($title, $bl) !== false) {
-                    fof_log("$id: Item title \"$title\" contained blacklisted term \"$bl\"", "update");
+                    fof_log($feed_id . ": Item title \"$title\" contained blacklisted term \"$bl\"", 'update');
                     continue 2;
                 }
             }
+            if (empty($title)) {
+                fof_log($feed_id . ': Item had no title', 'update');
+                $title = '[no title]';
+            }
 
             $link = $item->get_permalink();
+            if (empty($link)) {
+                // Some feeds don't furnish an item link...
+                fof_log($feed_id . ': Item had no link; synthesizing', 'update');
+                $link = $feed['feed_link'];
+            }
+
             $content = $item->get_content();
-            $date = $item->get_date('U');
+            if ( ! $content) {
+                fof_log($feed_id . ': Item has no content', 'update');
+                $content = '';
+            }
+
             $authors = $item->get_authors();
             $author = '';
-	    if ( !empty($authors) && is_array($authors)) {
-		foreach ($authors as $aobj) {
-		    $author .= " " . $aobj->get_name() . " " . $aobj->get_email();
-		}
-	    }
+            if ( !empty($authors) && is_array($authors)) {
+                foreach ($authors as $aobj) {
+                    $author .= " " . $aobj->get_name() . " " . $aobj->get_email();
+                }
+            }
 
             // don't fetch entries older than the purge limit
+            $date = $item->get_date('U');
             if ( ! $date ) {
                 // Item didn't come with a date, so synthesize one
                 $date = time();
-                fof_log("$id: item $link had no date; synthesizing", "update");
+                fof_log($feed_id . ": item $link had no date; synthesizing", 'update');
             } elseif ( ! empty($admin_prefs['purge'])
                        && $date <= ( time() - $admin_prefs['purge'] * 24 * 3600 ) ) {
-                fof_log("$id: item $link is older than cutoff", "update");
+                fof_log($feed_id . ": item $link is older than cutoff", 'update');
                 $purgedUpdTimes[] = $date;
                 continue;
             }
-
-            /* check if item already known */
-            $item_id = $item->get_id();
-            $id = fof_db_find_item($feed_id, $item_id);
 
             foreach ($fof_item_prefilters as $filter) {
                 list($link, $title, $content) = $filter($item, $link, $title, $content);
             }
 
-            if (!$link) {
-                // Some feeds don't furnish an item link...
-                fof_log("$id: Item had no link; synthesizing", "update");
-                $link = $feed['feed_link'];
-            }
-
+            /* check if item already known */
+            $item_id = $item->get_id();
+            $id = fof_db_find_item($feed_id, $item_id);
             if ($id == NULL) {
                 $n++;
 
