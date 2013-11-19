@@ -1482,13 +1482,28 @@ function fof_cache_image_data($url, $content_type, $data) {
 }
 
 
+/** Wrap FavIcon notices into fof_log.
+*/
+function fof_favicon_log($errno, $errstr) {
+    if ($errno === E_USER_NOTICE) {
+        fof_log($errstr, 'favicon');
+        return true;
+    }
+
+    /* Anything else gets passed along. */
+    return false;
+}
 /** Fetch the favicon for a url, cache it, and return its cached name.
 */
 function fof_get_favicon($url) {
     include_once('classes/favicon.php');
 
+    /* gather up notices from favicon and reroute to fof log */
+    set_error_handler('fof_favicon_log');
     $favicon = new FavIcon($url);
     $favicon = $favicon->getIcon();
+    restore_error_handler();
+
     if (empty($favicon)) {
         fof_log('FavIcon resolution failed for ' . $url);
         return false;
