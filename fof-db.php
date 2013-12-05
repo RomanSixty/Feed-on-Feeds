@@ -765,6 +765,15 @@ function fof_db_add_item($feed_id, $guid, $link, $title, $content, $cached, $pub
 
     fof_trace();
 
+    /* last-ditch enforce constraints */
+    if (is_null($link)) $link = '';
+    if (is_null($guid)) $guid = '';
+    if (is_null($title)) $title = '';
+    if (is_null($content)) $content = '';
+    if (is_null($cached)) $cached = 0;
+    if (is_null($published)) $published = 0;
+    if (is_null($updated)) $updated = 0;
+
     $query = "INSERT INTO $FOF_ITEM_TABLE (feed_id, item_link, item_guid, item_title, item_content, item_cached, item_published, item_updated, item_author) VALUES (:feed_id, :link, :guid, :title, :content, :cached, :published, :updated, :author)";
     $statement = $fof_connection->prepare($query);
     $statement->bindValue(':feed_id', $feed_id);

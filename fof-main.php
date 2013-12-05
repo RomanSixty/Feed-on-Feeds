@@ -922,7 +922,10 @@ function fof_update_feed($id)
 
     if ( ($rss = fof_parse($feed['feed_url'])) === false
     ||   $rss->error() ) {
-        $rss_error = (isset($rss) && $rss->error()) ? $rss->error() : 'unknown error';
+        if ($rss !== false)
+            $rss_error = $rss->error();
+        if (empty($rss_error))
+            $rss_error = 'unknown error';
         fof_db_feed_update_attempt_status($id, $rss_error);
         fof_log("feed update failed feed_id:$id url:'" . $feed['feed_url'] . "': " . $rss_error, "update");
         return array(0, "Error: <b>failed to parse feed '" . $feed['feed_url'] . "'</b>: $rss_error");
@@ -979,51 +982,58 @@ function fof_update_feed($id)
             $items_in_feed++;
 
             $title = $item->get_title();
-
             foreach ($blacklist as $bl) {
                 if (stristr($title, $bl) !== false) {
-                    fof_log("$id: Item title \"$title\" contained blacklisted term \"$bl\"", "update");
+                    fof_log($feed_id . ": Item title \"$title\" contained blacklisted term \"$bl\"", 'update');
                     continue 2;
                 }
             }
+            if (empty($title)) {
+                fof_log($feed_id . ': Item had no title', 'update');
+                $title = '[no title]';
+            }
 
             $link = $item->get_permalink();
+            if (empty($link)) {
+                // Some feeds don't furnish an item link...
+                fof_log($feed_id . ': Item had no link; synthesizing', 'update');
+                $link = $feed['feed_link'];
+            }
+
             $content = $item->get_content();
-            $date = $item->get_date('U');
+            if ( ! $content) {
+                fof_log($feed_id . ': Item has no content', 'update');
+                $content = '';
+            }
+
             $authors = $item->get_authors();
             $author = '';
-	    if ( !empty($authors) && is_array($authors)) {
-		foreach ($authors as $aobj) {
-		    $author .= " " . $aobj->get_name() . " " . $aobj->get_email();
-		}
-	    }
+            if ( !empty($authors) && is_array($authors)) {
+                foreach ($authors as $aobj) {
+                    $author .= " " . $aobj->get_name() . " " . $aobj->get_email();
+                }
+            }
 
             // don't fetch entries older than the purge limit
+            $date = $item->get_date('U');
             if ( ! $date ) {
                 // Item didn't come with a date, so synthesize one
                 $date = time();
-                fof_log("$id: item $link had no date; synthesizing", "update");
+                fof_log($feed_id . ": item $link had no date; synthesizing", 'update');
             } elseif ( ! empty($admin_prefs['purge'])
                        && $date <= ( time() - $admin_prefs['purge'] * 24 * 3600 ) ) {
-                fof_log("$id: item $link is older than cutoff", "update");
+                fof_log($feed_id . ": item $link is older than cutoff", 'update');
                 $purgedUpdTimes[] = $date;
                 continue;
             }
-
-            /* check if item already known */
-            $item_id = $item->get_id();
-            $id = fof_db_find_item($feed_id, $item_id);
 
             foreach ($fof_item_prefilters as $filter) {
                 list($link, $title, $content) = $filter($item, $link, $title, $content);
             }
 
-            if (!$link) {
-                // Some feeds don't furnish an item link...
-                fof_log("$id: Item had no link; synthesizing", "update");
-                $link = $feed['feed_link'];
-            }
-
+            /* check if item already known */
+            $item_id = $item->get_id();
+            $id = fof_db_find_item($feed_id, $item_id);
             if ($id == NULL) {
                 $n++;
 
@@ -1479,13 +1489,28 @@ function fof_cache_image_data($url, $content_type, $data) {
 }
 
 
+/** Wrap FavIcon notices into fof_log.
+*/
+function fof_favicon_log($errno, $errstr) {
+    if ($errno === E_USER_NOTICE) {
+        fof_log($errstr, 'favicon');
+        return true;
+    }
+
+    /* Anything else gets passed along. */
+    return false;
+}
 /** Fetch the favicon for a url, cache it, and return its cached name.
 */
 function fof_get_favicon($url) {
     include_once('classes/favicon.php');
 
+    /* gather up notices from favicon and reroute to fof log */
+    set_error_handler('fof_favicon_log');
     $favicon = new FavIcon($url);
     $favicon = $favicon->getIcon();
+    restore_error_handler();
+
     if (empty($favicon)) {
         fof_log('FavIcon resolution failed for ' . $url);
         return false;
