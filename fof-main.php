@@ -1569,7 +1569,7 @@ function fof_render_feed_row($f) {
             break;
 
         case 'fancy': /* feed_url max_date feed_unread feed_title */
-            $out .= '	<td class="source"><a href="' . $link . '" title="site"' . ($fof_prefs_obj->get('item_target') ? ' target="_blank"' : '') . '>' . $image_html . '</a></td>' . "\n";
+            $out .= '	<td class="source"><a href="' . $link . '" ' . ($fof_prefs_obj->get('item_target') ? ' target="_blank"' : '') . '>' . $image_html . '</a></td>' . "\n";
 
             $out .= '	<td class="latest"><span title="' . $f['lateststr'] . '" id="' . $f['feed_id'] . '-lateststr">' . $f['lateststrabbr'] . '</span></td>' . "\n";
 
