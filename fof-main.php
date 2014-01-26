@@ -1016,8 +1016,8 @@ function fof_update_feed($id)
 
             // don't fetch entries older than the purge limit
             $date = $item->get_date('U');
-            if ( ! $date ) {
-                // Item didn't come with a date, so synthesize one
+            if ( ! $date || $date > time()) {
+                // Item either didn't come with a date or it was nonsensical (to be fair, RFC822 is terrible), so use the current time instead
                 $date = time();
                 fof_log($feed_id . ": item $link had no date; synthesizing", 'update');
             } elseif ( ! empty($admin_prefs['purge'])
