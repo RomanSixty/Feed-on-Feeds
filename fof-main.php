@@ -1016,8 +1016,8 @@ function fof_update_feed($id)
 
             // don't fetch entries older than the purge limit
             $date = $item->get_date('U');
-            if ( ! $date ) {
-                // Item didn't come with a date, so synthesize one
+            if ( ! $date || $date > time()) {
+                // Item either didn't come with a date or it was nonsensical (to be fair, RFC822 is terrible), so use the current time instead
                 $date = time();
                 fof_log($feed_id . ": item $link had no date; synthesizing", 'update');
             } elseif ( ! empty($admin_prefs['purge'])
@@ -1569,7 +1569,7 @@ function fof_render_feed_row($f) {
             break;
 
         case 'fancy': /* feed_url max_date feed_unread feed_title */
-            $out .= '	<td class="source"><a href="' . $link . '" title="site"' . ($fof_prefs_obj->get('item_target') ? ' target="_blank"' : '') . '>' . $image_html . '</a></td>' . "\n";
+            $out .= '	<td class="source"><a href="' . $link . '" ' . ($fof_prefs_obj->get('item_target') ? ' target="_blank"' : '') . '>' . $image_html . '</a></td>' . "\n";
 
             $out .= '	<td class="latest"><span title="' . $f['lateststr'] . '" id="' . $f['feed_id'] . '-lateststr">' . $f['lateststrabbr'] . '</span></td>' . "\n";
 
