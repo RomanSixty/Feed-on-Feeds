@@ -25,7 +25,7 @@ if ( ! empty($_POST['read_feed'])) {
 if ( ! empty($_POST['update_feedid'])) {
     list($count, $error) = fof_update_feed($_POST['update_feedid']);
     if ( ! empty($error)) {
-        header('Status: 500');
+        //header('Status: 500');
         echo '<img class="feed-icon" src="' . $fof_asset['alert_icon'] . '" title="' . htmlentities($error, ENT_QUOTES) . '" />';
     } else {
         $feed_row = fof_get_feed(fof_current_user(), $_POST['update_feedid']);

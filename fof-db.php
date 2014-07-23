@@ -412,7 +412,7 @@ function fof_db_get_feeds_needing_attempt()
 
     fof_trace();
 
-    $query = "SELECT * FROM $FOF_FEED_TABLE WHERE feed_cache_next_attempt < :now ORDER BY feed_title";
+    $query = "SELECT * FROM $FOF_FEED_TABLE WHERE feed_cache_next_attempt < :now";
     $statement = $fof_connection->prepare($query);
     $statement->bindValue(':now', time());
     $result = $statement->execute();
