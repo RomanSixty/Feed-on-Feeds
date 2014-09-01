@@ -59,6 +59,9 @@ $add_feed_url .= "://" . $_SERVER["HTTP_HOST"] . $_SERVER["SCRIPT_NAME"];
   You can also use the <a href="javascript:void(location.href='<?php echo $add_feed_url; ?>?rss_url='+escape(location))">FoF subscribe</a> bookmarklet to subscribe to any page with a feed.  Just add it as a bookmark and then click on it when you are at a page you'd like to subscribe to!
 </span>
 </div>
+<?php
+if(strpos($_SERVER['HTTP_USER_AGENT'], 'Firefox') !== FALSE) {
+?>
 <script>
 document.observe("dom:loaded", function() {
     if (window.navigator.isContentHandlerRegistered('application/vnd.mozilla.maybe.feed', '<?php echo $add_feed_url; ?>?rss_url=%s')) {
@@ -66,6 +69,9 @@ document.observe("dom:loaded", function() {
     }
 });
 </script>
+<?php
+}
+?>
 
 <form method="post" action="opml.php">
 
