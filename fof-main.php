@@ -1041,7 +1041,7 @@ function fof_update_feed($id)
                 fof_apply_tags($feed_id, $id);
                 $count_Added++;
 
-		// FIXME: what is this for?
+                // FIXME: what is this for?
                 $republished = false;
 
                 if ( ! $republished) {
@@ -1090,12 +1090,14 @@ function fof_update_feed($id)
             $lastTime = $row['item_updated'];
         }
 
-        // Accumulate the time for 'now' (to give the window something to grow on)
-        $delta = time() - $lastTime;
-        if ($delta > 0 && $count > 0) {
-            $totalDelta += $delta;
-            $totalDeltaSquare += $delta*$delta;
-            $count++;
+        // If there were no new items, use the time since the last one to grow the window
+        if ( !$count_Added ) {
+            $delta = time() - $lastTime;
+            if ($delta > 0 && $count > 0) {
+                $totalDelta += $delta;
+                $totalDeltaSquare += $delta*$delta;
+                $count++;
+            }
         }
 
         $mean = 0;
@@ -1111,12 +1113,21 @@ function fof_update_feed($id)
             $mean = 86400;
         }
 
-        // This algorithm is rife with fiddling, and I really need to generate metrics to test the efficacy
         $now = time();
-        $nextInterval = max($lastTime + $nextInterval, $now) + $stdev*2/($count + 1);
+        $lastInterval = $now - $lastTime;
+
+        // This algorithm is rife with fiddling, and I really need to generate metrics to test the efficacy
+        $nextInterval = max($lastTime + $nextInterval, $now);
+        if ($count_Added > 1) {
+            // We missed an update, so make the interval shorter by how much we missed it by
+            $nextInterval -= lastInterval;
+        }
+        // fudge factor
+        $nextInterval += $stdev/($count_Added + 1);
+
+        // Always check at least twice a day
         $nextTime = min($nextInterval, $now + 86400/2);
 
-        $lastInterval = $now - $lastTime;
         fof_log($feed['feed_title'] . ": Next feed update in "
                 . ($nextTime - $now) . " seconds;"
                 . " count=$count t=$totalDelta t2=$totalDeltaSquare"
