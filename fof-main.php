@@ -1099,20 +1099,22 @@ function fof_update_feed($id)
         }
 
         $mean = 0;
+        $stdev = 0;
         if ($count > 0) {
             $mean = $totalDelta/$count;
-        }
-        $stdev = 0;
-        if ($count > 1) {
-            $stdev = sqrt(($count*$totalDeltaSquare - $totalDelta*$totalDelta)
-                          /($count * ($count - 1)));
+            if ($count > 1) {
+                $stdev = sqrt(($count*$totalDeltaSquare - $totalDelta*$totalDelta)
+                              /($count * ($count - 1)));
+            }
+        } else {
+            // We don't have any items to go on, so let's just say it's a day
+            $mean = 86400;
         }
 
         // This algorithm is rife with fiddling, and I really need to generate metrics to test the efficacy
         $now = time();
-        $nextInterval = $mean + $stdev*2/($count + 1);
-        $nextTime = min(max($lastTime + $nextInterval, $now + $stdev),
-                        $now + 86400/2);
+        $nextInterval = max($lastTime + $nextInterval, $now) + $stdev*2/($count + 1);
+        $nextTime = min($nextInterval, $now + 86400/2);
 
         $lastInterval = $now - $lastTime;
         fof_log($feed['feed_title'] . ": Next feed update in "
