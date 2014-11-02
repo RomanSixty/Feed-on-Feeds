@@ -46,7 +46,7 @@ with your existing MySQL in any way.
 
 #### I'm having an error message at installation:
 
-##### `couldn't open logfile /path/to/fof-data/fof-install.log`
+##### I'm getting `couldn't open logfile /path/to/fof-data/fof-install.log`
 
 You need to set the value of `FOF_DATA_PATH` in fof-config.php
 

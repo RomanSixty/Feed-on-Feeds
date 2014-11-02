@@ -17,7 +17,7 @@
     Controls where various data will be written.
     Currently this includes log files and the SQLite database (if being used)
 */
-define('FOF_DATA_PATH', '/path/to/fof-data/');
+define('FOF_DATA_PATH', '/path/to/fof-data');
 
 // Choose a backend.
 define('USE_SQLITE', 1); // Recommended unless you're expecting to support many users
