@@ -14,12 +14,18 @@ $fof_installer = true;
 require_once('fof-main.php');
 
 /* different drivers prefer different types */
+$driver_count = 0;
 if (defined('USE_MYSQL')) {
     define('SQL_DRIVER_INT_TYPE', 'INT(11)');
+    $driver_count++;
 } else if (defined('USE_SQLITE')) {
     define('SQL_DRIVER_INT_TYPE', 'INTEGER');
+    $driver_count++;
 } else {
     throw new Exception('Unimplemented pdo driver.');
+}
+if ($driver_count != 1) {
+    throw new Exception('Need to have exactly one SQL backend enabled');
 }
 
 /* parses version string out of assorted curl extension responses */
@@ -49,6 +55,35 @@ function fof_install_compat_notice($is_ok, $what, $fail_msg, $fail_extra, $is_re
     echo "<br><span class='warn'>$fail_msg</span>  <span>$fail_extra</span>\n";
 }
 
+/* ensure the data dir is present and usable */
+function fof_install_datadir() {
+    if (!defined('FOF_DATA_PATH')) {
+        echo '<span class="fail">Required configuration FOF_DATA_PATH not found</span>';
+        return false;
+    }
+
+    $datadir = FOF_DATA_PATH;
+    if (!file_exists($datadir)) {
+        $status = @mkdir($datadir, 0700);
+        if (!$status) {
+            echo '<span class="fail">Can\'t create data directory <code>$datadir</code>; '
+                 . 'please ensure that it was configured correctly and is in a location '
+                 . 'you have write access to.</span>';
+            return false;
+        }
+    }
+
+    if (!is_writable($datadir)) {
+        echo '<span class="fail">Can\'t write to data directory <code>$datadir</code>; '
+                 . 'please ensure that it was configured correctly and is in a location '
+                 . 'you have write access to.</span>';
+        return false;
+    }
+
+    echo "<span class='pass'>Data directory <code>$datadir</code> exists and is writable.</span>\n";
+
+    return true;
+}
 
 /* ensure the cache dir is present and usable */
 function fof_install_cachedir() {

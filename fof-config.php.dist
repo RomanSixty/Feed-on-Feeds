@@ -17,20 +17,20 @@
     Controls where various data will be written.
     Currently this includes log files and the SQLite database (if being used)
 */
-define('FOF_DATA_PATH', '/var/fof-data/');
+define('FOF_DATA_PATH', '/path/to/fof-data/');
 
-// Database connection information.  Host, username, password, database name.
-
-define('FOF_DB_HOST', "host.example.com");
-define('FOF_DB_USER', "username");
-define('FOF_DB_PASS', "password");
-define('FOF_DB_DBNAME', "database");
-
-// choose a backend
+// Choose a backend.
+define('USE_SQLITE', 1); // Recommended unless you're expecting to support many users
 // define('USE_MYSQL', 1);
-// define('USE_SQLITE', 1);
 
-// Some database setups may not allow triggers; uncomment this if you need to avoid installing them.
+// Database connection information, for mySQL.  Host, username, password, database name.
+
+//define('FOF_DB_HOST', "host.example.com");
+//define('FOF_DB_USER', "username");
+//define('FOF_DB_PASS', "password");
+//define('FOF_DB_DBNAME', "database");
+
+// Some mySQL  setups may not allow triggers; uncomment this if you need to avoid installing them.
 // define('SQL_NO_TRIGGERS', 1);
 
 // define('FOF_AUTH_EXTERNAL',1); // trust server auth to manage users

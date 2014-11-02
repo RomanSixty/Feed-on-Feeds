@@ -134,6 +134,16 @@ else
 <br>Minimum requirements met!
 <hr>
 
+<h2>Checking cache directory...</h2>
+<?php
+    if ( ! fof_install_datadir() ) {
+        echo "</div></body></html>\n";
+        exit();
+    }
+?>
+<br>Data directory ready.
+<hr>
+
 <h2>Creating tables...</h2>
 <?php
     fof_install_database(fof_install_schema(), 1);
