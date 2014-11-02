@@ -35,7 +35,7 @@ up automatically.
 
 # FAQ/troubleshooting
 
-### Which database backend should I use?
+#### Which database backend should I use?
 
 Most of the time, SQLite is what you want. You should only consider MySQL if
 you're going to support many concurrent users (i.e. 10 or more people using the
@@ -44,13 +44,13 @@ it easier to port your data to a new webhost. This is the case even if you
 already havea working MySQL installation, and using SQLite will not interfere
 with your existing MySQL in any way.
 
-### I'm having an error message at installation:
+#### I'm having an error message at installation:
 
-#### `couldn't open logfile /path/to/fof-data/fof-install.log`
+##### `couldn't open logfile /path/to/fof-data/fof-install.log`
 
 You need to set the value of `FOF_DATA_PATH` in fof-config.php
 
-#### `Syntax error or access violation` after "Cannot upgrade table: `[CREATE TRIGGER ...`
+##### I'm getting `Syntax error or access violation` after "Cannot upgrade table: `[CREATE TRIGGER ...`
 
 This occurs if you're on MySQL shared hosting and you don't have access to
 trigger creation, which is fairly common.  Find the following in
@@ -60,7 +60,7 @@ trigger creation, which is fairly common.  Find the following in
 
 and remove the `//` at the beginning of the line.
 
-### How do I delete a feed?
+#### How do I delete a feed?
 
 In the feeds list there's a little triangle (that looks like &Delta;). Hover
 over it and enjoy the context menu.
