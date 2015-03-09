@@ -1120,7 +1120,11 @@ function fof_update_feed($id)
         $interval = 2*$stdev/($count_Added + 1);
         $nextTime = $lastTime + $mean - 2*$interval;
         if ($nextTime < $now) {
-            $nextTime += $interval*ceil(($now - $interval)/$interval);
+            if ($interval > 0) {
+                $nextTime += $interval*ceil(($now - $interval)/$interval);
+            } else {
+                $nextTime = $now + 86400/2;
+            }
         }
 
         // Always check at least twice a day
