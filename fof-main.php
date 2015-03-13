@@ -1117,18 +1117,16 @@ function fof_update_feed($id)
         $lastInterval = $now - $lastTime;
 
         // This algorithm is rife with fiddling, and I really need to generate metrics to test the efficacy
-        $interval = 2*$stdev/($count_Added + 1);
-        $nextTime = $lastTime + $mean - 2*$interval;
-        if ($nextTime < $now) {
-            if ($interval > 0) {
-                $nextTime += $interval*ceil(($now - $interval)/$interval);
-            } else {
-                $nextTime = $now + 86400/2;
-            }
+        $nextInterval = max($lastTime + $nextInterval, $now);
+        if ($count_Added > 1) {
+            // We missed an update, so make the interval shorter by how much we missed it by
+            $nextInterval -= lastInterval;
         }
+        // fudge factor
+        $nextInterval += $stdev/($count_Added + 1);
 
         // Always check at least twice a day
-        $nextTime = min($nextTime, $now + 86400/2);
+        $nextTime = min($nextInterval, $now + 86400/2);
 
         fof_log($feed['feed_title'] . ": Next feed update in "
                 . ($nextTime - $now) . " seconds;"
