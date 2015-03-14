@@ -12,9 +12,9 @@
  *
  */
 
-include("header.php");
+include "header.php";
 
-include("items.php");
+include "items.php";
 
-include("footer.php");
+include "footer.php";
 ?>

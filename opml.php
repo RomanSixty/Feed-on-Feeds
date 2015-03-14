@@ -13,21 +13,20 @@
  */
 
 header("Content-Type: text/xml; charset=utf-8");
-include_once("fof-main.php");
+include_once "fof-main.php";
 
 echo '<?xml version="1.0"?>';
 ?>
 
 <opml version="1.1">
   <head>
-    <title>Feed on Feeds Subscriptions</title>  
+    <title>Feed on Feeds Subscriptions</title>
   </head>
   <body>
 <?php
 $result = fof_db_get_subscriptions(fof_current_user());
 
-while($row = fof_db_get_row($result))
-{
+while ($row = fof_db_get_row($result)) {
 	$url = htmlspecialchars($row['feed_url']);
 	$title = htmlspecialchars($row['feed_title']);
 	$link = htmlspecialchars($row['feed_link']);

@@ -13,7 +13,7 @@
 
 ob_start();
 
-include_once("fof-main.php");
+include_once "fof-main.php";
 
 fof_logout();
 
