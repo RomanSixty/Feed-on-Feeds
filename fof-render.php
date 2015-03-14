@@ -45,6 +45,30 @@ function do_highlight($full_body, $q, $class) {
 	return $full_body_hl;
 }
 
+function fof_render_set_ondemand_load($body) {
+	libxml_use_internal_errors(true);
+	$doc = new DOMDocument();
+	$doc->loadHTML($body);
+	foreach ($doc->getElementsByTagName('img') as $img) {
+		if ($img->hasAttribute('src')) {
+			$img->setAttribute('data-fof-ondemand-src', $img->getAttribute('src'));
+			$img->removeAttribute('src');
+		}
+		if ($img->hasAttribute('srcset')) {
+			$img->setAttribute('data-fof-ondemand-srcset', $img->getAttribute('srcset'));
+			$img->removeAttribute('srcset');
+		}
+	}
+
+	$ret = '';
+	foreach ($doc->getElementsByTagName('body') as $body) {
+		foreach ($body->childNodes as $node) {
+			$ret .= $doc->saveHTML($node);
+		}
+	}
+	return $ret;
+}
+
 /* quell warnings */
 function fof_render_get_key_($array, $key, $default = NULL) {
 	return (empty($array[$key]) ? $default : $array[$key]);
@@ -70,7 +94,7 @@ function fof_render_item($item, $include_div = true) {
 	$item_id = fof_render_get_key_($item, 'item_id');
 	$item_title = fof_render_get_key_($item, 'item_title', '[no title]');
 	$item_author = fof_render_get_key_($item, 'item_author', '');
-	$item_content = fof_render_get_key_($item, 'item_content');
+	$item_content = fof_render_set_ondemand_load(fof_render_get_key_($item, 'item_content'));
 	$item_read = fof_render_get_key_($item, 'item_read');
 
 	$prefs = fof_prefs();
