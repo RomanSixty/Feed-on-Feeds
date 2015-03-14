@@ -23,8 +23,10 @@ define('FOF_DATA_PATH', '/path/to/fof-data');
 define('USE_SQLITE', 1); // Recommended unless you're expecting to support many users
 // define('USE_MYSQL', 1);
 
-// Database connection information, for mySQL.  Host, username, password, database name.
+// Database configuration for SQLite
+define('FOF_DB_FILENAME', 'fof.db');
 
+// Database connection information, for mySQL.  Host, username, password, database name.
 //define('FOF_DB_HOST', "host.example.com");
 //define('FOF_DB_USER', "username");
 //define('FOF_DB_PASS', "password");
