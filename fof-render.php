@@ -47,8 +47,9 @@ function do_highlight($full_body, $q, $class) {
 
 function fof_render_set_ondemand_load($body) {
 	libxml_use_internal_errors(true);
-	$doc = new DOMDocument();
-	$doc->loadHTML($body);
+	$doc = new DOMDocument('1.0', 'utf-8');
+	// hack borrowed from http://beerpla.net/projects/smartdomdocument-a-smarter-php-domdocument-class/
+	$doc->loadHTML(mb_convert_encoding($body, 'HTML-ENTITIES', "UTF-8"));
 	foreach ($doc->getElementsByTagName('img') as $img) {
 		if ($img->hasAttribute('src')) {
 			$img->setAttribute('data-fof-ondemand-src', $img->getAttribute('src'));
