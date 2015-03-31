@@ -1251,12 +1251,13 @@ function fof_apply_plugin_tags($feed_id, $item_id = NULL, $user_id = NULL) {
 }
 
 function fof_init_plugins() {
-	global $fof_item_filters, $fof_item_prefilters, $fof_tag_prefilters, $fof_plugin_prefs;
+	global $fof_item_filters, $fof_item_prefilters, $fof_tag_prefilters, $fof_plugin_prefs, $fof_render_filters;
 
 	$fof_item_filters = array();
 	$fof_item_prefilters = array();
 	$fof_plugin_prefs = array();
 	$fof_tag_prefilters = array();
+	$fof_render_filters = array();
 
 	$p = &FoF_Prefs::instance();
 
@@ -1300,6 +1301,18 @@ function fof_add_item_filter($function, $order = null) {
 	}
 
 	ksort($fof_item_filters);
+}
+
+function fof_add_render_filter($function, $order = null) {
+	global $fof_render_filters;
+
+	if (is_int($order)) {
+		$fof_render_filters[$order] = $function;
+	} else {
+		$fof_render_filters[] = $function;
+	}
+
+	ksort($fof_render_filters);
 }
 
 function fof_add_item_prefilter($function) {

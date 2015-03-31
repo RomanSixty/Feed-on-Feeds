@@ -45,31 +45,6 @@ function do_highlight($full_body, $q, $class) {
 	return $full_body_hl;
 }
 
-function fof_render_set_ondemand_load($body) {
-	libxml_use_internal_errors(true);
-	$doc = new DOMDocument('1.0', 'utf-8');
-	// hack borrowed from http://beerpla.net/projects/smartdomdocument-a-smarter-php-domdocument-class/
-	$doc->loadHTML(mb_convert_encoding($body, 'HTML-ENTITIES', "UTF-8"));
-	foreach ($doc->getElementsByTagName('img') as $img) {
-		if ($img->hasAttribute('src')) {
-			$img->setAttribute('data-fof-ondemand-src', $img->getAttribute('src'));
-			$img->removeAttribute('src');
-		}
-		if ($img->hasAttribute('srcset')) {
-			$img->setAttribute('data-fof-ondemand-srcset', $img->getAttribute('srcset'));
-			$img->removeAttribute('srcset');
-		}
-	}
-
-	$ret = '';
-	foreach ($doc->getElementsByTagName('body') as $body) {
-		foreach ($body->childNodes as $node) {
-			$ret .= $doc->saveHTML($node);
-		}
-	}
-	return $ret;
-}
-
 /* quell warnings */
 function fof_render_get_key_($array, $key, $default = NULL) {
 	return (empty($array[$key]) ? $default : $array[$key]);
@@ -77,6 +52,7 @@ function fof_render_get_key_($array, $key, $default = NULL) {
 
 function fof_render_item($item, $include_div = true) {
 	global $fof_asset;
+	global $fof_render_filters;
 
 	$feed_link = fof_render_get_key_($item, 'feed_link');
 	if ($feed_link == "[no link]") {
@@ -95,8 +71,12 @@ function fof_render_item($item, $include_div = true) {
 	$item_id = fof_render_get_key_($item, 'item_id');
 	$item_title = fof_render_get_key_($item, 'item_title', '[no title]');
 	$item_author = fof_render_get_key_($item, 'item_author', '');
-	$item_content = fof_render_set_ondemand_load(fof_render_get_key_($item, 'item_content'));
+	$item_content = fof_render_get_key_($item, 'item_content');
 	$item_read = fof_render_get_key_($item, 'item_read');
+
+	foreach ($fof_render_filters as $filter) {
+		$item_content = $filter($item_content);
+	}
 
 	$prefs = fof_prefs();
 	$offset = fof_render_get_key_($prefs, 'tzoffset') * 60 * 60;
