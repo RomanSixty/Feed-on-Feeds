@@ -105,15 +105,18 @@ function fof_db_connect($create = false) {
 	 */
 	$pdo_options = array(PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION);
 	if (defined('USE_MYSQL')) {
+		if (!defined('FOF_DB_HOST') || !defined('FOF_DB_DBNAME')) {
+			throw new Exception('Missing MySQL configuration; make sure FOF_DB_HOST and FOF_DB_DBNAME are set');
+		}
 		$dsn = "mysql:host=" . FOF_DB_HOST . ($create ? '' : (';dbname=' . FOF_DB_DBNAME)) . ";charset=utf8";
 	} else if (defined('USE_SQLITE')) {
 		if (!defined('FOF_DATA_PATH') || !defined('FOF_DB_FILENAME')) {
-			throw new Exception('vital configuration is not set');
+			throw new Exception('Missing SQLite configuration; make sure FOF_DATA_PATH and FOF_DB_FILENAME are set');
 		}
 		$sqlite_db = FOF_DATA_PATH . DIRECTORY_SEPARATOR . FOF_DB_FILENAME;
 		$dsn = "sqlite:$sqlite_db";
 	} else {
-		throw new Exception('missing implementation for pdo driver');
+		throw new Exception('Missing database configuration; make sure USE_SQLITE or USE_MYSQL is set');
 	}
 
 	fof_log("Connecting to '$dsn'...");
