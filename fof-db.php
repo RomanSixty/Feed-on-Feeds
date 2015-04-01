@@ -105,7 +105,7 @@ function fof_db_connect($create = false) {
 	 */
 	$pdo_options = array(PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION);
 	if (defined('USE_MYSQL')) {
-		$dsn = "mysql:host=" . FOF_DB_HOST . ($create ? '' : (';dbname=' . FOF_DB_NAME)) . ";charset=utf8";
+		$dsn = "mysql:host=" . FOF_DB_HOST . ($create ? '' : (';dbname=' . FOF_DB_DBNAME)) . ";charset=utf8";
 	} else if (defined('USE_SQLITE')) {
 		if (!defined('FOF_DATA_PATH') || !defined('FOF_DB_FILENAME')) {
 			throw new Exception('vital configuration is not set');
