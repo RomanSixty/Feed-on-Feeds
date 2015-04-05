@@ -810,7 +810,7 @@ function remove_tag(id, tag)
     throb();
 
     var url = "add-tag.php";
-    var params = { "remove": "true", "tag": tag, "item": id };
+    var params = { "remove": "true", "tag": tag, "item": id.toString() };
     var complete = function () { refreshlist(); refreshitem(id); };
     var options = { method: 'post', parameters: params, onComplete: complete };
 
