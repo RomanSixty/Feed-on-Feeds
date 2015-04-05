@@ -12,20 +12,20 @@
  *
  */
 
-include_once('fof-main.php');
+include_once 'fof-main.php';
 
 $feed_id = $_POST['feed'];
-list ($count, $error) = fof_update_feed($feed_id);
+list($count, $error) = fof_update_feed($feed_id);
 $feed = fof_db_get_feed_by_id($feed_id);
 
 if ($count) {
-    echo "<span style=\"color:green\">" . fof_render_feed_link($feed) . " has $count new items.</span>";
+	echo "<span style=\"color:green\">" . fof_render_feed_link($feed) . " has $count new items.</span>";
 } else {
-    echo "<span>" . fof_render_feed_link($feed) . " has no new items.</span>";
+	echo "<span>" . fof_render_feed_link($feed) . " has no new items.</span>";
 }
 
 if ($error) {
-    echo " <span style=\"color:red\">$error</span>";
+	echo " <span style=\"color:red\">$error</span>";
 }
 
 ?>

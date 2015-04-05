@@ -12,7 +12,7 @@
  *
  */
 
-include_once('fof-main.php');
+include_once 'fof-main.php';
 
 $url = $_REQUEST['url'];
 $unread = $_REQUEST['unread'];
