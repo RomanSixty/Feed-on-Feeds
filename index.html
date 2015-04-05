@@ -1,0 +1,173 @@
+<!DOCTYPE html>
+<html>
+
+  <head>
+    <meta charset='utf-8'>
+    <meta http-equiv="X-UA-Compatible" content="chrome=1">
+    <meta name="description" content="Feed-on-feeds : RSS feed aggregator">
+
+    <link rel="stylesheet" type="text/css" media="screen" href="stylesheets/stylesheet.css">
+
+    <title>Feed-on-feeds</title>
+  </head>
+
+  <body>
+
+    <!-- HEADER -->
+    <div id="header_wrap" class="outer">
+        <header class="inner">
+          <a id="forkme_banner" href="https://github.com/plaidfluff/Feed-on-Feeds">View on GitHub</a>
+
+          <h1 id="project_title">Feed-on-feeds</h1>
+          <h2 id="project_tagline">RSS feed aggregator</h2>
+
+            <section id="downloads">
+              <a class="zip_download_link" href="https://github.com/plaidfluff/Feed-on-Feeds/zipball/master">Download this project as a .zip file</a>
+              <a class="tar_download_link" href="https://github.com/plaidfluff/Feed-on-Feeds/tarball/master">Download this project as a tar.gz file</a>
+            </section>
+        </header>
+    </div>
+
+    <!-- MAIN CONTENT -->
+    <div id="main_content_wrap" class="outer">
+      <section id="main_content" class="inner">
+        <h1>
+<a name="about" class="anchor" href="#about"><span class="octicon octicon-link"></span></a>About</h1>
+
+<p>FeedOnFeeds is a lightweight server-based RSS aggregator and reader,
+allowing you to keep up with syndicated content (blogs, comics, and so
+forth) without having to keep track of what you've read. Being
+server-based means all of your feeds and history are kept in one
+place, and being lightweight means you can install it pretty much
+anywhere without needing a fancy dedicated server or the like.</p>
+
+<p>FeedOnFeeds was originally written by Steve Minutillo; this fork
+strives to stay up-to-date with changes to PHP while improving
+security, multiuser support, and overall design.</p>
+
+<h1>
+<a name="requirements" class="anchor" href="#requirements"><span class="octicon octicon-link"></span></a>Requirements</h1>
+
+<p>FeedOnFeeds requires:</p>
+
+<ul>
+<li>A web server running PHP</li>
+<li>Access to a PDO-capable database (MySQL and SQLite are currently supported,
+and more are easy to add)</li>
+<li>Specific features may require specific PHP extensions; it is highly
+recommended (but not required) that you have Xlib, cURL, and iconv.</li>
+</ul>
+
+<h1>
+<a name="installation" class="anchor" href="#installation"><span class="octicon octicon-link"></span></a>Installation</h1>
+
+<p>To install, simply download a snapshot or clone from your favorite git
+repository.  Then copy fof-config.php.dist to fof-config.php and edit
+it as appropriate for your setup. If you're on shared hosting, be sure
+to point <code>FOF_DATA_PATH</code> to somewhere in your home directory.</p>
+
+<p>After that, point a web browser to install.php; For example, if you've
+installed it at <a href="http://example.com/fof">http://example.com/fof</a>, go to
+<a href="http://example.com/fof/install.php">http://example.com/fof/install.php</a> and then everything should be set
+up automatically.</p>
+
+<h1>
+<a name="faqtroubleshooting" class="anchor" href="#faqtroubleshooting"><span class="octicon octicon-link"></span></a>FAQ/troubleshooting</h1>
+
+<h4>
+<a name="which-database-backend-should-i-use" class="anchor" href="#which-database-backend-should-i-use"><span class="octicon octicon-link"></span></a>Which database backend should I use?</h4>
+
+<p>Most of the time, SQLite is what you want. You should only consider MySQL if
+you're going to support many concurrent users (i.e. 10 or more people using the
+app simultaneously), as SQLite has much lower administrative overhead and makes
+it easier to port your data to a new webhost. This is the case even if you
+already havea working MySQL installation, and using SQLite will not interfere
+with your existing MySQL in any way.</p>
+
+<h4>
+<a name="im-having-an-error-message-at-installation" class="anchor" href="#im-having-an-error-message-at-installation"><span class="octicon octicon-link"></span></a>I'm having an error message at installation:</h4>
+
+<h5>
+<a name="im-getting-couldnt-open-logfile-pathtofof-datafof-installlog" class="anchor" href="#im-getting-couldnt-open-logfile-pathtofof-datafof-installlog"><span class="octicon octicon-link"></span></a>I'm getting <code>couldn't open logfile /path/to/fof-data/fof-install.log</code>
+</h5>
+
+<p>You need to set the value of <code>FOF_DATA_PATH</code> in fof-config.php</p>
+
+<h5>
+<a name="im-getting-syntax-error-or-access-violation-after-cannot-upgrade-table-create-trigger-" class="anchor" href="#im-getting-syntax-error-or-access-violation-after-cannot-upgrade-table-create-trigger-"><span class="octicon octicon-link"></span></a>I'm getting <code>Syntax error or access violation</code> after "Cannot upgrade table: <code>[CREATE TRIGGER ...</code>
+</h5>
+
+<p>This occurs if you're on MySQL shared hosting and you don't have access to
+trigger creation, which is fairly common.  Find the following in
+<code>fof-config.php</code>:</p>
+
+<pre><code>// define('SQL_NO_TRIGGERS', 1);
+</code></pre>
+
+<p>and remove the <code>//</code> at the beginning of the line.</p>
+
+<h4>
+<a name="how-do-i-delete-a-feed" class="anchor" href="#how-do-i-delete-a-feed"><span class="octicon octicon-link"></span></a>How do I delete a feed?</h4>
+
+<p>In the feeds list there's a little triangle (that looks like Δ). Hover
+over it and enjoy the context menu.</p>
+
+<p>If you've set the UI theme to "simple," just click on the "d" in the feeds
+list.</p>
+
+<h1>
+<a name="upgrading" class="anchor" href="#upgrading"><span class="octicon octicon-link"></span></a>Upgrading</h1>
+
+<p>Upgrading to a newer FeedOnFeeds usually just involves downloading a
+new snapshot or issuing a git pull, and then pointing a browser at install.php
+again.</p>
+
+<h1>
+<a name="setting-up-automatic-updates" class="anchor" href="#setting-up-automatic-updates"><span class="octicon octicon-link"></span></a>Setting up automatic updates</h1>
+
+<p>FeedOnFeeds works best if you have it set to automatically update your feeds
+on-the-fly. The best way to do this is to set up a cron job like
+so:</p>
+
+<pre><code> * * * * * curl http://example.com/fof/update-quiet.php
+</code></pre>
+
+<p>Don't worry about updates occurring too frequently - FeedOnFeeds will only
+update feeds which are due for an update. By default it will
+update every feed at most once an hour, but if you enable dynamic
+update intervals in the admin preferences, it will adjust the polling
+update for feeds based on their historical update frequencies.</p>
+
+<p>If you're on Dreamhost, you can set up your cron job from the "goodies" section
+of the panel, and create a new cron job with the following:</p>
+
+<ul>
+<li>Command to run: <code>curl http://path/to/fof/update-quiet.php</code> (setting the URL
+appropriately)</li>
+<li>When to run: Custom</li>
+<li>Minutes: Every 10 minutes</li>
+<li>Hours: Every Hour</li>
+<li>Day of month: Every Day</li>
+<li>Month: Every Month</li>
+<li>Day of Week: Every Day of Week</li>
+</ul>
+
+<h1>
+<a name="legal" class="anchor" href="#legal"><span class="octicon octicon-link"></span></a>Legal</h1>
+
+<p>FeedOnFeeds is distributed under the GPL.</p>
+      </section>
+    </div>
+
+    <!-- FOOTER  -->
+    <div id="footer_wrap" class="outer">
+      <footer class="inner">
+        <p class="copyright">Feed-on-feeds maintained by <a href="https://github.com/plaidfluff">plaidfluff</a></p>
+        <p>Published with <a href="http://pages.github.com">GitHub Pages</a></p>
+      </footer>
+    </div>
+
+    
+
+  </body>
+</html>
