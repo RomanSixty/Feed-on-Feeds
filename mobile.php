@@ -12,8 +12,8 @@
  *
  */
 
-include_once("fof-main.php");
-include_once("fof-render.php");
+include_once "fof-main.php";
+include_once "fof-render.php";
 
 $result = fof_get_items($fof_user_id, NULL, "unread", NULL, 0, 10);
 
@@ -30,7 +30,7 @@ fof_set_content_type();
       <meta name = "viewport" content = "width=700">
 
       <link rel="stylesheet" href="fof.css" media="screen" />
-      <?php if (is_readable('./fof-custom.css')) { ?><link rel="stylesheet" href="fof-custom.css" media="screen" /><?php } ?>
+      <?php if (is_readable('./fof-custom.css')) {?><link rel="stylesheet" href="fof-custom.css" media="screen" /><?php }?>
       <style>
       .box
       {
@@ -52,14 +52,14 @@ function toggle_favorite(id)
 
     var url = "add-tag.php";
     var params = { "tag": "star", "item": id };
-    image.src = '<?php echo $fof_asset['star_pend_image']; ?>';
+    image.src = '<?php echo $fof_asset['star_pend_image'];?>';
 
     if(image.star)
     {
         params["remove"] = "true";
         var complete = function()
         {
-            image.src='<?php echo $fof_asset['star_off_image']; ?>';
+            image.src='<?php echo $fof_asset['star_off_image'];?>';
             image.star = false;
         };
     }
@@ -67,7 +67,7 @@ function toggle_favorite(id)
     {
         var complete = function()
         {
-            image.src='<?php echo $fof_asset['star_on_image']; ?>';
+            image.src='<?php echo $fof_asset['star_on_image'];?>';
             image.star = true;
         };
     }
@@ -98,31 +98,33 @@ function newWindowIfy()
 
 $first = true;
 
-foreach($result as $item)
-{
-    $item_id = $item['item_id'];
-    echo '<div class="item shown" id="i' . $item_id . '">';
+foreach ($result as $item) {
+	$item_id = $item['item_id'];
+	echo '<div class="item shown" id="i' . $item_id . '">';
 
-    $feed_link = $item['feed_link'];
-    $feed_title = $item['feed_title'];
-    $feed_image = $item['feed_image'];
-    $feed_description = $item['feed_description'];
+	$feed_link = $item['feed_link'];
+	$feed_title = $item['feed_title'];
+	$feed_image = $item['feed_image'];
+	$feed_description = $item['feed_description'];
 
-    $item_link = $item['item_link'];
-    $item_id = $item['item_id'];
-    $item_title = $item['item_title'];
-    $item_content = $item['item_content'];
+	$item_link = $item['item_link'];
+	$item_id = $item['item_id'];
+	$item_title = $item['item_title'];
+	$item_content = $item['item_content'];
 
-    $item_published = gmdate("Y-n-d g:ia", $item['item_published'] + $offset*60*60);
-    $item_cached = gmdate("Y-n-d g:ia", $item['item_cached'] + $offset*60*60);
-    $item_updated = gmdate("Y-n-d g:ia", $item['item_updated'] + $offset*60*60);
+	$item_published = gmdate("Y-n-d g:ia", $item['item_published'] + $offset * 60 * 60);
+	$item_cached = gmdate("Y-n-d g:ia", $item['item_cached'] + $offset * 60 * 60);
+	$item_updated = gmdate("Y-n-d g:ia", $item['item_updated'] + $offset * 60 * 60);
 
-    if(!$item_title) $item_title = "[no title]";
-    $tags = $item['tags'];
-    $star = in_array("star", $tags) ? true : false;
-    $star_image = $star ? $fof_asset['star_on_image'] : $fof_asset['star_off_image'];
+	if (!$item_title) {
+		$item_title = "[no title]";
+	}
 
-?>
+	$tags = $item['tags'];
+	$star = in_array("star", $tags) ? true : false;
+	$star_image = $star ? $fof_asset['star_on_image'] : $fof_asset['star_off_image'];
+
+	?>
 
 <div class="header">
 
@@ -130,15 +132,20 @@ foreach($result as $item)
         <img
             height="16"
             width="16"
-            src="<?php echo $star_image ?>"
-            id="fav<?php echo $item_id ?>"
-            onclick="return toggle_favorite('<?php echo $item_id ?>')"
+            src="<?php echo $star_image?>"
+            id="fav<?php echo $item_id?>"
+            onclick="return toggle_favorite('<?php echo $item_id?>')"
         />
         <script>
-        document.getElementById('fav<?php echo $item_id ?>').star = <?php if($star) echo 'true'; else echo 'false'; ?>;
+        document.getElementById('fav<?php echo $item_id?>').star = <?php if ($star) {
+		echo 'true';
+	} else {
+		echo 'false';
+	}
+	?>;
         </script>
-        <a href="<?php echo $item_link ?>">
-            <?php echo $item_title ?>
+        <a href="<?php echo $item_link?>">
+            <?php echo $item_title?>
         </a>
     </h1>
 
@@ -147,37 +154,34 @@ foreach($result as $item)
 
     <h2>
 
-        <a href="<?php echo $feed_link ?>" title='<?php echo htmlentities($feed_description); ?>'><img src="<?php echo $feed_image ?>" height="16" width="16" border="0" /></a>
-        <a href="<?php echo $feed_link ?>" title='<?php echo htmlentities($feed_description); ?>'><?php echo $feed_title ?></a>
+        <a href="<?php echo $feed_link?>" title='<?php echo htmlentities($feed_description);?>'><img src="<?php echo $feed_image?>" height="16" width="16" border="0" /></a>
+        <a href="<?php echo $feed_link?>" title='<?php echo htmlentities($feed_description);?>'><?php echo $feed_title?></a>
 
     </h2>
 
-    <span class="meta">on <?php echo $item_published ?> GMT</span>
+    <span class="meta">on <?php echo $item_published?> GMT</span>
 
 </div>
 
 
-<div class="body"><?php echo $item_content ?></div>
+<div class="body"><?php echo $item_content?></div>
 
 <div class="clearer"></div>
 </div>
 <input
     type="hidden"
-    name="c<?php echo $item_id ?>"
-    id="c<?php echo $item_id ?>"
+    name="c<?php echo $item_id?>"
+    id="c<?php echo $item_id?>"
     value="checked"
 />
 
 <?php
 }
 
-if(count($result) == 0)
-{
-    echo "<p><i>No new items.</i></p>";
-}
-else
-{
-    echo "<center><a href='#' onclick='mark_read(); return false;'><b>Mark All Read</b></a></center>";
+if (count($result) == 0) {
+	echo "<p><i>No new items.</i></p>";
+} else {
+	echo "<center><a href='#' onclick='mark_read(); return false;'><b>Mark All Read</b></a></center>";
 }
 
 ?>

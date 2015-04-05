@@ -12,19 +12,19 @@
  */
 
 /*
-	FIXME:
-		add form fallbacks for ajax actions
-*/
+FIXME:
+add form fallbacks for ajax actions
+ */
 
-require_once('fof-main.php');
+require_once 'fof-main.php';
 
-include('header.php');
+include 'header.php';
 
 function pretty_time($t) {
 	return strftime('%c', $t);
 }
 
-$p =& FoF_Prefs::instance();
+$p = &FoF_Prefs::instance();
 $fof_admin_prefs = $p->admin_prefs;
 
 if (empty($_GET['feed'])) {
@@ -70,7 +70,7 @@ if (isset($_POST['new_tag'])) {
 	}
 }
 
-if ( ! empty($messages)) {
+if (!empty($messages)) {
 	echo '<div class="notice">';
 	foreach ($messages as $msg) {
 		echo '<div>' . $msg . '</div>' . "\n";
@@ -101,12 +101,12 @@ if (fof_is_admin()) {
 	die();
 }
 
-if (fof_is_admin() && ! fof_db_is_subscribed_id(fof_current_user(), $feed_id)) {
+if (fof_is_admin() && !fof_db_is_subscribed_id(fof_current_user(), $feed_id)) {
 	/* fof_get_feed expects a subscription, so shirk that and just populate overall stats */
 	$feed_row = fof_db_get_feed_by_id($feed_id);
 	fof_db_subscription_feed_fix($feed_row);
 	list($feed_row['feed_items'], $feed_row['feed_tagged'], $counts) = fof_db_feed_counts(fof_current_user(), $feed_id);
-	$feed_row = array_merge(array('tags'=>array(), 'feed_unread'=>0, 'feed_read'=>0, 'feed_starred'=>0, 'feed_age'=>$feed_row['feed_cache_date']), $feed_row);
+	$feed_row = array_merge(array('tags' => array(), 'feed_unread' => 0, 'feed_read' => 0, 'feed_starred' => 0, 'feed_age' => $feed_row['feed_cache_date']), $feed_row);
 	list($feed_row['agestr'], $feed_row['agestrabbr']) = fof_nice_time_stamp($feed_row['feed_cache_date']);
 	$max_stmt = fof_db_get_latest_item_age(fof_current_user(), $feed_id);
 	$feed_row['max_date'] = fof_db_get_row($max_stmt, 'max_date', TRUE);
@@ -120,9 +120,9 @@ if (fof_is_admin() && ! fof_db_is_subscribed_id(fof_current_user(), $feed_id)) {
 }
 
 /* only include the update scripts if subscribed */
-if ( ! $admin_view || fof_db_is_subscribed_id(fof_current_user(), $feed_id)) {
+if (!$admin_view || fof_db_is_subscribed_id(fof_current_user(), $feed_id)) {
 	$feed_id_js = json_encode($feed_id);
-?>
+	?>
 <script>
 function subscription_tags_refresh(feed) {
 	var params = { subscription_tag_list: feed };
@@ -140,12 +140,12 @@ function subscription_tag_modify(feed, tag, action) {
 	new Ajax.Request("feed-action.php", {method: "post", parameters: params, onComplete: complete});
 }
 document.observe("dom:loaded", function() {
-	subscription_tags_refresh(<?php echo $feed_id_js; ?>);
+	subscription_tags_refresh(<?php echo $feed_id_js;?>);
 });
 document.observe("dom:loaded", function() {
 	$('new_tag').observe("keypress", function(event) {
 		if (event.keyCode == Event.KEY_RETURN) {
-			subscription_tag_modify(<?php echo $feed_id_js; ?>, this.value, "add");
+			subscription_tag_modify(<?php echo $feed_id_js;?>, this.value, "add");
 			this.clear();
 			return false;
 		}
@@ -153,7 +153,7 @@ document.observe("dom:loaded", function() {
 });
 document.observe("dom:loaded", function() {
 	$('new_tag').next('input[type="button"]').observe("click", function(event) {
-		subscription_tag_modify(<?php echo $feed_id_js; ?>, $('new_tag').value, "add");
+		subscription_tag_modify(<?php echo $feed_id_js;?>, $('new_tag').value, "add");
 		$('new_tag').clear();
 		return false;
 	});
@@ -169,39 +169,39 @@ document.observe("dom:loaded", function() {
 	<h2>General</h2>
 	<ul>
 		<li>
-			Source URL: '<?php echo $feed_row['feed_url']; ?>'
+			Source URL: '<?php echo $feed_row['feed_url'];?>'
 		</li>
 		<li>
-			Site URL: '<?php echo $feed_row['feed_link']; ?>'
+			Site URL: '<?php echo $feed_row['feed_link'];?>'
 		</li>
 		<li>
-			Description: '<?php echo $feed_row['feed_description']; ?>'
+			Description: '<?php echo $feed_row['feed_description'];?>'
 		</li>
 		<li>
-			Title: '<?php echo $feed_row['feed_title']; ?>'
+			Title: '<?php echo $feed_row['feed_title'];?>'
 		</li>
 <?php
-if ( ! $admin_view) {
-?>
+if (!$admin_view) {
+	?>
 		<li>
-			Custom Title: 
-			<input type="text" name="alt_title" value="<?php echo htmlentities($feed_row['alt_title'], ENT_QUOTES); ?>" size="50" />
+			Custom Title:
+			<input type="text" name="alt_title" value="<?php echo htmlentities($feed_row['alt_title'], ENT_QUOTES);?>" size="50" />
 		</li>
 <?php
 }
 ?>
 		<li>
 			Image:
-			<img class="feed-icon" src="<?php echo htmlentities($feed_row['feed_image'], ENT_QUOTES); ?>" />
+			<img class="feed-icon" src="<?php echo htmlentities($feed_row['feed_image'], ENT_QUOTES);?>" />
 		</li>
 <?php
-if ( ! $admin_view) {
-?>
+if (!$admin_view) {
+	?>
 		<li>
-			Custom Image: 
-			<input type="text" name="alt_image" value="<?php echo htmlentities($feed_row['alt_image'], ENT_QUOTES); ?>" size="50" />
+			Custom Image:
+			<input type="text" name="alt_image" value="<?php echo htmlentities($feed_row['alt_image'], ENT_QUOTES);?>" size="50" />
 			&nbsp;
-			<img class="feed-icon" src="<?php echo htmlentities($feed_row['alt_image'], ENT_QUOTES); ?>" />
+			<img class="feed-icon" src="<?php echo htmlentities($feed_row['alt_image'], ENT_QUOTES);?>" />
 		</li>
 <?php
 }
@@ -209,8 +209,8 @@ if ( ! $admin_view) {
 	</ul>
 	<span>
 <?php
-if ( ! $admin_view) {
-?>
+if (!$admin_view) {
+	?>
 		<input type="submit" value="Update" />
 <?php
 }
@@ -223,11 +223,11 @@ if ( ! $admin_view) {
 <div id="counts">
 	<h2>Item Counts</h2>
 	<ul>
-		<li>Items: <?php echo $feed_row['feed_items']; ?></li>
-		<li>Read: <?php echo $feed_row['feed_read']; ?></li>
-		<li>Unread: <?php echo $feed_row['feed_unread']; ?></li>
-		<li>Starred: <?php echo $feed_row['feed_starred']; ?></li>
-		<li>Tagged: <?php echo $feed_row['feed_tagged']; ?></li>
+		<li>Items: <?php echo $feed_row['feed_items'];?></li>
+		<li>Read: <?php echo $feed_row['feed_read'];?></li>
+		<li>Unread: <?php echo $feed_row['feed_unread'];?></li>
+		<li>Starred: <?php echo $feed_row['feed_starred'];?></li>
+		<li>Tagged: <?php echo $feed_row['feed_tagged'];?></li>
 	</ul>
 </div>
 
@@ -235,11 +235,11 @@ if ( ! $admin_view) {
 	<h2>Item History</h2>
 	<div>New items per day (today at left)</div>
 	<div>
-	    <img src="feed-action.php?feed_history=<?php echo $feed_id; ?>" />
+	    <img src="feed-action.php?feed_history=<?php echo $feed_id;?>" />
 	</div>
 </div>
 <?php
-if ( ! empty($fof_admin_prefs['purge'])) {
+if (!empty($fof_admin_prefs['purge'])) {
 	echo '<div id="purge">' . "\n";
 	echo '<h2>Purge Potential</h2>' . "\n";
 	/* NOTE: not accurate, don't know how many items were listed in latest feed fetch */
@@ -254,17 +254,17 @@ if ( ! empty($fof_admin_prefs['purge'])) {
 <div id="times">
 	<h2>Dates</h2>
 	<ul>
-		<li>Last updated: <?php echo pretty_time($feed_row['feed_age']) . '&nbsp;(' . $feed_row['agestr'] . ')'; ?></li>
-		<li>Most recent item: <?php echo pretty_time($feed_row['max_date']) . '&nbsp;(' . $feed_row['lateststr'] . ')'; ?></li>
-		<li>Image cached:  <?php echo pretty_time($feed_row['feed_image_cache_date']); ?>
+		<li>Last updated: <?php echo pretty_time($feed_row['feed_age']) . '&nbsp;(' . $feed_row['agestr'] . ')';?></li>
+		<li>Most recent item: <?php echo pretty_time($feed_row['max_date']) . '&nbsp;(' . $feed_row['lateststr'] . ')';?></li>
+		<li>Image cached:  <?php echo pretty_time($feed_row['feed_image_cache_date']);?>
 </li>
-		<li>Last update attempt: <?php echo pretty_time($feed_row['feed_cache_attempt_date']); ?></li>
+		<li>Last update attempt: <?php echo pretty_time($feed_row['feed_cache_attempt_date']);?></li>
 <?php
-if ( ! empty($feed_row['feed_cache_last_attempt_status'])) {
+if (!empty($feed_row['feed_cache_last_attempt_status'])) {
 	echo '<li><img class="feed-icon" src="' . $fof_asset['alert_icon'] . '" />&nbsp;Last update attempt was not successful: <span>' . $feed_row['feed_cache_last_attempt_status'] . '</span></li>' . "\n";
 }
 ?>
-		<li>Next attempt: 
+		<li>Next attempt:
 <?php
 $now = time();
 if ($now >= $feed_row['feed_cache_next_attempt']) {
@@ -281,22 +281,22 @@ if ($now >= $feed_row['feed_cache_next_attempt']) {
 </div>
 
 <?php
-if ( ! $admin_view) {
-?>
+if (!$admin_view) {
+	?>
 <form method="post" action="">
 
 <div id="feedtags">
 	<h2>Tags Automatically Applied to Items from this Feed</h2>
 	<ul>
-		<li><img class="feed-icon" src="<?php echo $fof_asset['busy_icon']; ?>" /> Tags loading...</li>
+		<li><img class="feed-icon" src="<?php echo $fof_asset['busy_icon'];?>" /> Tags loading...</li>
 	</ul>
 	<span>
 <?php
-	/*
-	* As far as I can tell, the observe event attached on domload (above) ought to handle this, but without the inline keyCode check here, it seems to still try to submit the form on carriage-return.
-	* Perhaps someone better-versed in clientside js can iron this out.
-	*/
-?>
+/*
+	 * As far as I can tell, the observe event attached on domload (above) ought to handle this, but without the inline keyCode check here, it seems to still try to submit the form on carriage-return.
+	 * Perhaps someone better-versed in clientside js can iron this out.
+	 */
+	?>
 		<input type="text" size="10" id="new_tag" onkeypress="if (event.keyCode == Event.KEY_RETURN) return false;" /><input type="button" value="Tag Feed" />
 	</span>
 </div>
@@ -308,5 +308,5 @@ if ( ! $admin_view) {
 ?>
 
 <?php
-include('footer.php');
+include 'footer.php';
 ?>

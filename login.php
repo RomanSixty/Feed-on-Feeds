@@ -16,28 +16,24 @@ ob_start();
 
 $fof_no_login = true;
 
-include_once("fof-main.php");
+include_once "fof-main.php";
 
 if (defined('FOF_AUTH_EXTERNAL_ONLY')) {
-    header('Location: .');
-    exit();
+	header('Location: .');
+	exit();
 }
 
 fof_set_content_type();
 
 $failed = false;
-if (isset($_POST["user_name"]) && isset($_POST["user_password"]))
-{
-    $user_password_hash = fof_db_user_password_hash($_POST['user_password'], $_POST['user_name']);
-    if (fof_authenticate($_POST['user_name'], $user_password_hash))
-    {
-        header("Location: .");
-        exit();
-    }
-    else
-    {
-        $failed = true;
-    }
+if (isset($_POST["user_name"]) && isset($_POST["user_password"])) {
+	$user_password_hash = fof_db_user_password_hash($_POST['user_password'], $_POST['user_name']);
+	if (fof_authenticate($_POST['user_name'], $user_password_hash)) {
+		header("Location: .");
+		exit();
+	} else {
+		$failed = true;
+	}
 }
 
 ?>
@@ -72,8 +68,8 @@ if (isset($_POST["user_name"]) && isset($_POST["user_password"]))
             Password:<br><input type=password name=user_password style='font-size: 16px'><br><br>
             <input type=submit value="Log on!" style='font-size: 16px; float: right;'><br>
 <?php
-    if ($failed) {
-?>
+if ($failed) {
+	?>
 <br><center><span style="color:red"><b>Incorrect user name or password</b></span></center>
 <?php
 }

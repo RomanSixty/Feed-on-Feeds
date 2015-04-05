@@ -12,15 +12,15 @@
  *
  */
 
-include_once("fof-main.php");
+include_once "fof-main.php";
 
 $feed = $_GET['feed'];
 
 fof_delete_subscription(fof_current_user(), $feed);
 
-include("header.php");
+include "header.php";
 ?>
 
 Deleted.
 
-<?php include("footer.php") ?>
+<?php include "footer.php"?>

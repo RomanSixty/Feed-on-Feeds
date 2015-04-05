@@ -12,7 +12,7 @@
  *
  */
 
-include_once("fof-main.php");
+include_once "fof-main.php";
 
 fof_set_content_type();
 
@@ -31,29 +31,26 @@ fof_set_content_type();
 
 
 <?php
-if ( ! empty($_GET['really']))
-{
-    $queries = array(
-        "DROP TABLE $FOF_FEED_TABLE",
-        "DROP TABLE $FOF_ITEM_TABLE",
-        "DROP TABLE $FOF_TAG_TABLE",
-        "DROP TABLE $FOF_ITEM_TAG_TABLE",
-        "DROP TABLE $FOF_SUBSCRIPTION_TABLE",
-        "DROP TABLE $FOF_USER_TABLE"
-    );
-    try {
-        foreach($queries as $query) {
-            $fof_connection->exec($query);
-        }
-    } catch (PDOException $e) {
-        die('Cannot drop table: <pre>' . $e->GetMessage() . '</pre>');
-    }
+if (!empty($_GET['really'])) {
+	$queries = array(
+		"DROP TABLE $FOF_FEED_TABLE",
+		"DROP TABLE $FOF_ITEM_TABLE",
+		"DROP TABLE $FOF_TAG_TABLE",
+		"DROP TABLE $FOF_ITEM_TAG_TABLE",
+		"DROP TABLE $FOF_SUBSCRIPTION_TABLE",
+		"DROP TABLE $FOF_USER_TABLE",
+	);
+	try {
+		foreach ($queries as $query) {
+			$fof_connection->exec($query);
+		}
+	} catch (PDOException $e) {
+		die('Cannot drop table: <pre>' . $e->GetMessage() . '</pre>');
+	}
 
-echo 'Done.  Now just delete this entire directory and we\'ll forget this ever happened.';
-}
-else
-{
-?>
+	echo 'Done.  Now just delete this entire directory and we\'ll forget this ever happened.';
+} else {
+	?>
 <script>
 if(confirm('This is your last chance.  Do you really want to uninstall Feed on Feeds?'))
 {
@@ -62,4 +59,4 @@ if(confirm('This is your last chance.  Do you really want to uninstall Feed on F
 </script>
 <a href="."><b>phew!</b></a>
 </body></html>
-<?php } ?>
+<?php }?>
