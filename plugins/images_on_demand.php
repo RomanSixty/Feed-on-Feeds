@@ -5,6 +5,12 @@
 fof_add_render_filter('fof_images_on_demand');
 
 function fof_images_on_demand($content) {
+	// AJAX refresh: we don't apply this filter, because images are
+	// probably already loaded
+	if ($_REQUEST['no_img_filter']) {
+		return $content;
+	}
+
 	/* quiet warnings */
 	$old_xml_err = libxml_use_internal_errors(true);
 	$dom = new DOMDocument();
