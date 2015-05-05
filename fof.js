@@ -103,7 +103,7 @@ var loadImages = function(e) {
 
 var loadVisibleItems = function() {
     applySelector(document.getElementById("items"), ".item", function(item) {
-        if (getY(item) - getScrollY() < getWindowHeight()) {
+        if (getY(item) - getScrollY() < getWindowHeight()*3/2) {
             loadImages(item);
         }
     });
