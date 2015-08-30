@@ -822,7 +822,7 @@ function remove_tag(id, tag) {
     var params = {
         "remove": "true",
         "tag": tag,
-        "item": id
+        "item": id.toString()
     };
     var complete = function() {
         refreshlist();
@@ -937,11 +937,13 @@ function refreshitem(id) {
 
     var url = 'item.php';
     var params = {
-        "id": id
+        "id": id,
+		"no_img_filter": 1
     };
     new Ajax.Updater($("i" + id), url, {
         method: 'get',
-        parameters: params
+        parameters: params,
+		onComplete: loadVisibleItems
     });
 }
 
