@@ -5,6 +5,10 @@
 fof_add_item_filter('remove_link_tags');
 
 function remove_link_tags($content) {
+	if (!$content) {
+		return $content;
+	}
+
 	$old_xml_err = libxml_use_internal_errors(true);
 	$dom = new DOMDocument();
 	$dom->loadHtml(mb_convert_encoding($content, 'HTML-ENTITIES', "UTF-8"));

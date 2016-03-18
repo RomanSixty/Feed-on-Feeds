@@ -33,7 +33,7 @@
  * POSSIBILITY OF SUCH DAMAGE.
  *
  * @package SimplePie
- * @version 1.3.1
+ * @version 1.4-dev
  * @copyright 2004-2012 Ryan Parman, Geoffrey Sneddon, Ryan McCue
  * @author Ryan Parman
  * @author Geoffrey Sneddon
@@ -42,10 +42,12 @@
  * @license http://www.opensource.org/licenses/bsd-license.php BSD License
  */
 
+
 // autoloader
 spl_autoload_register(array(new SimplePie_Autoloader(), 'autoload'));
 
-if (!class_exists('SimplePie')) {
+if (!class_exists('SimplePie'))
+{
 	trigger_error('Autoloader not registered properly', E_USER_ERROR);
 }
 
@@ -55,12 +57,14 @@ if (!class_exists('SimplePie')) {
  * @package SimplePie
  * @subpackage API
  */
-class SimplePie_Autoloader {
+class SimplePie_Autoloader
+{
 	/**
 	 * Constructor
 	 */
-	public function __construct() {
-		$this->path = dirname(__FILE__) . DIRECTORY_SEPARATOR . 'simplepie';
+	public function __construct()
+	{
+		$this->path = dirname(__FILE__) . DIRECTORY_SEPARATOR . 'library';
 	}
 
 	/**
@@ -68,9 +72,11 @@ class SimplePie_Autoloader {
 	 *
 	 * @param string $class The name of the class to attempt to load.
 	 */
-	public function autoload($class) {
+	public function autoload($class)
+	{
 		// Only load the class if it starts with "SimplePie"
-		if (strpos($class, 'SimplePie') !== 0) {
+		if (strpos($class, 'SimplePie') !== 0)
+		{
 			return;
 		}
 
