@@ -54,7 +54,6 @@ if (empty($fof_installer)) {
 }
 
 require_once 'autoloader.php';
-require_once 'simplepie/SimplePie.php';
 
 function fof_set_content_type($type = 'text/html') {
 	static $set;
@@ -116,8 +115,8 @@ function fof_stacktrace($skip_frames = 0, $include_args = true) {
 		$file = empty($frame['file']) ? '?' : basename($frame['file']);
 		$line = empty($frame['line']) ? '?' : $frame['line'];
 		$func = (empty($frame['class']) ? '' : $frame['class']) .
-		(empty($frame['type']) ? '' : $frame['type']) .
-		(empty($frame['function']) ? '?' : $frame['function']);
+			(empty($frame['type']) ? '' : $frame['type']) .
+			(empty($frame['function']) ? '?' : $frame['function']);
 		if ($file != $prev_file) {
 			$trace .= $file . ':';
 			$prev_file = $file;
@@ -755,8 +754,8 @@ function fof_subscribe($user_id, $url, $unread = 'today') {
 			|| $rss->error()) {
 			$rss_error = (isset($rss) && $rss->error()) ? $rss->error() : '';
 			return "<span style=\"color:red\">Error: <b>Failed to subscribe to '$url'</b>"
-			. (!empty($rss_error) ? ": $rss_error</span> <span><a href=\"http://feedvalidator.org/check?url=" . urlencode($url) . "\">try to validate it?</a>" : "")
-			. "</span><br>\n";
+				. (!empty($rss_error) ? ": $rss_error</span> <span><a href=\"http://feedvalidator.org/check?url=" . urlencode($url) . "\">try to validate it?</a>" : "")
+				. "</span><br>\n";
 		}
 
 		$self = $rss->get_link(0, 'self');
@@ -828,12 +827,12 @@ function fof_parse($url) {
 	$pie->init();
 
 	/* A feed might contain data before the <?xml declaration, which will cause
-	 * SimplePie to fail to parse it.
-	 * In case of an error in parsing, retry after trying to fetch and scrub the
-	 * feed data.
-	 * XXX: What error does this case report?  Could probably check for that,
-	 * and only try the scrubbing when it makes sense.
-	 */
+		 * SimplePie to fail to parse it.
+		 * In case of an error in parsing, retry after trying to fetch and scrub the
+		 * feed data.
+		 * XXX: What error does this case report?  Could probably check for that,
+		 * and only try the scrubbing when it makes sense.
+	*/
 	if ($pie->error()) {
 		fof_log('failed to parse feed url ' . $url . ': ' . $pie->error());
 
@@ -937,13 +936,13 @@ function fof_update_feed($id) {
 	if (($feed['feed_image_cache_date'] + FEED_IMAGE_CACHE_REFRESH_SECS) < time()
 		|| (!empty($feed_image) && !file_exists($feed_image))) {
 		/*
-		Feed images tend to be larger and less-square than favicons, but
-		are more likely to be directly related to the feed, so are being
-		given the first chance at representing the feed.
-		Perhaps the prioritization should be configurable by preference,
-		or check the dimensions and prefer a favicon if feedimage is over
-		some size?
-		 */
+			Feed images tend to be larger and less-square than favicons, but
+			are more likely to be directly related to the feed, so are being
+			given the first chance at representing the feed.
+			Perhaps the prioritization should be configurable by preference,
+			or check the dimensions and prefer a favicon if feedimage is over
+			some size?
+		*/
 		$feed_image_url = $rss->get_image_url();
 		if (!empty($feed_image_url)
 			&& ($new_feed_image = fof_cache_image_url($feed_image_url)) !== false) {
@@ -1140,16 +1139,16 @@ function fof_update_feed($id) {
 	$delete = array();
 
 	/*  If 'purge' preference is set, we delete any items that are not tagged by
-	by anything other than 'folded', are older than 'purge' days, and are
-	not one of the most recent 'purge_grace' items in the feed.
+		by anything other than 'folded', are older than 'purge' days, and are
+		not one of the most recent 'purge_grace' items in the feed.
 
-	FIXME: behavior question: should auto-tagged feeds purge items with
-	their auto-tags set?
-	 */
+		FIXME: behavior question: should auto-tagged feeds purge items with
+		their auto-tags set?
+	*/
 	if (!empty($admin_prefs['purge'])) {
 		/*  Always keep at least as many items as feed provides, or as set by
-		preferences.
-		 */
+			preferences.
+		*/
 		$grace = $items_in_feed;
 		if (!empty($admin_prefs['purge_grace'])) {
 			$grace = max($grace, $admin_prefs['purge_grace']);
@@ -1168,8 +1167,8 @@ function fof_update_feed($id) {
 	}
 
 	/*  If 'match_similarity' preference is set, we delete any items with
-	matching titles and similar content.
-	 */
+		matching titles and similar content.
+	*/
 	if (!empty($admin_prefs['match_similarity'])) {
 		$threshold = $admin_prefs['match_similarity'];
 
@@ -1454,8 +1453,8 @@ function fof_cache_image_data($url, $content_type, $data) {
 	}
 
 	/* Now determine what sort of image it is, so we can use the correct
-	filename extension when we save it locally.
-	 */
+		filename extension when we save it locally.
+	*/
 	/* strip fragments and queries off the url to reveal the path */
 	@list($url) = explode('#', $url, 2);
 	@list($url) = explode('?', $url, 2);
@@ -1463,11 +1462,11 @@ function fof_cache_image_data($url, $content_type, $data) {
 	$ext = pathinfo($url, PATHINFO_EXTENSION);
 
 	/* FIXME:
-	Ought to verify that the extension actually maps back onto an image
-	type, so that we don't end up saving, say, '.php' images.
-	I don't know of a lightweight nor portable means of accomplishing that,
-	though, so let's just blacklist some simple ones.
-	 */
+		Ought to verify that the extension actually maps back onto an image
+		type, so that we don't end up saving, say, '.php' images.
+		I don't know of a lightweight nor portable means of accomplishing that,
+		though, so let's just blacklist some simple ones.
+	*/
 	if (in_array(strtolower($ext), array('php', 'cgi', 'asp', 'aspx'))) {
 		$ext = null;
 	}
@@ -1571,18 +1570,18 @@ function fof_render_feed_row($f) {
 	$feed_update_url = fof_url('update.php', array('feed' => $f['feed_id']));
 
 	switch ($fof_prefs_obj->get('sidebar_style')) {
-		case 'simple':/* feed_url feed_unread feed_title */
+		case 'simple': /* feed_url feed_unread feed_title */
 			$out .= '	<td class="source"><a href="' . $f['feed_url'] . '" title="feed">' . $image_html . '</a></td>' . "\n";
 
 			$out .= '	<td class="unread">' . (empty($unread) ? '' : $unread) . '</td>';
 
 			$out .= '	<td class="title"><a href="' . ($unread ? $feed_view_unread_url : $feed_view_all_url) . '">' . $title . '</a></td>' . "\n";
 
-		/* controls */
+			/* controls */
 			$out .= '	<td class="controls"><a href="' . $feed_unsubscribe_url . '" title="delete" onclick="return sb_unsub_conf(' . $title_json . ');">[x]</a></td>' . "\n";
 			break;
 
-		case 'fancy':/* feed_url max_date feed_unread feed_title */
+		case 'fancy': /* feed_url max_date feed_unread feed_title */
 			$out .= '	<td class="source"><a href="' . $link . '" ' . ($fof_prefs_obj->get('item_target') ? ' target="_blank"' : '') . '>' . $image_html . '</a></td>' . "\n";
 
 			$out .= '	<td class="latest"><span title="' . $f['lateststr'] . '" id="' . $f['feed_id'] . '-lateststr">' . $f['lateststrabbr'] . '</span></td>' . "\n";
@@ -1596,7 +1595,7 @@ function fof_render_feed_row($f) {
 
 			$out .= '	<td class="title"><a href="' . ($unread ? $feed_view_unread_url : $feed_view_all_url) . '" title="' . ($unread ? ($unread . ' new of ') : '') . $items . ' total items">' . $title . '</a></td>' . "\n";
 
-		/* controls */
+			/* controls */
 			$out .= '	<td class="controls">';
 			$out .= '<ul class="feedmenu">';
 			$out .= '<li>';
@@ -1614,7 +1613,7 @@ function fof_render_feed_row($f) {
 			$out .= '</td>' . "\n";
 			break;
 
-		default:/* feed_age max_date feed_unread feed_url feed_title */
+		default: /* feed_age max_date feed_unread feed_url feed_title */
 			$out .= '	<td class="updated"><span title="' . $f['agestr'] . '" id="' . $f['feed_id'] . '-agestr">' . $f['agestrabbr'] . '</span></td>' . "\n";
 
 			$out .= '	<td class="latest"><span title="' . $f['lateststr'] . '" id="' . $f['feed_id'] . '-lateststr">' . $f['lateststrabbr'] . '</span></td>' . "\n";
@@ -1631,7 +1630,7 @@ function fof_render_feed_row($f) {
 
 			$out .= '	<td class="title"><a href="' . $link . '" title="home page"' . ($fof_prefs_obj->get('item_target') ? ' target="_blank"' : '') . '><b>' . $title . '</b></a></td>' . "\n";
 
-		/* controls */
+			/* controls */
 			$out .= '	<td class="controls"><span class="nowrap">';
 			$out .= ' <a href="' . $feed_update_url . '" title="update">u</a>';
 			$out .= ' <a href="#" title="mark all read" onclick="return sb_read_conf(' . $title_json . ', ' . $f['feed_id'] . ');">m</a>';
