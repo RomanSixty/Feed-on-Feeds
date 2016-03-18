@@ -1,0 +1,3 @@
+[submodule "simplepie"]
+	path = simplepie
+	url = git@github.com:simplepie/simplepie.git
