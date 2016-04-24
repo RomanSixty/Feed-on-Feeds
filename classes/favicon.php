@@ -1,12 +1,12 @@
 <?php
 /**	Locate a suitable favicon for a site.
 
-	Copyright (C) 2013 Justin Wind <justin.wind@gmail.com>
+	Copyright (C) 2013-2016 Justin Wind <justin.wind@gmail.com>
 
 */
 class FavIcon {
 	const VERSION = '1.0';
-	const BUILD = '20131115000000';
+	const BUILD = '20160424000000';
 	const SRC_URL = '';
 
 	static protected function default_user_agent() {
@@ -175,7 +175,7 @@ class FavIcon {
 		$stream_context = stream_context_create($this->stream_context_options);
 		$icon['data'] = @file_get_contents($url, NULL, $stream_context);
 		if ($icon['data'] === false) {
-            trigger_error('failed to get icon resource \'' . $url .'\'', E_USER_NOTICE);
+			trigger_error('failed to get icon resource \'' . $url .'\'', E_USER_NOTICE);
 			return null;
 		}
 
@@ -290,10 +290,12 @@ class FavIcon {
 			$url[] = '@';
 		}
 
-		$url[] = $parts['host'];
+		if ( ! empty($parts['host']))
+			$url[] = $parts['host'];
 
 		if ( ! empty($parts['port']))
-			$url[] = ':' . $parts['port'];
+			$url[] = ':';
+			$url[] = $parts['port'];
 
 		if ( ! empty($parts['path']))
 			$url[] = $parts['path'];
