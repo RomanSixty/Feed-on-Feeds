@@ -14,9 +14,15 @@
 
 include_once('fof-main.php');
 
+if (empty($_POST['tag']) or empty($_POST['item'])) {
+    header('Status: 400 Bad Request');
+    echo 'Incomplete data.';
+    exit();
+}
+
 $tags = $_POST['tag'];
 $item = $_POST['item'];
-$remove = $_POST['remove'];
+$remove = (isset($_POST['remove']) ? $_POST['remove'] : null);
 
 foreach (explode(' ', $tags) as $tag) {
     if($remove == 'true') {
