@@ -4,3 +4,5 @@ fof-custom.css
 fof.log
 fof-install.log
 *.db
+*~
+

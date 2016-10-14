@@ -123,8 +123,8 @@ function fof_db_connect($create = false) {
 
 	if (defined('USE_SQLITE')) {
 		// sqlite doesn't use these variables
-		define('FOF_DB_USER', '');
-		define('FOF_DB_PASS', '');
+		defined('FOF_DB_USER') || define('FOF_DB_USER', '');
+		defined('FOF_DB_PASS') || define('FOF_DB_PASS', '');
 	}
 
 	$fof_connection = new PDOLog($dsn, FOF_DB_USER, FOF_DB_PASS, $pdo_options);
