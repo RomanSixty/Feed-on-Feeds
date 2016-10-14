@@ -1,6 +1,6 @@
 <?php
 
-/* load images on-demand */
+/* pass imagse through our proxy, to address hotlinking and mixed-content security issues */
 
 fof_add_render_filter('fof_images_by_proxy');
 
