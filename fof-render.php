@@ -75,7 +75,7 @@ function fof_render_item($item, $include_div = true) {
 	$item_read = fof_render_get_key_($item, 'item_read');
 
 	foreach ($fof_render_filters as $filter) {
-		$item_content = $filter($item_content);
+		$item_content = $filter($item_content, $item);
 	}
 
 	$prefs = fof_prefs();
