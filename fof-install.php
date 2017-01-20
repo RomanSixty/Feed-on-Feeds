@@ -187,6 +187,8 @@ function fof_install_schema() {
     $tables[FOF_ITEM_TABLE][] = "item_updated " . SQL_DRIVER_INT_TYPE . " NOT NULL DEFAULT '0'";
     $tables[FOF_ITEM_TABLE][] = "item_title TEXT NOT NULL";
     $tables[FOF_ITEM_TABLE][] = "item_content TEXT NOT NULL";
+
+    /* indices */
     if (defined('USE_MYSQL')) {
         $tables[FOF_ITEM_TABLE][] = "PRIMARY KEY (item_id)";
         $tables[FOF_ITEM_TABLE][] = "FOREIGN KEY (feed_id) REFERENCES " . FOF_FEED_TABLE . " (feed_id) ON UPDATE CASCADE ON DELETE CASCADE";
@@ -194,8 +196,6 @@ function fof_install_schema() {
         $tables[FOF_ITEM_TABLE][] = "KEY feed_id_item_cached ( feed_id, item_cached )";
         $tables[FOF_ITEM_TABLE][] = "KEY feed_id_item_updated ( feed_id, item_updated )";
     }
-
-    /* indices */
     if (defined('USE_SQLITE')) {
         $indices[FOF_ITEM_TABLE]['feed_id'] = array('INDEX', 'feed_id');
         $indices[FOF_ITEM_TABLE]['item_guid'] = array('INDEX', 'item_guid');
@@ -211,10 +211,16 @@ function fof_install_schema() {
     $tables[FOF_ITEM_TAG_TABLE][] = "item_id " . SQL_DRIVER_INT_TYPE . " NOT NULL DEFAULT '0' REFERENCES " . FOF_ITEM_TABLE . " ( item_id ) ON UPDATE CASCADE ON DELETE CASCADE";
     $tables[FOF_ITEM_TAG_TABLE][] = "tag_id " . SQL_DRIVER_INT_TYPE . " NOT NULL DEFAULT '0' REFERENCES " . FOF_TAG_TABLE . " ( tag_id ) ON UPDATE CASCADE ON DELETE CASCADE";
     $tables[FOF_ITEM_TAG_TABLE][] = "PRIMARY KEY ( user_id, item_id, tag_id )";
+
+    /* indices */
     if (defined('USE_MYSQL')) {
         $tables[FOF_ITEM_TAG_TABLE][] = "FOREIGN KEY (user_id) REFERENCES " . FOF_USER_TABLE . " (user_id) ON UPDATE CASCADE ON DELETE CASCADE";
         $tables[FOF_ITEM_TAG_TABLE][] = "FOREIGN KEY (item_id) REFERENCES " . FOF_ITEM_TABLE . " (item_id) ON UPDATE CASCADE ON DELETE CASCADE";
         $tables[FOF_ITEM_TAG_TABLE][] = "FOREIGN KEY (tag_id) REFERENCES " . FOF_TAG_TABLE . " (tag_id) ON UPDATE CASCADE ON DELETE CASCADE";
+        $tables[FOF_ITEM_TAG_TABLE][] = "KEY tag_id ( tag_id )";
+    }
+    if (defined('USE_SQLITE')) {
+        $indices[FOF_ITEM_TAG_TABLE]['tag_id'] = array('INDEX', 'tag_id');
     }
 
 
