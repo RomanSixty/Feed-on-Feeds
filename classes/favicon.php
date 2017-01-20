@@ -6,7 +6,7 @@
 */
 class FavIcon {
 	const VERSION = '1.0';
-	const BUILD = '20130725000000';
+	const BUILD = '20131115000000';
 	const SRC_URL = '';
 
 	static protected function default_user_agent() {
@@ -77,10 +77,18 @@ class FavIcon {
 
 		libxml_set_streams_context($stream_context);
 		$libxml_err_state = libxml_use_internal_errors(true);
-		$dom->loadHTMLFile($this->site_url);
+		$dom_result = @$dom->loadHTMLFile($this->site_url);
 		libxml_clear_errors();
 		libxml_use_internal_errors($libxml_err_state);
 		libxml_set_streams_context($default_context);
+
+		if ($dom_result === false) {
+			$status = self::header_findr($http_response_header, null);
+			@list ( , $status, ) = explode(' ', $status, 3);
+			$status = (integer)$status;
+			trigger_error('site \'' . $this->site_url . '\' returned ' . $status, E_USER_NOTICE);
+			return false;
+		}
 
 		/*
 			If we followed any redirects, rewrite the site_url with the current
@@ -91,21 +99,19 @@ class FavIcon {
 		if ($location !== null)
 			$this->site_url = $location;
 
-		if ($dom !== false) {
-			/* check all the links which relate to icons */
-			foreach ($dom->getElementsByTagName('link') as $link) {
-				$relations = explode(' ', $link->getAttribute('rel'));
-				if (in_array('icon', array_map('strtolower', $relations))) {
-					$href = $link->getAttribute('href');
-					$href_absolute = $this->absolutize_url($href);
-					$icon = $this->validate_icon($href_absolute);
-					if ($icon !== null) {
-						if (empty($icon['type']))
-							$icon['type'] = $link->getAttribute('type');
-						if (empty($icon['sizes']))
-							$icon['sizes'] = $link->getAttribute('sizes');
-						$this->favicons[] = $icon;
-					}
+		/* check all the links which relate to icons */
+		foreach ($dom->getElementsByTagName('link') as $link) {
+			$relations = explode(' ', $link->getAttribute('rel'));
+			if (in_array('icon', array_map('strtolower', $relations))) {
+				$href = $link->getAttribute('href');
+				$href_absolute = $this->absolutize_url($href);
+				$icon = $this->validate_icon($href_absolute);
+				if ($icon !== null) {
+					if (empty($icon['type']))
+						$icon['type'] = $link->getAttribute('type');
+					if (empty($icon['sizes']))
+						$icon['sizes'] = $link->getAttribute('sizes');
+					$this->favicons[] = $icon;
 				}
 			}
 		}
@@ -167,7 +173,11 @@ class FavIcon {
 		$icon = array('href' => $url);
 
 		$stream_context = stream_context_create($this->stream_context_options);
-		$icon['data'] = file_get_contents($url, NULL, $stream_context);
+		$icon['data'] = @file_get_contents($url, NULL, $stream_context);
+		if ($icon['data'] === false) {
+            trigger_error('failed to get icon resource \'' . $url .'\'', E_USER_NOTICE);
+			return null;
+		}
 
 		/* did we get a useful response */
 		$status = self::header_findr($http_response_header, null);
@@ -179,7 +189,7 @@ class FavIcon {
 		}
 
 		if (empty($icon['data'])) {
-			trigger_error('icon resource \'' . $url . '\' is empty');
+			trigger_error('icon resource \'' . $url . '\' is empty', E_USER_NOTICE);
 			return null;
 		}
 
@@ -188,18 +198,34 @@ class FavIcon {
 		@list($icon['type'], ) = explode(';', $icon['type']);
 		@list($type, $subtype) = explode('/', $icon['type'], 2);
 		if (strcasecmp($type, 'image') !== 0) {
-			/*
-				Is their server possibly just sending the wrong content-type?
-				This turns out to be a fairly common problem with .ico files.
-				Double-check against magic mimetypes before giving up.
-			*/
-			$finfo = new finfo(FILEINFO_MIME);
-			@list($icon['type'], ) = explode(';', $finfo->buffer($icon['data']));
-			@list($type, $subtype) = explode('/', $icon['type'], 2);
-			if (strcasecmp($type, 'image') !== 0) {
-				/* really not an image */
-				trigger_error('icon resource \'' . $url . '\' is not an image', E_USER_NOTICE);
-				return null;
+			if (class_exists('finfo')) {
+				/*
+					Is their server possibly just sending the wrong content-type?
+					This turns out to be a fairly common problem with .ico files.
+					Double-check against magic mimetypes before giving up.
+				*/
+				$finfo = new finfo(FILEINFO_MIME);
+				@list($icon['type'], ) = explode(';', $finfo->buffer($icon['data']));
+				@list($type, $subtype) = explode('/', $icon['type'], 2);
+				if (strcasecmp($type, 'image') !== 0) {
+					/* really not an image */
+					trigger_error('icon resource \'' . $url . '\' is not an image', E_USER_NOTICE);
+					return null;
+				}
+			} else {
+				/* allow common extensions */
+				$ext = pathinfo(parse_url($url,  PHP_URL_PATH), PATHINFO_EXTENSION);
+				switch ($ext) {
+				case 'ico':
+				case 'gif':
+				case 'png':
+				case 'jpg':
+					break;
+
+				default:
+					trigger_error('icon resource \'' . $url . '\' has non-image type \'' . $icon['type'] . '\'', E_USER_NOTICE);
+					return null;
+				}
 			}
 		}
 
@@ -224,7 +250,7 @@ class FavIcon {
 		}
 
 		/* If it starts with a /, it's a complete path. */
-		if ($url[0] === '/') {
+		if ( ! empty($url) && $url[0] === '/') {
 			$url_parts['path'] = $url;
 		} else {
 			/* Otherwise, we need to tack this relative path on to the site's

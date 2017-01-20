@@ -12,8 +12,8 @@
  *
  */
 
-include_once("fof-main.php");
-include_once("fof-render.php");
+include_once "fof-main.php";
+include_once "fof-render.php";
 
 fof_set_content_type();
 
