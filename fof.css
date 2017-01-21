@@ -486,7 +486,7 @@ list-style: none;
   background-repeat: no-repeat;
   background-position: center;
   background-size: cover;
-  background: #eee;
+  background-color: #eee;
 }
 
 .youtube-video:before,
