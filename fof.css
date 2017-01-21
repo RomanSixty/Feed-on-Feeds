@@ -476,3 +476,52 @@ list-style: none;
 .feedmenu li:hover ul li a:hover {
     background: #333;
 }
+
+.youtube-video {
+  position: relative;
+  cursor: pointer;
+  height: 315px;
+  width: 560px;
+  overflow: hidden;
+  background-repeat: no-repeat;
+  background-position: center;
+  background-size: cover;
+  background: #eee;
+}
+
+.youtube-video:before,
+.youtube-video:after {
+  content: "";
+  display: block;
+  position: absolute;
+  opacity: .7;
+  transition: opacity .3s;
+}
+
+.youtube-video:hover:before,
+.youtube-video:hover:after {
+  opacity: 1;
+}
+
+.youtube-video:before {
+  width: 0;
+  height: 0;
+  border-top: 25px solid transparent;
+  border-bottom: 25px solid transparent;
+  border-left: 35px solid #fff;
+  top: 133px;
+  left: 267px;
+  z-index: 10;
+}
+
+.youtube-video:after {
+  background: rgba(0, 0, 0, .6) none repeat scroll 0 0;
+  border-radius: 50px;
+  box-shadow: 0 0 10px rgba(0, 0, 0, 0.3);
+
+  height: 100px;
+  margin-left: 230px;
+  margin-top: 107px;
+  width: 100px;
+  opacity: .9;
+}
