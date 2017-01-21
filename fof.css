@@ -494,34 +494,31 @@ list-style: none;
   content: "";
   display: block;
   position: absolute;
-  opacity: .7;
-  transition: opacity .3s;
-}
-
-.youtube-video:hover:before,
-.youtube-video:hover:after {
-  opacity: 1;
 }
 
 .youtube-video:before {
   width: 0;
   height: 0;
-  border-top: 25px solid transparent;
-  border-bottom: 25px solid transparent;
-  border-left: 35px solid #fff;
-  top: 133px;
-  left: 267px;
+  border-top: 10px solid transparent;
+  border-bottom: 10px solid transparent;
+  border-left: 20px solid #fff;
+  top: 147px;
+  left: 272px;
   z-index: 10;
 }
 
 .youtube-video:after {
-  background: rgba(0, 0, 0, .6) none repeat scroll 0 0;
-  border-radius: 50px;
+  background-color: rgba(0, 0, 0, .6);
+  border-radius: 10px;
   box-shadow: 0 0 10px rgba(0, 0, 0, 0.3);
+  transition: background-color .3s;
+  height: 48px;
+  width: 68px;
 
-  height: 100px;
-  margin-left: 230px;
-  margin-top: 107px;
-  width: 100px;
-  opacity: .9;
+  margin-left: 246px;
+  margin-top: 134px;
+}
+
+.youtube-video:hover:after {
+  background-color: rgba(204, 24, 30, 1);
 }
