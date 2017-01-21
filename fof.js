@@ -1171,3 +1171,15 @@ function view_order_set(what, feed, order) {
     };
     new Ajax.Updater($("view-settings-button"), url, options);
 }
+
+function embed_youtube ( element ) {
+	var iframe = document.createElement("iframe");
+
+	iframe.setAttribute("src", "https://www.youtube.com/embed/" + element.dataset.ytid + "?autoplay=1&rel=0");
+	iframe.setAttribute("frameborder", "0");
+	iframe.setAttribute("width", 560);
+	iframe.setAttribute("height", 315);
+	iframe.setAttribute("allowfullscreen", "1");
+
+	element.parentNode.replaceChild(iframe, element);
+}
