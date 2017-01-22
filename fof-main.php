@@ -81,10 +81,10 @@ function fof_log($message, $topic = 'debug') {
 		$log_file = (empty($fof_installer) ? 'fof.log' : 'fof-install.log');
 		$log_fullpath = implode(DIRECTORY_SEPARATOR, array($log_path, $log_file));
 		$log = fopen($log_fullpath, 'a');
-	}
 
-	if (!$log) {
-		die("FATAL: couldn't open logfile $log_fullpath");
+		if (!$log) {
+			die("FATAL: couldn't open logfile $log_fullpath");
+		}
 	}
 
 	// log topic restriction?
@@ -1229,8 +1229,6 @@ function fof_apply_plugin_tags($feed_id, $item_id = NULL, $user_id = NULL) {
 		}
 	}
 
-	$userdata = fof_db_get_users();
-
 	foreach ($users as $user) {
 		fof_log("tagging for $user");
 
@@ -1238,13 +1236,9 @@ function fof_apply_plugin_tags($feed_id, $item_id = NULL, $user_id = NULL) {
 		foreach ($fof_tag_prefilters as $plugin => $filter) {
 			fof_log("considering $plugin $filter");
 
-			// FIXME: what is this condition trying to do?
-			//if ( empty( $userdata[$user]['prefs']['plugin_' . $plugin] ) )
-			{
-				foreach ($items as $item) {
-					$tags = $filter($item['item_link'], $item['item_title'], $item['item_content'], $item);
-					fof_tag_item($user, $item['item_id'], $tags);
-				}
+			foreach ($items as $item) {
+				$tags = $filter($item['item_link'], $item['item_title'], $item['item_content'], $item);
+				fof_tag_item($user, $item['item_id'], $tags);
 			}
 		}
 	}
