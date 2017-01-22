@@ -120,4 +120,3 @@ function fof_balancetags($text) {
 
 	return $newtext;
 }
-?>

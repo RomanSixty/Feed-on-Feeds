@@ -1,7 +1,7 @@
 <?php
 
 fof_add_item_widget('fof_wordpress');
-fof_add_pref('WordPress URL', 'plugin_wordpressurl');
+fof_add_pref('[wordpress] WordPress URL', 'plugin_wordpressurl');
 
 function fof_wordpress($item)
 {
@@ -20,4 +20,3 @@ function fof_wordpress($item)
 
     return "<a href='$link'><img src='plugins/wordpress.png' height=12 width=12 border=0 /></a> <a href='$link'>blog it</a>";
 }
-?>

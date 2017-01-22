@@ -51,4 +51,3 @@ function fof_item_targets($content) {
 
 	return $content_out;
 }
-?>

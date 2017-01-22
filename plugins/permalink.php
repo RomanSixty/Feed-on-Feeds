@@ -1,4 +1,4 @@
-<?php 
+<?php
 
 fof_add_item_widget('fof_permalink');
 
@@ -8,5 +8,3 @@ function fof_permalink($item)
 
     return '<a href="' . $url . '">permalink</a>';
 }
-?>
-

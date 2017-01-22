@@ -287,20 +287,38 @@ $dirlist = opendir(FOF_DIR . "/plugins");
 while ($file = readdir($dirlist)) {
 	if (preg_match('/\.php$/', $file)) {
 		fof_log("considering " . $file);
-		$plugins[] = substr($file, 0, -4);
+		$plugins[substr($file, 0, -4)]['code'] = true;
+	}
+	elseif (preg_match('/\.ini$/', $file)) {
+		$meta = parse_ini_file ( FOF_DIR . "/plugins/".$file );
+		$plugins[substr($file, 0, -4)]['meta'] = $meta;
 	}
 }
 
 closedir();
 
-foreach ($plugins as $plugin) {
-	echo '<input type=checkbox name=\'' . htmlentities($plugin) . '\'';
+ksort($plugins);
+
+echo '<table class="plugin_prefs">';
+echo '<tr><th>Plugin</th><th>Type</th><th>Description</th></tr>';
+
+foreach ($plugins as $plugin => $data) {
+	if ( !$data [ 'code' ] ) continue;
+
+	echo '<tr><td><input type=checkbox name="' . htmlentities($plugin) . '"';
+
 	if (!$prefs->get('plugin_' . $plugin)) {
 		echo ' checked';
 	}
 
-	echo '> Enable plugin <tt>' . $plugin . "</tt>?<br>\n";
+	echo '> ' . $plugin . '</td>';
+
+	if ( !empty ( $data [ 'meta' ] ) )
+		echo '<td><tt>[' . $data [ 'meta' ][ 'type' ] . ']</tt></td><td><small>' . htmlspecialchars ( $data [ 'meta' ][ 'description' ] ) . '</small></td>';
+
+	echo '</tr>';
 }
+echo '</table>';
 ?>
 
 <br>
