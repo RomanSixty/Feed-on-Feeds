@@ -830,6 +830,7 @@ function fof_parse($url)
     $pie->remove_div(true);
 
     $pie->set_feed_url($url);
+    $pie->set_useragent('FoF '.SIMPLEPIE_USERAGENT);
     $pie->init();
 
     /* A feed might contain data before the <?xml declaration, which will cause
@@ -859,6 +860,7 @@ function fof_parse($url)
         $pie->remove_div(true);
 
         $pie->set_raw_data($data);
+        $pie->set_useragent('FoF '.SIMPLEPIE_USERAGENT);
         $pie->init();
     }
 
