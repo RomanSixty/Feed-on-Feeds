@@ -752,6 +752,8 @@ function ajax_mark_read(id) {
 
             window.scrollTo(0, y - (bar + 10));
         }
+
+        loadVisibleItems();
     };
     var options = {
         method: 'post',
