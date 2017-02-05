@@ -1183,3 +1183,15 @@ function embed_youtube ( element ) {
 
 	element.parentNode.replaceChild(iframe, element);
 }
+
+function embed_vimeo ( element ) {
+	var iframe = document.createElement("iframe");
+
+	iframe.setAttribute("src", "https://player.vimeo.com/video/" + element.dataset.vmid);
+	iframe.setAttribute("frameborder", "0");
+	iframe.setAttribute("width", 560);
+	iframe.setAttribute("height", 315);
+	iframe.setAttribute("allowfullscreen", "1");
+
+	element.parentNode.replaceChild(iframe, element);
+}
