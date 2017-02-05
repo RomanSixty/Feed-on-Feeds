@@ -127,7 +127,7 @@ When adding feeds, mark <select name="unread">
 
 RSS or weblog URL: <input type="text" name="rss_url" size="40" value="<?php echo htmlentities($url)?>"><input type="Submit" value="Add a feed"><br><br>
 
-YouTube channel page: <input type="text" name="youtube_channel" size="40" value="<?php echo htmlentities($url)?>"><input type="Submit" value="Subscribe to channel"><br><br>
+YouTube channel page: <input type="text" name="youtube_channel" size="40" value="<?php echo htmlentities($youtube)?>"><input type="Submit" value="Subscribe to channel"><br><br>
 
 OPML URL: <input type="hidden" name="MAX_FILE_SIZE" value="100000">
 
