@@ -90,6 +90,9 @@ function fof_render_item($item, $include_div = true) {
 		$item_title = do_highlight("<span>$item_title</span>", $_GET['search'], "highlight");
 	}
 
+	// enable controls, if an item contains a video
+	$item_content = preg_replace ( '~<(video [^>]+)>~i', '<$1 controls>', $item_content );
+
 	$tags = fof_render_get_key_($item, 'tags', array());
 
 	$star = in_array("star", $tags) ? true : false;
