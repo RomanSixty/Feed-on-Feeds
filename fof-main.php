@@ -824,6 +824,9 @@ function fof_parse($url) {
 	$pie->set_cache_duration($admin_prefs["manualtimeout"] * 60);
 	$pie->remove_div(true);
 
+	// we allow iframe (for YouTube embeds etc.), the rest is SimplePie's default
+	$pie->strip_htmltags(array('base', 'blink', 'body', 'doctype', 'embed', 'font', 'form', 'frame', 'frameset', 'html', 'input', 'marquee', 'meta', 'noscript', 'object', 'param', 'script', 'style'));
+
 	$pie->set_feed_url($url);
 	$pie->init();
 

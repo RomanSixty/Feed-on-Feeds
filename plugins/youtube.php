@@ -7,11 +7,11 @@ fof_add_item_prefilter('fof_youtube');
  */
 function fof_youtube($item, $link, $title, $content)
 {
+	$matches = array();
+	$embed   = '';
+
 	if ( strstr ( $link, 'youtube.com/watch' ) !== false )
 	{
-		$matches = array();
-		$embed   = '';
-
 		if ( preg_match ( '~watch\?v=(.*)$~i', $link, $matches ) )
 			$embed = '<div class="youtube-video"
 				data-ytid="' . $matches [ 1 ] . '"
@@ -20,6 +20,15 @@ function fof_youtube($item, $link, $title, $content)
 
 		$content .= $embed;
 	}
+
+	// replace default YouTube embeds...
+	$content = preg_replace (
+		'~<iframe[^>]+src="https?://(?:www\.)?youtube\.com/embed/([^?"]+)[^>]*>.*</iframe>~iu',
+		'<div class="youtube-video"
+			data-ytid="$1"
+			style="background-image: url(\'//i.ytimg.com/vi/$1/hqdefault.jpg\')"
+			onclick="embed_youtube(this);"></div>',
+			$content );
 
 	return array ( $link, $title, $content );
 }
