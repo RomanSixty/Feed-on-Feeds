@@ -146,8 +146,10 @@ echo "		<a href=\"$item_link\"" . (fof_render_get_key_($prefs, 'item_target') ? 
 <?php
 /* show non-system tags */
 	foreach (array_diff($tags, array('unread', 'star', 'folded')) as $tag) {
-		echo '		<a href="' . fof_url('.', array('what' => $tag)) . '">' . htmlentities($tag) . '</a>';
-		echo '		<a href="#" class="untag" title="remove ' . htmlentities('"' . $tag . '"') . ' tag" onclick="return remove_tag(' . $item_id . ',' . htmlentities(json_encode($tag), ENT_QUOTES) . ');">[x]</a>' . "\n";
+		echo '      <span id="tag_' . $item_id . '_' . $tag . '">';
+		echo '		  <a href="' . fof_url('.', array('what' => $tag)) . '">' . htmlentities($tag) . '</a>';
+		echo '		  <a href="#" class="untag" title="remove ' . htmlentities('"' . $tag . '"') . ' tag" onclick="return remove_tag(' . $item_id . ',' . htmlentities(json_encode($tag), ENT_QUOTES) . ');">[x]</a>';
+		echo '      </span>' . "\n";
 	}
 	?>
 		<a href="#" onclick="return itemTagAddShow('<?=$item_id?>', this);">add tag</a>

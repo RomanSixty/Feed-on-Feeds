@@ -828,7 +828,9 @@ function remove_tag(id, tag) {
     };
     var complete = function() {
         refreshlist();
-        refreshitem(id);
+
+        var tag_item = $('tag_' + id.toString() + '_' + tag);
+		tag_item.remove();
     };
     var options = {
         method: 'post',
