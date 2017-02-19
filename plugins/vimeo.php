@@ -23,7 +23,7 @@ function fof_vimeo($item, $link, $title, $content)
 				style="background-image: url(\'//i.vimeocdn.com/video/' . $matches1 [ 1 ] . '.jpg?mw=560\')"
 				onclick="embed_vimeo(this);"></div>';
 
-		$content = $embed . $content;
+		$content = $embed . preg_replace ( '~<iframe.*</iframe>~ui', '', $content );
 	}
 
 	return array ( $link, $title, $content );
