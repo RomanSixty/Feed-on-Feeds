@@ -175,12 +175,12 @@ function require_user() {
 	if (defined('FOF_AUTH_EXTERNAL') && !empty($_SERVER['REMOTE_USER'])) {
 		$user_row = fof_db_get_user($_SERVER['REMOTE_USER']);
 		if (empty($user_row)) {
-			fof_log('user \'' . $_SERVER['REMOTE_USER'] . '\' not indexed', 'auth');
+			fof_log('user "' . $_SERVER['REMOTE_USER'] . '" not indexed', 'auth');
 
 			if (defined('FOF_AUTH_EXTERNAL_ADD')) {
-				$result = fof_db_add_user($_SERVER['REMOTE_USER'], 'unused password' . $_SERVER['UNIQUE_ID']);
+				fof_db_add_user($_SERVER['REMOTE_USER'], 'unused password' . $_SERVER['UNIQUE_ID']);
 				$user_row = fof_db_get_user($_SERVER['REMOTE_USER']);
-				fof_log('added new index for user \'' . $_SERVER['REMOTE_USER'] . '\'', 'auth');
+				fof_log('added new index for user "' . $_SERVER['REMOTE_USER'] . '"', 'auth');
 			}
 		}
 		if (!empty($user_row)) {
@@ -188,7 +188,7 @@ function require_user() {
 			$fof_user_name = $user_row['user_name'];
 			$fof_user_level = $user_row['user_level'];
 
-			fof_log('user \'' . $_SERVER['REMOTE_USER'] . '\' established', 'auth');
+			fof_log('user "' . $_SERVER['REMOTE_USER'] . '" established', 'auth');
 			return true;
 		}
 		if (defined('FOF_AUTH_EXTERNAL_ONLY')) {
@@ -783,7 +783,7 @@ function fof_subscribe($user_id, $url, $unread = 'today') {
 	fof_db_add_subscription($user_id, $feed['feed_id']);
 
 	/* update the feed */
-	list($n, $err) = fof_update_feed($new_feed_id);
+	list(, $err) = fof_update_feed($new_feed_id);
 	if (!empty($err)) {
 		return "<span style=\"color:red\">$err</span><br>\n";
 	}
@@ -1041,13 +1041,7 @@ function fof_update_feed($id) {
 				fof_apply_tags($feed_id, $id);
 				$count_Added++;
 
-				// FIXME: what is this for?
-				$republished = false;
-
-				if (!$republished) {
-					fof_mark_item_unread($feed_id, $id);
-				}
-
+				fof_mark_item_unread($feed_id, $id);
 				fof_apply_plugin_tags($feed_id, $id, NULL);
 			} else {
 				fof_db_update_item($feed_id, $item_id, $link, time(), $author);
@@ -1099,7 +1093,6 @@ function fof_update_feed($id) {
 			}
 		}
 
-		$mean = 0;
 		$stdev = 0;
 		if ($count > 0) {
 			$mean = $totalDelta / $count;
@@ -1113,6 +1106,7 @@ function fof_update_feed($id) {
 		}
 
 		$now = time();
+		$nextInterval = 0;
 		$lastInterval = $now - $lastTime;
 
 		// This algorithm is rife with fiddling, and I really need to generate metrics to test the efficacy
