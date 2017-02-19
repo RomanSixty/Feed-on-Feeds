@@ -1142,7 +1142,7 @@ function fof_update_feed($id) {
 
 	$delete = array();
 
-	/*  If 'purge' preference is set, we delete any items that are not tagged by
+	/*  If 'purge' preference is set, we delete any items that are not tagged
 	by anything other than 'folded', are older than 'purge' days, and are
 	not one of the most recent 'purge_grace' items in the feed.
 
@@ -1150,12 +1150,11 @@ function fof_update_feed($id) {
 	their auto-tags set?
 	 */
 	if (!empty($admin_prefs['purge'])) {
-		/*  Always keep at least as many items as feed provides, or as set by
-		preferences.
+		/*  Always keep at least as many items as set by preferences.
 		 */
-		$grace = $items_in_feed;
+		$grace = 0;
 		if (!empty($admin_prefs['purge_grace'])) {
-			$grace = max($grace, $admin_prefs['purge_grace']);
+			$grace = $admin_prefs['purge_grace'];
 		}
 
 		/* It's okay to purge 'folded' items. */
