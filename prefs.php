@@ -343,7 +343,7 @@ echo '</table>';
 
 <?php
                                                         // advanced plugin preferences
-foreach ($plugins as $plugin) {
+foreach ($plugins as $plugin => $data) {
 	                                                        // save preferences
 	$funcname = 'save_prefs_' . $plugin;
 
