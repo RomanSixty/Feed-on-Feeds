@@ -488,6 +488,7 @@ list-style: none;
   background-position: center;
   background-size: cover;
   background-color: #eee;
+  max-width: 100%;
 }
 
 .youtube-video:before,
