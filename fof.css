@@ -25,6 +25,10 @@ p
     padding: 5px;
 }
 
+iframe {
+  max-width: 100%;
+}
+
 .clearer
 {
     clear: both;
