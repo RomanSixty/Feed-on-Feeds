@@ -50,4 +50,3 @@ function fof_images_on_demand($content, $item) {
 
 	return $content_out;
 }
-?>

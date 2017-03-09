@@ -62,4 +62,3 @@ function fof_enclosures($item, $link, $title, $content) {
 
 	return array($link, $title, $content . implode($enc_html));
 }
-?>

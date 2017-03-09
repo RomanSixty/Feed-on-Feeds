@@ -5,7 +5,7 @@
  * A PHP-Based RSS and Atom Feed Framework.
  * Takes the hard work out of managing a complete RSS/Atom solution.
  *
- * Copyright (c) 2004-2012, Ryan Parman, Geoffrey Sneddon, Ryan McCue, and contributors
+ * Copyright (c) 2004-2016, Ryan Parman, Geoffrey Sneddon, Ryan McCue, and contributors
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without modification, are
@@ -33,8 +33,7 @@
  * POSSIBILITY OF SUCH DAMAGE.
  *
  * @package SimplePie
- * @version 1.4-dev
- * @copyright 2004-2012 Ryan Parman, Geoffrey Sneddon, Ryan McCue
+ * @copyright 2004-2016 Ryan Parman, Geoffrey Sneddon, Ryan McCue
  * @author Ryan Parman
  * @author Geoffrey Sneddon
  * @author Ryan McCue
@@ -777,24 +776,20 @@ class SimplePie_IRI
 	 */
 	public function is_valid()
 	{
-		$isauthority = $this->iuserinfo !== null || $this->ihost !== null || $this->port !== null;
-		if ($this->ipath !== '' &&
-			(
-				$isauthority && (
-					$this->ipath[0] !== '/' ||
-					substr($this->ipath, 0, 2) === '//'
-				) ||
-				(
-					$this->scheme === null &&
-					!$isauthority &&
-					strpos($this->ipath, ':') !== false &&
-					(strpos($this->ipath, '/') === false ? true : strpos($this->ipath, ':') < strpos($this->ipath, '/'))
-				)
-			)
-		)
-		{
-			return false;
-		}
+		if ($this->ipath === '') return true;
+
+		$isauthority = $this->iuserinfo !== null || $this->ihost !== null ||
+			$this->port !== null;
+		if ($isauthority && $this->ipath[0] === '/') return true;
+
+		if (!$isauthority && (substr($this->ipath, 0, 2) === '//')) return false;
+
+		// Relative urls cannot have a colon in the first path segment (and the
+		// slashes themselves are not included so skip the first character).
+		if (!$this->scheme && !$isauthority &&
+		    strpos($this->ipath, ':') !== false &&
+		    strpos($this->ipath, '/', 1) !== false &&
+		    strpos($this->ipath, ':') < strpos($this->ipath, '/', 1)) return false;
 
 		return true;
 	}

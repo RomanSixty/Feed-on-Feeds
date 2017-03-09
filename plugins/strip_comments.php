@@ -7,5 +7,3 @@ function strip_comments($text) {
 
 	return $text;
 }
-
-?>

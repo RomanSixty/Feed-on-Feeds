@@ -80,10 +80,10 @@ function fof_log($message, $topic = 'debug') {
 		$log_file = (empty($fof_installer) ? 'fof.log' : 'fof-install.log');
 		$log_fullpath = implode(DIRECTORY_SEPARATOR, array($log_path, $log_file));
 		$log = fopen($log_fullpath, 'a');
-	}
 
-	if (!$log) {
-		die("FATAL: couldn't open logfile $log_fullpath");
+		if (!$log) {
+			die("FATAL: couldn't open logfile $log_fullpath");
+		}
 	}
 
 	// log topic restriction?
@@ -174,12 +174,12 @@ function require_user() {
 	if (defined('FOF_AUTH_EXTERNAL') && !empty($_SERVER['REMOTE_USER'])) {
 		$user_row = fof_db_get_user($_SERVER['REMOTE_USER']);
 		if (empty($user_row)) {
-			fof_log('user \'' . $_SERVER['REMOTE_USER'] . '\' not indexed', 'auth');
+			fof_log('user "' . $_SERVER['REMOTE_USER'] . '" not indexed', 'auth');
 
 			if (defined('FOF_AUTH_EXTERNAL_ADD')) {
-				$result = fof_db_add_user($_SERVER['REMOTE_USER'], 'unused password' . $_SERVER['UNIQUE_ID']);
+				fof_db_add_user($_SERVER['REMOTE_USER'], 'unused password' . $_SERVER['UNIQUE_ID']);
 				$user_row = fof_db_get_user($_SERVER['REMOTE_USER']);
-				fof_log('added new index for user \'' . $_SERVER['REMOTE_USER'] . '\'', 'auth');
+				fof_log('added new index for user "' . $_SERVER['REMOTE_USER'] . '"', 'auth');
 			}
 		}
 		if (!empty($user_row)) {
@@ -187,7 +187,7 @@ function require_user() {
 			$fof_user_name = $user_row['user_name'];
 			$fof_user_level = $user_row['user_level'];
 
-			fof_log('user \'' . $_SERVER['REMOTE_USER'] . '\' established', 'auth');
+			fof_log('user "' . $_SERVER['REMOTE_USER'] . '" established', 'auth');
 			return true;
 		}
 		if (defined('FOF_AUTH_EXTERNAL_ONLY')) {
@@ -782,7 +782,7 @@ function fof_subscribe($user_id, $url, $unread = 'today') {
 	fof_db_add_subscription($user_id, $feed['feed_id']);
 
 	/* update the feed */
-	list($n, $err) = fof_update_feed($new_feed_id);
+	list(, $err) = fof_update_feed($new_feed_id);
 	if (!empty($err)) {
 		return "<span style=\"color:red\">$err</span><br>\n";
 	}
@@ -822,6 +822,9 @@ function fof_parse($url) {
 	$pie->set_cache_location(dirname(__FILE__) . '/cache');
 	$pie->set_cache_duration($admin_prefs["manualtimeout"] * 60);
 	$pie->remove_div(true);
+
+	// we allow iframe (for YouTube embeds etc.), the rest is SimplePie's default
+	$pie->strip_htmltags(array('base', 'blink', 'body', 'doctype', 'embed', 'font', 'form', 'frame', 'frameset', 'html', 'input', 'marquee', 'meta', 'noscript', 'object', 'param', 'script', 'style'));
 
 	$pie->set_feed_url($url);
 	$pie->init();
@@ -1037,13 +1040,7 @@ function fof_update_feed($id) {
 				fof_apply_tags($feed_id, $id);
 				$count_Added++;
 
-				// FIXME: what is this for?
-				$republished = false;
-
-				if (!$republished) {
-					fof_mark_item_unread($feed_id, $id);
-				}
-
+				fof_mark_item_unread($feed_id, $id);
 				fof_apply_plugin_tags($feed_id, $id, NULL);
 			} else {
 				fof_db_update_item($feed_id, $item_id, $link, time(), $author);
@@ -1095,7 +1092,6 @@ function fof_update_feed($id) {
 			}
 		}
 
-		$mean = 0;
 		$stdev = 0;
 		if ($count > 0) {
 			$mean = $totalDelta / $count;
@@ -1109,6 +1105,7 @@ function fof_update_feed($id) {
 		}
 
 		$now = time();
+		$nextInterval = 0;
 		$lastInterval = $now - $lastTime;
 
 		// This algorithm is rife with fiddling, and I really need to generate metrics to test the efficacy
@@ -1151,7 +1148,7 @@ function fof_update_feed($id) {
 		*/
 		$grace = $items_in_feed;
 		if (!empty($admin_prefs['purge_grace'])) {
-			$grace = max($grace, $admin_prefs['purge_grace']);
+			$grace = $admin_prefs['purge_grace'];
 		}
 
 		/* It's okay to purge 'folded' items. */
@@ -1228,8 +1225,6 @@ function fof_apply_plugin_tags($feed_id, $item_id = NULL, $user_id = NULL) {
 		}
 	}
 
-	$userdata = fof_db_get_users();
-
 	foreach ($users as $user) {
 		fof_log("tagging for $user");
 
@@ -1237,13 +1232,9 @@ function fof_apply_plugin_tags($feed_id, $item_id = NULL, $user_id = NULL) {
 		foreach ($fof_tag_prefilters as $plugin => $filter) {
 			fof_log("considering $plugin $filter");
 
-			// FIXME: what is this condition trying to do?
-			//if ( empty( $userdata[$user]['prefs']['plugin_' . $plugin] ) )
-			{
-				foreach ($items as $item) {
-					$tags = $filter($item['item_link'], $item['item_title'], $item['item_content'], $item);
-					fof_tag_item($user, $item['item_id'], $tags);
-				}
+			foreach ($items as $item) {
+				$tags = $filter($item['item_link'], $item['item_title'], $item['item_content'], $item);
+				fof_tag_item($user, $item['item_id'], $tags);
 			}
 		}
 	}

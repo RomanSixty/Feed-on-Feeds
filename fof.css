@@ -25,6 +25,10 @@ p
     padding: 5px;
 }
 
+iframe {
+  max-width: 100%;
+}
+
 .clearer
 {
     clear: both;
@@ -475,4 +479,67 @@ list-style: none;
 }
 .feedmenu li:hover ul li a:hover {
     background: #333;
+}
+
+.youtube-video,
+.vimeo-video {
+  position: relative;
+  cursor: pointer;
+  height: 315px;
+  width: 560px;
+  overflow: hidden;
+  background-repeat: no-repeat;
+  background-position: center;
+  background-size: cover;
+  background-color: #eee;
+  max-width: 100%;
+}
+
+.youtube-video:before,
+.youtube-video:after,
+.vimeo-video:before,
+.vimeo-video:after {
+  content: "";
+  display: block;
+  position: absolute;
+}
+
+.youtube-video:before,
+.vimeo-video:before {
+  width: 0;
+  height: 0;
+  border-top: 10px solid transparent;
+  border-bottom: 10px solid transparent;
+  border-left: 20px solid #fff;
+  top: 147px;
+  left: 272px;
+  z-index: 10;
+}
+
+.youtube-video:after,
+.vimeo-video:after {
+  background-color: rgba(0, 0, 0, .6);
+  border-radius: 10px;
+  box-shadow: 0 0 10px rgba(0, 0, 0, 0.3);
+  transition: background-color .3s;
+  height: 48px;
+  width: 68px;
+
+  margin-left: 246px;
+  margin-top: 134px;
+}
+
+.youtube-video:hover:after {
+  background-color: rgba(204, 24, 30, 1);
+}
+
+.vimeo-video:hover:after {
+  background-color: rgba(0, 173, 239, 1);
+}
+
+.plugin_prefs th,
+.plugin_prefs td {
+  text-align: left;
+  vertical-align: top;
+  padding: 3px 5px;
 }

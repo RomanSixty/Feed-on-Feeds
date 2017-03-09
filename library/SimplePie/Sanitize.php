@@ -5,7 +5,7 @@
  * A PHP-Based RSS and Atom Feed Framework.
  * Takes the hard work out of managing a complete RSS/Atom solution.
  *
- * Copyright (c) 2004-2012, Ryan Parman, Geoffrey Sneddon, Ryan McCue, and contributors
+ * Copyright (c) 2004-2016, Ryan Parman, Geoffrey Sneddon, Ryan McCue, and contributors
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without modification, are
@@ -33,8 +33,7 @@
  * POSSIBILITY OF SUCH DAMAGE.
  *
  * @package SimplePie
- * @version 1.4-dev
- * @copyright 2004-2012 Ryan Parman, Geoffrey Sneddon, Ryan McCue
+ * @copyright 2004-2016 Ryan Parman, Geoffrey Sneddon, Ryan McCue
  * @author Ryan Parman
  * @author Geoffrey Sneddon
  * @author Ryan McCue
@@ -274,10 +273,6 @@ class SimplePie_Sanitize
 				$document = new DOMDocument();
 				$document->encoding = 'UTF-8';
 
-				// See https://github.com/simplepie/simplepie/issues/334
-				$unique_tag = '#'.uniqid().'#';
-				$data = trim($unique_tag . $data . $unique_tag);
-
 				$data = $this->preprocess($data, $type);
 
 				set_error_handler(array('SimplePie_Misc', 'silence_errors'));
@@ -367,10 +362,17 @@ class SimplePie_Sanitize
 					}
 				}
 
+				// Get content node
+				$div = $document->getElementsByTagName('body')->item(0)->firstChild;
 				// Finally, convert to a HTML string
-				$data = trim($document->saveHTML());
-
-				list($_, $data, $_) = explode($unique_tag, $data);
+				if (version_compare(PHP_VERSION, '5.3.6', '>='))
+				{
+					$data = trim($document->saveHTML($div));
+				}
+				else
+				{
+					$data = trim($document->saveXML($div));
+				}
 
 				if ($this->remove_div)
 				{
