@@ -91,7 +91,7 @@ function fof_render_item($item, $include_div = true) {
 	}
 
 	// enable controls, if an item contains a video
-	$item_content = preg_replace ( '~<(video [^>]+)>~i', '<$1 controls>', $item_content );
+	$item_content = preg_replace('~<(video [^>]+)>~i', '<$1 controls>', $item_content);
 
 	$tags = fof_render_get_key_($item, 'tags', array());
 

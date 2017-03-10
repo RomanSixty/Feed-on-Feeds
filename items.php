@@ -146,11 +146,11 @@ echo $item_controls;
 
 <div id="item-display-controls-spacer" class="banner">
 <ul class="inline-list">
-<?php echo $item_controls;?>
+<?php echo $item_controls; ?>
 </ul>
 </div>
 
-<div id="display-summary"><?php echo $title;?></div>
+<div id="display-summary"><?php echo $title; ?></div>
 
 <?php
 if ($fof_prefs_obj->get('keyboard')) {

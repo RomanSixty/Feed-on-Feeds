@@ -50,22 +50,22 @@ if (is_readable('./fof-custom.css')) {
 
     <style>
         #sidebar {
-            width: <?php echo $width?>px;
+            width: <?php echo $width ?>px;
         }
         #handle {
-            left:<?php echo $width?>px;
+            left:<?php echo $width ?>px;
         }
         #items {
-            margin-left: <?php echo $width + 10?>px;
+            margin-left: <?php echo $width + 10 ?>px;
         }
-        #item-display-controls { left: <?php echo $width + 10?>px; }
-        #welcome { width: <?php echo $width - 30?>px; }
+        #item-display-controls { left: <?php echo $width + 10 ?>px; }
+        #welcome { width: <?php echo $width - 30 ?>px; }
     </style>
 
 <!--[if IE]>
     <style>
         #sidebar table {
-            width: <?php echo $width - 20?>px;
+            width: <?php echo $width - 20 ?>px;
         }
     </style>
     <script>isIE = true;</script>
