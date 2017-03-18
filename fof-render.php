@@ -75,7 +75,7 @@ function fof_render_item($item, $include_div = true) {
 	$item_read = fof_render_get_key_($item, 'item_read');
 
 	foreach ($fof_render_filters as $filter) {
-		$item_content = $filter($item_content);
+		$item_content = $filter($item_content, $item);
 	}
 
 	// some minor cleanup tasks...
@@ -94,7 +94,7 @@ function fof_render_item($item, $include_div = true) {
 	}
 
 	// enable controls, if an item contains a video
-	$item_content = preg_replace ( '~<(video [^>]+)>~i', '<$1 controls>', $item_content );
+	$item_content = preg_replace('~<(video [^>]+)>~i', '<$1 controls>', $item_content);
 
 	// also make images clickable
 	$item_content = str_replace ( '<img ', '<img tabindex="0" ', $item_content );

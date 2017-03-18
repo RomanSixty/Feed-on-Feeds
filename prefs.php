@@ -209,7 +209,7 @@ if (empty($sidebar_style) && $prefs->get('simple_sidebar')) {
 }
 ?>>old to new</option></select>
     <br>
-    Number of items in paged displays: <input type="string" size="3" name="howmany" value="<?php echo $prefs->get('howmany')?>">
+    Number of items in paged displays: <input type="string" size="3" name="howmany" value="<?php echo $prefs->get('howmany') ?>">
     <br>
     Display custom feed favicons? <input type="checkbox" name="favicons"<?php if ($prefs->get('favicons')) {
 	echo " checked=true";
@@ -226,7 +226,7 @@ if (empty($sidebar_style) && $prefs->get('simple_sidebar')) {
 }
 ?>>
     <br>
-    Time offset in hours: <input size="3" type="text" name=tzoffset value="<?php echo $prefs->get('tzoffset')?>"> (UTC time: <?php echo gmdate("Y-n-d g:ia")?>, local time: <?php echo gmdate("Y-n-d g:ia", time() + $prefs->get("tzoffset") * 60 * 60)?>)
+    Time offset in hours: <input size="3" type="text" name=tzoffset value="<?php echo $prefs->get('tzoffset') ?>"> (UTC time: <?php echo gmdate("Y-n-d g:ia") ?>, local time: <?php echo gmdate("Y-n-d g:ia", time() + $prefs->get("tzoffset") * 60 * 60) ?>)
   </fieldset>
   <br>
   <fieldset>
@@ -250,9 +250,9 @@ if (empty($sidebar_style) && $prefs->get('simple_sidebar')) {
 }
 ?>
     <br>
-    Name to be shown on shared page: <input type="text" name="sharedname" value="<?php echo $prefs->get('sharedname')?>">
+    Name to be shown on shared page: <input type="text" name="sharedname" value="<?php echo $prefs->get('sharedname') ?>">
     <br>
-    URL to be linked on shared page: <input type="text" name="sharedurl" value="<?php echo $prefs->get('sharedurl')?>">
+    URL to be linked on shared page: <input type="text" name="sharedurl" value="<?php echo $prefs->get('sharedurl') ?>">
   </fieldset>
   <br>
 <?php
@@ -288,9 +288,8 @@ while ($file = readdir($dirlist)) {
 	if (preg_match('/\.php$/', $file)) {
 		fof_log("considering " . $file);
 		$plugins[substr($file, 0, -4)]['code'] = true;
-	}
-	elseif (preg_match('/\.ini$/', $file)) {
-		$meta = parse_ini_file ( FOF_DIR . "/plugins/".$file );
+	} elseif (preg_match('/\.ini$/', $file)) {
+		$meta = parse_ini_file(FOF_DIR . "/plugins/" . $file);
 		$plugins[substr($file, 0, -4)]['meta'] = $meta;
 	}
 }
@@ -303,7 +302,9 @@ echo '<table class="plugin_prefs">';
 echo '<tr><th>Plugin</th><th>Type</th><th>Description</th></tr>';
 
 foreach ($plugins as $plugin => $data) {
-	if ( !$data [ 'code' ] ) continue;
+	if (!$data['code']) {
+		continue;
+	}
 
 	echo '<tr><td><input type=checkbox name="' . htmlentities($plugin) . '"';
 
@@ -313,8 +314,9 @@ foreach ($plugins as $plugin => $data) {
 
 	echo '> ' . $plugin . '</td>';
 
-	if ( !empty ( $data [ 'meta' ] ) )
-		echo '<td><tt>[' . $data [ 'meta' ][ 'type' ] . ']</tt></td><td><small>' . htmlspecialchars ( $data [ 'meta' ][ 'description' ] ) . '</small></td>';
+	if (!empty($data['meta'])) {
+		echo '<td><tt>[' . $data['meta']['type'] . ']</tt></td><td><small>' . htmlspecialchars($data['meta']['description']) . '</small></td>';
+	}
 
 	echo '</tr>';
 }
@@ -326,25 +328,25 @@ echo '</table>';
 	$name = $plugin_pref[0];
 	$key = $plugin_pref[1];
 	$type = $plugin_pref[2];?>
-<?php echo $name?>:
+<?php echo $name ?>:
 
 <?php if ($type == "boolean") {
 		?>
-<input name="<?php echo $key?>" type="checkbox" <?php if ($prefs->get($key)) {
+<input name="<?php echo $key ?>" type="checkbox" <?php if ($prefs->get($key)) {
 			echo "checked";
 		}
 		?>><br>
 <?php } else {?>
-<input name="<?php echo $key?>" value="<?php echo $prefs->get($key)?>"><br>
+<input name="<?php echo $key ?>" value="<?php echo $prefs->get($key) ?>"><br>
 <?php }}?>
 <br>
 <input type="submit" name="plugins" value="Save Plugin Preferences">
 </form>
 
 <?php
-                                                        // advanced plugin preferences
+// advanced plugin preferences
 foreach ($plugins as $plugin => $data) {
-	                                                        // save preferences
+	// save preferences
 	$funcname = 'save_prefs_' . $plugin;
 
 	if (function_exists($funcname)) {
@@ -426,7 +428,7 @@ foreach ($feeds as $row) {
 <form method="post" action="prefs.php#adminprefs" style="border: 1px solid black; margin: 10px; padding: 10px;">
 Enable logging? <input type=checkbox name="logging" <?=$prefs->get('logging') ? "checked" : ''?>> Log Topic Restriction (space separated): <input type="text" name="log_topics" value="<?=$prefs->get('log_topics')?>"><br><br>
 Purge read items after <input size="4" type="text" name=purge value="<?=$prefs->get('purge')?>"> days (leave blank to never purge)<br><br>
-When purging read items, keep at least <input size="4" type="text" name="purge_grace" value="<?php echo $prefs->get('purge_grace');?>"> items per feed, even if they're old.<br><br>
+When purging read items, keep at least <input size="4" type="text" name="purge_grace" value="<?php echo $prefs->get('purge_grace'); ?>"> items per feed, even if they're old.<br><br>
 Allow automatic feed updates every <input size="4" type="text" name=autotimeout value="<?=$prefs->get('autotimeout')?>"> minutes<br><br>
 Allow manual feed updates every <input size="4" type="text" name=manualtimeout value="<?=$prefs->get('manualtimeout')?>"> minutes<br><br>
 Use dynamic update intervals based on each feed's own update rate <input type="checkbox" name="dynupdates" value="1" <?=$prefs->get('dynupdates') ? 'checked' : ''?>><br><br>
@@ -435,7 +437,7 @@ Remove duplicate entries based on similarity <input size="4" type="text" name="m
 <fieldset>
 <legend><b>Feed Item Title Blacklist</b></legend>
 Feed items with titles containing one of the following terms (one per line) will be discarded immediately. The matching is not case sensitive.<br>
-<textarea name="blacklist" cols="100" rows="10"><?php echo $prefs->get('blacklist')?></textarea>
+<textarea name="blacklist" cols="100" rows="10"><?php echo $prefs->get('blacklist') ?></textarea>
 </fieldset>
 <br>
 
@@ -464,14 +466,14 @@ $result = fof_db_get_nonadmin_usernames();
 
 <br><h1 id="deluser">Delete User</h1>
 <form method="post" action="prefs.php#deluser" style="border: 1px solid black; margin: 10px; padding: 10px;" onsubmit="return confirm('Delete User - Are you sure?')">
-<select name=username><?php echo implode('', $user_options);?></select>
+<select name=username><?php echo implode('', $user_options); ?></select>
 <input type=submit name=deleteuser value="Delete user"><br>
 </form>
 
 <br><h1>Change User's Password</h1>
 <form method="post" action="prefs.php" style="border: 1px solid black; margin: 10px; padding: 10px;" onsubmit="return confirm('Change Password - Are you sure?')">
 <table border=0 cellspacing=0 cellpadding=2>
-<tr><td>Select user:</td><td><select name=username><?php echo implode('', $user_options);?></select></td></tr>
+<tr><td>Select user:</td><td><select name=username><?php echo implode('', $user_options); ?></select></td></tr>
 <tr><td>New password:</td><td><input type=password name=password></td></tr>
 <tr><td>Repeat new password:</td><td><input type=password name=password2></td></tr></table>
 <input type=submit name=changepassword value="Change"><br>
@@ -480,7 +482,7 @@ $result = fof_db_get_nonadmin_usernames();
 <?php }?>
 
 <?php
-}/* FOF_AUTH_EXTERNAL_ONLY */
+} /* FOF_AUTH_EXTERNAL_ONLY */
 	?>
 <br>
 <form method="get" action="uninstall.php" onsubmit="return confirm('Really?  This will delete all the database tables!')">

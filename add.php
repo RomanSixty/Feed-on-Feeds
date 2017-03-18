@@ -26,8 +26,7 @@ $unread = isset($_POST['unread']) ? $_POST['unread'] : NULL;
 
 $feeds = array();
 
-if ( $youtube )
-{
+if ($youtube) {
 	// okay, we may have different kinds of URLs here, depending if the channel owner got a vanity user name
 	//
 	// https://www.youtube.com/user/<vanity_title>...
@@ -36,20 +35,23 @@ if ( $youtube )
 	// what we need however is the channel's id, so let's try to find that out
 
 	$channel_id = null;
-	$matches    = array();
+	$matches = array();
 
-	if ( preg_match ( '~youtube\.com/channel/([^/]+)~', $youtube, $matches ) )
-		$channel_id = $matches [ 1 ];
-	elseif ( preg_match ( '~youtube\.com/user/([^/]+)~', $youtube, $matches ) )
-	{
-		$file = file_get_contents ( $youtube );
+	if (preg_match('~youtube\.com/channel/([^/]+)~', $youtube, $matches)) {
+		$channel_id = $matches[1];
+	} elseif (preg_match('~youtube\.com/user/([^/]+)~', $youtube, $matches)) {
+		$file = file_get_contents($youtube);
 
-		if ( preg_match ( '~data-style-type="branded"[^>]+data-channel-external-id="([^"]+)"~m', $file, $matches ) )
-			$channel_id = $matches [ 1 ];
+		if (preg_match('~data-style-type="branded"[^>]+data-channel-external-id="([^"]+)"~m', $file, $matches)) {
+			$channel_id = $matches[1];
+		}
+
 	}
 
-	if ( !empty ( $channel_id ) )
+	if (!empty($channel_id)) {
 		$feeds[] = 'https://www.youtube.com/feeds/videos.xml?channel_id=' . $channel_id;
+	}
+
 }
 
 if ($url) {
@@ -81,10 +83,10 @@ $add_feed_url .= "://" . $_SERVER["HTTP_HOST"] . $_SERVER["SCRIPT_NAME"];
 
 <div style="background: #eee; border: 1px solid black; padding: 1.5em; margin: 1.5em;">
 <span id="register_feed_reader">
-  If your browser is cool, you can <a href="#" onclick="window.navigator.registerContentHandler('application/vnd.mozilla.maybe.feed', '<?php echo $add_feed_url?>?rss_url=%s', 'Feed on Feeds');return false;">register Feed on Feeds as a Feed Reader</a>.
+  If your browser is cool, you can <a href="#" onclick="window.navigator.registerContentHandler('application/vnd.mozilla.maybe.feed', '<?php echo $add_feed_url ?>?rss_url=%s', 'Feed on Feeds');return false;">register Feed on Feeds as a Feed Reader</a>.
 </span>
 <span id="add_bookmarklet">
-  You can also use the <a href="javascript:void(location.href='<?php echo $add_feed_url;?>?rss_url='+escape(location))">FoF subscribe</a> bookmarklet to subscribe to any page with a feed.  Just add it as a bookmark and then click on it when you are at a page you'd like to subscribe to!
+  You can also use the <a href="javascript:void(location.href='<?php echo $add_feed_url; ?>?rss_url='+escape(location))">FoF subscribe</a> bookmarklet to subscribe to any page with a feed.  Just add it as a bookmark and then click on it when you are at a page you'd like to subscribe to!
 </span>
 </div>
 <?php
@@ -92,7 +94,7 @@ if (strpos($_SERVER['HTTP_USER_AGENT'], 'Firefox') !== FALSE) {
 	?>
 <script>
 document.observe("dom:loaded", function() {
-    if (window.navigator.isContentHandlerRegistered('application/vnd.mozilla.maybe.feed', '<?php echo $add_feed_url;?>?rss_url=%s')) {
+    if (window.navigator.isContentHandlerRegistered('application/vnd.mozilla.maybe.feed', '<?php echo $add_feed_url; ?>?rss_url=%s')) {
         $('register_feed_reader').update('Feed on Feeds is already registered as a feed reader in this browser!');
     }
 });
@@ -125,16 +127,16 @@ When adding feeds, mark <select name="unread">
 ?>>no</option>
 </select> items as unread<br><br>
 
-RSS or weblog URL: <input type="text" name="rss_url" size="40" value="<?php echo htmlentities($url)?>"><input type="Submit" value="Add a feed"><br><br>
+RSS or weblog URL: <input type="text" name="rss_url" size="40" value="<?php echo htmlentities($url) ?>"><input type="Submit" value="Add a feed"><br><br>
 
-YouTube channel page: <input type="text" name="youtube_channel" size="40" value="<?php echo htmlentities($youtube)?>"><input type="Submit" value="Subscribe to channel"><br><br>
+YouTube channel page: <input type="text" name="youtube_channel" size="40" value="<?php echo htmlentities($youtube) ?>"><input type="Submit" value="Subscribe to channel"><br><br>
 
 OPML URL: <input type="hidden" name="MAX_FILE_SIZE" value="100000">
 
-<input type="text" name="opml_url" size="40" value="<?php echo htmlentities($opml)?>"><input type="Submit" value="Add feeds from OPML file on the Internet"><br><br>
+<input type="text" name="opml_url" size="40" value="<?php echo htmlentities($opml) ?>"><input type="Submit" value="Add feeds from OPML file on the Internet"><br><br>
 
 <input type="hidden" name="MAX_FILE_SIZE" value="100000">
-OPML filename: <input type="file" name="opml_file" size="40" value="<?php echo htmlentities($file)?>"><input type="Submit" value="Upload an OPML file">
+OPML filename: <input type="file" name="opml_file" size="40" value="<?php echo htmlentities($file) ?>"><input type="Submit" value="Upload an OPML file">
 
 </form>
 <hr>
@@ -146,8 +148,8 @@ if (count($feeds)) {
 	foreach ($feeds as $feed) {
 		$feedjson[] = json_encode(array('url' => $feed, 'idx' => $idx));
 		echo '<div id="feed_index_' . $idx . '">'
-		. $feed . ' is waiting to add...'
-		. "</div>\n";
+			. $feed . ' is waiting to add...'
+			. "</div>\n";
 		$idx++;
 	}
 

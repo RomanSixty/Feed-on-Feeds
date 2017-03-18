@@ -67,16 +67,16 @@ function fof_install_datadir() {
 		$status = @mkdir($datadir, 0700);
 		if (!$status) {
 			echo '<span class="fail">Can\'t create data directory <code>$datadir</code>; '
-			. 'please ensure that it was configured correctly and is in a location '
-			. 'you have write access to.</span>';
+				. 'please ensure that it was configured correctly and is in a location '
+				. 'you have write access to.</span>';
 			return false;
 		}
 	}
 
 	if (!is_writable($datadir)) {
 		echo '<span class="fail">Can\'t write to data directory <code>$datadir</code>; '
-		. 'please ensure that it was configured correctly and is in a location '
-		. 'you have write access to.</span>';
+			. 'please ensure that it was configured correctly and is in a location '
+			. 'you have write access to.</span>';
 		return false;
 	}
 
@@ -162,10 +162,10 @@ function fof_install_create_reference_query($table_name, $column_name, $referenc
 	}
 	if (defined('USE_SQLITE')) {
 		/*
-		I guess this isn't possible without creating a new table, migrating
-		the data, then dropping the old table.
-		FIXME: Supporting this is going to be ugly.
-		 */
+			I guess this isn't possible without creating a new table, migrating
+			the data, then dropping the old table.
+			FIXME: Supporting this is going to be ugly.
+		*/
 		return NULL;
 	}
 	throw new Exception('Query not implemented for this pdo driver.');
@@ -174,187 +174,180 @@ function fof_install_create_reference_query($table_name, $column_name, $referenc
 /* define all tables as arrays */
 /* most of the fiddly driver-specific quirks are finagled in here */
 function fof_install_schema() {
-    $tables = array();
-    $indices = array();
+	$tables = array();
+	$indices = array();
 
-    /* FOF_FEED_TABLE *
+	/* FOF_FEED_TABLE *
     /* columns */
-    if (defined('USE_MYSQL')) {
-        $tables[FOF_FEED_TABLE][] = "feed_id " . SQL_DRIVER_INT_TYPE . " NOT NULL AUTO_INCREMENT";
-    } else if (defined('USE_SQLITE')) {
-        $tables[FOF_FEED_TABLE][] = "feed_id " . SQL_DRIVER_INT_TYPE . " PRIMARY KEY AUTOINCREMENT NOT NULL";
-    }
-    $tables[FOF_FEED_TABLE][] = "feed_url TEXT NOT NULL";
-    $tables[FOF_FEED_TABLE][] = "feed_title TEXT NOT NULL";
-    $tables[FOF_FEED_TABLE][] = "feed_link TEXT NOT NULL";
-    $tables[FOF_FEED_TABLE][] = "feed_description TEXT NOT NULL";
-    $tables[FOF_FEED_TABLE][] = "feed_image TEXT";
-    $tables[FOF_FEED_TABLE][] = "feed_image_cache_date " . SQL_DRIVER_INT_TYPE . " DEFAULT '0'";
-    $tables[FOF_FEED_TABLE][] = "feed_cache_date " . SQL_DRIVER_INT_TYPE . " DEFAULT '0'";
-    $tables[FOF_FEED_TABLE][] = "feed_cache_attempt_date " . SQL_DRIVER_INT_TYPE . " DEFAULT '0'";
-    $tables[FOF_FEED_TABLE][] = "feed_cache_next_attempt " . SQL_DRIVER_INT_TYPE . " DEFAULT '0'";
-    $tables[FOF_FEED_TABLE][] = "feed_cache TEXT"; /* FIXME: unused column? */
-    $tables[FOF_FEED_TABLE][] = "feed_cache_last_attempt_status TEXT";
-    if (defined('USE_MYSQL')) {
-        $tables[FOF_FEED_TABLE][] = "PRIMARY KEY ( feed_id )";
-        $tables[FOF_FEED_TABLE][] = "KEY feed_cache_next_attempt ( feed_cache_next_attempt )";
-    }
+	if (defined('USE_MYSQL')) {
+		$tables[FOF_FEED_TABLE][] = "feed_id " . SQL_DRIVER_INT_TYPE . " NOT NULL AUTO_INCREMENT";
+	} else if (defined('USE_SQLITE')) {
+		$tables[FOF_FEED_TABLE][] = "feed_id " . SQL_DRIVER_INT_TYPE . " PRIMARY KEY AUTOINCREMENT NOT NULL";
+	}
+	$tables[FOF_FEED_TABLE][] = "feed_url TEXT NOT NULL";
+	$tables[FOF_FEED_TABLE][] = "feed_title TEXT NOT NULL";
+	$tables[FOF_FEED_TABLE][] = "feed_link TEXT NOT NULL";
+	$tables[FOF_FEED_TABLE][] = "feed_description TEXT NOT NULL";
+	$tables[FOF_FEED_TABLE][] = "feed_image TEXT";
+	$tables[FOF_FEED_TABLE][] = "feed_image_cache_date " . SQL_DRIVER_INT_TYPE . " DEFAULT '0'";
+	$tables[FOF_FEED_TABLE][] = "feed_cache_date " . SQL_DRIVER_INT_TYPE . " DEFAULT '0'";
+	$tables[FOF_FEED_TABLE][] = "feed_cache_attempt_date " . SQL_DRIVER_INT_TYPE . " DEFAULT '0'";
+	$tables[FOF_FEED_TABLE][] = "feed_cache_next_attempt " . SQL_DRIVER_INT_TYPE . " DEFAULT '0'";
+	$tables[FOF_FEED_TABLE][] = "feed_cache TEXT"; /* FIXME: unused column? */
+	$tables[FOF_FEED_TABLE][] = "feed_cache_last_attempt_status TEXT";
+	if (defined('USE_MYSQL')) {
+		$tables[FOF_FEED_TABLE][] = "PRIMARY KEY ( feed_id )";
+		$tables[FOF_FEED_TABLE][] = "KEY feed_cache_next_attempt ( feed_cache_next_attempt )";
+	}
 
-    /* indices */
-    if (defined('USE_SQLITE')) {
-        $indices[FOF_FEED_TABLE]['feed_cache_next_attempt'] = array('INDEX', 'feed_cache_next_attempt');
-    }
+	/* indices */
+	if (defined('USE_SQLITE')) {
+		$indices[FOF_FEED_TABLE]['feed_cache_next_attempt'] = array('INDEX', 'feed_cache_next_attempt');
+	}
 
+	/* FOF_ITEM_TABLE */
+	/* columns */
+	if (defined('USE_MYSQL')) {
+		$tables[FOF_ITEM_TABLE][] = "item_id " . SQL_DRIVER_INT_TYPE . " NOT NULL AUTO_INCREMENT";
+	} else if (defined('USE_SQLITE')) {
+		$tables[FOF_ITEM_TABLE][] = "item_id " . SQL_DRIVER_INT_TYPE . " PRIMARY KEY AUTOINCREMENT NOT NULL";
+	}
+	$tables[FOF_ITEM_TABLE][] = "feed_id " . SQL_DRIVER_INT_TYPE . " NOT NULL DEFAULT '0' REFERENCES " . FOF_FEED_TABLE . " ( feed_id ) ON UPDATE CASCADE ON DELETE CASCADE";
+	$tables[FOF_ITEM_TABLE][] = "item_guid TEXT NOT NULL";
+	$tables[FOF_ITEM_TABLE][] = "item_link TEXT NOT NULL";
+	$tables[FOF_ITEM_TABLE][] = "item_cached " . SQL_DRIVER_INT_TYPE . " NOT NULL DEFAULT '0'";
+	$tables[FOF_ITEM_TABLE][] = "item_published " . SQL_DRIVER_INT_TYPE . " NOT NULL DEFAULT '0'";
+	$tables[FOF_ITEM_TABLE][] = "item_updated " . SQL_DRIVER_INT_TYPE . " NOT NULL DEFAULT '0'";
+	$tables[FOF_ITEM_TABLE][] = "item_title TEXT NOT NULL";
+	$tables[FOF_ITEM_TABLE][] = "item_content TEXT NOT NULL";
+	$tables[FOF_ITEM_TABLE][] = "item_author TEXT";
 
-    /* FOF_ITEM_TABLE */
-    /* columns */
-    if (defined('USE_MYSQL')) {
-        $tables[FOF_ITEM_TABLE][] = "item_id " . SQL_DRIVER_INT_TYPE . " NOT NULL AUTO_INCREMENT";
-    } else if (defined('USE_SQLITE')) {
-        $tables[FOF_ITEM_TABLE][] = "item_id " . SQL_DRIVER_INT_TYPE . " PRIMARY KEY AUTOINCREMENT NOT NULL";
-    }
-    $tables[FOF_ITEM_TABLE][] = "feed_id " . SQL_DRIVER_INT_TYPE . " NOT NULL DEFAULT '0' REFERENCES " . FOF_FEED_TABLE . " ( feed_id ) ON UPDATE CASCADE ON DELETE CASCADE";
-    $tables[FOF_ITEM_TABLE][] = "item_guid TEXT NOT NULL";
-    $tables[FOF_ITEM_TABLE][] = "item_link TEXT NOT NULL";
-    $tables[FOF_ITEM_TABLE][] = "item_cached " . SQL_DRIVER_INT_TYPE . " NOT NULL DEFAULT '0'";
-    $tables[FOF_ITEM_TABLE][] = "item_published " . SQL_DRIVER_INT_TYPE . " NOT NULL DEFAULT '0'";
-    $tables[FOF_ITEM_TABLE][] = "item_updated " . SQL_DRIVER_INT_TYPE . " NOT NULL DEFAULT '0'";
-    $tables[FOF_ITEM_TABLE][] = "item_title TEXT NOT NULL";
-    $tables[FOF_ITEM_TABLE][] = "item_content TEXT NOT NULL";
-    $tables[FOF_ITEM_TABLE][] = "item_author TEXT";
+	/* indices */
+	if (defined('USE_MYSQL')) {
+		$tables[FOF_ITEM_TABLE][] = "PRIMARY KEY (item_id)";
+		$tables[FOF_ITEM_TABLE][] = "FOREIGN KEY (feed_id) REFERENCES " . FOF_FEED_TABLE . " (feed_id) ON UPDATE CASCADE ON DELETE CASCADE";
+		$tables[FOF_ITEM_TABLE][] = "KEY item_guid ( item_guid(255) )";
+		$tables[FOF_ITEM_TABLE][] = "KEY feed_id_item_cached ( feed_id, item_cached )";
+		$tables[FOF_ITEM_TABLE][] = "KEY feed_id_item_updated ( feed_id, item_updated )";
+	}
+	if (defined('USE_SQLITE')) {
+		$indices[FOF_ITEM_TABLE]['feed_id'] = array('INDEX', 'feed_id');
+		$indices[FOF_ITEM_TABLE]['item_guid'] = array('INDEX', 'item_guid');
+		$indices[FOF_ITEM_TABLE]['item_title'] = array('INDEX', 'item_title');
+		$indices[FOF_ITEM_TABLE]['feed_id_item_cached'] = array('INDEX', 'feed_id, item_cached');
+		$indices[FOF_ITEM_TABLE]['feed_id_item_updated'] = array('INDEX', 'feed_id, item_updated');
+	}
 
-    /* indices */
-    if (defined('USE_MYSQL')) {
-        $tables[FOF_ITEM_TABLE][] = "PRIMARY KEY (item_id)";
-        $tables[FOF_ITEM_TABLE][] = "FOREIGN KEY (feed_id) REFERENCES " . FOF_FEED_TABLE . " (feed_id) ON UPDATE CASCADE ON DELETE CASCADE";
-        $tables[FOF_ITEM_TABLE][] = "KEY item_guid ( item_guid(255) )";
-        $tables[FOF_ITEM_TABLE][] = "KEY feed_id_item_cached ( feed_id, item_cached )";
-        $tables[FOF_ITEM_TABLE][] = "KEY feed_id_item_updated ( feed_id, item_updated )";
-    }
-    if (defined('USE_SQLITE')) {
-        $indices[FOF_ITEM_TABLE]['feed_id'] = array('INDEX', 'feed_id');
-        $indices[FOF_ITEM_TABLE]['item_guid'] = array('INDEX', 'item_guid');
-        $indices[FOF_ITEM_TABLE]['item_title'] = array('INDEX', 'item_title');
-        $indices[FOF_ITEM_TABLE]['feed_id_item_cached'] = array('INDEX', 'feed_id, item_cached');
-        $indices[FOF_ITEM_TABLE]['feed_id_item_updated'] = array('INDEX', 'feed_id, item_updated');
-    }
+	/* FOF_ITEM_TAG_TABLE */
+	/* columns */
+	$tables[FOF_ITEM_TAG_TABLE][] = "user_id " . SQL_DRIVER_INT_TYPE . " NOT NULL DEFAULT '0' REFERENCES " . FOF_USER_TABLE . " ( user_id ) ON UPDATE CASCADE ON DELETE CASCADE";
+	$tables[FOF_ITEM_TAG_TABLE][] = "item_id " . SQL_DRIVER_INT_TYPE . " NOT NULL DEFAULT '0' REFERENCES " . FOF_ITEM_TABLE . " ( item_id ) ON UPDATE CASCADE ON DELETE CASCADE";
+	$tables[FOF_ITEM_TAG_TABLE][] = "tag_id " . SQL_DRIVER_INT_TYPE . " NOT NULL DEFAULT '0' REFERENCES " . FOF_TAG_TABLE . " ( tag_id ) ON UPDATE CASCADE ON DELETE CASCADE";
+	$tables[FOF_ITEM_TAG_TABLE][] = "PRIMARY KEY ( user_id, item_id, tag_id )";
 
+	/* indices */
+	if (defined('USE_MYSQL')) {
+		$tables[FOF_ITEM_TAG_TABLE][] = "FOREIGN KEY (user_id) REFERENCES " . FOF_USER_TABLE . " (user_id) ON UPDATE CASCADE ON DELETE CASCADE";
+		$tables[FOF_ITEM_TAG_TABLE][] = "FOREIGN KEY (item_id) REFERENCES " . FOF_ITEM_TABLE . " (item_id) ON UPDATE CASCADE ON DELETE CASCADE";
+		$tables[FOF_ITEM_TAG_TABLE][] = "FOREIGN KEY (tag_id) REFERENCES " . FOF_TAG_TABLE . " (tag_id) ON UPDATE CASCADE ON DELETE CASCADE";
+		$tables[FOF_ITEM_TAG_TABLE][] = "KEY tag_id ( tag_id )";
+	}
+	if (defined('USE_SQLITE')) {
+		$indices[FOF_ITEM_TAG_TABLE]['tag_id'] = array('INDEX', 'tag_id');
+	}
 
-    /* FOF_ITEM_TAG_TABLE */
-    /* columns */
-    $tables[FOF_ITEM_TAG_TABLE][] = "user_id " . SQL_DRIVER_INT_TYPE . " NOT NULL DEFAULT '0' REFERENCES " . FOF_USER_TABLE . " ( user_id ) ON UPDATE CASCADE ON DELETE CASCADE";
-    $tables[FOF_ITEM_TAG_TABLE][] = "item_id " . SQL_DRIVER_INT_TYPE . " NOT NULL DEFAULT '0' REFERENCES " . FOF_ITEM_TABLE . " ( item_id ) ON UPDATE CASCADE ON DELETE CASCADE";
-    $tables[FOF_ITEM_TAG_TABLE][] = "tag_id " . SQL_DRIVER_INT_TYPE . " NOT NULL DEFAULT '0' REFERENCES " . FOF_TAG_TABLE . " ( tag_id ) ON UPDATE CASCADE ON DELETE CASCADE";
-    $tables[FOF_ITEM_TAG_TABLE][] = "PRIMARY KEY ( user_id, item_id, tag_id )";
+	/* FOF_SUBSCRIPTION_TABLE */
+	/* columns */
+	$tables[FOF_SUBSCRIPTION_TABLE][] = "feed_id " . SQL_DRIVER_INT_TYPE . " NOT NULL DEFAULT '0' REFERENCES " . FOF_FEED_TABLE . " ( feed_id ) ON UPDATE CASCADE ON DELETE CASCADE";
+	$tables[FOF_SUBSCRIPTION_TABLE][] = "user_id " . SQL_DRIVER_INT_TYPE . " NOT NULL DEFAULT '0' REFERENCES " . FOF_USER_TABLE . " ( user_id ) ON UPDATE CASCADE ON DELETE CASCADE";
+	$tables[FOF_SUBSCRIPTION_TABLE][] = "subscription_prefs TEXT";
+	$tables[FOF_SUBSCRIPTION_TABLE][] = "PRIMARY KEY ( feed_id, user_id )";
+	if (defined('USE_MYSQL')) {
+		$tables[FOF_SUBSCRIPTION_TABLE][] = "FOREIGN KEY (feed_id) REFERENCES " . FOF_FEED_TABLE . " (feed_id) ON UPDATE CASCADE ON DELETE CASCADE";
+		$tables[FOF_SUBSCRIPTION_TABLE][] = "FOREIGN KEY (user_id) REFERENCES " . FOF_USER_TABLE . " (user_id) ON UPDATE CASCADE ON DELETE CASCADE";
+	}
 
-    /* indices */
-    if (defined('USE_MYSQL')) {
-        $tables[FOF_ITEM_TAG_TABLE][] = "FOREIGN KEY (user_id) REFERENCES " . FOF_USER_TABLE . " (user_id) ON UPDATE CASCADE ON DELETE CASCADE";
-        $tables[FOF_ITEM_TAG_TABLE][] = "FOREIGN KEY (item_id) REFERENCES " . FOF_ITEM_TABLE . " (item_id) ON UPDATE CASCADE ON DELETE CASCADE";
-        $tables[FOF_ITEM_TAG_TABLE][] = "FOREIGN KEY (tag_id) REFERENCES " . FOF_TAG_TABLE . " (tag_id) ON UPDATE CASCADE ON DELETE CASCADE";
-        $tables[FOF_ITEM_TAG_TABLE][] = "KEY tag_id ( tag_id )";
-    }
-    if (defined('USE_SQLITE')) {
-        $indices[FOF_ITEM_TAG_TABLE]['tag_id'] = array('INDEX', 'tag_id');
-    }
+	/* FOF_VIEW_TABLE */
+	/* Stores the details about the preferred methods of displaying a collection of items. */
+	/* columns */
+	if (defined('USE_MYSQL')) {
+		$tables[FOF_VIEW_TABLE][] = "view_id " . SQL_DRIVER_INT_TYPE . " NOT NULL AUTO_INCREMENT";
+	} else if (defined('USE_SQLITE')) {
+		$tables[FOF_VIEW_TABLE][] = "view_id " . SQL_DRIVER_INT_TYPE . " PRIMARY KEY AUTOINCREMENT NOT NULL";
+	}
+	$tables[FOF_VIEW_TABLE][] = "view_settings TEXT";
+	if (defined('USE_MYSQL')) {
+		$tables[FOF_VIEW_TABLE][] = "PRIMARY KEY (view_id)";
+	}
 
+	/* FOF_VIEW_STATE_TABLE */
+	/* Associates a group of feed/tags with a view. */
+	/*
+		        This table also has triggers.  They will be created in the update
+		        section below, as it's easier to check if they exist via script than
+		        to craft a driver-portable create-if-not-exists statement here.
+	*/
 
-    /* FOF_SUBSCRIPTION_TABLE */
-    /* columns */
-    $tables[FOF_SUBSCRIPTION_TABLE][] = "feed_id " . SQL_DRIVER_INT_TYPE . " NOT NULL DEFAULT '0' REFERENCES " . FOF_FEED_TABLE . " ( feed_id ) ON UPDATE CASCADE ON DELETE CASCADE";
-    $tables[FOF_SUBSCRIPTION_TABLE][] = "user_id " . SQL_DRIVER_INT_TYPE . " NOT NULL DEFAULT '0' REFERENCES " . FOF_USER_TABLE . " ( user_id ) ON UPDATE CASCADE ON DELETE CASCADE";
-    $tables[FOF_SUBSCRIPTION_TABLE][] = "subscription_prefs TEXT";
-    $tables[FOF_SUBSCRIPTION_TABLE][] = "PRIMARY KEY ( feed_id, user_id )";
-    if (defined('USE_MYSQL')) {
-        $tables[FOF_SUBSCRIPTION_TABLE][] = "FOREIGN KEY (feed_id) REFERENCES " . FOF_FEED_TABLE . " (feed_id) ON UPDATE CASCADE ON DELETE CASCADE";
-        $tables[FOF_SUBSCRIPTION_TABLE][] = "FOREIGN KEY (user_id) REFERENCES " . FOF_USER_TABLE . " (user_id) ON UPDATE CASCADE ON DELETE CASCADE";
-    }
+	/* columns */
+	$tables[FOF_VIEW_STATE_TABLE][] = "user_id " . SQL_DRIVER_INT_TYPE . " NOT NULL REFERENCES " . FOF_USER_TABLE . " (user_id) ON UPDATE CASCADE ON DELETE CASCADE";
+	$tables[FOF_VIEW_STATE_TABLE][] = "feed_id " . SQL_DRIVER_INT_TYPE . " REFERENCES " . FOF_FEED_TABLE . " (feed_id) ON UPDATE CASCADE ON DELETE CASCADE";
+	$tables[FOF_VIEW_STATE_TABLE][] = "tag_id " . SQL_DRIVER_INT_TYPE . " REFERENCES " . FOF_TAG_TABLE . " (tag_id) ON UPDATE CASCADE ON DELETE CASCADE";
+	$tables[FOF_VIEW_STATE_TABLE][] = "view_id " . SQL_DRIVER_INT_TYPE . " NOT NULL REFERENCES " . FOF_VIEW_TABLE . " (view_id) ON UPDATE CASCADE ON DELETE CASCADE";
+	$tables[FOF_VIEW_STATE_TABLE][] = "CHECK ((feed_id IS NULL) != (tag_id IS NULL))";
+	if (defined('USE_MYSQL')) {
+		$tables[FOF_VIEW_STATE_TABLE][] = "FOREIGN KEY (user_id) REFERENCES " . FOF_USER_TABLE . " (user_id) ON UPDATE CASCADE ON DELETE CASCADE";
+		$tables[FOF_VIEW_STATE_TABLE][] = "FOREIGN KEY (feed_id) REFERENCES " . FOF_FEED_TABLE . " (feed_id) ON UPDATE CASCADE ON DELETE CASCADE";
+		$tables[FOF_VIEW_STATE_TABLE][] = "FOREIGN KEY (tag_id) REFERENCES " . FOF_TAG_TABLE . " (tag_id) ON UPDATE CASCADE ON DELETE CASCADE";
+		$tables[FOF_VIEW_STATE_TABLE][] = "FOREIGN KEY (view_id) REFERENCES " . FOF_VIEW_TABLE . " (view_id) ON UPDATE CASCADE ON DELETE CASCADE";
+	}
 
+	/* FOF_TAG_TABLE */
+	/* columns */
+	if (defined('USE_MYSQL')) {
+		$tables[FOF_TAG_TABLE][] = "tag_id " . SQL_DRIVER_INT_TYPE . " NOT NULL AUTO_INCREMENT";
+	} else if (defined('USE_SQLITE')) {
+		$tables[FOF_TAG_TABLE][] = "tag_id " . SQL_DRIVER_INT_TYPE . " PRIMARY KEY AUTOINCREMENT NOT NULL";
+	}
+	$tables[FOF_TAG_TABLE][] = "tag_name CHAR(100) NOT NULL DEFAULT ''";
+	if (defined('USE_MYSQL')) {
+		$tables[FOF_TAG_TABLE][] = "PRIMARY KEY ( tag_id )";
+		$tables[FOF_TAG_TABLE][] = "UNIQUE KEY ( tag_name )";
+	}
 
-    /* FOF_VIEW_TABLE */
-    /* Stores the details about the preferred methods of displaying a collection of items. */
-    /* columns */
-    if (defined('USE_MYSQL')) {
-        $tables[FOF_VIEW_TABLE][] = "view_id " . SQL_DRIVER_INT_TYPE . " NOT NULL AUTO_INCREMENT";
-    } else if (defined('USE_SQLITE')) {
-        $tables[FOF_VIEW_TABLE][] = "view_id " . SQL_DRIVER_INT_TYPE . " PRIMARY KEY AUTOINCREMENT NOT NULL";
-    }
-    $tables[FOF_VIEW_TABLE][] = "view_settings TEXT";
-    if (defined('USE_MYSQL')) {
-        $tables[FOF_VIEW_TABLE][] = "PRIMARY KEY (view_id)";
-    }
+	/* indices */
+	if (defined('USE_SQLITE')) {
+		$indices[FOF_TAG_TABLE]['tag_name'] = array('UNIQUE INDEX', 'tag_name');
+	}
 
+	/* FOF_USER_LEVELS_TABLE */
+	/* SQLite doesn't support ENUM, so it gets another table.. */
+	/* columns */
+	if (defined('USE_SQLITE')) {
+		$tables[FOF_USER_LEVELS_TABLE][] = "seq INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL";
+		$tables[FOF_USER_LEVELS_TABLE][] = "level TEXT NOT NULL";
+		$indices[FOF_USER_LEVELS_TABLE]['level'] = array('UNIQUE INDEX', 'level');
+	}
 
-    /* FOF_VIEW_STATE_TABLE */
-    /* Associates a group of feed/tags with a view. */
-    /*
-        This table also has triggers.  They will be created in the update
-        section below, as it's easier to check if they exist via script than
-        to craft a driver-portable create-if-not-exists statement here.
-    */
+	/* FOF_USER_TABLE */
+	/* columns */
+	if (defined('USE_MYSQL')) {
+		$tables[FOF_USER_TABLE][] = "user_id " . SQL_DRIVER_INT_TYPE . " NOT NULL";
+	} else if (defined('USE_SQLITE')) {
+		$tables[FOF_USER_TABLE][] = "user_id " . SQL_DRIVER_INT_TYPE . " PRIMARY KEY AUTOINCREMENT NOT NULL";
+	}
+	$tables[FOF_USER_TABLE][] = "user_name VARCHAR(100) NOT NULL DEFAULT ''";
+	$tables[FOF_USER_TABLE][] = "user_password_hash VARCHAR(32) NOT NULL DEFAULT ''";
+	if (defined('USE_MYSQL')) {
+		$tables[FOF_USER_TABLE][] = "user_level ENUM ( 'user', 'admin' ) NOT NULL DEFAULT 'user'";
+	} else if (defined('USE_SQLITE')) {
+		$tables[FOF_USER_TABLE][] = "user_level TEXT NOT NULL DEFAULT 'user' REFERENCES " . FOF_USER_LEVELS_TABLE . " ( level ) ON UPDATE CASCADE";
+	}
+	$tables[FOF_USER_TABLE][] = "user_prefs TEXT";
+	if (defined('USE_MYSQL')) {
+		$tables[FOF_USER_TABLE][] = "PRIMARY KEY ( user_id )";
+	}
 
-    /* columns */
-    $tables[FOF_VIEW_STATE_TABLE][] = "user_id " . SQL_DRIVER_INT_TYPE . " NOT NULL REFERENCES " . FOF_USER_TABLE . " (user_id) ON UPDATE CASCADE ON DELETE CASCADE";
-    $tables[FOF_VIEW_STATE_TABLE][] = "feed_id " . SQL_DRIVER_INT_TYPE . " REFERENCES " . FOF_FEED_TABLE . " (feed_id) ON UPDATE CASCADE ON DELETE CASCADE";
-    $tables[FOF_VIEW_STATE_TABLE][] = "tag_id " . SQL_DRIVER_INT_TYPE . " REFERENCES " . FOF_TAG_TABLE . " (tag_id) ON UPDATE CASCADE ON DELETE CASCADE";
-    $tables[FOF_VIEW_STATE_TABLE][] = "view_id " . SQL_DRIVER_INT_TYPE . " NOT NULL REFERENCES " . FOF_VIEW_TABLE . " (view_id) ON UPDATE CASCADE ON DELETE CASCADE";
-    $tables[FOF_VIEW_STATE_TABLE][] = "CHECK ((feed_id IS NULL) != (tag_id IS NULL))";
-    if (defined('USE_MYSQL')) {
-        $tables[FOF_VIEW_STATE_TABLE][] = "FOREIGN KEY (user_id) REFERENCES " . FOF_USER_TABLE . " (user_id) ON UPDATE CASCADE ON DELETE CASCADE";
-        $tables[FOF_VIEW_STATE_TABLE][] = "FOREIGN KEY (feed_id) REFERENCES " . FOF_FEED_TABLE . " (feed_id) ON UPDATE CASCADE ON DELETE CASCADE";
-        $tables[FOF_VIEW_STATE_TABLE][] = "FOREIGN KEY (tag_id) REFERENCES " . FOF_TAG_TABLE . " (tag_id) ON UPDATE CASCADE ON DELETE CASCADE";
-        $tables[FOF_VIEW_STATE_TABLE][] = "FOREIGN KEY (view_id) REFERENCES " . FOF_VIEW_TABLE . " (view_id) ON UPDATE CASCADE ON DELETE CASCADE";
-    }
-
-    /* FOF_TAG_TABLE */
-    /* columns */
-    if (defined('USE_MYSQL')) {
-        $tables[FOF_TAG_TABLE][] = "tag_id " . SQL_DRIVER_INT_TYPE . " NOT NULL AUTO_INCREMENT";
-    } else if (defined('USE_SQLITE')) {
-        $tables[FOF_TAG_TABLE][] = "tag_id " . SQL_DRIVER_INT_TYPE . " PRIMARY KEY AUTOINCREMENT NOT NULL";
-    }
-    $tables[FOF_TAG_TABLE][] = "tag_name CHAR(100) NOT NULL DEFAULT ''";
-    if (defined('USE_MYSQL')) {
-        $tables[FOF_TAG_TABLE][] = "PRIMARY KEY ( tag_id )";
-        $tables[FOF_TAG_TABLE][] = "UNIQUE KEY ( tag_name )";
-    }
-
-    /* indices */
-    if (defined('USE_SQLITE')) {
-        $indices[FOF_TAG_TABLE]['tag_name'] = array('UNIQUE INDEX', 'tag_name');
-    }
-
-
-    /* FOF_USER_LEVELS_TABLE */
-    /* SQLite doesn't support ENUM, so it gets another table.. */
-    /* columns */
-    if (defined('USE_SQLITE')) {
-        $tables[FOF_USER_LEVELS_TABLE][] = "seq INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL";
-        $tables[FOF_USER_LEVELS_TABLE][] = "level TEXT NOT NULL";
-        $indices[FOF_USER_LEVELS_TABLE]['level'] = array('UNIQUE INDEX', 'level');
-    }
-
-
-    /* FOF_USER_TABLE */
-    /* columns */
-    if (defined('USE_MYSQL')) {
-        $tables[FOF_USER_TABLE][] = "user_id " . SQL_DRIVER_INT_TYPE . " NOT NULL";
-    } else if (defined('USE_SQLITE')) {
-        $tables[FOF_USER_TABLE][] = "user_id " . SQL_DRIVER_INT_TYPE . " PRIMARY KEY AUTOINCREMENT NOT NULL";
-    }
-    $tables[FOF_USER_TABLE][] = "user_name VARCHAR(100) NOT NULL DEFAULT ''";
-    $tables[FOF_USER_TABLE][] = "user_password_hash VARCHAR(32) NOT NULL DEFAULT ''";
-    if (defined('USE_MYSQL')) {
-        $tables[FOF_USER_TABLE][] = "user_level ENUM ( 'user', 'admin' ) NOT NULL DEFAULT 'user'";
-    } else if (defined('USE_SQLITE')) {
-        $tables[FOF_USER_TABLE][] = "user_level TEXT NOT NULL DEFAULT 'user' REFERENCES " . FOF_USER_LEVELS_TABLE . " ( level ) ON UPDATE CASCADE";
-    }
-    $tables[FOF_USER_TABLE][] = "user_prefs TEXT";
-    if (defined('USE_MYSQL')) {
-        $tables[FOF_USER_TABLE][] = "PRIMARY KEY ( user_id )";
-    }
-
-    return array($tables, $indices);
+	return array($tables, $indices);
 }
 
 /* given a schema array, returns an array of queries to define the database */
@@ -593,15 +586,15 @@ function fof_install_database_update_old_tables() {
 		/* triggers */
 		if (!defined('SQL_NO_TRIGGERS')) {
 			/*
-			Some setups might not allow triggers, so skip installing them
-			entirely if that situation has been declared.
-			 */
+				Some setups might not allow triggers, so skip installing them
+				entirely if that situation has been declared.
+			*/
 			if (defined('USE_MYSQL')) {
 				/*
-				N.B. MySQL doesn't actually honor any CHECK expressions, so
-				the xor-null constraint on the view_state table needs to be
-				enforced via a trigger.
-				 */
+					N.B. MySQL doesn't actually honor any CHECK expressions, so
+					the xor-null constraint on the view_state table needs to be
+					enforced via a trigger.
+				*/
 				if (!fof_install_database_trigger_exists(FOF_VIEW_STATE_TABLE, 'xor_null_before_insert')) {
 					$queries[FOF_VIEW_STATE_TABLE . '.xor_null_before_insert.trigger'] = "CREATE TRIGGER xor_null_before_insert BEFORE INSERT ON " . FOF_VIEW_STATE_TABLE . "
 FOR EACH ROW
@@ -625,7 +618,7 @@ END";
 				} else {
 					echo '<div class="exists">' . FOF_VIEW_STATE_TABLE . ' before_update_trigger is up to date.</div>' . "\n";
 				}
-			}/* USE_MYSQL */
+			} /* USE_MYSQL */
 
 			/* If a tag or feed is deleted, purge any view states which included them. */
 			if (!fof_install_database_trigger_exists(FOF_VIEW_STATE_TABLE, 'cascade_view_delete')) {
@@ -638,7 +631,7 @@ END";
 			} else {
 				echo '<div class="exists">' . FOF_VIEW_STATE_TABLE . ' after_delete_trigger is up to date.</div>' . "\n";
 			}
-		}/* SQL_NO_TRIGGERS */
+		} /* SQL_NO_TRIGGERS */
 
 		/* FOF_USER_TABLE */
 		fof_install_migrate_column($queries, FOF_USER_TABLE, 'user_password_hash', array(
@@ -669,9 +662,9 @@ END";
 
 		if (!defined('USE_SQLITE')) {
 			/*  SQLite cannot drop columns without creating a new table, copying
-			data, dropping the old table, and renaming the new one...
-			A few unused columns won't hurt anything for a while.
-			 */
+				data, dropping the old table, and renaming the new one...
+				A few unused columns won't hurt anything for a while.
+			*/
 			if (fof_install_database_column_exists(FOF_FEED_TABLE, 'alt_image')) {
 				$queries[FOF_FEED_TABLE . '.alt_image.drop'] = "ALTER TABLE " . FOF_FEED_TABLE . " DROP COLUMN alt_image";
 			} else {
@@ -806,7 +799,7 @@ function fof_install_database_populate() {
 			echo "</span>\n";
 		}
 		echo " Done!\n";
-	}/* USE_SQLITE */
+	} /* USE_SQLITE */
 
 	/* populate tag table */
 	echo "<br>Populating " . FOF_TAG_TABLE . "... \n";
