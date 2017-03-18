@@ -30,7 +30,7 @@ You can also use FeedOnFeeds for keeping track of your favourite YouTube
 channels without having to register with Google. Just activate the integrated
 **YouTube plugin** and add subscriptions to the channels you want to follow.
 
-#Installation
+# Installation
 
 FeedOnFeeds requires:
 
