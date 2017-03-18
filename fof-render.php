@@ -78,6 +78,9 @@ function fof_render_item($item, $include_div = true) {
 		$item_content = $filter($item_content);
 	}
 
+	// some minor cleanup tasks...
+	$item_content = html_entity_decode($item_content, ENT_NOQUOTES, 'utf-8');
+
 	$prefs = fof_prefs();
 	$offset = fof_render_get_key_($prefs, 'tzoffset') * 60 * 60;
 
@@ -92,6 +95,9 @@ function fof_render_item($item, $include_div = true) {
 
 	// enable controls, if an item contains a video
 	$item_content = preg_replace ( '~<(video [^>]+)>~i', '<$1 controls>', $item_content );
+
+	// also make images clickable
+	$item_content = str_replace ( '<img ', '<img tabindex="0" ', $item_content );
 
 	$tags = fof_render_get_key_($item, 'tags', array());
 
