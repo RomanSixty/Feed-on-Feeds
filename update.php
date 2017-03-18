@@ -31,7 +31,7 @@ if (!empty($_GET['feed'])) {
 	}
 	echo '<div id="feed_id_' . $feed['feed_id'] . '">'
 	. fof_render_feed_link($feed) . ' ' . $feed_status
-	. "</div>\n";
+		. "</div>\n";
 } else {
 	if ($fof_user_id == 1) {
 		$result = fof_db_get_feeds_needing_attempt();
@@ -52,7 +52,7 @@ if (!empty($_GET['feed'])) {
 		}
 		echo '<div id="feed_id_' . $feed['feed_id'] . '">'
 		. fof_render_feed_link($feed) . ' ' . $feed_status
-		. "</div>\n";
+			. "</div>\n";
 	}
 }
 

@@ -71,7 +71,7 @@ function fof_db_query_log_cb($query_string, $elapsed_time, $result, $rows_affect
 	if (defined('FOF_QUERY_LOG_TRACE')) {
 		$msg .= fof_stacktrace(2, false);
 		$msg .= ' result:' . $result . ' ';
-	}/* FOF_QUERY_LOG_TRACE */
+	} /* FOF_QUERY_LOG_TRACE */
 
 	$msg .= $query_string;
 
@@ -98,11 +98,11 @@ function fof_db_connect($create = false) {
 	global $fof_connection;
 
 	/* It would be nice to actually use prepared statements by setting
-	PDO::ATTR_EMULATE_PREPARES => false
-	but it seems that however PDO translates its named parameters to the
-	MySQL bindings doesn't work when a parameter is repeated in a query..
-	Leaving the emulation on is easier than changing the sql.
-	 */
+		PDO::ATTR_EMULATE_PREPARES => false
+		but it seems that however PDO translates its named parameters to the
+		MySQL bindings doesn't work when a parameter is repeated in a query..
+		Leaving the emulation on is easier than changing the sql.
+	*/
 	$pdo_options = array(PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION);
 	if (defined('USE_MYSQL')) {
 		if (!defined('FOF_DB_HOST') || !defined('FOF_DB_DBNAME')) {
@@ -120,6 +120,12 @@ function fof_db_connect($create = false) {
 	}
 
 	fof_log("Connecting to '$dsn'...");
+
+	if (defined('USE_SQLITE')) {
+		// sqlite doesn't use these variables
+		defined('FOF_DB_USER') || define('FOF_DB_USER', '');
+		defined('FOF_DB_PASS') || define('FOF_DB_PASS', '');
+	}
 
 	$fof_connection = new PDOLog($dsn, FOF_DB_USER, FOF_DB_PASS, $pdo_options);
 	PDOLog::$logfn = 'fof_db_query_log_cb';
@@ -282,10 +288,10 @@ function fof_db_get_latest_item_age($user_id = null, $feed_id = null) {
 	}
 
 	$query = "SELECT max(i.item_cached) AS max_date, i.feed_id " .
-	"FROM $FOF_ITEM_TABLE i " .
-	($user_id ? "JOIN $FOF_SUBSCRIPTION_TABLE s ON i.feed_id = s.feed_id " : '') .
-	$where .
-	"GROUP BY i.feed_id";
+		"FROM $FOF_ITEM_TABLE i " .
+		($user_id ? "JOIN $FOF_SUBSCRIPTION_TABLE s ON i.feed_id = s.feed_id " : '') .
+		$where .
+		"GROUP BY i.feed_id";
 	$statement = $fof_connection->prepare($query);
 	if ($user_id) {
 		$statement->bindValue(':user_id', $user_id);
@@ -317,9 +323,9 @@ function fof_db_feed_counts($user_id, $feed_id) {
 
 	/* get total items */
 	$query = "SELECT count(DISTINCT i.item_id) AS total " .
-	"FROM $FOF_ITEM_TABLE i " .
-	"LEFT JOIN $FOF_SUBSCRIPTION_TABLE s ON s.feed_id = i.feed_id " .
-	"WHERE i.feed_id = :feed_id AND s.user_id = :user_id";
+		"FROM $FOF_ITEM_TABLE i " .
+		"LEFT JOIN $FOF_SUBSCRIPTION_TABLE s ON s.feed_id = i.feed_id " .
+		"WHERE i.feed_id = :feed_id AND s.user_id = :user_id";
 	$statement = $fof_connection->prepare($query);
 	$statement->bindValue(':user_id', $user_id);
 	$statement->bindValue(':feed_id', $feed_id);
@@ -328,11 +334,11 @@ function fof_db_feed_counts($user_id, $feed_id) {
 
 	/* get counts per tag */
 	$query = "SELECT t.tag_id, t.tag_name, COUNT(t.tag_name) AS tag_count " .
-	"FROM $FOF_ITEM_TABLE i " .
-	"LEFT JOIN $FOF_ITEM_TAG_TABLE it ON it.item_id = i.item_id " .
-	"LEFT JOIN $FOF_TAG_TABLE t ON t.tag_id = it.tag_id " .
-	"WHERE i.feed_id = :feed_id AND it.user_id = :user_id " .
-	"GROUP BY t.tag_id";
+		"FROM $FOF_ITEM_TABLE i " .
+		"LEFT JOIN $FOF_ITEM_TAG_TABLE it ON it.item_id = i.item_id " .
+		"LEFT JOIN $FOF_TAG_TABLE t ON t.tag_id = it.tag_id " .
+		"WHERE i.feed_id = :feed_id AND it.user_id = :user_id " .
+		"GROUP BY t.tag_id";
 	$statement = $fof_connection->prepare($query);
 	$statement->bindValue(':user_id', $user_id);
 	$statement->bindValue(':feed_id', $feed_id);
@@ -458,24 +464,24 @@ function fof_db_get_item_count($user_id, $what = 'all', $feed_id = NULL, $search
 	}
 
 	/*
-	First, generate a query which will return rows of feed_id,item_id for
-	every item matching specifications.
+		First, generate a query which will return rows of feed_id,item_id for
+		every item matching specifications.
 
-	NOTE: would have used more bound parameters in here, but for some
-	reason, queries were not working with them, so they've been stripped
-	out and replaced with inline values.
-	 */
+		NOTE: would have used more bound parameters in here, but for some
+		reason, queries were not working with them, so they've been stripped
+		out and replaced with inline values.
+	*/
 	if ($what == 'all') {
 		$query = "SELECT i.feed_id, i.item_id FROM $FOF_ITEM_TABLE i" .
-		" JOIN $FOF_SUBSCRIPTION_TABLE s ON s.feed_id = i.feed_id" .
-		" WHERE s.user_id = " . $user_id;
+			" JOIN $FOF_SUBSCRIPTION_TABLE s ON s.feed_id = i.feed_id" .
+			" WHERE s.user_id = " . $user_id;
 	} else {
 		$query = "SELECT DISTINCT s.feed_id, i.item_id" .
-		" FROM $FOF_SUBSCRIPTION_TABLE s" .
-		" JOIN $FOF_ITEM_TABLE i ON i.feed_id = s.feed_id" .
-		" JOIN $FOF_ITEM_TAG_TABLE it ON it.item_id = i.item_id AND it.user_id = " . $user_id .
-		" JOIN $FOF_TAG_TABLE t ON t.tag_id = it.tag_id" .
-		" WHERE s.user_id = " . $user_id;
+			" FROM $FOF_SUBSCRIPTION_TABLE s" .
+			" JOIN $FOF_ITEM_TABLE i ON i.feed_id = s.feed_id" .
+			" JOIN $FOF_ITEM_TAG_TABLE it ON it.item_id = i.item_id AND it.user_id = " . $user_id .
+			" JOIN $FOF_TAG_TABLE t ON t.tag_id = it.tag_id" .
+			" WHERE s.user_id = " . $user_id;
 	}
 
 	if (!empty($feed_id)) {
@@ -488,16 +494,16 @@ function fof_db_get_item_count($user_id, $what = 'all', $feed_id = NULL, $search
 
 	switch ($what) {
 		case 'all':
-		/* Every item. */
+			/* Every item. */
 			break;
 
 		case 'tagged':
-		/* Item must be tagged, but not by any system tag. */
+			/* Item must be tagged, but not by any system tag. */
 			$query .= " AND t.tag_name NOT IN (" . implode(',', $what_q) . ") GROUP BY it.item_id";
 			break;
 
 		default:
-		/* Item must have all tags. */
+			/* Item must have all tags. */
 			if (!empty($what_q)) {
 				$query .= " AND t.tag_name IN (" . implode(',', $what_q) . ")";
 				$query .= " GROUP BY it.item_id HAVING count(it.item_id) = " . count($what_q);
@@ -552,9 +558,9 @@ function fof_db_is_subscribed($user_id, $feed_url) {
 	fof_trace();
 
 	$query = "SELECT s.feed_id FROM $FOF_SUBSCRIPTION_TABLE s, $FOF_FEED_TABLE f" .
-	" WHERE f.feed_url = :feed_url" .
-	" AND f.feed_id = s.feed_id" .
-	" AND s.user_id = :user_id;";
+		" WHERE f.feed_url = :feed_url" .
+		" AND f.feed_id = s.feed_id" .
+		" AND s.user_id = :user_id;";
 	$statement = $fof_connection->prepare($query);
 	$statement->bindValue(':feed_url', $feed_url);
 	$statement->bindValue(':user_id', $user_id);
@@ -953,11 +959,11 @@ function fof_db_get_item($user_id, $item_id) {
 	fof_trace();
 
 	$query = "SELECT i.*, f.*" .
-	($user_id ? ", s.subscription_prefs " : '') .
-	" FROM $FOF_ITEM_TABLE i " .
-	" JOIN $FOF_FEED_TABLE f ON i.feed_id = f.feed_id " .
-	($user_id ? "JOIN $FOF_SUBSCRIPTION_TABLE s ON i.feed_id = s.feed_id AND s.user_id = :user_id " : '') .
-	" WHERE i.item_id = :item_id";
+		($user_id ? ", s.subscription_prefs " : '') .
+		" FROM $FOF_ITEM_TABLE i " .
+		" JOIN $FOF_FEED_TABLE f ON i.feed_id = f.feed_id " .
+		($user_id ? "JOIN $FOF_SUBSCRIPTION_TABLE s ON i.feed_id = s.feed_id AND s.user_id = :user_id " : '') .
+		" WHERE i.item_id = :item_id";
 	$statement = $fof_connection->prepare($query);
 	$statement->bindValue(':item_id', $item_id);
 	if ($user_id) {
@@ -972,10 +978,10 @@ function fof_db_get_item($user_id, $item_id) {
 		fof_db_subscription_feed_fix($item);
 
 		$query = "SELECT t.tag_name" .
-		" FROM $FOF_TAG_TABLE t, $FOF_ITEM_TAG_TABLE it" .
-		" WHERE t.tag_id = it.tag_id" .
-		" AND it.item_id = :item_id" .
-		" AND it.user_id = :user_id";
+			" FROM $FOF_TAG_TABLE t, $FOF_ITEM_TAG_TABLE it" .
+			" WHERE t.tag_id = it.tag_id" .
+			" AND it.item_id = :item_id" .
+			" AND it.user_id = :user_id";
 		$statement = $fof_connection->prepare($query);
 		$statement->bindValue(':item_id', $item_id);
 		$statement->bindValue(':user_id', $user_id);
@@ -1007,29 +1013,29 @@ function fof_db_items_purge_list($feed_id, $purge_days, $purge_grace = 0, $ignor
 	}
 
 	/*  We're interested in items (from a specific feed, and last updated before
-	the given timestamp) which either lack tags entirely, or which are
-	tagged /solely/ with the tags we've specified.
+		the given timestamp) which either lack tags entirely, or which are
+		tagged /solely/ with the tags we've specified.
 
-	We begin by getting all of the item_ids from the item table which have
-	either no tag_id in the item-tag table, or have one of the specified
-	tag_names.  Then, from that set, we remove any item_ids which exist in
-	the item-tag table which are tagged with anything other than our allowed
-	tag_names.
+		We begin by getting all of the item_ids from the item table which have
+		either no tag_id in the item-tag table, or have one of the specified
+		tag_names.  Then, from that set, we remove any item_ids which exist in
+		the item-tag table which are tagged with anything other than our allowed
+		tag_names.
 
-	This doesn't use set-difference operations because MySQL doesn't know
-	what those are.
+		This doesn't use set-difference operations because MySQL doesn't know
+		what those are.
 
-	This could probably be optimized.
-	 */
+		This could probably be optimized.
+	*/
 
 	$query = "SELECT DISTINCT i.item_id FROM $FOF_ITEM_TABLE i" .
-	" LEFT JOIN $FOF_ITEM_TAG_TABLE it USING (item_id)" .
-	" LEFT JOIN $FOF_TAG_TABLE t USING (tag_id)" .
-	" WHERE i.feed_id = :feed_id" .
-	" AND i.item_updated < :purge_before" .
-	" AND (tag_id IS NULL" .
-	(empty($ignore_tag_names_q) ? '' : (" OR t.tag_name IN (" . implode(',', $ignore_tag_names_q) . ")")) .
-	")";
+		" LEFT JOIN $FOF_ITEM_TAG_TABLE it USING (item_id)" .
+		" LEFT JOIN $FOF_TAG_TABLE t USING (tag_id)" .
+		" WHERE i.feed_id = :feed_id" .
+		" AND i.item_updated < :purge_before" .
+		" AND (tag_id IS NULL" .
+		(empty($ignore_tag_names_q) ? '' : (" OR t.tag_name IN (" . implode(',', $ignore_tag_names_q) . ")")) .
+		")";
 	if (!empty($ignore_tag_names_q)) {
 		$query .= " AND i.item_id NOT IN (" .
 		" SELECT DISTINCT it.item_id FROM $FOF_ITEM_TAG_TABLE it" .
@@ -1038,15 +1044,15 @@ function fof_db_items_purge_list($feed_id, $purge_days, $purge_grace = 0, $ignor
 		" WHERE feed_id = :feed_id" .
 		" AND i.item_updated < :purge_before" .
 		" AND t.tag_name NOT IN (" . implode(',', $ignore_tag_names_q) . ")" .
-		" )";
+			" )";
 	}
 
 	$query .= " ORDER BY i.item_updated DESC";
 
 	if (!empty($purge_grace)) {
 		/*  We need to include a LIMIT of as many as the driver can return,
-		because some drivers don't understand OFFSET without a LIMIT.
-		 */
+			because some drivers don't understand OFFSET without a LIMIT.
+		*/
 		if (defined('USE_MYSQL')) {
 			$query .= ' LIMIT 18446744073709551610';
 		}
@@ -1114,11 +1120,11 @@ function fof_db_items_duplicate_list() {
 	fof_trace();
 
 	$query = "SELECT i2.item_id, i1.item_content AS c1," .
-	" i2.item_content AS c2" .
-	" FROM $FOF_ITEM_TABLE i1" .
-	" LEFT JOIN $FOF_ITEM_TABLE i2" .
-	" ON i1.item_title=i2.item_title AND i1.feed_id=i2.feed_id" .
-	" WHERE i1.item_id < i2.item_id";
+		" i2.item_content AS c2" .
+		" FROM $FOF_ITEM_TABLE i1" .
+		" LEFT JOIN $FOF_ITEM_TABLE i2" .
+		" ON i1.item_title=i2.item_title AND i1.feed_id=i2.feed_id" .
+		" WHERE i1.item_id < i2.item_id";
 	$statement = $fof_connection->query($query);
 
 	return $statement;
@@ -1324,10 +1330,10 @@ function fof_db_get_item_tags($user_id, $item_id) {
 	fof_trace();
 
 	$query = "SELECT t.tag_name" .
-	" FROM $FOF_TAG_TABLE t, $FOF_ITEM_TAG_TABLE it" .
-	" WHERE t.tag_id = it.tag_id" .
-	" AND it.item_id = :item_id" .
-	" AND it.user_id = :user_id";
+		" FROM $FOF_TAG_TABLE t, $FOF_ITEM_TAG_TABLE it" .
+		" WHERE t.tag_id = it.tag_id" .
+		" AND it.item_id = :item_id" .
+		" AND it.user_id = :user_id";
 	$statement = $fof_connection->prepare($query);
 	$statement->bindValue(':item_id', $item_id);
 	$statement->bindValue(':user_id', $user_id);
@@ -1345,7 +1351,7 @@ function fof_db_tag_count($user_id, $tag_name) {
 	fof_trace();
 
 	$query = "SELECT COUNT(*) AS tag_count FROM $FOF_ITEM_TAG_TABLE it, $FOF_TAG_TABLE t"
-	. " WHERE it.tag_id = t.tag_id AND it.user_id = :user_id AND t.tag_name = :tag_name";
+		. " WHERE it.tag_id = t.tag_id AND it.user_id = :user_id AND t.tag_name = :tag_name";
 	$statement = $fof_connection->prepare($query);
 	$statement->bindValue(':user_id', $user_id);
 	$statement->bindValue(':tag_name', $tag_name);
@@ -1368,14 +1374,14 @@ function fof_db_get_tag_unread($user_id) {
 	fof_trace();
 
 	$query = "SELECT count(*) AS tag_count, it2.tag_id" .
-	" FROM $FOF_ITEM_TABLE i, $FOF_ITEM_TAG_TABLE it , $FOF_ITEM_TAG_TABLE it2" .
-	" WHERE it.item_id = it2.item_id" .
-	" AND it.tag_id = 1" .
-	" AND i.item_id = it.item_id" .
-	" AND i.item_id = it2.item_id" .
-	" AND it.user_id = :user_id" .
-	" AND it2.user_id = :user_id" .
-	" GROUP BY it2.tag_id";
+		" FROM $FOF_ITEM_TABLE i, $FOF_ITEM_TAG_TABLE it , $FOF_ITEM_TAG_TABLE it2" .
+		" WHERE it.item_id = it2.item_id" .
+		" AND it.tag_id = 1" .
+		" AND i.item_id = it.item_id" .
+		" AND i.item_id = it2.item_id" .
+		" AND it.user_id = :user_id" .
+		" AND it2.user_id = :user_id" .
+		" GROUP BY it2.tag_id";
 	$statement = $fof_connection->prepare($query);
 	$statement->bindValue(':user_id', $user_id);
 	$result = $statement->execute();
@@ -1393,10 +1399,10 @@ function fof_db_get_tags($user_id) {
 	fof_trace();
 
 	$query = "SELECT t.tag_id, t.tag_name, count( it.item_id ) AS count" .
-	" FROM $FOF_TAG_TABLE t" .
-	" LEFT JOIN $FOF_ITEM_TAG_TABLE it ON t.tag_id = it.tag_id" .
-	" WHERE it.user_id = :user_id" .
-	" GROUP BY t.tag_id ORDER BY t.tag_name";
+		" FROM $FOF_TAG_TABLE t" .
+		" LEFT JOIN $FOF_ITEM_TAG_TABLE it ON t.tag_id = it.tag_id" .
+		" WHERE it.user_id = :user_id" .
+		" GROUP BY t.tag_id ORDER BY t.tag_name";
 	$statement = $fof_connection->prepare($query);
 	$statement->bindValue(':user_id', $user_id);
 	$result = $statement->execute();
@@ -1524,8 +1530,8 @@ function fof_db_get_tag_by_name($tags) {
 	}
 
 	$query = "SELECT DISTINCT tag_id" .
-	" FROM $FOF_TAG_TABLE" .
-	" WHERE tag_name IN ( " . (count($tags_q) ? implode(', ', $tags_q) : "''") . " )";
+		" FROM $FOF_TAG_TABLE" .
+		" WHERE tag_name IN ( " . (count($tags_q) ? implode(', ', $tags_q) : "''") . " )";
 	$statement = $fof_connection->query($query);
 	while (($row = fof_db_get_row($statement)) !== false) {
 		$return[] = $row['tag_id'];
@@ -1644,11 +1650,11 @@ function fof_db_mark_item_unread($users, $item_id) {
 	$tag_id = fof_db_get_tag_by_name('unread');
 
 	/*
-	This query will need to be changed to work with a driver other than
-	MySQL or SQLite.  It simply needs to be able to insert, and ignore
-	existing row conflicts.
-	Perhaps someone versed in SQL has suggestions.
-	 */
+		This query will need to be changed to work with a driver other than
+		MySQL or SQLite.  It simply needs to be able to insert, and ignore
+		existing row conflicts.
+		Perhaps someone versed in SQL has suggestions.
+	*/
 
 	if (defined('USE_SQLITE')) {
 
@@ -1776,8 +1782,8 @@ function fof_db_untag_user_all($user_id, $tag_ids) {
 	}
 
 	$query = "DELETE FROM $FOF_ITEM_TAG_TABLE WHERE user_id = :user_id AND tag_id IN ("
-	. (count($tag_ids) ? implode(', ', $tag_ids) : "''")
-	. ")";
+		. (count($tag_ids) ? implode(', ', $tag_ids) : "''")
+		. ")";
 	$statement = $fof_connection->prepare($query);
 	$statement->bindValue(':user_id', $user_id);
 	$result = $statement->execute();
@@ -1823,17 +1829,17 @@ function fof_db_view_get($user_id, $tag_ids, $feed_ids) {
 	$constituent_count = count($tag_ids) + count($feed_ids);
 
 	/*
-	Well this is more awkward than I want it to be...
-	$q1 gets a list of view_ids which match at least all of the criteria,
-	but which might also have more set members.
-	The main query then winnows through those view_ids for the one with the
-	correct number of constituents.
-	 */
+		Well this is more awkward than I want it to be...
+		$q1 gets a list of view_ids which match at least all of the criteria,
+		but which might also have more set members.
+		The main query then winnows through those view_ids for the one with the
+		correct number of constituents.
+	*/
 	/*
-	also I guess MySQL doesn't like empty IN clauses, so we have to ensure
-	there's always something in there by adding these '-1's which ought
-	never actually appear as ids (because autoincrement).
-	 */
+		also I guess MySQL doesn't like empty IN clauses, so we have to ensure
+		there's always something in there by adding these '-1's which ought
+		never actually appear as ids (because autoincrement).
+	*/
 	$tag_ids[] = '-1';
 	$feed_ids[] = '-1';
 

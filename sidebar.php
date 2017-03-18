@@ -32,7 +32,7 @@ if (empty($sidebar_style) && $fof_prefs_obj->get('simple_sidebar')) {
 }
 
 ?>
-<img id="throbber" src="<?php echo $fof_asset['throbber_image'];?>" align="left" style="display: none;" />
+<img id="throbber" src="<?php echo $fof_asset['throbber_image']; ?>" align="left" style="display: none;" />
 <?php
 $welcomecontent = '<span>Welcome, <span class="userid">' . $fof_user_name . '</span>!</span>';
 $welcomecontent .= ' | <a href="prefs.php">prefs</a>';
@@ -87,12 +87,12 @@ if (!empty($unread)) {
 }
 ?>
   <script>
-    document.title=<?php echo json_encode($page_title_js);?>;
-    what=<?php echo json_encode($what);?>;
-    when=<?php echo json_encode($when);?>;
-    search=<?php echo json_encode($search);?>;
-    feed=<?php echo json_encode($feed);?>;
-    starred=<?php echo json_encode($starred);?>;
+    document.title=<?php echo json_encode($page_title_js); ?>;
+    what=<?php echo json_encode($what); ?>;
+    when=<?php echo json_encode($when); ?>;
+    search=<?php echo json_encode($search); ?>;
+    feed=<?php echo json_encode($feed); ?>;
+    starred=<?php echo json_encode($starred); ?>;
   </script>
 
 <?php

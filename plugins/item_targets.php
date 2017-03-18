@@ -10,11 +10,11 @@ function fof_item_targets($content) {
 	$dom = new DOMDocument();
 
 	/*
-	Load content into DOM, within a div wrapper.  Wrapper div will be
-	stripped before returning altered content.  Without doing this,
-	any bare text content would get wrapped in p elements while being
-	parsed in.
-	 */
+		Load content into DOM, within a div wrapper.  Wrapper div will be
+		stripped before returning altered content.  Without doing this,
+		any bare text content would get wrapped in p elements while being
+		parsed in.
+	*/
 	$dom->loadHtml('<div>' . mb_convert_encoding($content, 'HTML-ENTITIES', "UTF-8") . '</div>');
 
 	/* strip <!DOCTYPE> which DOMDocument adds */

@@ -93,10 +93,10 @@ if (!empty($_POST['subscription_tag_list'])) {
 		echo '		<li>'
 		. $tag
 		. ' <a href="#" onclick="subscription_tag_modify(' . htmlentities(implode(',', array(json_encode($feed_id), json_encode($tag), json_encode('delete'))), ENT_QUOTES) . '); return false;">'
-		. '[x]'
-		. '</a>'
-		. '</li>'
-		. "\n";
+			. '[x]'
+			. '</a>'
+			. '</li>'
+			. "\n";
 	}
 	echo "	";
 

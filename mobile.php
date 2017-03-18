@@ -52,14 +52,14 @@ function toggle_favorite(id)
 
     var url = "add-tag.php";
     var params = { "tag": "star", "item": id };
-    image.src = '<?php echo $fof_asset['star_pend_image'];?>';
+    image.src = '<?php echo $fof_asset['star_pend_image']; ?>';
 
     if(image.star)
     {
         params["remove"] = "true";
         var complete = function()
         {
-            image.src='<?php echo $fof_asset['star_off_image'];?>';
+            image.src='<?php echo $fof_asset['star_off_image']; ?>';
             image.star = false;
         };
     }
@@ -67,7 +67,7 @@ function toggle_favorite(id)
     {
         var complete = function()
         {
-            image.src='<?php echo $fof_asset['star_on_image'];?>';
+            image.src='<?php echo $fof_asset['star_on_image']; ?>';
             image.star = true;
         };
     }
@@ -132,20 +132,20 @@ foreach ($result as $item) {
         <img
             height="16"
             width="16"
-            src="<?php echo $star_image?>"
-            id="fav<?php echo $item_id?>"
-            onclick="return toggle_favorite('<?php echo $item_id?>')"
+            src="<?php echo $star_image ?>"
+            id="fav<?php echo $item_id ?>"
+            onclick="return toggle_favorite('<?php echo $item_id ?>')"
         />
         <script>
-        document.getElementById('fav<?php echo $item_id?>').star = <?php if ($star) {
+        document.getElementById('fav<?php echo $item_id ?>').star = <?php if ($star) {
 		echo 'true';
 	} else {
 		echo 'false';
 	}
 	?>;
         </script>
-        <a href="<?php echo $item_link?>">
-            <?php echo $item_title?>
+        <a href="<?php echo $item_link ?>">
+            <?php echo $item_title ?>
         </a>
     </h1>
 
@@ -154,24 +154,24 @@ foreach ($result as $item) {
 
     <h2>
 
-        <a href="<?php echo $feed_link?>" title='<?php echo htmlentities($feed_description);?>'><img src="<?php echo $feed_image?>" height="16" width="16" border="0" /></a>
-        <a href="<?php echo $feed_link?>" title='<?php echo htmlentities($feed_description);?>'><?php echo $feed_title?></a>
+        <a href="<?php echo $feed_link ?>" title='<?php echo htmlentities($feed_description); ?>'><img src="<?php echo $feed_image ?>" height="16" width="16" border="0" /></a>
+        <a href="<?php echo $feed_link ?>" title='<?php echo htmlentities($feed_description); ?>'><?php echo $feed_title ?></a>
 
     </h2>
 
-    <span class="meta">on <?php echo $item_published?> GMT</span>
+    <span class="meta">on <?php echo $item_published ?> GMT</span>
 
 </div>
 
 
-<div class="body"><?php echo $item_content?></div>
+<div class="body"><?php echo $item_content ?></div>
 
 <div class="clearer"></div>
 </div>
 <input
     type="hidden"
-    name="c<?php echo $item_id?>"
-    id="c<?php echo $item_id?>"
+    name="c<?php echo $item_id ?>"
+    id="c<?php echo $item_id ?>"
     value="checked"
 />
 

@@ -3,7 +3,7 @@
 fof_add_item_prefilter('fof_enclosures');
 
 /** Appends item enclosures to end of incoming item content.
-*/
+ */
 function fof_enclosures($item, $link, $title, $content) {
 	$enc_html = array();
 	foreach ($item->get_enclosures() as $enclosure) {
@@ -12,33 +12,35 @@ function fof_enclosures($item, $link, $title, $content) {
 		@list($type, $subtype) = explode(',', $mimetype);
 
 		$show_handle = 'show enclosure';
-		if ( ! empty($medium))
+		if (!empty($medium)) {
 			$show_handle .= " ($medium)";
-		else if ( ! empty($mimetype))
+		} else if (!empty($mimetype)) {
 			$show_handle .= " ($mimetype)";
+		}
 
 		/* skip empty enclosures */
 		$enclosure_link = $enclosure->get_link();
-		if (empty($enclosure_link))
+		if (empty($enclosure_link)) {
 			continue;
+		}
 
 		/* Inline images. */
 		if ($medium === 'image'
-		||  $type === 'image') {
+			|| $type === 'image') {
 
 			$description = $enclosure->get_description();
 			$enclosure_title = htmlentities($enclosure->get_title(), ENT_QUOTES);
 			$enc_html[] = '<div>' .
-			                '<a href="#" onclick="show_enclosure(event); return false;" title="' . $enclosure_title . '">' .
-			                  $show_handle .
-			                '</a>' .
-			                '<div class="enclosure" style="display:none;">' .
-			                '<a href="' . $enclosure_link . '">' .
-			                  '<img src="' . $enclosure_link . '" title="' . $enclosure_title . '" alt="" />' .
-			                '</a>' .
-			                (empty($description) ? '' : ('<p>' . $description . '</p>')) .
-			              '</div>' .
-			            '</div>' . "\n";
+				'<a href="#" onclick="show_enclosure(event); return false;" title="' . $enclosure_title . '">' .
+				$show_handle .
+				'</a>' .
+				'<div class="enclosure" style="display:none;">' .
+				'<a href="' . $enclosure_link . '">' .
+				'<img src="' . $enclosure_link . '" title="' . $enclosure_title . '" alt="" />' .
+				'</a>' .
+				(empty($description) ? '' : ('<p>' . $description . '</p>')) .
+				'</div>' .
+				'</div>' . "\n";
 			continue;
 		}
 
@@ -51,13 +53,13 @@ function fof_enclosures($item, $link, $title, $content) {
 		);
 
 		$enc_html[] = '<a href="#" onclick="show_enclosure(event); return false;" title="' . htmlentities($enclosure->get_title(), ENT_QUOTES) . '">' .
-		                $show_handle .
-		              '</a>' .
-		              '<div class="enclosure" style="display:none;">' .
-		                '<div>' .
-		                  $enclosure->embed($embed_opts) .
-		                '</div>' .
-		              '</div>';
+		$show_handle .
+		'</a>' .
+		'<div class="enclosure" style="display:none;">' .
+		'<div>' .
+		$enclosure->embed($embed_opts) .
+			'</div>' .
+			'</div>';
 	}
 
 	return array($link, $title, $content . implode($enc_html));

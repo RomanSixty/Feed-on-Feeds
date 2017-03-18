@@ -74,15 +74,15 @@ if ($format == 'atom') {
 		echo " " . strip_tags($extratitle);
 	}
 	?></title>
-    <updated><?php echo gmdate('Y-m-d\TH:i:s\Z')?></updated>
+    <updated><?php echo gmdate('Y-m-d\TH:i:s\Z') ?></updated>
     <generator uri="http://feedonfeeds.com/">Feed on Feeds</generator>
     <?php if ($name) {
 		echo "<author><name>$name</name></author>";
 	}
 	?>
-    <id><?php echo $shared_feed?></id>
-    <link href="<?php echo $shared_feed?>" rel="self" type="application/atom+xml"/>
-    <link href="<?php echo $shared_link?>" rel="alternate"/>
+    <id><?php echo $shared_feed ?></id>
+    <link href="<?php echo $shared_feed ?>" rel="self" type="application/atom+xml"/>
+    <link href="<?php echo $shared_link ?>" rel="alternate"/>
 <?php
 
 	foreach ($result as $item) {
@@ -111,16 +111,16 @@ if ($format == 'atom') {
 
 		?>
   <entry>
-    <id><?php echo $item_guid?></id>
-    <link href="<?php echo $item_link?>" rel="alternate" type="text/html"/>
-    <title type="html"><?php echo $item_title?></title>
-    <summary type="html"><?php echo $item_content?></summary>
-    <updated><?php echo $item_updated?></updated>
+    <id><?php echo $item_guid ?></id>
+    <link href="<?php echo $item_link ?>" rel="alternate" type="text/html"/>
+    <title type="html"><?php echo $item_title ?></title>
+    <summary type="html"><?php echo $item_content ?></summary>
+    <updated><?php echo $item_updated ?></updated>
     <source>
-      <id><?php echo $feed_link?></id>
-      <link href="<?php echo $feed_link?>" rel="alternate" type="text/html"/>
-      <link href="<?php echo $feed_url?>" rel="self" type="application/atom+xml"/>
-      <title><?php echo $feed_title?></title>
+      <id><?php echo $feed_link ?></id>
+      <link href="<?php echo $feed_link ?>" rel="alternate" type="text/html"/>
+      <link href="<?php echo $feed_url ?>" rel="self" type="application/atom+xml"/>
+      <title><?php echo $feed_title ?></title>
     </source>
   </entry>
 <?php
@@ -133,7 +133,7 @@ if ($format == 'atom') {
 <!DOCTYPE html>
 <html>
     <head>
-        <link rel="alternate" href="<?php echo $shared_feed?>" type="application/atom+xml"/>
+        <link rel="alternate" href="<?php echo $shared_feed ?>" type="application/atom+xml"/>
         <title>Feed on Feeds - Shared Items<?php if ($name) {
 		echo " from $name";
 	}
@@ -210,19 +210,19 @@ $first = true;
 		?>
             <div class="header">
                 <h1>
-                    <a href="<?php echo $item_link?>">
-                        <?php echo $item_title?>
+                    <a href="<?php echo $item_link ?>">
+                        <?php echo $item_title ?>
                     </a>
                 </h1>
                 <span class='dash'> - </span>
                 <h2>
-                    <a href="<?php echo $feed_link?>" title='<?php echo $feed_description?>'><img src="<?php echo $feed_image?>" height="16" width="16" border="0" /></a>
-                    <a href="<?php echo $feed_link?>" title='<?php echo $feed_description?>'><?php echo $feed_title?></a>
+                    <a href="<?php echo $feed_link ?>" title='<?php echo $feed_description ?>'><img src="<?php echo $feed_image ?>" height="16" width="16" border="0" /></a>
+                    <a href="<?php echo $feed_link ?>" title='<?php echo $feed_description ?>'><?php echo $feed_title ?></a>
                 </h2>
-                <span class="meta">on <?php echo $item_published?> GMT</span>
+                <span class="meta">on <?php echo $item_published ?> GMT</span>
             </div>
 
-            <div class="body"><?php echo $item_content?></div>
+            <div class="body"><?php echo $item_content ?></div>
             <div class="clearer"></div>
         </div>
 <?php
