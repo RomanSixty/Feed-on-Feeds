@@ -11,12 +11,7 @@ function fof_images_on_demand($content, $item) {
 		return $content;
 	}
 
-	/* quiet warnings */
-	$old_xml_err = libxml_use_internal_errors(true);
-	$dom = new DOMDocument();
-
-	// hack borrowed from http://beerpla.net/projects/smartdomdocument-a-smarter-php-domdocument-class/
-	$dom->loadHTML(mb_convert_encoding($content, 'HTML-ENTITIES', "UTF-8"));
+	$dom = fof_content_to_dom($content);
 
 	foreach ($dom->getElementsByTagName('img') as $img) {
 		if ($img->hasAttribute('src')) {
@@ -29,24 +24,5 @@ function fof_images_on_demand($content, $item) {
 		}
 	}
 
-	$content_out = '';
-	$node = $dom->firstChild;
-	while ($node) {
-		$content_out .= $dom->saveHTML($node);
-		/* repeat for all nodes at this level */
-		$node = $node->nextSibling;
-	}
-
-	foreach (libxml_get_errors() as $error) {
-		/* just ignore warnings */
-		if ($error->level === LIBXML_ERR_WARNING) {
-			continue;
-		}
-
-		fof_log(__FUNCTION__ . ': ' . $error->message);
-	}
-	libxml_clear_errors();
-	libxml_use_internal_errors($old_xml_err);
-
-	return $content_out;
+	return fof_dom_to_content($dom);
 }

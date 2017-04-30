@@ -5,13 +5,7 @@
 fof_add_item_filter('remove_media_autoplay');
 
 function remove_media_autoplay($content) {
-	if (!$content) {
-		return $content;
-	}
-
-	$old_xml_err = libxml_use_internal_errors(true);
-	$dom = new DOMDocument();
-	$dom->loadHtml(mb_convert_encoding($content, 'HTML-ENTITIES', "UTF-8"));
+	$dom = fof_content_to_dom($content);
 
 	// IFRAME is usually only used for horrible autoplaying videos and for ads.
 	foreach ($dom->getElementsByTagName('iframe') as $link) {
@@ -30,5 +24,5 @@ function remove_media_autoplay($content) {
 		$audio->setAttribute("controls", true);
 	}
 
-	return preg_replace('~<(?:!DOCTYPE|/?(?:html|body))[^>]*>\s*~i', '', $dom->saveHTML());
+	return fof_dom_to_content($dom);
 }

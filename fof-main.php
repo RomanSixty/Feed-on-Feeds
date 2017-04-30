@@ -1633,4 +1633,22 @@ function fof_render_feed_row($f) {
 	return $out;
 }
 
+// Helper function for plugins - extract a DOMdocument from a content string
+function fof_content_to_dom($content) {
+	if (!$content) {
+		return $content;
+	}
+
+	$old_xml_err = libxml_use_internal_errors(true);
+	$dom = new DOMDocument();
+	$dom->loadHtml(mb_convert_encoding($content, 'HTML-ENTITIES', "UTF-8"));
+
+	return $dom;
+}
+
+// Helper function for plugins - convert a DOMdocument back to a content string
+function fof_dom_to_content($dom) {
+	return preg_replace('~<(?:!DOCTYPE|/?(?:html|body))[^>]*>\s*~i', '', $dom->saveHTML());
+}
+
 ?>
