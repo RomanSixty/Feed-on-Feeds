@@ -1635,12 +1635,12 @@ function fof_render_feed_row($f) {
 
 // Helper function for plugins - extract a DOMdocument from a content string
 function fof_content_to_dom($content) {
+	$dom = new DOMDocument();
 	if (!$content) {
-		return $content;
+		return $dom;
 	}
 
 	$old_xml_err = libxml_use_internal_errors(true);
-	$dom = new DOMDocument();
 	$dom->loadHtml(mb_convert_encoding($content, 'HTML-ENTITIES', "UTF-8"));
 
 	return $dom;
