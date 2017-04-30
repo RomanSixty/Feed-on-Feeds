@@ -12,11 +12,12 @@ function remove_malicious_tags($content) {
 		}
 	}
 
-	// These attributes are never good news
-	$xpath = new DOMXpath($dom);
-	foreach (Array("style", "class") as $attr) {
-		foreach ($xpath->query("//*[$attr]") as $elem) {
-			$elem->removeAttribute($attr);
+	// Strip out problematic attributes
+	foreach ($dom->getElementsByTagName("*") as $elem) {
+		foreach ($elem->attributes as $attr) {
+			if (preg_match("/style|class|on.*/", $attr->nodeName)) {
+				$elem->removeAttribute($attr->nodeName);
+			}
 		}
 	}
 
