@@ -5,8 +5,8 @@ fof_add_item_filter('remove_malicious_tags');
 function remove_malicious_tags($content) {
 	$dom = fof_content_to_dom($content);
 
-	// These tags are never good news
-	foreach (Array("iframe", "link", "script") as $tag) {
+	// These tags are pretty much never good news
+	foreach (Array("iframe", "link", "script", "object", "embed") as $tag) {
 		foreach ($dom->getElementsByTagName($tag) as $elem) {
 			$elem->parentNode->removeChild($elem);
 		}
