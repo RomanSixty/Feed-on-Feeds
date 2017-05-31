@@ -1032,18 +1032,17 @@ function fof_update_feed($id) {
 
 			/* check if item already known */
 			$item_id = $item->get_id();
-			$id = fof_db_find_item($feed_id, $item_id);
-			if ($id == NULL) {
+			$found = fof_db_find_item($feed_id, $item_id);
+
+			$id = fof_db_add_item($found, $feed_id, $item_id, $link, $title, $content, time(), $date, $author);
+			if ($found == NULL) {
 				$n++;
 
-				$id = fof_db_add_item($feed_id, $item_id, $link, $title, $content, time(), $date, $date, $author);
 				fof_apply_tags($feed_id, $id);
 				$count_Added++;
 
 				fof_mark_item_unread($feed_id, $id);
 				fof_apply_plugin_tags($feed_id, $id, NULL);
-			} else {
-				fof_db_update_item($feed_id, $item_id, $link, time(), $author);
 			}
 		}
 	}
