@@ -820,6 +820,15 @@ function fof_db_add_item($item_id, $feed_id, $guid, $link, $title, $content, $ca
 				(feed_id, item_link, item_guid, item_title, item_content, item_cached, item_published, item_updated, item_author)
 			VALUES
 				(:feed_id, :link, :guid, :title, :content, :cached, :itemdate, :itemdate, :author)";
+		$statement = $fof_connection->prepare($query);
+		$statement->bindValue(':feed_id', $feed_id);
+		$statement->bindValue(':link', $link);
+		$statement->bindValue(':guid', $guid);
+		$statement->bindValue(':title', $title);
+		$statement->bindValue(':content', $content);
+		$statement->bindValue(':cached', $cached);
+		$statement->bindValue(':itemdate', $itemdate);
+		$statement->bindValue(':author', $author);
 	} else {
 		$query = "UPDATE $FOF_ITEM_TABLE SET
 				item_link = :link,
@@ -830,17 +839,17 @@ function fof_db_add_item($item_id, $feed_id, $guid, $link, $title, $content, $ca
 				item_updated = :itemdate,
 				item_author = :author
 			WHERE feed_id = :feed_id and item_id = :item_id";
+		$statement = $fof_connection->prepare($query);
+		$statement->bindValue(':link', $link);
+		$statement->bindValue(':guid', $guid);
+		$statement->bindValue(':title', $title);
+		$statement->bindValue(':content', $content);
+		$statement->bindValue(':cached', $cached);
+		$statement->bindValue(':itemdate', $itemdate);
+		$statement->bindValue(':author', $author);
+		$statement->bindValue(':feed_id', $feed_id);
+		$statement->bindValue(':item_id', $item_id);
 	}
-	$statement = $fof_connection->prepare($query);
-	$statement->bindValue(':feed_id', $feed_id);
-	$statement->bindValue(':item_id', $item_id);
-	$statement->bindValue(':link', $link);
-	$statement->bindValue(':guid', $guid);
-	$statement->bindValue(':title', $title);
-	$statement->bindValue(':content', $content);
-	$statement->bindValue(':cached', $cached);
-	$statement->bindValue(':itemdate', $itemdate);
-	$statement->bindValue(':author', $author);
 	$result = $statement->execute();
 	$statement->closeCursor();
 
