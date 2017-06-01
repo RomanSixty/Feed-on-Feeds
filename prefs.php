@@ -367,6 +367,7 @@ foreach ($plugins as $plugin => $data) {
 <div style="border: 1px solid black; margin: 10px; padding: 10px; font-size: 12px; font-family: verdana, arial;">
 <table cellpadding="3" cellspacing="0">
 <?php
+
 /* reuse $feeds from sidebar.php */
 foreach ($feeds as $row) {
 	$id = $row['feed_id'];
@@ -378,7 +379,11 @@ foreach ($feeds as $row) {
 	$description = $row['feed_description'];
 	$tags = $row['tags'];
 
-	echo '<tr' . (++$t % 2 ? ' class="odd-row"' : '') . ">\n";
+	$error = $row['feed_cache_last_attempt_status'];
+
+	$rowspan = !!$error ? ' rowspan="2"' : '';
+	$rowclass = (++$t % 2 ? ' class="odd-row"' : '');
+	echo '<tr' . $rowclass . $rowspan . ">\n";
 
 	if ($prefs->get('favicons')) {
 		$feed_image = $row['display_image'];
@@ -388,7 +393,13 @@ foreach ($feeds as $row) {
 		$feed_image = 'image/feed-icon.png';
 	}
 
-	echo "  <td><a href=\"$url\" title=\"feed\" name=\"$anchor\"><img src='$feed_image' width='16' height='16' border='0' /></a></td>";
+	echo "  <td class=\"feed-prefs-header\"" . $rowspan . "><a href=\"$url\" title=\"feed\" name=\"$anchor\"><img src='$feed_image' width='16' height='16' border='0' /></a></td>";
+
+	if (!!$error) {
+		echo '  <td colspan="3">Error: <span class="error">' . $error
+			. '</span> [<a href="delete.php?feed=' . $id . '">unsubscribe</a>]</td>' . "\n"
+			. '</tr><tr class="' . $rowclass . '">';
+	}
 
 	echo "  <td>
     <form method=\"post\" action=\"prefs.php#$anchor\">

@@ -24,7 +24,7 @@ $feeds = array();
 if (!empty($_GET['feed'])) {
 	$feed = fof_db_get_feed_by_id($_GET['feed']);
 	if (empty($feed)) {
-		$feed_status = "<span style=\"color:red\">Error: unknown feed '" . $_GET['feed'] . "'</span>";
+		$feed_status = "<span class=\"error\">Error: unknown feed '" . $_GET['feed'] . "'</span>";
 	} else {
 		$feeds[] = $feed;
 		$feed_status = " is waiting to update...";

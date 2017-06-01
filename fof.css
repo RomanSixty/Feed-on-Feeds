@@ -543,3 +543,12 @@ list-style: none;
   vertical-align: top;
   padding: 3px 5px;
 }
+
+.error {
+    color: red;
+    font-weight: bold;
+}
+
+td.feed-prefs-header {
+    vertical-align: top;
+}
