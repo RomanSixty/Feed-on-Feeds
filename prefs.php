@@ -397,7 +397,7 @@ foreach ($feeds as $row) {
 
 	if (!!$error) {
 		echo '  <td colspan="3">Error: <span class="error">' . $error
-			. '</span> [<a href="delete.php?feed=' . $id . '">unsubscribe</a>]</td>' . "\n"
+			. '</span> [<a href="' . $row["feed_link"] . '">view site</a>] [<a href="delete.php?feed=' . $id . '">unsubscribe</a>]</td>' . "\n"
 			. '</tr><tr class="' . $rowclass . '">';
 	}
 
