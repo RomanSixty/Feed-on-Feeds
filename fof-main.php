@@ -585,13 +585,15 @@ function fof_get_items($user_id, $feed = NULL, $what = "unread", $when = NULL, $
 	return $items;
 }
 
-function fof_get_item($user_id, $item_id) {
+function fof_get_item($user_id, $item_id, $run_filters = true) {
 	global $fof_item_filters;
 
 	$item = fof_db_get_item($user_id, $item_id);
 
-	foreach ($fof_item_filters as $filter) {
-		$item['item_content'] = $filter($item['item_content']);
+	if ($run_filters) {
+		foreach ($fof_item_filters as $filter) {
+			$item['item_content'] = $filter($item['item_content']);
+		}
 	}
 
 	return $item;
@@ -807,6 +809,24 @@ function fof_mark_item_unread($feed_id, $id) {
 	fof_db_mark_item_unread($users, $id);
 }
 
+function fof_new_parser() {
+	$p = &FoF_Prefs::instance();
+	$admin_prefs = $p->admin_prefs;
+
+	$pie = new SimplePie();
+	$pie->set_cache_location(dirname(__FILE__) . '/cache');
+	$pie->set_cache_duration($admin_prefs["manualtimeout"] * 60);
+
+	// we allow iframe (for YouTube embeds etc.), the rest is SimplePie's default
+	$striptags = $pie->strip_htmltags;
+	if (($key = array_search('iframe', $striptags)) !== false) {
+		unset($striptags[$key]);
+	}
+	$pie->strip_htmltags($striptags);
+
+	return $pie;
+}
+
 /** Let SimplePie process a feed URL.
  */
 function fof_parse($url) {
@@ -818,14 +838,7 @@ function fof_parse($url) {
 	$p = &FoF_Prefs::instance();
 	$admin_prefs = $p->admin_prefs;
 
-	$pie = new SimplePie();
-	$pie->set_cache_location(dirname(__FILE__) . '/cache');
-	$pie->set_cache_duration($admin_prefs["manualtimeout"] * 60);
-	$pie->remove_div(true);
-
-	// we allow iframe (for YouTube embeds etc.), the rest is SimplePie's default
-	$pie->strip_htmltags(array('base', 'blink', 'body', 'doctype', 'embed', 'font', 'form', 'frame', 'frameset', 'html', 'input', 'marquee', 'meta', 'noscript', 'object', 'param', 'script', 'style'));
-
+	$pie = fof_new_parser();
 	$pie->set_feed_url($url);
 	$pie->init();
 
@@ -850,11 +863,7 @@ function fof_parse($url) {
 
 		unset($pie);
 
-		$pie = new SimplePie();
-		$pie->set_cache_location(dirname(__FILE__) . '/cache');
-		$pie->set_cache_duration($admin_prefs["manualtimeout"] * 60);
-		$pie->remove_div(true);
-
+		$pie = fof_new_parser();
 		$pie->set_raw_data($data);
 		$pie->init();
 	}
