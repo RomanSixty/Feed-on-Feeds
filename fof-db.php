@@ -25,8 +25,7 @@ defined('FOF_USER_TABLE') || define('FOF_USER_TABLE', FOF_DB_PREFIX . 'user');
 defined('FOF_VIEW_TABLE') || define('FOF_VIEW_TABLE', FOF_DB_PREFIX . 'view');
 defined('FOF_VIEW_STATE_TABLE') || define('FOF_VIEW_STATE_TABLE', FOF_DB_PREFIX . 'view_state');
 if (defined('USE_MYSQL')) {
-	/* default to old myisam, but innodb would be better, now that tables have constraints */
-	defined('MYSQL_ENGINE') || define('MYSQL_ENGINE', 'MyISAM');
+	defined('MYSQL_ENGINE') || define('MYSQL_ENGINE', 'InnoDB');
 }
 
 $FOF_FEED_TABLE = FOF_FEED_TABLE;

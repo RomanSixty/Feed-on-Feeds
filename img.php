@@ -14,7 +14,7 @@ if (!$_GET['url']) {
 
 // TODO: make sure we're logged in
 
-$item = fof_get_item(NULL, $_GET['item']);
+$item = fof_get_item(NULL, $_GET['item'], false);
 if (!$item) {
 	die("couldn't get item");
 }
@@ -26,7 +26,7 @@ $url = urljoin($item['item_link'], $_GET['url']);
 $final = false;
 function dump_headers($ch, $header) {
 	global $final;
-	if (preg_match('@HTTP/.* [12456789]@', $header)) {
+	if (preg_match('@HTTP/[^ ]* [12456789]@', $header)) {
 		$final = true;
 	} else if ($final && preg_match('/^\w: /', $header)) {
 		header($header);

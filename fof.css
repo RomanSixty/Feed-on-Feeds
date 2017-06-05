@@ -552,3 +552,12 @@ list-style: none;
 td.feed-prefs-header {
     vertical-align: top;
 }
+
+.item pre {
+    white-space: pre-wrap;
+}
+
+.item .text-post {
+    font-family: monospace;
+    white-space: pre-wrap;
+}
