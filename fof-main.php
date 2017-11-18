@@ -809,13 +809,14 @@ function fof_mark_item_unread($feed_id, $id) {
 	fof_db_mark_item_unread($users, $id);
 }
 
-function fof_new_parser() {
+function fof_new_parser($useragent='FoF '.SIMPLEPIE_USERAGENT) {
 	$p = &FoF_Prefs::instance();
 	$admin_prefs = $p->admin_prefs;
 
 	$pie = new SimplePie();
 	$pie->set_cache_location(dirname(__FILE__) . '/cache');
 	$pie->set_cache_duration($admin_prefs["manualtimeout"] * 60);
+	$pie->set_useragent($useragent);
 
 	// we allow iframe (for YouTube embeds etc.), the rest is SimplePie's default
 	$striptags = $pie->strip_htmltags;
