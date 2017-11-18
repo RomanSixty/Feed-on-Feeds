@@ -12,8 +12,8 @@
  *
  */
 
-include_once("fof-main.php");
-include_once("fof-render.php");
+include_once "fof-main.php";
+include_once "fof-render.php";
 
 $result = fof_get_items($fof_user_id, NULL, "unread", NULL, 0, 10);
 
@@ -30,7 +30,7 @@ fof_set_content_type();
       <meta name = "viewport" content = "width=700">
 
       <link rel="stylesheet" href="fof.css" media="screen" />
-      <?php if (is_readable('./fof-custom.css')) { ?><link rel="stylesheet" href="fof-custom.css" media="screen" /><?php } ?>
+      <?php if (is_readable('./fof-custom.css')) {?><link rel="stylesheet" href="fof-custom.css" media="screen" /><?php }?>
       <style>
       .box
       {
@@ -98,31 +98,33 @@ function newWindowIfy()
 
 $first = true;
 
-foreach($result as $item)
-{
-    $item_id = $item['item_id'];
-    echo '<div class="item shown" id="i' . $item_id . '">';
+foreach ($result as $item) {
+	$item_id = $item['item_id'];
+	echo '<div class="item shown" id="i' . $item_id . '">';
 
-    $feed_link = $item['feed_link'];
-    $feed_title = $item['feed_title'];
-    $feed_image = $item['feed_image'];
-    $feed_description = $item['feed_description'];
+	$feed_link = $item['feed_link'];
+	$feed_title = $item['feed_title'];
+	$feed_image = $item['feed_image'];
+	$feed_description = $item['feed_description'];
 
-    $item_link = $item['item_link'];
-    $item_id = $item['item_id'];
-    $item_title = $item['item_title'];
-    $item_content = $item['item_content'];
+	$item_link = $item['item_link'];
+	$item_id = $item['item_id'];
+	$item_title = $item['item_title'];
+	$item_content = $item['item_content'];
 
-    $item_published = gmdate("Y-n-d g:ia", $item['item_published'] + $offset*60*60);
-    $item_cached = gmdate("Y-n-d g:ia", $item['item_cached'] + $offset*60*60);
-    $item_updated = gmdate("Y-n-d g:ia", $item['item_updated'] + $offset*60*60);
+	$item_published = gmdate("Y-n-d g:ia", $item['item_published'] + $offset * 60 * 60);
+	$item_cached = gmdate("Y-n-d g:ia", $item['item_cached'] + $offset * 60 * 60);
+	$item_updated = gmdate("Y-n-d g:ia", $item['item_updated'] + $offset * 60 * 60);
 
-    if(!$item_title) $item_title = "[no title]";
-    $tags = $item['tags'];
-    $star = in_array("star", $tags) ? true : false;
-    $star_image = $star ? $fof_asset['star_on_image'] : $fof_asset['star_off_image'];
+	if (!$item_title) {
+		$item_title = "[no title]";
+	}
 
-?>
+	$tags = $item['tags'];
+	$star = in_array("star", $tags) ? true : false;
+	$star_image = $star ? $fof_asset['star_on_image'] : $fof_asset['star_off_image'];
+
+	?>
 
 <div class="header">
 
@@ -135,7 +137,12 @@ foreach($result as $item)
             onclick="return toggle_favorite('<?php echo $item_id ?>')"
         />
         <script>
-        document.getElementById('fav<?php echo $item_id ?>').star = <?php if($star) echo 'true'; else echo 'false'; ?>;
+        document.getElementById('fav<?php echo $item_id ?>').star = <?php if ($star) {
+		echo 'true';
+	} else {
+		echo 'false';
+	}
+	?>;
         </script>
         <a href="<?php echo $item_link ?>">
             <?php echo $item_title ?>
@@ -171,13 +178,10 @@ foreach($result as $item)
 <?php
 }
 
-if(count($result) == 0)
-{
-    echo "<p><i>No new items.</i></p>";
-}
-else
-{
-    echo "<center><a href='#' onclick='mark_read(); return false;'><b>Mark All Read</b></a></center>";
+if (count($result) == 0) {
+	echo "<p><i>No new items.</i></p>";
+} else {
+	echo "<center><a href='#' onclick='mark_read(); return false;'><b>Mark All Read</b></a></center>";
 }
 
 ?>

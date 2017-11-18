@@ -12,39 +12,69 @@
  *
  */
 
-include('header.php');
+include 'header.php';
 
 $url = isset($_POST['rss_url']) ? $_POST['rss_url'] : NULL;
-if (! isset($url)) {
-    $url = isset($_GET['rss_url']) ? $_GET['rss_url'] : NULL;
+if (!isset($url)) {
+	$url = isset($_GET['rss_url']) ? $_GET['rss_url'] : NULL;
 }
 
+$youtube = isset($_POST['youtube_channel']) ? $_POST['youtube_channel'] : NULL;
 $opml = isset($_POST['opml_url']) ? $_POST['opml_url'] : NULL;
 $file = isset($_POST['opml_file']) ? $_POST['opml_file'] : NULL;
 $unread = isset($_POST['unread']) ? $_POST['unread'] : NULL;
 
 $feeds = array();
 
-if ($url)
-    $feeds[] = $url;
+if ($youtube) {
+	// okay, we may have different kinds of URLs here, depending if the channel owner got a vanity user name
+	//
+	// https://www.youtube.com/user/<vanity_title>...
+	// https://www.youtube.com/channel/<channel_id>...
+	//
+	// what we need however is the channel's id, so let's try to find that out
 
-if ($opml) {
-    $sfile = new SimplePie_File($opml);
-    if ( ! $sfile->success) {
-        echo "Cannot open " . htmlentities($opml) . "<br>";
-        return false;
-    }
+	$channel_id = null;
+	$matches = array();
 
-    $content = $sfile->body;
-    $feeds = fof_opml_to_array($content);
+	if (preg_match('~youtube\.com/channel/([^/]+)~', $youtube, $matches)) {
+		$channel_id = $matches[1];
+	} elseif (preg_match('~youtube\.com/user/([^/]+)~', $youtube, $matches)) {
+		$file = file_get_contents($youtube);
+
+		if (preg_match('~data-style-type="branded"[^>]+data-channel-external-id="([^"]+)"~m', $file, $matches)) {
+			$channel_id = $matches[1];
+		}
+
+	}
+
+	if (!empty($channel_id)) {
+		$feeds[] = 'https://www.youtube.com/feeds/videos.xml?channel_id=' . $channel_id;
+	}
+
 }
 
-if ( ! empty($_FILES['opml_file']) && ! empty($_FILES['opml_file']['tmp_name'])) {
-    if (($content = file_get_contents($_FILES['opml_file']['tmp_name'])) === false) {
-        echo "Cannot open uploaded file '" . htmlentities($_FILES['opml_file']['name']) . "'<br>";
-    } else {
-        $feeds = fof_opml_to_array($content);
-    }
+if ($url) {
+	$feeds[] = $url;
+}
+
+if ($opml) {
+	$sfile = new SimplePie_File($opml);
+	if (!$sfile->success) {
+		echo "Cannot open " . htmlentities($opml) . "<br>";
+		return false;
+	}
+
+	$content = $sfile->body;
+	$feeds = fof_opml_to_array($content);
+}
+
+if (!empty($_FILES['opml_file']) && !empty($_FILES['opml_file']['tmp_name'])) {
+	if (($content = file_get_contents($_FILES['opml_file']['tmp_name'])) === false) {
+		echo "Cannot open uploaded file '" . htmlentities($_FILES['opml_file']['name']) . "'<br>";
+	} else {
+		$feeds = fof_opml_to_array($content);
+	}
 }
 
 $add_feed_url = (isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] == 'on') ? 'https' : 'http';
@@ -60,8 +90,8 @@ $add_feed_url .= "://" . $_SERVER["HTTP_HOST"] . $_SERVER["SCRIPT_NAME"];
 </span>
 </div>
 <?php
-if(strpos($_SERVER['HTTP_USER_AGENT'], 'Firefox') !== FALSE) {
-?>
+if (strpos($_SERVER['HTTP_USER_AGENT'], 'Firefox') !== FALSE) {
+	?>
 <script>
 document.observe("dom:loaded", function() {
     if (window.navigator.isContentHandlerRegistered('application/vnd.mozilla.maybe.feed', '<?php echo $add_feed_url; ?>?rss_url=%s')) {
@@ -83,12 +113,23 @@ document.observe("dom:loaded", function() {
 <form method="post" name="addform" action="add.php" enctype="multipart/form-data">
 
 When adding feeds, mark <select name="unread">
-    <option value=all<?php if ($unread == "all") echo " selected" ?>>all</option>
-    <option value=today<?php if ($unread == "today") echo " selected" ?>>today's</option>
-    <option value=no<?php if ($unread == "no") echo " selected" ?>>no</option>
+    <option value=all<?php if ($unread == "all") {
+	echo " selected";
+}
+?>>all</option>
+    <option value=today<?php if ($unread == "today") {
+	echo " selected";
+}
+?>>today's</option>
+    <option value=no<?php if ($unread == "no") {
+	echo " selected";
+}
+?>>no</option>
 </select> items as unread<br><br>
 
 RSS or weblog URL: <input type="text" name="rss_url" size="40" value="<?php echo htmlentities($url) ?>"><input type="Submit" value="Add a feed"><br><br>
+
+YouTube channel page: <input type="text" name="youtube_channel" size="40" value="<?php echo htmlentities($youtube) ?>"><input type="Submit" value="Subscribe to channel"><br><br>
 
 OPML URL: <input type="hidden" name="MAX_FILE_SIZE" value="100000">
 
@@ -102,19 +143,19 @@ OPML filename: <input type="file" name="opml_file" size="40" value="<?php echo h
 
 <?php
 if (count($feeds)) {
-    $idx = 0;
-    $feedjson = array();
-    foreach ($feeds as $feed) {
-        $feedjson[] = json_encode(array('url' => $feed, 'idx' => $idx));
-        echo '<div id="feed_index_' . $idx . '">'
-            . $feed . ' is waiting to add...'
-            . "</div>\n";
-        $idx++;
-    }
+	$idx = 0;
+	$feedjson = array();
+	foreach ($feeds as $feed) {
+		$feedjson[] = json_encode(array('url' => $feed, 'idx' => $idx));
+		echo '<div id="feed_index_' . $idx . '">'
+			. $feed . ' is waiting to add...'
+			. "</div>\n";
+		$idx++;
+	}
 
-    echo "<script>\nwindow.onload = ajaxadd;\nfeedslist = [" . implode(', ', $feedjson) . "];\n</script>\n";
+	echo "<script>\nwindow.onload = ajaxadd;\nfeedslist = [" . implode(', ', $feedjson) . "];\n</script>\n";
 }
 echo '<br>';
 
-include('footer.php');
+include 'footer.php';
 ?>

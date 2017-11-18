@@ -16,11 +16,11 @@ ob_start();
 
 $fof_no_login = true;
 $fof_user_id = 1;
-include_once("fof-main.php");
+include_once "fof-main.php";
 
 set_time_limit(FOF_UPDATE_TIME_LIMIT);
 
-$p =& FoF_Prefs::instance();
+$p = &FoF_Prefs::instance();
 $fof_admin_prefs = $p->prefs;
 
 fof_log("=== update started, timeout = $fof_admin_prefs[autotimeout], purge = $fof_admin_prefs[purge] ===", "update");
@@ -32,7 +32,7 @@ $feeds = array();
 $now = time();
 while (($feed = fof_db_get_row($result)) !== false) {
 	if (($now - $feed['feed_cache_date']) > ($fof_admin_prefs['autotimeout'] * 60)
-	&&  ($now > $feed['feed_cache_next_attempt'])) {
+		&& ($now > $feed['feed_cache_next_attempt'])) {
 		$feeds[] = $feed;
 	} else {
 		fof_log("skipping $feed[feed_id] $feed[feed_url]", 'update');

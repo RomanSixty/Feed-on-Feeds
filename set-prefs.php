@@ -12,13 +12,12 @@
  *
  */
 
-include_once("fof-main.php");
+include_once "fof-main.php";
 
-$prefs =& FoF_Prefs::instance();
+$prefs = &FoF_Prefs::instance();
 
-foreach($_POST as $k => $v)
-{
-    $prefs->set($k, $v);
+foreach ($_POST as $k => $v) {
+	$prefs->set($k, $v);
 }
 
 $prefs->save();
