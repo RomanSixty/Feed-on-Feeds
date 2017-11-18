@@ -103,7 +103,7 @@ function fof_log($message, $topic = 'debug') {
 }
 
 /** Assemble a shorthand trace of calls at current state.
-For debugging purposes.
+ *For debugging purposes.
  */
 function fof_stacktrace($skip_frames = 0, $include_args = true) {
 	$trace = '';
@@ -1643,14 +1643,21 @@ function fof_render_feed_row($f) {
 	return $out;
 }
 
+class DOMDocumentWithErrContext extends DOMDocument {
+	public $old_xml_err;
+	public function __construct() {
+		parent::__construct();
+		$this->old_xml_err = libxml_use_internal_errors(true);
+	}
+}
+
 // Helper function for plugins - extract a DOMdocument from a content string
 function fof_content_to_dom($content) {
-	$dom = new DOMDocument();
+	$dom = new DOMDocumentWithErrContext();
 	if (!$content) {
 		return $dom;
 	}
 
-	$old_xml_err = libxml_use_internal_errors(true);
 	$dom->loadHtml(mb_convert_encoding($content, 'HTML-ENTITIES', "UTF-8"));
 
 	return $dom;
@@ -1658,6 +1665,16 @@ function fof_content_to_dom($content) {
 
 // Helper function for plugins - convert a DOMdocument back to a content string
 function fof_dom_to_content($dom) {
+	foreach (libxml_get_errors() as $error) {
+		/* just ignore warnings */
+		if ($error->level === LIBXML_ERR_WARNING) {
+			continue;
+		}
+		fof_log(__FUNCTION__ . ': ' . $error->message);
+	}
+	libxml_clear_errors();
+	libxml_use_internal_errors($dom->old_xml_err);
+
 	return preg_replace('~<(?:!DOCTYPE|/?(?:html|body))[^>]*>\s*~i', '', $dom->saveHTML());
 }
 
