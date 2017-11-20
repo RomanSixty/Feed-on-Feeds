@@ -125,7 +125,7 @@ function fof_install_create_table_query($table_name, $column_array) {
 	$query .= implode(",\n  ", $column_array);
 	$query .= "\n)";
 	if (defined('USE_MYSQL')) {
-		$query .= " ENGINE=" . MYSQL_ENGINE . " DEFAULT CHARSET=UTF8";
+		$query .= " ENGINE=" . MYSQL_ENGINE . " DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci";
 	}
 
 	return $query . ';';
