@@ -397,6 +397,28 @@ function fof_install_database($schema, $exec = 0) {
 	return array_filter($query_history);
 }
 
+/** Determine if a table is using the correct charset
+*/
+function fof_install_table_charset_is_correct($table) {
+	if (defined('USE_MYSQL')) {
+		$query = "SELECT c.character_set_name FROM INFORMATION_SCHEMA.TABLES AS t, INFORMATION_SCHEMA.COLLATION_CHARACTER_SET_APPLICABILITY AS c WHERE c.collection_name = t.table_collation AND t.table_schema = '".FOF_DB_DBNAME."' AND t.table_name = '".$table."'";
+		$statement = $fof_connection->query($query);
+		$column = fof_db_get_row($statement, "character_set_name", TRUE);
+		return ($column == 'utf8mb4');
+	}
+	return true;
+}
+
+/** Update a table's charset
+*/
+function fof_install_migrate_table_charset(&$queries, $table) {
+	if (!fof_install_table_charset_is_correct($table)) {
+		if (defined('USE_MYSQL')) {
+			$queries[implode('.', array($table, 'charset'))] = "ALTER TABLE " . $table . " CONVERT TO CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci";
+		}
+	}
+}
+
 /** Determine if a column exists in a table.
  */
 function fof_install_database_column_exists($table, $name) {
@@ -582,7 +604,23 @@ function fof_install_database_update_old_tables() {
 	global $fof_connection;
 	$queries = array();
 
+	$all_tables = array(
+		FOF_FEED_TABLE,
+		FOF_ITEM_TABLE,
+		FOF_ITEM_TAG_TABLE,
+		FOF_SUBSCRIPTION_TABLE,
+		FOF_TAG_TABLE,
+		FOF_USER_TABLE,
+		FOF_VIEW_TABLE,
+		FOF_VIEW_STATE_TABLE
+	);
+
 	try {
+		/* charsets */
+		foreach ($all_tables as $table) {
+			fof_install_migrate_table_charset($table);
+		}
+
 		/* triggers */
 		if (!defined('SQL_NO_TRIGGERS')) {
 			/*
