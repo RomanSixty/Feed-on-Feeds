@@ -261,6 +261,7 @@ function fof_install_schema() {
 	$tables[FOF_SUBSCRIPTION_TABLE][] = "feed_id " . SQL_DRIVER_INT_TYPE . " NOT NULL DEFAULT '0' REFERENCES " . FOF_FEED_TABLE . " ( feed_id ) ON UPDATE CASCADE ON DELETE CASCADE";
 	$tables[FOF_SUBSCRIPTION_TABLE][] = "user_id " . SQL_DRIVER_INT_TYPE . " NOT NULL DEFAULT '0' REFERENCES " . FOF_USER_TABLE . " ( user_id ) ON UPDATE CASCADE ON DELETE CASCADE";
 	$tables[FOF_SUBSCRIPTION_TABLE][] = "subscription_prefs TEXT";
+	$tables[FOF_SUBSCRIPTION_TABLE][] = "subscription_added " . SQL_DRIVER_INT_TYPE . " DEFAULT '0'";
 	$tables[FOF_SUBSCRIPTION_TABLE][] = "PRIMARY KEY ( feed_id, user_id )";
 	if (defined('USE_MYSQL')) {
 		$tables[FOF_SUBSCRIPTION_TABLE][] = "FOREIGN KEY (feed_id) REFERENCES " . FOF_FEED_TABLE . " (feed_id) ON UPDATE CASCADE ON DELETE CASCADE";
@@ -747,6 +748,10 @@ END";
 
 		fof_install_migrate_reference($queries, FOF_SUBSCRIPTION_TABLE, 'feed_id', array(
 			'add' => fof_install_create_reference_query(FOF_SUBSCRIPTION_TABLE, 'feed_id', array(FOF_FEED_TABLE, 'feed_id')),
+		));
+
+		fof_install_migrate_reference($queries, FOF_SUBSCRIPTION_TABLE, 'subscription_added', array(
+			'add' => "ALTER TABLE " . FOF_SUBSCRIPTION_TABLE . " ADD subscription_added " . SQL_DRIVER_INT_TYPE . " DEFAUT '0' AFTER subscription_prefs",
 		));
 
 		/* FOF_VIEW_STATE_TABLE */

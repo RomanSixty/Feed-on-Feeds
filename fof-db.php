@@ -658,10 +658,11 @@ function fof_db_add_subscription($user_id, $feed_id) {
 
 	fof_trace();
 
-	$query = "INSERT INTO $FOF_SUBSCRIPTION_TABLE ( feed_id, user_id ) VALUES ( :feed_id, :user_id )";
+	$query = "INSERT INTO $FOF_SUBSCRIPTION_TABLE ( feed_id, user_id, subscription_added ) VALUES ( :feed_id, :user_id, :now )";
 	$statement = $fof_connection->prepare($query);
 	$statement->bindValue(':feed_id', $feed_id);
 	$statement->bindValue(':user_id', $user_id);
+	$statement->bindValue(':now', time());
 	$result = $statement->execute();
 	$statement->closeCursor();
 }
