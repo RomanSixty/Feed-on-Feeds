@@ -219,7 +219,12 @@ function fof_install_schema() {
 	$tables[FOF_ITEM_TABLE][] = "item_published " . SQL_DRIVER_INT_TYPE . " NOT NULL DEFAULT '0'";
 	$tables[FOF_ITEM_TABLE][] = "item_updated " . SQL_DRIVER_INT_TYPE . " NOT NULL DEFAULT '0'";
 	$tables[FOF_ITEM_TABLE][] = "item_title TEXT NOT NULL";
-	$tables[FOF_ITEM_TABLE][] = "item_content TEXT NOT NULL";
+	if (defined('USE_MYSQL')) {
+		$content_text_type = "LONGTEXT";
+	} else {
+		$content_text_type = "TEXT";
+	}
+	$tables[FOF_ITEM_TABLE][] = "item_content " . $content_text_type . " NOT NULL";
 	$tables[FOF_ITEM_TABLE][] = "item_author TEXT";
 
 	/* indices */
