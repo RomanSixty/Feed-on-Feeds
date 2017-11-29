@@ -107,7 +107,7 @@ function fof_db_connect($create = false) {
 		if (!defined('FOF_DB_HOST') || !defined('FOF_DB_DBNAME')) {
 			throw new Exception('Missing MySQL configuration; make sure FOF_DB_HOST and FOF_DB_DBNAME are set');
 		}
-		$dsn = "mysql:host=" . FOF_DB_HOST . ($create ? '' : (';dbname=' . FOF_DB_DBNAME)) . ";charset=utf8";
+		$dsn = "mysql:host=" . FOF_DB_HOST . ($create ? '' : (';dbname=' . FOF_DB_DBNAME)) . ";charset=utf8mb4";
 	} else if (defined('USE_SQLITE')) {
 		if (!defined('FOF_DATA_PATH') || !defined('FOF_DB_FILENAME')) {
 			throw new Exception('Missing SQLite configuration; make sure FOF_DATA_PATH and FOF_DB_FILENAME are set');
