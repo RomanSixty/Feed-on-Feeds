@@ -1122,7 +1122,7 @@ function fof_update_feed($id) {
 		$nextInterval = max($lastTime + $nextInterval, $now);
 		if ($count_Added > 1) {
 			// We missed an update, so make the interval shorter by how much we missed it by
-			$nextInterval -= lastInterval;
+			$nextInterval -= $lastInterval;
 		}
 		// fudge factor
 		$nextInterval += $stdev / ($count_Added + 1);
