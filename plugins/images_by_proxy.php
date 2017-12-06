@@ -2,15 +2,13 @@
 
 /* pass images through our proxy, to address hotlinking and mixed-content security issues */
 
-fof_add_render_filter('fof_images_by_proxy');
+fof_add_domitem_filter('fof_images_by_proxy');
 
 function wrap_image_in_proxy($url, $item) {
 	return 'img.php?item=' . $item['item_id'] . '&url=' . urlencode($url);
 }
 
-function fof_images_by_proxy($content, $item) {
-	$dom = fof_content_to_dom($content);
-
+function fof_images_by_proxy($dom, $item) {
 	foreach ($dom->getElementsByTagName('img') as $img) {
 		if ($img->hasAttribute('src')) {
 			$img->setAttribute('src', wrap_image_in_proxy($img->getAttribute('src'), $item));
@@ -28,6 +26,6 @@ function fof_images_by_proxy($content, $item) {
 		}
 	}
 
-	return fof_dom_to_content($dom);
+	return $dom;
 }
 ?>

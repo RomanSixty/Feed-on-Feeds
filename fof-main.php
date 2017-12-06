@@ -1280,12 +1280,14 @@ function fof_init_plugins() {
 		$fof_item_prefilters,
 		$fof_tag_prefilters,
 		$fof_plugin_prefs,
+		$fof_domitem_filters,
 		$fof_render_filters;
 
 	$fof_item_filters = array();
 	$fof_item_prefilters = array();
 	$fof_plugin_prefs = array();
 	$fof_tag_prefilters = array();
+	$fof_domitem_filters = array();
 	$fof_render_filters = array();
 
 	$p = &FoF_Prefs::instance();
@@ -1319,6 +1321,17 @@ function fof_add_item_filter($function, $order = null) {
 	}
 
 	ksort($fof_item_filters);
+}
+
+function fof_add_domitem_filter($function, $order = null) {
+	global $fof_domitem_filters;
+
+	if (is_int($order)) {
+		$fof_domitem_filters[$order] = $function;
+		ksort($fof_domitem_filters);
+	} else {
+		$fof_domitem_filters[] = $function;
+	}
 }
 
 function fof_add_render_filter($function, $order = null) {

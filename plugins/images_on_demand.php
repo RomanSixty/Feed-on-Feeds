@@ -2,16 +2,14 @@
 
 /* load images on-demand */
 
-fof_add_render_filter('fof_images_on_demand');
+fof_add_domitem_filter('fof_images_on_demand');
 
-function fof_images_on_demand($content, $item) {
+function fof_images_on_demand($dom, $item) {
 	// AJAX refresh: we don't apply this filter, because images are
 	// probably already loaded
 	if (isset($_REQUEST['no_img_filter'])) {
 		return $content;
 	}
-
-	$dom = fof_content_to_dom($content);
 
 	foreach ($dom->getElementsByTagName('img') as $img) {
 		if ($img->hasAttribute('src')) {
@@ -24,5 +22,6 @@ function fof_images_on_demand($content, $item) {
 		}
 	}
 
-	return fof_dom_to_content($dom);
+	return $dom;
 }
+?>
