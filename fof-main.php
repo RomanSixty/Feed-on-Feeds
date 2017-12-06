@@ -1250,8 +1250,37 @@ function fof_apply_plugin_tags($feed_id, $item_id = NULL, $user_id = NULL) {
 	}
 }
 
+/* Return an associative array with plugin names as keys, mapped to array with
+the following values:
+code => path to php plugin file, suitable for including
+meta => optionally-loaded contents of plugin ini file
+*/
+function fof_list_plugins($wantmeta = false, $dir = FOF_DIR . DIRECTORY_SEPARATOR . 'plugins') {
+	$plugins = array();
+	$dirlist = opendir($dir);
+	while (($file = readdir($dirlist)) !== false) {
+		$info = pathinfo($file);
+		if ($info['filename'][0] === '.') {
+			continue;
+		}
+		$filepath = $dir . DIRECTORY_SEPARATOR . $file;
+		if ($info['extension'] === 'php') {
+			$plugins[$info['filename']]['code'] = $filepath;
+		} elseif ($info['extension'] === 'ini') {
+			$plugins[$info['filename']]['meta'] = $wantmeta ? parse_ini_file($filepath) : null;
+		}
+	}
+	closedir($dirlist);
+
+	return $plugins;
+}
+
 function fof_init_plugins() {
-	global $fof_item_filters, $fof_item_prefilters, $fof_tag_prefilters, $fof_plugin_prefs, $fof_render_filters;
+	global $fof_item_filters,
+		$fof_item_prefilters,
+		$fof_tag_prefilters,
+		$fof_plugin_prefs,
+		$fof_render_filters;
 
 	$fof_item_filters = array();
 	$fof_item_prefilters = array();
@@ -1261,27 +1290,16 @@ function fof_init_plugins() {
 
 	$p = &FoF_Prefs::instance();
 
-	$plugin_dir = FOF_DIR . DIRECTORY_SEPARATOR . 'plugins';
-
+	$plugins = fof_list_plugins();
 	$active_plugins = array();
-	$dirlist = opendir($plugin_dir);
-	while (($file = readdir($dirlist)) !== false) {
-		$info = pathinfo($file);
-
-		if ($info['extension'] !== 'php'
-			|| $info['filename'][0] === '.') {
-			continue;
+	foreach ($plugins as $plugin => $data) {
+		if (!empty($data['code'])) {
+			if ($p->get('plugin_' . $plugin) == false) {
+				$active_plugins[] = $plugin;
+				include $data['code'];
+			}
 		}
-
-		if ($p->get('plugin_' . $info['filename'])) {
-			continue;
-		}
-
-		$active_plugins[] = $info['filename'];
-
-		include $plugin_dir . DIRECTORY_SEPARATOR . $file;
 	}
-	closedir($dirlist);
 	fof_log('included plugins: ' . implode(', ', $active_plugins));
 }
 
