@@ -1260,7 +1260,7 @@ function fof_list_plugins($wantmeta = false, $dir = FOF_DIR . DIRECTORY_SEPARATO
 	$dirlist = opendir($dir);
 	while (($file = readdir($dirlist)) !== false) {
 		$info = pathinfo($file);
-		if ($info['filename'][0] === '.') {
+		if (empty($info['filename']) || $info['filename'][0] === '.') {
 			continue;
 		}
 		$filepath = $dir . DIRECTORY_SEPARATOR . $file;
