@@ -64,6 +64,13 @@ class FavIcon {
 	}
 
 
+	/** $http_response_header can be empty during certain connection-closed
+		cases, so try to minimize errors from such.
+	*/
+	static protected function safe_headers() {
+		return ( ! empty($http_response_header)) ? $http_response_header : array('HTTP/1.1 400 Bad request');
+	}
+
 	/**	Load the page, parse for iconic links, and add them to icon list if
 		they are valid.
 	*/
@@ -85,7 +92,7 @@ class FavIcon {
 		libxml_set_streams_context($default_context);
 
 		if ($dom_result === false) {
-			$status = self::header_findr($http_response_header, null);
+			$status = self::header_findr(self::safe_headers(), null);
 			@list ( , $status, ) = explode(' ', $status, 3);
 			$status = (integer)$status;
 			trigger_error('site \'' . $this->site_url . '\' returned ' . $status, E_USER_NOTICE);
@@ -97,7 +104,7 @@ class FavIcon {
 			location, so that relative urls may be correctly converted into
 			their absolute form.
 		*/
-		$location = self::header_findr($http_response_header, 'Location');
+		$location = self::header_findr(self::safe_headers(), 'Location');
 		if ($location !== null) {
 			$this->site_url = $location;
 		}
@@ -188,7 +195,7 @@ class FavIcon {
 		}
 
 		/* did we get a useful response */
-		$status = self::header_findr($http_response_header, null);
+		$status = self::header_findr(self::safe_headers(), null);
 		@list ( , $status, ) = explode(' ', $status, 3);
 		$status = (integer)$status;
 		if ($status !== 200) {
@@ -202,7 +209,7 @@ class FavIcon {
 		}
 
 		/* is it displayable */
-		$icon['type'] = self::header_findr($http_response_header, 'Content-Type');
+		$icon['type'] = self::header_findr(self::safe_headers(), 'Content-Type');
 		@list($icon['type'], ) = explode(';', $icon['type']);
 		@list($type, $subtype) = explode('/', $icon['type'], 2);
 		if (strcasecmp($type, 'image') !== 0) {
