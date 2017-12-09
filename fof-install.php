@@ -756,7 +756,7 @@ END";
 		));
 
 		fof_install_migrate_reference($queries, FOF_SUBSCRIPTION_TABLE, 'subscription_added', array(
-			'add' => "ALTER TABLE " . FOF_SUBSCRIPTION_TABLE . " ADD subscription_added " . SQL_DRIVER_INT_TYPE . " DEFAUT '0' AFTER subscription_prefs",
+			'add' => "ALTER TABLE " . FOF_SUBSCRIPTION_TABLE . " ADD subscription_added " . SQL_DRIVER_INT_TYPE . " DEFAULT '0' AFTER subscription_prefs",
 		));
 
 		/* FOF_VIEW_STATE_TABLE */
