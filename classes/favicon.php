@@ -33,8 +33,9 @@ class FavIcon {
 
 		$this->links_from_site();
 
-		if (empty($this->favicons))
+		if (empty($this->favicons)) {
 			$this->links_from_rote();
+		}
 
 		/* TODO: sort by something other than first-occurence */
 	}
@@ -56,8 +57,9 @@ class FavIcon {
 	*/
 	function getIcon() {
 		@list($first) = $this->favicons;
-		if (empty($first))
+		if (empty($first)) {
 			return null;
+		}
 		return $first;
 	}
 
@@ -96,8 +98,9 @@ class FavIcon {
 			their absolute form.
 		*/
 		$location = self::header_findr($http_response_header, 'Location');
-		if ($location !== null)
+		if ($location !== null) {
 			$this->site_url = $location;
+		}
 
 		/* check all the links which relate to icons */
 		foreach ($dom->getElementsByTagName('link') as $link) {
@@ -107,10 +110,12 @@ class FavIcon {
 				$href_absolute = $this->absolutize_url($href);
 				$icon = $this->validate_icon($href_absolute);
 				if ($icon !== null) {
-					if (empty($icon['type']))
+					if (empty($icon['type'])) {
 						$icon['type'] = $link->getAttribute('type');
-					if (empty($icon['sizes']))
+					}
+					if (empty($icon['sizes'])) {
 						$icon['sizes'] = $link->getAttribute('sizes');
+					}
 					$this->favicons[] = $icon;
 				}
 			}
@@ -125,8 +130,9 @@ class FavIcon {
 
 		/* take only what we want */
 		foreach (array('scheme', 'user', 'pass', 'host', 'port') as $key) {
-			if ( ! empty($this->site_url_parts[$key]))
+			if ( ! empty($this->site_url_parts[$key])) {
 				$favicon_url[$key] = $this->site_url_parts[$key];
+			}
 		}
 
 		/* add our own */
@@ -137,8 +143,9 @@ class FavIcon {
 
 		/* look for it */
 		$icon = $this->validate_icon($favicon_url);
-		if ($icon !== null)
+		if ($icon !== null) {
 			$this->favicons[] = $icon;
+		}
 	}
 
 
@@ -147,8 +154,9 @@ class FavIcon {
 		when http wrappers follow redirects.
 	*/
 	static protected function header_findr($headers, $header=null) {
-		if (empty($headers))
+		if (empty($headers)) {
 			return null;
+		}
 
 		end($headers);
 		while (key($headers) !== null) {
@@ -237,16 +245,18 @@ class FavIcon {
 	*/
 	protected function absolutize_url($url) {
 		/* If there's a scheme, it's already good to go. */
-		if (strpos($url, '://'))
+		if (strpos($url, '://')) {
 			return $url;
+		}
 
 		/* If there's no scheme, $url is just a path, so we need to fill in
 			the preambling parts from the site's url. */
 		$url_parts = array();
 		foreach (array('scheme', 'user', 'pass', 'host', 'port') as $key) {
 			if (empty($url_parts[$key])
-			&&  ! empty($this->site_url_parts[$key]))
+			&&  ! empty($this->site_url_parts[$key])) {
 				$url_parts[$key] = $this->site_url_parts[$key];
+			}
 		}
 
 		/* If it starts with a /, it's a complete path. */
@@ -281,8 +291,9 @@ class FavIcon {
 		}
 
 		if ( ! empty($parts['user']) || ! empty($parts['pass'])) {
-			if ( ! empty($parts['user']))
+			if ( ! empty($parts['user'])) {
 				$url[] = $parts['user'];
+			}
 			if ( ! empty($parts['pass'])) {
 				$url[] = ':';
 				$url[] = $parts['pass'];
@@ -290,15 +301,18 @@ class FavIcon {
 			$url[] = '@';
 		}
 
-		if ( ! empty($parts['host']))
+		if ( ! empty($parts['host'])) {
 			$url[] = $parts['host'];
+		}
 
-		if ( ! empty($parts['port']))
+		if ( ! empty($parts['port'])) {
 			$url[] = ':';
 			$url[] = $parts['port'];
+		}
 
-		if ( ! empty($parts['path']))
+		if ( ! empty($parts['path'])) {
 			$url[] = $parts['path'];
+		}
 
 		if ( ! empty($parts['query'])) {
 			$url[] = '?';
