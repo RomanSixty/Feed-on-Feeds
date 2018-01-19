@@ -103,7 +103,7 @@ function fof_log($message, $topic = 'debug') {
 }
 
 /** Assemble a shorthand trace of calls at current state.
-For debugging purposes.
+ *For debugging purposes.
  */
 function fof_stacktrace($skip_frames = 0, $include_args = true) {
 	$trace = '';
@@ -809,13 +809,14 @@ function fof_mark_item_unread($feed_id, $id) {
 	fof_db_mark_item_unread($users, $id);
 }
 
-function fof_new_parser() {
+function fof_new_parser($useragent='FoF '.SIMPLEPIE_USERAGENT) {
 	$p = &FoF_Prefs::instance();
 	$admin_prefs = $p->admin_prefs;
 
 	$pie = new SimplePie();
 	$pie->set_cache_location(dirname(__FILE__) . '/cache');
 	$pie->set_cache_duration($admin_prefs["manualtimeout"] * 60);
+	$pie->set_useragent($useragent);
 
 	// we allow iframe (for YouTube embeds etc.), the rest is SimplePie's default
 	$striptags = $pie->strip_htmltags;
@@ -829,13 +830,14 @@ function fof_new_parser() {
 
 /** Let SimplePie process a feed URL.
  */
-function fof_parse($url) {
+function fof_parse($url)
+{
 	if (empty($url)) {
 		fof_log("got empty url");
 		return false;
 	}
 
-	$p = &FoF_Prefs::instance();
+	$p =& FoF_Prefs::instance();
 	$admin_prefs = $p->admin_prefs;
 
 	$pie = fof_new_parser();
@@ -843,21 +845,21 @@ function fof_parse($url) {
 	$pie->init();
 
 	/* A feed might contain data before the <?xml declaration, which will cause
-		 * SimplePie to fail to parse it.
-		 * In case of an error in parsing, retry after trying to fetch and scrub the
-		 * feed data.
-		 * XXX: What error does this case report?  Could probably check for that,
-		 * and only try the scrubbing when it makes sense.
-	*/
+	 * SimplePie to fail to parse it.
+	 * In case of an error in parsing, retry after trying to fetch and scrub the
+	 * feed data.
+	 * XXX: What error does this case report?  Could probably check for that,
+	 * and only try the scrubbing when it makes sense.
+	 */
 	if ($pie->error()) {
 		fof_log('failed to parse feed url ' . $url . ': ' . $pie->error());
 
-		if (($data = file_get_contents($url)) === false) {
+		if ( ($data = file_get_contents($url)) === false) {
 			fof_log("failed to fetch '$url'");
 			return $pie;
 		}
 
-		$data = preg_replace('~.*<\?xml~sim', '<?xml', $data);
+		$data = preg_replace ( '~.*<\?xml~sim', '<?xml', $data );
 
 		#file_put_contents ('/tmp/text.xml',$data);
 
@@ -1120,7 +1122,7 @@ function fof_update_feed($id) {
 		$nextInterval = max($lastTime + $nextInterval, $now);
 		if ($count_Added > 1) {
 			// We missed an update, so make the interval shorter by how much we missed it by
-			$nextInterval -= lastInterval;
+			$nextInterval -= $lastInterval;
 		}
 		// fudge factor
 		$nextInterval += $stdev / ($count_Added + 1);
@@ -1248,38 +1250,58 @@ function fof_apply_plugin_tags($feed_id, $item_id = NULL, $user_id = NULL) {
 	}
 }
 
+/* Return an associative array with plugin names as keys, mapped to array with
+the following values:
+code => path to php plugin file, suitable for including
+meta => optionally-loaded contents of plugin ini file
+*/
+function fof_list_plugins($wantmeta = false, $dir = FOF_DIR . DIRECTORY_SEPARATOR . 'plugins') {
+	$plugins = array();
+	$dirlist = opendir($dir);
+	while (($file = readdir($dirlist)) !== false) {
+		$info = pathinfo($file);
+		if (empty($info['filename']) || $info['filename'][0] === '.') {
+			continue;
+		}
+		$filepath = $dir . DIRECTORY_SEPARATOR . $file;
+		if ($info['extension'] === 'php') {
+			$plugins[$info['filename']]['code'] = $filepath;
+		} elseif ($info['extension'] === 'ini') {
+			$plugins[$info['filename']]['meta'] = $wantmeta ? parse_ini_file($filepath) : null;
+		}
+	}
+	closedir($dirlist);
+
+	return $plugins;
+}
+
 function fof_init_plugins() {
-	global $fof_item_filters, $fof_item_prefilters, $fof_tag_prefilters, $fof_plugin_prefs, $fof_render_filters;
+	global $fof_item_filters,
+		$fof_item_prefilters,
+		$fof_tag_prefilters,
+		$fof_plugin_prefs,
+		$fof_domitem_filters,
+		$fof_render_filters;
 
 	$fof_item_filters = array();
 	$fof_item_prefilters = array();
 	$fof_plugin_prefs = array();
 	$fof_tag_prefilters = array();
+	$fof_domitem_filters = array();
 	$fof_render_filters = array();
 
 	$p = &FoF_Prefs::instance();
 
-	$plugin_dir = FOF_DIR . DIRECTORY_SEPARATOR . 'plugins';
-
+	$plugins = fof_list_plugins();
 	$active_plugins = array();
-	$dirlist = opendir($plugin_dir);
-	while (($file = readdir($dirlist)) !== false) {
-		$info = pathinfo($file);
-
-		if ($info['extension'] !== 'php'
-			|| $info['filename'][0] === '.') {
-			continue;
+	foreach ($plugins as $plugin => $data) {
+		if (!empty($data['code'])) {
+			if ($p->get('plugin_' . $plugin) == false) {
+				$active_plugins[] = $plugin;
+				include $data['code'];
+			}
 		}
-
-		if ($p->get('plugin_' . $info['filename'])) {
-			continue;
-		}
-
-		$active_plugins[] = $info['filename'];
-
-		include $plugin_dir . DIRECTORY_SEPARATOR . $file;
 	}
-	closedir($dirlist);
 	fof_log('included plugins: ' . implode(', ', $active_plugins));
 }
 
@@ -1299,6 +1321,17 @@ function fof_add_item_filter($function, $order = null) {
 	}
 
 	ksort($fof_item_filters);
+}
+
+function fof_add_domitem_filter($function, $order = null) {
+	global $fof_domitem_filters;
+
+	if (is_int($order)) {
+		$fof_domitem_filters[$order] = $function;
+		ksort($fof_domitem_filters);
+	} else {
+		$fof_domitem_filters[] = $function;
+	}
 }
 
 function fof_add_render_filter($function, $order = null) {
@@ -1641,14 +1674,21 @@ function fof_render_feed_row($f) {
 	return $out;
 }
 
+class DOMDocumentWithErrContext extends DOMDocument {
+	public $old_xml_err;
+	public function __construct() {
+		parent::__construct();
+		$this->old_xml_err = libxml_use_internal_errors(true);
+	}
+}
+
 // Helper function for plugins - extract a DOMdocument from a content string
 function fof_content_to_dom($content) {
-	$dom = new DOMDocument();
+	$dom = new DOMDocumentWithErrContext();
 	if (!$content) {
 		return $dom;
 	}
 
-	$old_xml_err = libxml_use_internal_errors(true);
 	$dom->loadHtml(mb_convert_encoding($content, 'HTML-ENTITIES', "UTF-8"));
 
 	return $dom;
@@ -1656,6 +1696,16 @@ function fof_content_to_dom($content) {
 
 // Helper function for plugins - convert a DOMdocument back to a content string
 function fof_dom_to_content($dom) {
+	foreach (libxml_get_errors() as $error) {
+		/* just ignore warnings */
+		if ($error->level === LIBXML_ERR_WARNING) {
+			continue;
+		}
+		fof_log(__FUNCTION__ . ': ' . $error->message);
+	}
+	libxml_clear_errors();
+	libxml_use_internal_errors($dom->old_xml_err);
+
 	return preg_replace('~<(?:!DOCTYPE|/?(?:html|body))[^>]*>\s*~i', '', $dom->saveHTML());
 }
 

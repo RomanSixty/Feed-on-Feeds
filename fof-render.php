@@ -51,8 +51,9 @@ function fof_render_get_key_($array, $key, $default = NULL) {
 }
 
 function fof_render_item($item, $include_div = true) {
-	global $fof_asset;
-	global $fof_render_filters;
+	global $fof_asset,
+		$fof_render_filters,
+		$fof_domitem_filters;
 
 	$feed_link = fof_render_get_key_($item, 'feed_link');
 	if ($feed_link == "[no link]") {
@@ -77,6 +78,12 @@ function fof_render_item($item, $include_div = true) {
 	foreach ($fof_render_filters as $filter) {
 		$item_content = $filter($item_content, $item);
 	}
+
+	$dom = fof_content_to_dom($item_content);
+	foreach ($fof_domitem_filters as $filter) {
+		$dom = $filter($dom, $item);
+	}
+	$item_content = fof_dom_to_content($dom);
 
 	// some minor cleanup tasks...
 	$item_content = html_entity_decode($item_content, ENT_NOQUOTES, 'utf-8');

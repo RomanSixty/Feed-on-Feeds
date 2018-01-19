@@ -1,12 +1,12 @@
 <?php
 /**	Locate a suitable favicon for a site.
 
-	Copyright (C) 2013 Justin Wind <justin.wind@gmail.com>
+	Copyright (C) 2013-2016 Justin Wind <justin.wind@gmail.com>
 
 */
 class FavIcon {
 	const VERSION = '1.0';
-	const BUILD = '20131115000000';
+	const BUILD = '20160424000000';
 	const SRC_URL = '';
 
 	static protected function default_user_agent() {
@@ -33,8 +33,9 @@ class FavIcon {
 
 		$this->links_from_site();
 
-		if (empty($this->favicons))
+		if (empty($this->favicons)) {
 			$this->links_from_rote();
+		}
 
 		/* TODO: sort by something other than first-occurence */
 	}
@@ -56,11 +57,19 @@ class FavIcon {
 	*/
 	function getIcon() {
 		@list($first) = $this->favicons;
-		if (empty($first))
+		if (empty($first)) {
 			return null;
+		}
 		return $first;
 	}
 
+
+	/** $http_response_header can be empty during certain connection-closed
+		cases, so try to minimize errors from such.
+	*/
+	static protected function safe_headers() {
+		return ( ! empty($http_response_header)) ? $http_response_header : array('HTTP/1.1 400 Bad request');
+	}
 
 	/**	Load the page, parse for iconic links, and add them to icon list if
 		they are valid.
@@ -83,7 +92,7 @@ class FavIcon {
 		libxml_set_streams_context($default_context);
 
 		if ($dom_result === false) {
-			$status = self::header_findr($http_response_header, null);
+			$status = self::header_findr(self::safe_headers(), null);
 			@list ( , $status, ) = explode(' ', $status, 3);
 			$status = (integer)$status;
 			trigger_error('site \'' . $this->site_url . '\' returned ' . $status, E_USER_NOTICE);
@@ -95,9 +104,10 @@ class FavIcon {
 			location, so that relative urls may be correctly converted into
 			their absolute form.
 		*/
-		$location = self::header_findr($http_response_header, 'Location');
-		if ($location !== null)
+		$location = self::header_findr(self::safe_headers(), 'Location');
+		if ($location !== null) {
 			$this->site_url = $location;
+		}
 
 		/* check all the links which relate to icons */
 		foreach ($dom->getElementsByTagName('link') as $link) {
@@ -107,10 +117,12 @@ class FavIcon {
 				$href_absolute = $this->absolutize_url($href);
 				$icon = $this->validate_icon($href_absolute);
 				if ($icon !== null) {
-					if (empty($icon['type']))
+					if (empty($icon['type'])) {
 						$icon['type'] = $link->getAttribute('type');
-					if (empty($icon['sizes']))
+					}
+					if (empty($icon['sizes'])) {
 						$icon['sizes'] = $link->getAttribute('sizes');
+					}
 					$this->favicons[] = $icon;
 				}
 			}
@@ -125,8 +137,9 @@ class FavIcon {
 
 		/* take only what we want */
 		foreach (array('scheme', 'user', 'pass', 'host', 'port') as $key) {
-			if ( ! empty($this->site_url_parts[$key]))
+			if ( ! empty($this->site_url_parts[$key])) {
 				$favicon_url[$key] = $this->site_url_parts[$key];
+			}
 		}
 
 		/* add our own */
@@ -137,8 +150,9 @@ class FavIcon {
 
 		/* look for it */
 		$icon = $this->validate_icon($favicon_url);
-		if ($icon !== null)
+		if ($icon !== null) {
 			$this->favicons[] = $icon;
+		}
 	}
 
 
@@ -147,8 +161,9 @@ class FavIcon {
 		when http wrappers follow redirects.
 	*/
 	static protected function header_findr($headers, $header=null) {
-		if (empty($headers))
+		if (empty($headers)) {
 			return null;
+		}
 
 		end($headers);
 		while (key($headers) !== null) {
@@ -175,12 +190,12 @@ class FavIcon {
 		$stream_context = stream_context_create($this->stream_context_options);
 		$icon['data'] = @file_get_contents($url, NULL, $stream_context);
 		if ($icon['data'] === false) {
-            trigger_error('failed to get icon resource \'' . $url .'\'', E_USER_NOTICE);
+			trigger_error('failed to get icon resource \'' . $url .'\'', E_USER_NOTICE);
 			return null;
 		}
 
 		/* did we get a useful response */
-		$status = self::header_findr($http_response_header, null);
+		$status = self::header_findr(self::safe_headers(), null);
 		@list ( , $status, ) = explode(' ', $status, 3);
 		$status = (integer)$status;
 		if ($status !== 200) {
@@ -194,7 +209,7 @@ class FavIcon {
 		}
 
 		/* is it displayable */
-		$icon['type'] = self::header_findr($http_response_header, 'Content-Type');
+		$icon['type'] = self::header_findr(self::safe_headers(), 'Content-Type');
 		@list($icon['type'], ) = explode(';', $icon['type']);
 		@list($type, $subtype) = explode('/', $icon['type'], 2);
 		if (strcasecmp($type, 'image') !== 0) {
@@ -237,16 +252,18 @@ class FavIcon {
 	*/
 	protected function absolutize_url($url) {
 		/* If there's a scheme, it's already good to go. */
-		if (strpos($url, '://'))
+		if (strpos($url, '://')) {
 			return $url;
+		}
 
 		/* If there's no scheme, $url is just a path, so we need to fill in
 			the preambling parts from the site's url. */
 		$url_parts = array();
 		foreach (array('scheme', 'user', 'pass', 'host', 'port') as $key) {
 			if (empty($url_parts[$key])
-			&&  ! empty($this->site_url_parts[$key]))
+			&&  ! empty($this->site_url_parts[$key])) {
 				$url_parts[$key] = $this->site_url_parts[$key];
+			}
 		}
 
 		/* If it starts with a /, it's a complete path. */
@@ -281,8 +298,9 @@ class FavIcon {
 		}
 
 		if ( ! empty($parts['user']) || ! empty($parts['pass'])) {
-			if ( ! empty($parts['user']))
+			if ( ! empty($parts['user'])) {
 				$url[] = $parts['user'];
+			}
 			if ( ! empty($parts['pass'])) {
 				$url[] = ':';
 				$url[] = $parts['pass'];
@@ -290,13 +308,18 @@ class FavIcon {
 			$url[] = '@';
 		}
 
-		$url[] = $parts['host'];
+		if ( ! empty($parts['host'])) {
+			$url[] = $parts['host'];
+		}
 
-		if ( ! empty($parts['port']))
-			$url[] = ':' . $parts['port'];
+		if ( ! empty($parts['port'])) {
+			$url[] = ':';
+			$url[] = $parts['port'];
+		}
 
-		if ( ! empty($parts['path']))
+		if ( ! empty($parts['path'])) {
 			$url[] = $parts['path'];
+		}
 
 		if ( ! empty($parts['query'])) {
 			$url[] = '?';

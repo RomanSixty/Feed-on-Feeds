@@ -122,17 +122,8 @@ if (isset($_POST['plugins'])) {
 		$prefs->set($key, fof_prefs_get_key_($_POST, $key));
 	}
 
-	$plugins = array();
-	$dirlist = opendir(FOF_DIR . "/plugins");
-	while ($file = readdir($dirlist)) {
-		if (preg_match('/\.php$/', $file)) {
-			$plugins[] = substr($file, 0, -4);
-		}
-	}
-
-	closedir();
-
-	foreach ($plugins as $plugin) {
+	$plugins = fof_list_plugins();
+	foreach ($plugins as $plugin => $data) {
 		$prefs->set("plugin_" . $plugin, fof_prefs_get_key_($_POST, $plugin) != "on");
 	}
 
@@ -281,25 +272,12 @@ if (!defined('FOF_AUTH_EXTERNAL_ONLY')) {
 <br><h1 id="plugins">Feed on Feeds - Plugin Preferences</h1>
 <form method="post" action="prefs.php#plugins" style="border: 1px solid black; margin: 10px; padding: 10px;">
 
+<table class="plugin_prefs">
+<tr><th>Plugin</th><th>Type</th><th>Description</th></tr>
+
 <?php
-$plugins = array();
-$dirlist = opendir(FOF_DIR . "/plugins");
-while ($file = readdir($dirlist)) {
-	if (preg_match('/\.php$/', $file)) {
-		fof_log("considering " . $file);
-		$plugins[substr($file, 0, -4)]['code'] = true;
-	} elseif (preg_match('/\.ini$/', $file)) {
-		$meta = parse_ini_file(FOF_DIR . "/plugins/" . $file);
-		$plugins[substr($file, 0, -4)]['meta'] = $meta;
-	}
-}
-
-closedir();
-
+$plugins = fof_list_plugins(true);
 ksort($plugins);
-
-echo '<table class="plugin_prefs">';
-echo '<tr><th>Plugin</th><th>Type</th><th>Description</th></tr>';
 
 foreach ($plugins as $plugin => $data) {
 	if (!$data['code']) {
@@ -315,7 +293,7 @@ foreach ($plugins as $plugin => $data) {
 	echo '> ' . $plugin . '</td>';
 
 	if (!empty($data['meta'])) {
-		echo '<td><tt>[' . $data['meta']['type'] . ']</tt></td><td><small>' . htmlspecialchars($data['meta']['description']) . '</small></td>';
+		echo '<td><tt>[' . $data['meta']['type'] . ']</tt></td><td><small>' . htmlspecialchars($data['meta']['description']) . '</small></td>' . "\n";
 	}
 
 	echo '</tr>';

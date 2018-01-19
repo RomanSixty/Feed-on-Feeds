@@ -2,11 +2,9 @@
 
 /* Make media playback more sensible */
 
-fof_add_item_filter('remove_media_autoplay');
+fof_add_domitem_filter('remove_media_autoplay');
 
-function remove_media_autoplay($content) {
-	$dom = fof_content_to_dom($content);
-
+function remove_media_autoplay($dom, $item) {
 	// Make sure video doesn't autoplay and does have contorls
 	foreach ($dom->getElementsByTagName('video') as $video) {
 		$video->removeAttribute("autoplay");
@@ -19,5 +17,6 @@ function remove_media_autoplay($content) {
 		$audio->setAttribute("controls", true);
 	}
 
-	return fof_dom_to_content($dom);
+	return $dom;
 }
+?>
