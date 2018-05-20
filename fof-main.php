@@ -816,7 +816,11 @@ function fof_new_parser($useragent='FoF '.SIMPLEPIE_USERAGENT) {
 	$pie = new SimplePie();
 	$pie->set_cache_location(dirname(__FILE__) . '/cache');
 	$pie->set_cache_duration($admin_prefs["manualtimeout"] * 60);
-	$pie->set_useragent($useragent);
+
+	if (defined('FOF_USER_AGENT'))
+		$pie->set_useragent(FOF_USER_AGENT);
+	else
+		$pie->set_useragent($useragent);
 
 	// we allow iframe (for YouTube embeds etc.), the rest is SimplePie's default
 	$striptags = $pie->strip_htmltags;
