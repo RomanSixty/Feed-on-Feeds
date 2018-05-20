@@ -5,4 +5,5 @@ fof.log
 fof-install.log
 *.db
 *~
-
+cookies.txt
+.idea

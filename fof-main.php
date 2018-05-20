@@ -846,6 +846,15 @@ function fof_parse($url)
 
 	$pie = fof_new_parser();
 	$pie->set_feed_url($url);
+
+	// do we have a cookie file?
+    if ( is_readable ( $cookiestxt = dirname(__FILE__) . '/cookies.txt' ) ) {
+        $pie->set_curl_options(array(
+            CURLOPT_COOKIEFILE => $cookiestxt,
+            CURLOPT_COOKIEJAR => $cookiestxt
+        ) );
+    }
+
 	$pie->init();
 
 	/* A feed might contain data before the <?xml declaration, which will cause
