@@ -624,7 +624,7 @@ function fof_install_database_update_old_tables() {
 	try {
 		/* charsets */
 		foreach ($all_tables as $table) {
-			fof_install_migrate_table_charset($table);
+			fof_install_migrate_table_charset($queries, $table);
 		}
 
 		/* triggers */
@@ -755,7 +755,7 @@ END";
 			'add' => fof_install_create_reference_query(FOF_SUBSCRIPTION_TABLE, 'feed_id', array(FOF_FEED_TABLE, 'feed_id')),
 		));
 
-		fof_install_migrate_reference($queries, FOF_SUBSCRIPTION_TABLE, 'subscription_added', array(
+		fof_install_migrate_column($queries, FOF_SUBSCRIPTION_TABLE, 'subscription_added', array(
 			'add' => "ALTER TABLE " . FOF_SUBSCRIPTION_TABLE . " ADD subscription_added " . SQL_DRIVER_INT_TYPE . " DEFAULT '0' AFTER subscription_prefs",
 		));
 
