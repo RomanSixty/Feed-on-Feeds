@@ -848,12 +848,12 @@ function fof_parse($url)
 	$pie->set_feed_url($url);
 
 	// do we have a cookie file?
-    if ( is_readable ( $cookiestxt = dirname(__FILE__) . '/cookies.txt' ) ) {
-        $pie->set_curl_options(array(
-            CURLOPT_COOKIEFILE => $cookiestxt,
-            CURLOPT_COOKIEJAR => $cookiestxt
-        ) );
-    }
+	if ( is_readable ( $cookiestxt = (defined('FOF_DATA_PATH') ? FOF_DATA_PATH : dirname(__FILE__)) . '/cookies.txt' ) ) {
+		$pie->set_curl_options(array(
+			CURLOPT_COOKIEFILE => $cookiestxt,
+			CURLOPT_COOKIEJAR => $cookiestxt
+		) );
+	}
 
 	$pie->init();
 
