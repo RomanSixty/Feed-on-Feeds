@@ -4,23 +4,25 @@
 require_once 'fof-main.php';
 require_once 'library/urljoin.php';
 
-if (!$_GET['item']) {
+$item_id = $_GET['item'];
+if (!$item_id) {
 	die("Missing item ID");
 }
 
-if (!$_GET['url']) {
+$url = $_GET['url'];
+if (!$url) {
 	die("Missing URL");
 }
 
 // TODO: make sure we're logged in
 
-$item = fof_get_item(NULL, $_GET['item'], false);
+$item = fof_get_item(NULL, $item_id, false);
 if (!$item) {
 	die("couldn't get item");
 }
 
 // fix relative URLs with $item['item_link']
-$url = urljoin($item['item_link'], $_GET['url']);
+$url = urljoin($item['item_link'], $url);
 
 // This is a really annoying way to get the final header chunk. There's got to be a better way...
 $final = false;
@@ -28,8 +30,9 @@ function dump_headers($ch, $header) {
 	global $final;
 	if (preg_match('@HTTP/[^ ]* [12456789]@', $header)) {
 		$final = true;
-	} else if ($final && preg_match('/^\w: /', $header)) {
-		header($header);
+	} else if ($final && strpos($header, ':')) {
+		fof_log("image $url header: $header");
+		header(rtrim($header));
 	}
 	return strlen($header);
 }
@@ -44,5 +47,6 @@ curl_setopt_array($curl, array(
 ));
 
 curl_exec($curl);
+fof_log(curl_error($curl));
 curl_close($curl);
 ?>
