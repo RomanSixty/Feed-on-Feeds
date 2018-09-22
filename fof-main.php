@@ -842,7 +842,6 @@ function fof_parse($url)
 	}
 
 	$p =& FoF_Prefs::instance();
-	$admin_prefs = $p->admin_prefs;
 
 	$pie = fof_new_parser();
 	$pie->set_feed_url($url);
@@ -1623,7 +1622,7 @@ function fof_render_feed_row($f) {
 			$out .= '	<td class="title"><a href="' . ($unread ? $feed_view_unread_url : $feed_view_all_url) . '">' . $title . '</a></td>' . "\n";
 
 			/* controls */
-			$out .= '	<td class="controls"><a href="' . $feed_unsubscribe_url . '" title="delete" onclick="return sb_unsub_conf(' . $title_json . ');">[x]</a></td>' . "\n";
+			$out .= '	<td class="controls hide-on-mobile"><a href="' . $feed_unsubscribe_url . '" title="delete" onclick="return sb_unsub_conf(' . $title_json . ');">[x]</a></td>' . "\n";
 			break;
 
 		case 'fancy': /* feed_url max_date feed_unread feed_title */
@@ -1641,7 +1640,7 @@ function fof_render_feed_row($f) {
 			$out .= '	<td class="title"><a href="' . ($unread ? $feed_view_unread_url : $feed_view_all_url) . '" title="' . ($unread ? ($unread . ' new of ') : '') . $items . ' total items">' . $title . '</a></td>' . "\n";
 
 			/* controls */
-			$out .= '	<td class="controls">';
+			$out .= '	<td class="controls hide-on-mobile">';
 			$out .= '<ul class="feedmenu">';
 			$out .= '<li>';
 			$out .= '<a href="#" title="feed controls">&Delta;</a>';
@@ -1676,7 +1675,7 @@ function fof_render_feed_row($f) {
 			$out .= '	<td class="title"><a href="' . $link . '" title="home page"' . ($fof_prefs_obj->get('item_target') ? ' target="_blank"' : '') . '><b>' . $title . '</b></a></td>' . "\n";
 
 			/* controls */
-			$out .= '	<td class="controls"><span class="nowrap">';
+			$out .= '	<td class="controls hide-on-mobile"><span class="nowrap">';
 			$out .= ' <a href="' . $feed_update_url . '" title="update">u</a>';
 			$out .= ' <a href="#" title="mark all read" onclick="return sb_read_conf(' . $title_json . ', ' . $f['feed_id'] . ');">m</a>';
 			$out .= ' <a href="' . $feed_unsubscribe_url . '" title="delete" onclick="return sb_unsub_conf(' . $title_json . ');">d</a>';

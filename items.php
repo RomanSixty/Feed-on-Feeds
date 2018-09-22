@@ -82,7 +82,7 @@ $qv = array('feed' => $feed,
 	'search' => $search);
 
 $set_view_button = '&hearts;';
-$item_controls .= '	<li id="view-settings-button">';
+$item_controls .= '	<li id="view-settings-button" class="hide-on-mobile">';
 if (!empty($search)) {
 	$item_controls .= '<span class="unavailable" title="Sorry, collections of items which involve search terms cannot currently store custom orderings.">';
 	$item_controls .= $set_view_button;
@@ -105,7 +105,7 @@ if (!empty($search)) {
 }
 $item_controls .= '</li>';
 
-$item_controls .= '	<li class="orderby">';
+$item_controls .= '	<li class="orderby hide-on-mobile">';
 if ($order == 'asc') {
 	$item_controls .= '<a href="' . fof_url('.', array_merge($qv, array('order' => 'desc'))) . '">';
 }
@@ -117,7 +117,7 @@ if ($order == 'asc') {
 
 $item_controls .= "</li>\n";
 
-$item_controls .= '	<li class="orderby">';
+$item_controls .= '	<li class="orderby hide-on-mobile">';
 if ($order == 'desc') {
 	$item_controls .= '<a href="' . fof_url('.', array_merge($qv, array('order' => 'asc'))) . '">';
 }
@@ -130,13 +130,13 @@ if ($order == 'desc') {
 $item_controls .= "</li>\n";
 
 $item_controls .= '	<li><a href="#" onclick="flag_all();mark_read();return false;"><strong>Mark all read</strong></a></li>';
-$item_controls .= '	<li><a href="#" onclick="flag_all();return false;">Flag all</a></li>';
-$item_controls .= '	<li><a href="#" onclick="unflag_all();return false;">Unflag all</a></li>';
-$item_controls .= '	<li><a href="#" onclick="toggle_all();return false;">Toggle all</a></li>';
-$item_controls .= '	<li><a href="#" onclick="mark_read();return false;"><strong>Mark flagged read</strong></a></li>';
-$item_controls .= '	<li><a href="#" onclick="mark_unread();return false;">Mark flagged unread</a></li>';
-$item_controls .= '	<li><a href="#" onclick="show_all();return false;">Show all</a></li>';
-$item_controls .= '	<li><a href="#" onclick="hide_all();return false;">Hide all</a></li>';
+$item_controls .= '	<li class="hide-on-mobile"><a href="#" onclick="flag_all();return false;">Flag all</a></li>';
+$item_controls .= '	<li class="hide-on-mobile"><a href="#" onclick="unflag_all();return false;">Unflag all</a></li>';
+$item_controls .= '	<li class="hide-on-mobile"><a href="#" onclick="toggle_all();return false;">Toggle all</a></li>';
+$item_controls .= '	<li class="hide-on-mobile"><a href="#" onclick="mark_read();return false;"><strong>Mark flagged read</strong></a></li>';
+$item_controls .= '	<li class="hide-on-mobile"><a href="#" onclick="mark_unread();return false;">Mark flagged unread</a></li>';
+$item_controls .= '	<li class="hide-on-mobile"><a href="#" onclick="show_all();return false;">Show all</a></li>';
+$item_controls .= '	<li class="hide-on-mobile"><a href="#" onclick="hide_all();return false;">Hide all</a></li>';
 $item_controls .= '	<li><a href="#" onclick="untag_all();return false;">Untag all</a></li>';
 
 echo $item_controls;

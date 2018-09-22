@@ -119,7 +119,7 @@ function fof_render_item($item, $include_div = true) {
 	?>
 
 <div class="header">
-	<span class="controls">
+	<span class="controls hide-on-mobile">
 		<a class="uparrow" href="#" onclick="hide_body('<?=$item_id?>');return false;">fold &uarr;</a>
 		<a class="downarrow" href="#" onclick="show_body('<?=$item_id?>');return false;">unfold &darr;</a>
 		<a href="#" onclick="ajax_mark_read('<?=$item_id?>'); return false;">mark read</a>
@@ -134,7 +134,8 @@ function fof_render_item($item, $include_div = true) {
 			   value="checked"
 			   ondblclick="flag_upto('c<?=$item_id?>');"
 			   onclick="return checkbox(event);"
-			   title="shift-click or double-click to flag all items up to this one" />
+			   title="shift-click or double-click to flag all items up to this one"
+		       class="hide-on-mobile"/>
 <?php
 echo '		<span id="fav' . $item_id . '" class="' . ($star ? '' : 'un') . 'starred" onclick="return toggle_favorite(' . $item_id . ')"></span>' . "\n";
 	?>

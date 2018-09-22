@@ -37,6 +37,7 @@ if (is_readable('./fof-custom.css')) {
 }
 ?>
     <link rel="microsummary" href="microsummary.php" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
     <script src="prototype/prototype.js" type="text/javascript"></script>
     <script src="fof.js" type="text/javascript"></script>
     <script>
@@ -73,12 +74,13 @@ if (is_readable('./fof-custom.css')) {
 </head>
 
 <body class="highlight-on"> <!--onkeypress="keyboard(event)"-->
+<a href="#sidebar" id="menu_toggle" onclick="$('sidebar').toggleClassName('active'); return false;">☰</a>
 <div id="sidebar">
 <?php
 include 'sidebar.php';
 ?>
 </div>
 
-<div id="handle" onmousedown="startResize(event)"></div>
+<div id="handle" class="hide-on-mobile" onmousedown="startResize(event)"></div>
 
 <div id="items">

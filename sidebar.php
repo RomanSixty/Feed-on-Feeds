@@ -35,20 +35,20 @@ if (empty($sidebar_style) && $fof_prefs_obj->get('simple_sidebar')) {
 <img id="throbber" src="<?php echo $fof_asset['throbber_image']; ?>" align="left" style="display: none;" />
 <?php
 $welcomecontent = '<span>Welcome, <span class="userid">' . $fof_user_name . '</span>!</span>';
-$welcomecontent .= ' | <a href="prefs.php">prefs</a>';
+$welcomecontent .= '<span class="hide-on-mobile"> | <a href="prefs.php">prefs</a>';
 if (!defined('FOF_AUTH_EXTERNAL')) {
 	$welcomecontent .= ' | <a href="logout.php">log out</a>';
 }
 
-$welcomecontent .= ' | <a href="http://feedonfeeds.com/">about</a>';
+$welcomecontent .= ' | <a href="http://feedonfeeds.com/">about</a></span>';
 
-echo '<div id="welcome" class="banner ontop">' . $welcomecontent . "</div>\n";
-echo '<div id="welcome-spacer" class="banner">' . $welcomecontent . "</div>\n";
+echo '<div id="welcome" class="banner ontop hide-on-mobile">' . $welcomecontent . "</div>\n";
+echo '<div id="welcome-spacer" class="banner hide-on-mobile">' . $welcomecontent . "</div>\n";
 echo '<div id="feed-actions"><a href="add.php"><b>Add Feeds</b></a> / ';
 if ($sidebar_style == 'fancy') {
-	echo '<a href="#" title="Update all subscribed feeds" onclick="' . htmlentities('throb(); new Ajax.Request("feed-action.php", {method:"post", parameters:{"update_subscribed_sources": true}});', ENT_QUOTES) . '"><b>Update Feeds</b></a>';
+	echo '<a href="#" class="hide-on-mobile" title="Update all subscribed feeds" onclick="' . htmlentities('throb(); new Ajax.Request("feed-action.php", {method:"post", parameters:{"update_subscribed_sources": true}});', ENT_QUOTES) . '"><b>Update Feeds</b></a>';
 } else {
-	echo '<a href="update.php"><b>Update Feeds</b></a>';
+	echo '<a href="update.php" class="hide-on-mobile"><b>Update Feeds</b></a>';
 }
 
 echo '</div>' . "\n";
@@ -98,12 +98,12 @@ if (!empty($unread)) {
 <?php
 echo '  <li' . (empty($feed) && $what == 'unread' ? " class='current-view'" : '') . '>';
 echo '<a href="' . fof_url('.', array('what' => 'unread', 'how' => 'paged')) . '"><span style="color:red"><b>Unread' . ($unread ? " ($unread)" : '') . '</b></span></a>';
-echo ' [<a href="' . fof_url('.', array('what' => 'unread', 'how' => 'unpaged')) . '">unpaged</a>]';
+echo '<span class="hide-on-mobile"> [<a href="' . fof_url('.', array('what' => 'unread', 'how' => 'unpaged')) . '">unpaged</a>]</span>';
 echo "</li>\n";
 
 echo '  <li' . (empty($feed) && $what == 'star' ? " class='current-view'" : '') . '>';
 echo '<a href="' . fof_url('.', array('what' => 'star', 'how' => 'paged')) . '"><span class="starred-small"></span> Starred <span id="starredcount">' . ($starred ? "($starred)" : '') . '</span></a>';
-echo ' [<a href="' . fof_url('.', array('what' => 'star', 'how' => 'unpaged')) . '">unpaged</a>]';
+echo '<span class="hide-on-mobile"> [<a href="' . fof_url('.', array('what' => 'star', 'how' => 'unpaged')) . '">unpaged</a>]</span>';
 echo "</li>\n";
 
 echo '  <li' . (empty($feed) && $what == 'all' && isset($when) ? " class='current-view'" : '') . '>';
@@ -151,8 +151,7 @@ function fof_sidebar_tags_fancy() {
 
 		$tagline = '	<tr class="tag' . (++$n % 2 ? ' odd-row' : '') . (in_array($tag['tag_name'], $what_a) ? ' current-view' : '') . '" id="tagid_' . $tag['tag_id'] . '">';
 
-		$tagline .= '<td class="source"><img src="' . (empty($tag['tag_icon']) ? $fof_asset['tag_icon'] : $tag['tag_icon']) . '" class="feed-icon" /></td>';
-		$tagline .= '<td class="latest"></td>';
+		$tagline .= '<td class="source hide-on-mobile"><img src="' . (empty($tag['tag_icon']) ? $fof_asset['tag_icon'] : $tag['tag_icon']) . '" class="feed-icon" /></td>';
 
 		$tagline .= '<td class="unread"><span class="unread">';
 		if ($tag['unread']) {
@@ -163,7 +162,7 @@ function fof_sidebar_tags_fancy() {
 
 		$tagline .= '<td class="title"><a href="' . ($tag['unread'] ? $tag_view_unread_url : $tag_view_all_url) . '" title="' . ($tag['unread'] ? ($tag['unread'] . ' new of ') : '') . $tag['count'] . ' total items">' . $tag['tag_name'] . '</a></td>';
 
-		$tagline .= '<td class="controls">';
+		$tagline .= '<td class="controls hide-on-mobile">';
 		$tagline .= '<ul class="feedmenu"><li>';
 		$tagline .= '<a href="#" title="tag controls">&Delta;</a>';
 		$tagline .= '<ul>';
@@ -188,10 +187,9 @@ function fof_sidebar_tags_fancy() {
 	if (!empty($taglines)) {
 		echo "<div id=\"tags\">\n";
 		echo "<table cellspacing=\"0\" cellpadding=\"1\" border=\"0\" class=\"taglist\">\n";
-		echo "<thead>\n";
+		echo "<thead class=\"hide-on-mobile\">\n";
 		echo '	<tr class="heading">';
 		echo '<th class="source"></th>';
-		echo '<th class="latest" style="visibility:hidden;">latest&darr;</th>';
 		echo '<th class="unread"><span class="unread">#</span></th>';
 		echo '<th class="title">tag name</th>';
 		echo '<th class="controls"><span></span></th>';
@@ -302,7 +300,7 @@ if (function_exists('fof_sidebar_tags_' . $sidebar_style)) {
 ?>
 <div id="feeds">
   <table cellspacing="0" cellpadding="1" border="0">
-    <thead>
+    <thead class="hide-on-mobile">
       <tr class="heading">
 <?php
 
@@ -368,7 +366,7 @@ foreach ($columns as $col) {
 	echo "</a></span></th>\n";
 }
 ?>
-        <th class="controls"></th>
+        <th class="controls hide-on-mobile"></th>
       </tr>
     </thead>
     <tbody>
