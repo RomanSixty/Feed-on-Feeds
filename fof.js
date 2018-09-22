@@ -890,20 +890,18 @@ function change_feed_order(order, direction) {
 function toggle_favorite(id) {
     throb();
 
-    var image = $('fav' + id);
+    var star = $('fav' + id);
 
     var url = "add-tag.php";
     var params = {
         "tag": "star",
         "item": id
     };
-    image.src = 'image/star-pending.gif';
 
-    if (image.className == 'starred') {
+    if (star.className == 'starred') {
         params['remove'] = "true";
         var complete = function() {
-            image.src = 'image/star-off.gif';
-            image.className = 'unstarred';
+			star.className = 'unstarred';
             starred--;
             if (starred) {
                 $('starredcount').update('(' + starred + ')');
@@ -914,8 +912,7 @@ function toggle_favorite(id) {
         };
     } else {
         var complete = function() {
-            image.src = 'image/star-on.gif';
-            image.className = 'starred';
+			star.className = 'starred';
             starred++;
             if (starred) {
                 $('starredcount').update('(' + starred + ')');
@@ -925,6 +922,8 @@ function toggle_favorite(id) {
             unthrob();
         };
     }
+
+	star.className = 'starred-pending';
 
     var options = {
         method: 'post',

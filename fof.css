@@ -231,12 +231,44 @@ h2
     float: right;
 }
 
-.starred,.unstarred
-{
-    width: 16px;
-    height: 16px;
-    border: 0;
-    cursor: pointer;
+.starred,
+.unstarred,
+.starred-pending {
+  display: inline-block;
+  font-size: 22px;
+  line-height: 20px;
+  width: 20px;
+  text-align: center;
+  cursor: pointer;
+  vertical-align: baseline;
+}
+
+.starred:before {
+  content: "★";
+  color: red;
+}
+
+.unstarred:before {
+  content: "☆";
+}
+
+.starred-pending {
+  content: "☆";
+  color: red;
+}
+
+.starred-small {
+  display: inline-block;
+  font-size: 18px;
+  line-height: 16px;
+  width: 16px;
+  text-align: center;
+  vertical-align: baseline;
+}
+
+.starred-small:before {
+  content: "★";
+  color: red;
 }
 
 .tags
@@ -389,12 +421,6 @@ list-style: none;
 .feed-icon {
     width: 16px;
     height: 16px;
-    border: 0;
-}
-
-.star-icon-small {
-    width: 10px;
-    height: 10px;
     border: 0;
 }
 

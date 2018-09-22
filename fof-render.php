@@ -109,7 +109,6 @@ function fof_render_item($item, $include_div = true) {
 	$tags = fof_render_get_key_($item, 'tags', array());
 
 	$star = in_array("star", $tags) ? true : false;
-	$star_image = $star ? $fof_asset['star_on_image'] : $fof_asset['star_off_image'];
 
 	$unread = in_array("unread", $tags) ? true : false;
 
@@ -137,7 +136,7 @@ function fof_render_item($item, $include_div = true) {
 			   onclick="return checkbox(event);"
 			   title="shift-click or double-click to flag all items up to this one" />
 <?php
-echo '		<img id="fav' . $item_id . '" class="' . ($star ? '' : 'un') . 'starred" src="' . $star_image . '" onclick="return toggle_favorite(' . $item_id . ')" />' . "\n";
+echo '		<span id="fav' . $item_id . '" class="' . ($star ? '' : 'un') . 'starred" onclick="return toggle_favorite(' . $item_id . ')"></span>' . "\n";
 	?>
 		<script>
 			document.getElementById('fav<?=$item_id?>').star = <?php if ($star) {

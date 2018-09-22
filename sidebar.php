@@ -102,7 +102,7 @@ echo ' [<a href="' . fof_url('.', array('what' => 'unread', 'how' => 'unpaged'))
 echo "</li>\n";
 
 echo '  <li' . (empty($feed) && $what == 'star' ? " class='current-view'" : '') . '>';
-echo '<a href="' . fof_url('.', array('what' => 'star', 'how' => 'paged')) . '"><img class="star-icon-small" src="' . $fof_asset['star_on_image'] . '" /> Starred <span id="starredcount">' . ($starred ? "($starred)" : '') . '</span></a>';
+echo '<a href="' . fof_url('.', array('what' => 'star', 'how' => 'paged')) . '"><span class="starred-small"></span> Starred <span id="starredcount">' . ($starred ? "($starred)" : '') . '</span></a>';
 echo ' [<a href="' . fof_url('.', array('what' => 'star', 'how' => 'unpaged')) . '">unpaged</a>]';
 echo "</li>\n";
 
