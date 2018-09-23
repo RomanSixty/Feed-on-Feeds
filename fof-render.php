@@ -201,7 +201,6 @@ $widgets = fof_get_widgets($item);
 		foreach ($widgets as $widget) {
 			echo '<span class="widget">' . $widget . "</span>";
 		}
-		echo "</div>\n";
 	}
 ?>
 </div><!-- .widgets -->
