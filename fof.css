@@ -272,10 +272,28 @@ h2
   color: red;
 }
 
-.tags
-{
-    font-size: 70%;
-    float: right;
+.tags {
+  display: inline-block;
+  float: left;
+}
+
+.tags .tag {
+  display: inline-block;
+  margin: 0 5px;
+  border: 1px solid #ddd;
+}
+
+.tags .tag a {
+  text-decoration: none;
+  padding: 0 5px;
+  line-height: 16px;
+  vertical-align: middle;
+}
+
+.tags .tag a.untag {
+  padding: 0 5px;
+  border-left: 1px solid #ddd;
+  font-size: 10px;
 }
 
 .item.hidden

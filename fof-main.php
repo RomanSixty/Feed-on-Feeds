@@ -1658,7 +1658,7 @@ function fof_render_feed_row($f) {
 			break;
 
 		default: /* feed_age max_date feed_unread feed_url feed_title */
-			$out .= '	<td class="updated"><span title="' . $f['agestr'] . '" id="' . $f['feed_id'] . '-agestr">' . $f['agestrabbr'] . '</span></td>' . "\n";
+			$out .= '	<td class="updated hide-on-mobile"><span title="' . $f['agestr'] . '" id="' . $f['feed_id'] . '-agestr">' . $f['agestrabbr'] . '</span></td>' . "\n";
 
 			$out .= '	<td class="latest"><span title="' . $f['lateststr'] . '" id="' . $f['feed_id'] . '-lateststr">' . $f['lateststrabbr'] . '</span></td>' . "\n";
 

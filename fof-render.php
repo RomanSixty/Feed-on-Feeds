@@ -155,22 +155,6 @@ echo "		<a href=\"$item_link\"" . (fof_render_get_key_($prefs, 'item_target') ? 
 	?>
 	</h1>
 
-	<span class="tags">
-<?php
-/* show non-system tags */
-	foreach (array_diff($tags, array('unread', 'star', 'folded')) as $tag) {
-		echo '      <span id="tag_' . $item_id . '_' . $tag . '">';
-		echo '		  <a href="' . fof_url('.', array('what' => $tag)) . '">' . htmlentities($tag) . '</a>';
-		echo '		  <a href="#" class="untag" title="remove ' . htmlentities('"' . $tag . '"') . ' tag" onclick="return remove_tag(' . $item_id . ',' . htmlentities(json_encode($tag), ENT_QUOTES) . ');">[x]</a>';
-		echo '      </span>' . "\n";
-	}
-	?>
-		<a href="#" onclick="return itemTagAddShow('<?=$item_id?>', this);">add tag</a>
-		<div id="addtag<?=$item_id?>" style="display: none !important">
-			<input onfocus="this.value=''" onkeypress="itemTagAdd('<?=$item_id?>', event.keyCode);" type="text" id="tag<?=$item_id?>" size="12" value="enter tag here" />
-			<input type="button" name="add tag" value="tag" onclick="itemTagAdd('<?=$item_id?>');" />
-		</div>
-	</span>
 
 	<span class="dash"> - </span>
 
@@ -189,20 +173,39 @@ if ($feed_image && $prefs['favicons']) {
 
 <div class="body"><?=$item_content?></div>
 
+<div class="clearer"></div>
+<div class="widgets">
+
+	<span class="tags">
+	<a href="#" onclick="return itemTagAddShow('<?=$item_id?>', this);">add tag</a>
+	<span id="addtag<?=$item_id?>" style="display: none !important">
+		<input onfocus="this.value=''" onkeypress="itemTagAdd('<?=$item_id?>', event.keyCode);" type="text" id="tag<?=$item_id?>" size="12" value="enter tag here" />
+		<input type="button" name="add tag" value="tag" onclick="itemTagAdd('<?=$item_id?>');" />
+	</span>
+<?php
+/* show non-system tags */
+	foreach (array_diff($tags, array('unread', 'star', 'folded')) as $tag) {
+		echo '<span id="tag_' . $item_id . '_' . $tag . '" class="tag">';
+		echo '<a href="' . fof_url('.', array('what' => $tag)) . '">' . htmlentities($tag) . '</a>';
+		echo '<a href="#" class="untag" title="remove ' . htmlentities('"' . $tag . '"') . ' tag" onclick="return remove_tag(' . $item_id . ',' . htmlentities(json_encode($tag), ENT_QUOTES) . ');">[x]</a>';
+		echo '</span>' . "\n";
+	}
+	?>
+	</span>
 <?php
 $widgets = fof_get_widgets($item);
 
 	$widgets[] = '<a href="#" onclick="return ajax_mark_read(\'' . $item_id . '\');">mark read</a>';
 
 	if (!empty($widgets)) {
-		echo '<div class="clearer"></div>' . "\n";
-		echo '<div class="widgets">';
 		foreach ($widgets as $widget) {
 			echo '<span class="widget">' . $widget . "</span>";
 		}
 		echo "</div>\n";
 	}
-
+?>
+</div><!-- .widgets -->
+<?php
 	if ($include_div) {
 		echo "</div>\n";
 	}
