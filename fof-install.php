@@ -685,15 +685,15 @@ END";
 
 		/* FOF_FEED_TABLE */
 		fof_install_migrate_column($queries, FOF_FEED_TABLE, 'feed_image_cache_date', array(
-			'add' => "ALTER TABLE " . FOF_FEED_TABLE . " ADD feed_image_cache_date " . SQL_DRIVER_INT_TYPE . " DEFAULT 0 AFTER feed_image",
+			'add' => "ALTER TABLE " . FOF_FEED_TABLE . " ADD feed_image_cache_date " . SQL_DRIVER_INT_TYPE . " DEFAULT 0" . (defined(USE_MYSQL) ? " AFTER feed_image" : ""),
 		));
 
 		fof_install_migrate_column($queries, FOF_FEED_TABLE, 'feed_cache_attempt_date', array(
-			'add' => "ALTER TABLE " . FOF_FEED_TABLE . " ADD feed_cache_attempt_date " . SQL_DRIVER_INT_TYPE . " DEFAULT '0' AFTER feed_cache_date",
+			'add' => "ALTER TABLE " . FOF_FEED_TABLE . " ADD feed_cache_attempt_date " . SQL_DRIVER_INT_TYPE . " DEFAULT '0'" . (defined(USE_MYSQL) ? " AFTER feed_cache_date" : ""),
 		));
 
 		fof_install_migrate_column($queries, FOF_FEED_TABLE, 'feed_cache_next_attempt', array(
-			'add' => "ALTER TABLE " . FOF_FEED_TABLE . " ADD feed_cache_next_attempt " . SQL_DRIVER_INT_TYPE . " DEFAULT '0' AFTER feed_cache_attempt_date",
+			'add' => "ALTER TABLE " . FOF_FEED_TABLE . " ADD feed_cache_next_attempt " . SQL_DRIVER_INT_TYPE . " DEFAULT '0'" . (defined(USE_MYSQL) ? " AFTER feed_cache_attempt_date" : ""),
 		));
 
 		fof_install_migrate_index($queries, FOF_FEED_TABLE, 'feed_cache_next_attempt', array(
@@ -701,7 +701,7 @@ END";
 		));
 
 		fof_install_migrate_column($queries, FOF_FEED_TABLE, 'feed_cache_last_attempt_status', array(
-			'add' => "ALTER TABLE " . FOF_FEED_TABLE . " ADD feed_cache_last_attempt_status TEXT AFTER feed_cache_next_attempt",
+			'add' => "ALTER TABLE " . FOF_FEED_TABLE . " ADD feed_cache_last_attempt_status TEXT" . (defined(USE_MYSQL) ? " AFTER feed_cache_next_attempt" : ""),
 		));
 
 		if (!defined('USE_SQLITE')) {
@@ -730,7 +730,7 @@ END";
 		));
 
 		fof_install_migrate_column($queries, FOF_ITEM_TABLE, 'item_author', array(
-			'add' => "ALTER TABLE " . FOF_ITEM_TABLE . " ADD item_author TEXT AFTER item_content",
+			'add' => "ALTER TABLE " . FOF_ITEM_TABLE . " ADD item_author TEXT" . (defined(USE_MYSQL) ? " AFTER item_content" : ""),
 		));
 
 		/* FOF_ITEM_TAG_TABLE */
@@ -756,7 +756,7 @@ END";
 		));
 
 		fof_install_migrate_column($queries, FOF_SUBSCRIPTION_TABLE, 'subscription_added', array(
-			'add' => "ALTER TABLE " . FOF_SUBSCRIPTION_TABLE . " ADD subscription_added " . SQL_DRIVER_INT_TYPE . " DEFAULT '0'",
+			'add' => "ALTER TABLE " . FOF_SUBSCRIPTION_TABLE . " ADD subscription_added " . SQL_DRIVER_INT_TYPE . " DEFAULT '0'" . (defined('USE_MYSQL') ? " AFTER subscription_prefs" : ""),
 		));
 
 		/* FOF_VIEW_STATE_TABLE */
