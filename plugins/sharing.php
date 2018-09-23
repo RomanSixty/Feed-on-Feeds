@@ -16,5 +16,5 @@ function fof_sharing($item) {
 	$shared_link = $shared ? "return remove_tag($id, 'shared');" : "return add_tag($id, 'shared');";
 	$shared_text = $shared ? "unshare" : "share";
 
-	return "<a href=\"\" onClick=\"$shared_link\"><img src=\"$shared_image\" width=\"12\" height=\"12\" border=\"0\"/></a> <a href=\"\" onClick=\"$shared_link\">$shared_text</a> ";
+	return '<a href="#" onClick="' . $shared_link . '"><img src="' . $shared_image . '" width="12" height="12" border="0"/><span class="hide-on-mobile"> ' . $shared_text . '</span></a>';
 }

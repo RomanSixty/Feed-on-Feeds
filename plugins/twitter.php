@@ -32,6 +32,5 @@ function fof_twitter($item) {
 	$posturl = 'http://twitter.com/home?status=' . urlencode("$text $url");
 	$linktag = '<a href="' . $posturl . '" onClick="window.open(\'' . $posturl . '\',\'post to twitter\',\'width=800,height=500,status=0,toolbar=0,location=0,menubar=0,resizeable=1\');return false;">';
 
-	return $linktag . '<img src="https://twitter.com/favicons/favicon.ico" height="16" width="16" /></a> '
-		. $linktag . 'tweet</a>';
+	return $linktag . '<img src="https://abs.twimg.com/favicons/favicon.ico" height="16" width="16" border="0" /><span class="hide-on-mobile"> tweet</span></a>';
 }

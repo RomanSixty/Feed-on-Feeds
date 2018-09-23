@@ -19,5 +19,5 @@ function fof_wordpress($item) {
 
 	$link = "$wordpress/wp-admin/post-new.php?text=$text&popupurl=$url&popuptitle=$title";
 
-	return "<a href='$link'><img src='plugins/wordpress.png' height=12 width=12 border=0 /></a> <a href='$link'>blog it</a>";
+	return '<a href="' . $link . '"><img src="plugins/wordpress.png" height="12" width="12" border="0" /><span class="hide-on-mobile"> blog</span></a>';
 }
