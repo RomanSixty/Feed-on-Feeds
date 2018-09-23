@@ -8,7 +8,7 @@ function fof_images_on_demand($dom, $item) {
 	// AJAX refresh: we don't apply this filter, because images are
 	// probably already loaded
 	if (isset($_REQUEST['no_img_filter'])) {
-		return $content;
+		return $dom;
 	}
 
 	foreach ($dom->getElementsByTagName('img') as $img) {
