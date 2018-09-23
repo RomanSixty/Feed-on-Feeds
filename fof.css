@@ -86,7 +86,7 @@ iframe {
 #nav
 {
     font-size: .8em;
-    padding-left: 0em;
+    padding: 0 5px;
     list-style: none;
     margin: 1ex 0px;
 }
@@ -601,10 +601,9 @@ td.feed-prefs-header {
   }
 
   #nav li a {
-    display: block;
+    display: inline-block;
     line-height: 25px;
     margin: 5px;
-    text-align: center;
   }
 
   #tags,
@@ -637,6 +636,11 @@ td.feed-prefs-header {
   #sidebar.active {
     left: 0;
     box-shadow: 0 3px 5px rgba(0, 0, 0, .5);
+  }
+
+  #sidebar .ontop {
+    position: absolute;
+    font-size: 12px;
   }
 
   #items {

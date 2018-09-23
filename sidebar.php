@@ -42,13 +42,13 @@ if (!defined('FOF_AUTH_EXTERNAL')) {
 
 $welcomecontent .= ' | <a href="http://feedonfeeds.com/">about</a></span>';
 
-echo '<div id="welcome" class="banner ontop hide-on-mobile">' . $welcomecontent . "</div>\n";
-echo '<div id="welcome-spacer" class="banner hide-on-mobile">' . $welcomecontent . "</div>\n";
-echo '<div id="feed-actions"><a href="add.php"><b>Add Feeds</b></a> / ';
+echo '<div id="welcome" class="banner ontop">' . $welcomecontent . "</div>\n";
+echo '<div id="welcome-spacer" class="banner">' . $welcomecontent . "</div>\n";
+echo '<div id="feed-actions" class="hide-on-mobile"><a href="add.php"><b>Add Feeds</b></a> / ';
 if ($sidebar_style == 'fancy') {
 	echo '<a href="#" class="hide-on-mobile" title="Update all subscribed feeds" onclick="' . htmlentities('throb(); new Ajax.Request("feed-action.php", {method:"post", parameters:{"update_subscribed_sources": true}});', ENT_QUOTES) . '"><b>Update Feeds</b></a>';
 } else {
-	echo '<a href="update.php" class="hide-on-mobile"><b>Update Feeds</b></a>';
+	echo '<a href="update.php"><b>Update Feeds</b></a>';
 }
 
 echo '</div>' . "\n";
@@ -97,25 +97,25 @@ if (!empty($unread)) {
 
 <?php
 echo '  <li' . (empty($feed) && $what == 'unread' ? " class='current-view'" : '') . '>';
-echo '<a href="' . fof_url('.', array('what' => 'unread', 'how' => 'paged')) . '"><span style="color:red"><b>Unread' . ($unread ? " ($unread)" : '') . '</b></span></a>';
+echo '📖 <a href="' . fof_url('.', array('what' => 'unread', 'how' => 'paged')) . '"><span style="color:red"><b>Unread' . ($unread ? " ($unread)" : '') . '</b></span></a>';
 echo '<span class="hide-on-mobile"> [<a href="' . fof_url('.', array('what' => 'unread', 'how' => 'unpaged')) . '">unpaged</a>]</span>';
 echo "</li>\n";
 
 echo '  <li' . (empty($feed) && $what == 'star' ? " class='current-view'" : '') . '>';
-echo '<a href="' . fof_url('.', array('what' => 'star', 'how' => 'paged')) . '"><span class="starred-small"></span> Starred <span id="starredcount">' . ($starred ? "($starred)" : '') . '</span></a>';
+echo '<span class="starred-small"></span> <a href="' . fof_url('.', array('what' => 'star', 'how' => 'paged')) . '">Starred <span id="starredcount">' . ($starred ? "($starred)" : '') . '</span></a>';
 echo '<span class="hide-on-mobile"> [<a href="' . fof_url('.', array('what' => 'star', 'how' => 'unpaged')) . '">unpaged</a>]</span>';
 echo "</li>\n";
 
 echo '  <li' . (empty($feed) && $what == 'all' && isset($when) ? " class='current-view'" : '') . '>';
-echo '<a href="' . fof_url('.', array('what' => 'all', 'when' => 'today')) . '">&lt; Today</a>';
+echo '📆 <a href="' . fof_url('.', array('what' => 'all', 'when' => 'today')) . '">Today</a>';
 echo "</li>\n";
 
 echo '  <li' . (empty($feed) && $what == 'all' && empty($when) ? " class='current-view'" : '') . '>';
-echo '<a href="' . fof_url('.', array('what' => 'all', 'how' => 'paged')) . '">All Items' . ($total ? "($total)" : '') . "</a>";
+echo '📓 <a href="' . fof_url('.', array('what' => 'all', 'how' => 'paged')) . '">All Items ' . ($total ? "($total)" : '') . "</a>";
 echo "</li>\n";
 
 echo '  <li' . (!empty($search) ? ' class="current-view"' : '') . '>';
-echo '<a href="#" onclick="$(\'search\').toggle();$(\'searchfield\').focus();return false;">Search</a>' . "\n";
+echo '🔎 <a href="#" onclick="$(\'search\').toggle();$(\'searchfield\').focus();return false;">Search</a>' . "\n";
 echo '    <form action="." id="search"' . (empty($search) ? ' style="display:none"' : '') . ">\n";
 echo '      <input type="hidden" name="how" value="paged">' . "\n";
 echo '      <input type="hidden" name="what" value="' . (empty($what) || $what == 'unread' ? 'all' : htmlentities($what, ENT_QUOTES)) . "\">\n";
