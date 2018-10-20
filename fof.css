@@ -48,6 +48,12 @@ iframe {
   text-align: right;
 }
 
+.widgets:after {
+  content: "";
+  display: block;
+  clear: both;
+}
+
 .widget {
   margin-left: 1em;
 }
@@ -248,6 +254,11 @@ h2 {
 .tags {
   display: inline-block;
   float: left;
+}
+
+.tags > a {
+  display: inline-block;
+  margin-left: 10px;
 }
 
 .tags .tag {

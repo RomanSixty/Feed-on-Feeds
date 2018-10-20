@@ -713,7 +713,7 @@ function itemTagAddShow(id, link) {
 }
 
 function itemTagAdd(id, key) {
-    if (key == null || key === 13) {
+    if (key == null || key === 'Enter') {
         return add_tag(id, document.getElementById('tag' + id).value);
 	}
     return false;
