@@ -24,11 +24,10 @@ if (!empty($_POST['read_feed'])) {
 /* update one feed, return replacement sidebar feed list content */
 if (!empty($_POST['update_feedid'])) {
 	list($count, $error) = fof_update_feed($_POST['update_feedid']);
+	$feed_row = fof_get_feed(fof_current_user(), $_POST['update_feedid']);
 	if (!empty($error)) {
-		//header('Status: 500');
-		echo '<img class="feed-icon" src="' . $fof_asset['alert_icon'] . '" title="' . htmlentities($error, ENT_QUOTES) . '" />';
+        echo fof_render_feed_row($feed_row, $error);
 	} else {
-		$feed_row = fof_get_feed(fof_current_user(), $_POST['update_feedid']);
 		echo fof_render_feed_row($feed_row);
 	}
 	exit();
@@ -44,7 +43,7 @@ if (!empty($_POST['update_tag_sources'])) {
 	/* FIXME: check timeouts, like below */
 
 	if (!empty($subs[$tag_id])) {
-		echo 'pendingUpdates.add(' . json_encode($subs[$tag_id]) . ');';
+		echo 'pendingUpdates(' . json_encode($subs[$tag_id]) . ');';
 	}
 
 	exit();
@@ -72,7 +71,7 @@ if (!empty($_POST['update_subscribed_sources'])) {
 	}
 
 	if (!empty($sources)) {
-		echo 'pendingUpdates.add(' . json_encode($sources) . ');';
+		echo 'pendingUpdates(' . json_encode($sources) . ');';
 	}
 
 	exit();

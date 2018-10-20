@@ -155,7 +155,7 @@ echo $item_controls;
 <?php
 if ($fof_prefs_obj->get('keyboard')) {
 	?>
-<div id="keyboard-legend" style="display:none">
+<div id="keyboard-legend" class="hide">
 	<span style="font-variant:small-caps;">Keyboard Commands</span>
 	<dl>
 		<dt>?</dt><dd>Toggle this display.</dd>
@@ -193,9 +193,6 @@ echo $links;
 $items = fof_get_items(fof_current_user(), $feed, $what, $when, $which, $howmany, $order, $search);
 
 if (!empty($items)) {
-	list($first_item) = $items;
-	echo "<script>firstItem = 'i" . $first_item['item_id'] . "';</script>\n";
-
 	foreach ($items as $item) {
 		fof_render_item($item, true);
 	}
@@ -204,12 +201,9 @@ if (!empty($items)) {
 }
 
 ?>
-<div id="end-of-items"></div>
 		</form>
 
 
 <?php
 echo $links;
 ?>
-
-<script>itemElements = $$('.item');</script>

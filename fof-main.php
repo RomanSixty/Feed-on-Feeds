@@ -1572,7 +1572,7 @@ function fof_get_favicon($url) {
 }
 
 /* generate the contents of a tr element from a feed db row*/
-function fof_render_feed_row($f) {
+function fof_render_feed_row($f, $error = false) {
 	global $fof_asset;
 	global $fof_prefs_obj;
 
@@ -1602,7 +1602,11 @@ function fof_render_feed_row($f) {
 		$image = $fof_asset['alert_icon'];
 	}
 
-	$image_html = '<img class="feed-icon" src="' . htmlentities($image, ENT_QUOTES) . '"' . (empty($f['feed_cache_last_attempt_status']) ? '' : (' title="Last update attempt was not successful." alt="' . htmlentities($f['feed_cache_last_attempt_status'], ENT_QUOTES) . '"')) . '>';
+	if ($error) {
+        $image_html = '<img class="feed-icon" src="' . $fof_asset['alert_icon'] . '" title="' . htmlentities($error, ENT_QUOTES) . '" />';
+    } else {
+	    $image_html = '<img class="feed-icon" src="' . htmlentities($image, ENT_QUOTES) . '"' . (empty($f['feed_cache_last_attempt_status']) ? '' : (' title="Last update attempt was not successful." alt="' . htmlentities($f['feed_cache_last_attempt_status'], ENT_QUOTES) . '"')) . '>';
+    }
 
 	$unread = empty($f['feed_unread']) ? 0 : $f['feed_unread'];
 	$items = empty($f['feed_items']) ? 0 : $f['feed_items'];

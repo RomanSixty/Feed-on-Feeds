@@ -1,235 +1,208 @@
 body {
-    font-size: 100%;
-    font-family: Verdana, Arial, sans-serif;
-    margin: 0;
-    padding: 0;
+  font-size: 100%;
+  font-family: Verdana, Arial, sans-serif;
+  margin: 0;
+  padding: 0;
+}
+
+.hide {
+  display: none;
 }
 
 #items h1,
 #items .meta,
 #items .body {
-    font-family: Georgia, serif;
+  font-family: Georgia, serif;
 }
 
 h1 span.author {
-    font-size: x-small;
+  font-size: x-small;
 }
 
 a img {
   border: 0;
 }
 
-p
-{
-    margin: 0;
-    padding: 5px;
+p {
+  margin: 0;
+  padding: 5px;
 }
 
 iframe {
   max-width: 100%;
 }
 
-.clearer
-{
-    clear: both;
+.clearer {
+  clear: both;
 }
 
-.header
-{
-    background: #dddddd;
-    padding: 5px;
+.header {
+  background: #dddddd;
+  padding: 5px;
 }
 
-.widgets
-{
-    background: #f0f0f0;
-    font-size: .8em;
-    padding: 4px;
-    text-align: right;
+.widgets {
+  background: #f0f0f0;
+  font-size: .8em;
+  padding: 4px;
+  text-align: right;
 }
 
-.widget
-{
-    margin-left: 1em;
+.widget {
+  margin-left: 1em;
 }
 
-#handle
-{
-    top: 0px;
-    bottom: 0px;
-    position: fixed;
-    width: 10px;
-    background: gray;
-    cursor: ew-resize;
-    background-image: url(image/grippy.png);
+#handle {
+  top: 0;
+  bottom: 0;
+  position: fixed;
+  width: 10px;
+  cursor: ew-resize;
+  background-image: url(image/grippy.png);
 }
 
-#sidebar
-{
-    margin: 0px;
-    top: 0px;
-    bottom: 0px;
-    left: 0px;
-    position: fixed;
-    overflow-x: visible;
-    overflow-y: auto;
-    padding: 0px;
+#sidebar {
+  margin: 0;
+  top: 0;
+  bottom: 0;
+  left: 0;
+  position: fixed;
+  overflow-x: visible;
+  overflow-y: auto;
+  padding: 0;
 }
 
 #throbber {
-    position: fixed;
-    left: 0;
-    top: 0;
-    z-index: 999;
+  position: fixed;
+  left: 0;
+  top: 0;
+  z-index: 999;
 }
 
-#nav
-{
-    font-size: .8em;
-    padding: 0 5px;
-    list-style: none;
-    margin: 1ex 0px;
+#nav {
+  font-size: .8em;
+  padding: 0 5px;
+  list-style: none;
+  margin: 1ex 0;
 }
 
 /* search box */
-#nav form
-{
-    display: inline;
+#nav form {
+  display: inline;
 }
 
 #feed-actions {
-    text-align: center;
-    font-size: .8em;
+  text-align: center;
+  font-size: .8em;
 }
 
-#sidebar table
-{
-    font-size: .6em;
-    border-collapse: collapse;
-    width: 100%;
-    margin: 0px;
-    padding: 0px;
+#sidebar table {
+  font-size: .6em;
+  border-collapse: collapse;
+  width: 100%;
+  margin: 0;
+  padding: 0;
 }
 
 #sidebar th {
-    font-weight: normal;
+  font-weight: normal;
 }
 
-#sidebar .heading a
-{
-    text-decoration: none;
+#sidebar .heading a {
+  text-decoration: none;
 }
 
-#sidebar .heading
-{
-    background: #ccc;
-    border-bottom: 1px solid gray;
+#sidebar .heading {
+  background: #ccc;
+  border-bottom: 1px solid gray;
 }
 
-#sidebar td
-{
-    padding: 2px;
+#sidebar td {
+  padding: 2px;
 }
 
 #display-summary {
-    margin: 0px 1ex 1ex 4px;
-    font-size: small;
-    clear: both;
+  margin: 0 1ex 1ex 4px;
+  font-size: small;
+  clear: both;
 }
 
-.odd-row
-{
-    background: #ddd;
+.odd-row {
+  background: #ddd;
 }
 
 .current-view {
-    background: #ccc;
-    border: 1px #999;
+  background: #ccc;
+  border: 1px #999;
 }
 
-.unread
-{
-    font-weight: bold;
-    color: red;
+.unread {
+  font-weight: bold;
+  color: red;
 }
 
-
-.unread-item
-{
-    font-weight: bold;
+.unread-item {
+  font-weight: bold;
 }
 
 .pagination-nav {
-    text-align: center;
+  text-align: center;
 }
 
-.highlight-on .highlight
-{
-    background: yellow;
+.highlight-on .highlight {
+  background: yellow;
 }
 
-h1
-{
-    font-size: 110%;
-    margin: 0px;
-    margin-bottom: 5px;
-    font-weight: normal;
+h1 {
+  font-size: 110%;
+  margin: 0 0 5px 0;
+  font-weight: normal;
 }
 
-h2
-{
-    font-size: 100%;
-    margin: 0px;
-    margin-bottom: 5px;
-    font-weight: normal;
-    display: inline;
+h2 {
+  font-size: 100%;
+  margin: 0 0 5px 0;
+  font-weight: normal;
+  display: inline;
 }
 
-.meta
-{
-    font-size: 80%;
-    display: inline;
+.meta {
+  font-size: 80%;
+  display: inline;
 }
 
-.header
-{
-    background-color: #ddd;
-    padding: 5px;
+.header {
+  background-color: #ddd;
+  padding: 5px;
 }
 
-.body
-{
-    margin: 0px;
-    padding: 10px 10px 10px 10px;
+.body {
+  margin: 0;
+  padding: 10px 10px 10px 10px;
 }
 
-.item
-{
-    border: 2px solid #ddd;
-    margin: 0px 4px 1ex;
-    clear: both;
-    overflow: hidden;
+.item {
+  border: 2px solid #ddd;
+  margin: 0 4px 1ex;
+  clear: both;
+  overflow: hidden;
 }
 
-.item .selected
-{
-    border: 2px solid #888;
-    background-color: #eee;
+.item.selected {
+  border: 2px solid red;
+  background-color: #eee;
 }
 
-.selected .header
-{
-    background-color: #ccc;
+.selected .header {
+  background-color: #ccc;
 }
 
-.nowrap
-{
-    white-space: nowrap;
+.nowrap {
+  white-space: nowrap;
 }
 
-.controls
-{
-    float: right;
+.controls {
+  float: right;
 }
 
 .starred,
@@ -292,238 +265,217 @@ h2
 
 .tags .tag a.untag {
   padding: 0 5px;
-  border-left: 1px solid #ddd;
+  border-right: 1px solid #ddd;
   font-size: 10px;
 }
 
-.item.hidden
-{
-    margin-bottom: 10px;
+.item.hidden {
+  margin-bottom: 10px;
 }
 
-.hidden .body
-{
-    display: none;
+.hidden .body,
+.hidden .widgets,
+.shown .downarrow,
+.shown .dash,
+.hidden .uparrow,
+.hidden .tags,
+.hidden .meta {
+  display: none;
 }
 
-.hidden .widgets
-{
-    display: none;
+.hidden .dash {
+  display: inline;
 }
 
-.shown .downarrow
-{
-    display: none;
+.hidden h1 {
+  font-size: 90%;
+  display: inline;
 }
 
-.hidden .uparrow
-{
-    display: none;
-}
-
-.hidden h1
-{
-    font-size: 90%;
-    display: inline;
-}
-
-.hidden h2
-{
-    font-size: 80%;
-}
-
-.hidden .tags
-{
-    display: none;
-}
-
-.hidden .meta
-{
-    display: none;
-}
-
-.hidden .dash
-{
-    display: inline;
-}
-
-.shown .dash
-{
-    display: none;
+.hidden h2 {
+  font-size: 80%;
 }
 
 #welcome {
-    text-align: center;
+  text-align: center;
 }
 
 #welcome .userid {
-    font-weight: bold;
+  font-weight: bold;
 }
 
 #feed-controls {
-    text-align: center;
+  text-align: center;
 }
 
 /* all controls listed along top of page, on both sidebar and item sides */
 .banner {
-    font-size: .7em;
-    background: #ddd;
-    border-bottom: 1px solid #666;
-    padding: 5px 7px;
-    margin: 0;
+  font-size: .7em;
+  background: #ddd;
+  border-bottom: 1px solid #666;
+  padding: 5px 7px;
+  margin: 0;
 }
 
 .banner li {
-    padding: 5px 4px;
+  padding: 5px 4px;
 }
 
 .banner li a {
-    padding: 0;
+  padding: 0;
 }
 
 .ontop {
-    position: fixed;
-    z-index: 101;
-    top: 0;
-    left: 0;
-    right: 0;
+  position: fixed;
+  z-index: 101;
+  top: 0;
+  left: 0;
+  right: 0;
 }
 
-#item-display-controls
-{
-    padding: 0 5px;
+#item-display-controls {
+  padding: 0 5px;
 }
 
-#item-display-controls-spacer
-{
-    top: 0;
-    left: 0;
-    right: 0;
-    padding: 0;
+#item-display-controls-spacer {
+  top: 0;
+  left: 0;
+  right: 0;
+  padding: 0;
 }
 
 #view-settings-button .unavailable {
-    color: #999;
-}
-#view-settings-button .custom {
-    color: #090;
+  color: #999;
 }
 
+#view-settings-button .custom {
+  color: #090;
+}
 
 #keyboard-legend {
-    position: fixed;
-    top: 40px;
-    right: 20px;
-    padding: 10px;
-    font-size: 80%;
-    width: 20%;
-    background: #eee;
-    border: 1px solid #000;
-    opacity: .9;
+  position: fixed;
+  top: 40px;
+  right: 20px;
+  padding: 10px;
+  font-size: 80%;
+  width: 20%;
+  background: #eee;
+  border: 1px solid #000;
+  opacity: .9;
 }
 
 #keyboard-legend dt {
-    float: left;
+  float: left;
 }
 
-.inline-list
-{
-margin: auto;
-padding: 0;
-list-style: none;
+.inline-list {
+  margin: auto;
+  padding: 0;
+  list-style: none;
 }
 
 .inline-list li {
-    display: inline-block;
+  display: inline-block;
 }
 
 .feed-icon {
-    width: 16px;
-    height: 16px;
-    border: 0;
+  width: 16px;
+  height: 16px;
+  border: 0;
 }
 
 #tags .source,
 #feeds .source {
-    vertical-align: middle;
-    margin-left: auto;
-    margin-right: auto;
+  vertical-align: middle;
+  margin-left: auto;
+  margin-right: auto;
 }
+
 #tags .latest,
 #feeds .latest {
-    text-align: right;
+  text-align: right;
 }
+
 #tags .unread,
 #feeds .unread {
-    text-align: right;
+  text-align: right;
 }
+
 #tags .title,
 #feeds .title {
-    width: 100%;
+  width: 100%;
 }
+
 #tags .title a,
 #feeds .title a {
-    font-weight: bold;
-    text-decoration: none;
-    color: #000;
+  font-weight: bold;
+  text-decoration: none;
+  color: #000;
 }
 
 /* fancy sidebar menus */
 .feedmenu {
-    list-style: none;
-    margin: 0px;
-    padding-left: 10px;
-    padding-right: 10px;
-    float: left;
-    width: 20%;
-    position: relative;
+  list-style: none;
+  margin: 0;
+  padding-left: 10px;
+  padding-right: 10px;
+  float: left;
+  width: 20%;
+  position: relative;
 }
+
 .feedmenu li {
-    float: left;
-    position: relative;
+  float: left;
+  position: relative;
 }
+
 .feedmenu a {
-    display: block;
-    padding: 2px;
-    padding-left: 10px;
-    padding-right: 10px;
-    text-decoration: none;
+  display: block;
+  padding: 2px 10px 0;
+  text-decoration: none;
 }
+
 .feedmenu a:hover {
-    color: #fff;
-    background: #333;
-    text-decoration: underline;
+  color: #fff;
+  background: #333;
+  text-decoration: underline;
 }
+
 .feedmenu ul {
-    background: #ccc;
-    list-style: none;
-    position: absolute;
-    right: 9999px;
-    background-color: #eee;
-    border: 1px solid black;
-    margin: 0px;
-    padding: 2px;
-    z-index: 4;
+  list-style: none;
+  position: absolute;
+  right: 9999px;
+  background: #eee;
+  border: 1px solid black;
+  margin: 0;
+  padding: 2px;
+  z-index: 4;
 }
+
 .feedmenu ul li {
-    padding-top: 1px;
-    float: none;
+  padding-top: 1px;
+  float: none;
 }
+
 .feedmenu ul a {
-    white-space: nowrap;
+  white-space: nowrap;
 }
+
 .feedmenu li:hover ul {
-    right: 0px;
+  right: 0;
 }
+
 .feedmenu li:hover a {
-    background: #ccc;
-    text-decoration: underline;
+  background: #ccc;
+  text-decoration: underline;
 }
+
 .feedmenu li:hover ul a {
-    text-decoration: none;
+  text-decoration: none;
 }
+
 .feedmenu li:hover ul li a:hover {
-    background: #333;
+  background: #333;
 }
 
 .youtube-video,
@@ -569,7 +521,6 @@ list-style: none;
   transition: background-color .3s;
   height: 48px;
   width: 68px;
-
   margin-left: 246px;
   margin-top: 134px;
 }
@@ -590,21 +541,21 @@ list-style: none;
 }
 
 .error {
-    color: red;
-    font-weight: bold;
+  color: red;
+  font-weight: bold;
 }
 
 td.feed-prefs-header {
-    vertical-align: top;
+  vertical-align: top;
 }
 
 .item pre {
-    white-space: pre-wrap;
+  white-space: pre-wrap;
 }
 
 .item .text-post {
-    font-family: monospace;
-    white-space: pre-wrap;
+  font-family: monospace;
+  white-space: pre-wrap;
 }
 
 #menu_toggle {
@@ -647,7 +598,6 @@ td.feed-prefs-header {
     left: -250px;
     z-index: 1500;
     background: rgba(255, 255, 255, .9);
-
     transition: left .2s;
   }
 
@@ -685,7 +635,6 @@ td.feed-prefs-header {
     line-height: 25px;
     width: 25px;
     text-align: center;
-
     position: fixed;
     left: 0;
     top: 0;

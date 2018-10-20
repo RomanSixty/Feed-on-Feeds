@@ -62,9 +62,42 @@ $feedjson = array();
 foreach ($feeds as $feed) {
 	$feedjson[] = json_encode(array('id' => $feed['feed_id'], 'title' => $feed['feed_title']));
 }
+?>
+<script>
+	let feedslist = [ <?php echo implode(', ', $feedjson); ?> ];
+	let feedi;
 
-echo "<script>\nwindow.onload = ajaxupdate;\nfeedslist = [ " . implode(', ', $feedjson) . " ];\n</script>\n";
+	window.onload = function() {
+		throb();
+		feedi = iterate(feedslist);
+		for (let i = 0; i < Math.min(feedslist.length, 5); i++)
+			setTimeout(continueupdate, 50);
+	};
 
+	function continueupdate() {
+		if (feed = feedi()) {
+			const f = feed();
+			const update_feed_id = 'feed_id_' + f['id'];
+			window.scrollTo(0, document.getElementById(update_feed_id).offsetTop);
+
+			fetch('update-single.php', {
+				'method': 'post',
+				'headers': {'Content-Type': 'application/x-www-form-urlencoded'},
+				'body': 'feed='+f['id']
+			}).then(function(response) {
+				response.text().then(data => {
+					document.getElementById(update_feed_id).innerHTML = data;
+				});
+				continueupdate();
+			});
+		} else {
+			document.getElementById('items').insertAdjacentHTML('beforeend', '<br>Update complete!');
+			refreshlist();
+		}
+	}
+</script>
+
+<?php
 include 'footer.php';
 ?>
 

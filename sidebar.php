@@ -46,7 +46,7 @@ echo '<div id="welcome" class="banner ontop">' . $welcomecontent . "</div>\n";
 echo '<div id="welcome-spacer" class="banner">' . $welcomecontent . "</div>\n";
 echo '<div id="feed-actions" class="hide-on-mobile"><a href="add.php"><b>Add Feeds</b></a> / ';
 if ($sidebar_style == 'fancy') {
-	echo '<a href="#" class="hide-on-mobile" title="Update all subscribed feeds" onclick="' . htmlentities('throb(); new Ajax.Request("feed-action.php", {method:"post", parameters:{"update_subscribed_sources": true}});', ENT_QUOTES) . '"><b>Update Feeds</b></a>';
+	echo '<a href="#" class="hide-on-mobile" title="Update all subscribed feeds" onclick="sb_update_subscribed_sources()"><b>Update Feeds</b></a>';
 } else {
 	echo '<a href="update.php"><b>Update Feeds</b></a>';
 }
@@ -88,6 +88,7 @@ if (!empty($unread)) {
 ?>
   <script>
     document.title=<?php echo json_encode($page_title_js); ?>;
+
     what=<?php echo json_encode($what); ?>;
     when=<?php echo json_encode($when); ?>;
     search=<?php echo json_encode($search); ?>;

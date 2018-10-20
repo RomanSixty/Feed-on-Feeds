@@ -38,15 +38,11 @@ if (is_readable('./fof-custom.css')) {
 ?>
     <link rel="microsummary" href="microsummary.php" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <script src="prototype/prototype.js" type="text/javascript"></script>
     <script src="fof.js" type="text/javascript"></script>
     <script>
-        document.onmousemove = dragResize;
-        document.onmouseup = completeDrag;
 <?php if ($fof_prefs_obj->get('keyboard')) {?>
         document.onkeypress = keyboard;
 <?php }?>
-        isIE = false;
     </script>
 
     <style>
@@ -62,15 +58,6 @@ if (is_readable('./fof-custom.css')) {
         #item-display-controls { left: <?php echo $width + 10 ?>px; }
         #welcome { width: <?php echo $width - 30 ?>px; }
     </style>
-
-<!--[if IE]>
-    <style>
-        #sidebar table {
-            width: <?php echo $width - 20 ?>px;
-        }
-    </style>
-    <script>isIE = true;</script>
-<![endif]-->
 </head>
 
 <body class="highlight-on"> <!--onkeypress="keyboard(event)"-->

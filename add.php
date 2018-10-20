@@ -153,7 +153,40 @@ if (count($feeds)) {
 		$idx++;
 	}
 
-	echo "<script>\nwindow.onload = ajaxadd;\nfeedslist = [" . implode(', ', $feedjson) . "];\n</script>\n";
+?>
+<script>
+ 	let feedslist = [ <?php echo implode(', ', $feedjson); ?> ];
+ 	let feedi;
+
+	window.onload = function() {
+		throb();
+		feedi = iterate(feedslist);
+		continueadd();
+	};
+
+	function continueadd() {
+		if (feed = feedi()) {
+			const f = feed();
+			const new_feed_id = 'feed_index_' + f['idx'];
+
+			fetch('add-single.php', {
+				'method': 'post',
+				'headers': {'Content-Type': 'application/x-www-form-urlencoded'},
+				'body': 'url='+f['url']+'&unread='+document.addform.unread.value
+			}).then(function(response) {
+				response.text().then(data => {
+					document.getElementById(new_feed_id).innerHTML = data;
+				});
+				continueadd();
+			});
+		} else {
+			document.getElementById('items').insertAdjacentHTML('beforeend', '<br>Done!');
+			refreshlist();
+		}
+	}
+</script>
+
+<?php
 }
 echo '<br>';
 

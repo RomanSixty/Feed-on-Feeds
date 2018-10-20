@@ -124,40 +124,49 @@ if (!$admin_view || fof_db_is_subscribed_id(fof_current_user(), $feed_id)) {
 	$feed_id_js = json_encode($feed_id);
 	?>
 <script>
-function subscription_tags_refresh(feed) {
-	var params = { subscription_tag_list: feed };
-	new Ajax.Updater($("feedtags").down("ul"), "feed-action.php", { method: "post", parameters: params });
-}
-function subscription_tag_modify(feed, tag, action) {
-	var params = { feed: feed, subscription_tag: tag };
-	if (action == "delete") {
-		params[action] = true;
+
+	function subscription_tags_refresh(feed) {
+		fetch('feed-action.php', {
+			'method': 'post',
+			'headers': {'Content-Type': 'application/x-www-form-urlencoded'},
+			'body': 'subscription_tag_list='+feed
+		}).then(function(response) {
+			response.text().then(data => document.querySelector('#feedtags ul').innerHTML = data);
+		});
 	}
-	var complete = function () {
-		subscription_tags_refresh(feed);
-		refreshlist(); // update sidebar
-	};
-	new Ajax.Request("feed-action.php", {method: "post", parameters: params, onComplete: complete});
-}
-document.observe("dom:loaded", function() {
-	subscription_tags_refresh(<?php echo $feed_id_js; ?>);
-});
-document.observe("dom:loaded", function() {
-	$('new_tag').observe("keypress", function(event) {
-		if (event.keyCode == Event.KEY_RETURN) {
-			subscription_tag_modify(<?php echo $feed_id_js; ?>, this.value, "add");
-			this.clear();
-			return false;
+
+	function subscription_tag_modify(feed, tag, action) {
+		let params = 'feed='+feed+'&subscription_tag='+tag;
+		if (action === "delete") {
+			params += '&'+action+'=true';
 		}
-	});
-});
-document.observe("dom:loaded", function() {
-	$('new_tag').next('input[type="button"]').observe("click", function(event) {
-		subscription_tag_modify(<?php echo $feed_id_js; ?>, $('new_tag').value, "add");
-		$('new_tag').clear();
-		return false;
-	});
-});
+		fetch('feed-action.php', {
+			'method': 'post',
+			'headers': {'Content-Type': 'application/x-www-form-urlencoded'},
+			'body': params
+		}).then(function() {
+			subscription_tags_refresh(feed);
+			refreshlist();
+		});
+	}
+
+	window.onload = function() {
+		subscription_tags_refresh(<?php echo $feed_id_js; ?>);
+
+		document.getElementById('new_tag').addEventListener("keypress", function(event) {
+			if (event.key === 'Enter') {
+				subscription_tag_modify(<?php echo $feed_id_js; ?>, this.value, "add");
+				document.getElementById('new_tag').value = '';
+				return false;
+			}
+		});
+
+		document.querySelector('#new_tag + input[type="button"]').addEventListener("click", function(event) {
+			subscription_tag_modify(<?php echo $feed_id_js; ?>, document.getElementById('new_tag').value, "add");
+			document.getElementById('new_tag').value = '';
+			return false;
+		});
+	};
 </script>
 <?php
 }
@@ -297,7 +306,7 @@ if (!$admin_view) {
 	 * Perhaps someone better-versed in clientside js can iron this out.
 	 */
 	?>
-		<input type="text" size="10" id="new_tag" onkeypress="if (event.keyCode == Event.KEY_RETURN) return false;" /><input type="button" value="Tag Feed" />
+		<input type="text" size="10" id="new_tag" onkeypress="if (event.key == 'Enter') return false;" /><input type="button" value="Tag Feed" />
 	</span>
 </div>
 

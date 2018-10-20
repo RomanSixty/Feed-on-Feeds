@@ -1,72 +1,51 @@
-var curWidth = 0;
-var curPos = 0;
-var drag = false;
-var what;
-var when;
-var search;
-var feed;
+// filled in sidebar.php
+let what    = null;
+let when    = null;
+let search  = null;
+let feed    = null;
+let starred = 0;
 
-var firstItem;
-var item;
-var itemElement;
-var itemElements;
+let itemElement = null;
 
-var pendingUpdates = [];
-pendingUpdates.inFlight = 0;
-pendingUpdates.add = function(items) {
-    this.push.apply(this, items);
-    this.work();
-}
-pendingUpdates.work = function() {
-    var that = this;
-    var url = "feed-action.php";
-    var complete = function() {
-        that.inFlight -= 1;
-        if (that.inFlight == 0 && that.length == 0)
-            unthrob();
-    };
-    while (that.length) {
-        var id = that.shift();
-        that.inFlight += 1;
+/**
+ * update these feeds
+ * @param {int[]} feeds
+ * @fixme doesn't exactly work... it updates, but the spinners aren't shown
+ */
+function pendingUpdates(feeds) {
+	throb();
 
-        var feed_element = $$("#sidebar #feeds #f" + id)[0];
-        var feed_icon_element = $$("#sidebar #feeds #f" + id + " img.feed-icon")[0];
-        feed_icon_element.replace("<img class=\"feed-icon\" src=\"image/spinner.gif\" title=\"update pending\" />");
-        // FIXME: assetize busy spinner
+	feeds.forEach(feed_id => {
+		document.querySelector('#f'+feed_id+' img.feed-icon').src = "image/spinner.gif";
 
-        var params = {
-            "update_feedid": id
-        };
-        var options = {
-            method: "post",
-            parameters: params,
-            onComplete: complete
-        };
-        new Ajax.Updater({
-            success: feed_element,
-            failure: feed_icon_element
-        }, url, options);
-    }
-    if (that.inFlight == 0 && that.length == 0)
-        unthrob();
+		fetch('feed-action.php', {
+			'method': 'post',
+			'headers': {'Content-Type': 'application/x-www-form-urlencoded'},
+			'body': 'update_feedid='+feed_id
+		}).then(function(response) {
+			response.text().then(data => document.getElementById('f'+feed_id).innerHTML = data);
+		});
+	});
+
+	unthrob();
 }
 
 // magic from http://peter.michaux.ca/article/3556
-var getScrollY = function() {
-    if (typeof window.pageYOffset == 'number') {
+let getScrollY = function() {
+    if (typeof window.pageYOffset === 'number') {
         getScrollY = function() {
             return window.pageYOffset;
         };
-    } else if ((typeof document.compatMode == 'string') &&
+    } else if ((typeof document.compatMode === 'string') &&
         (document.compatMode.indexOf('CSS') >= 0) &&
         (document.documentElement) &&
-        (typeof document.documentElement.scrollTop == 'number')) {
+        (typeof document.documentElement.scrollTop === 'number')) {
 
         getScrollY = function() {
             return document.documentElement.scrollTop;
         };
     } else if ((document.body) &&
-        (typeof document.body.scrollTop == 'number')) {
+        (typeof document.body.scrollTop === 'number')) {
 
         getScrollY = function() {
             return document.body.scrollTop;
@@ -78,30 +57,20 @@ var getScrollY = function() {
     }
 
     return getScrollY();
-}
+};
 
-var applySelector = function(item, selector, func) {
-    // for some reason, some browsers' querySelectorAll() doesn't provide .forEach()
-    var items = item.querySelectorAll(selector);
-    for (var i = 0; i < items.length; i++) {
-        func(items[i]);
-    }
-}
-
-var loadImages = function(e) {
+function loadImages(e) {
     applySelector(e, 'img[data-fof-ondemand-src]', function(img) {
         img.src = img.getAttribute('data-fof-ondemand-src');
         img.removeAttribute('data-fof-ondemand-src');
-        console.log("demand loading " + img.src);
     });
     applySelector(e, 'img[data-fof-ondemand-srcset]', function(img) {
         img.srcset = img.getAttribute('data-fof-ondemand-srcset');
         img.removeAttribute('data-fof-ondemand-srcset');
-        console.log("demand loading " + img.srcset);
     });
 }
 
-var loadVisibleItems = function() {
+function loadVisibleItems() {
     applySelector(document.getElementById("items"), ".item", function(item) {
         if (getY(item) - getScrollY() < getWindowHeight()*3/2) {
             loadImages(item);
@@ -110,13 +79,13 @@ var loadVisibleItems = function() {
 }
 
 window.addEventListener('scroll', loadVisibleItems, false);
-window.addEventListener('load', loadVisibleItems, false);
+window.addEventListener('load',   loadVisibleItems, false);
 
-var getY = function(e) {
-    var y = NaN;
+function getY(e) {
+    let y = NaN;
 
     if (e.offsetParent) {
-        y = e.offsetTop
+        y = e.offsetTop;
         while (e = e.offsetParent) {
             y += e.offsetTop
         }
@@ -126,7 +95,7 @@ var getY = function(e) {
 }
 
 function getWindowHeight() {
-    if (typeof(window.innerHeight) == 'number') {
+    if (typeof(window.innerHeight) === 'number') {
         //Non-IE
         return window.innerHeight;
     } else if (document.documentElement && document.documentElement.clientHeight) {
@@ -140,65 +109,36 @@ function getWindowHeight() {
     return NaN;
 }
 
-function embed_odeo(link) {
-    document.writeln('<embed src="http://odeo.com/flash/audio_player_fullsize.swf" pluginspage="http://www.macromedia.com/go/getflashplayer" type="application/x-shockwave-flash" quality="high" width="440" height="80" wmode="transparent" allowScriptAccess="any" flashvars="valid_sample_rate=true&external_url=' + link + '"></embed>');
-}
-
-function embed_quicktime(type, bgcolor, width, height, link, placeholder, loop) {
-    if (placeholder != '') {
-        document.writeln('<embed type="' + type + '" style="cursor:hand; cursor:pointer;" href="' + link + '" src="' + placeholder + '" width="' + width + '" height="' + height + '" autoplay="false" target="myself" controller="false" loop="' + loop + '" scale="aspect" bgcolor="' + bgcolor + '" pluginspage="http://www.apple.com/quicktime/download/"></embed>');
-    } else {
-        document.writeln('<embed type="' + type + '" style="cursor:hand; cursor:pointer;" src="' + link + '" width="' + width + '" height="' + height + '" autoplay="false" target="myself" controller="true" loop="' + loop + '" scale="aspect" bgcolor="' + bgcolor + '" pluginspage="http://www.apple.com/quicktime/download/"></embed>');
-    }
-}
-
-function embed_flash(bgcolor, width, height, link, loop, type) {
-    document.writeln('<embed src="' + link + '" pluginspage="http://www.macromedia.com/go/getflashplayer" type="' + type + '" quality="high" width="' + width + '" height="' + height + '" bgcolor="' + bgcolor + '" loop="' + loop + '"></embed>');
-}
-
-function embed_flv(width, height, link, placeholder, loop, player) {
-    document.writeln('<embed src="' + player + '" pluginspage="http://www.macromedia.com/go/getflashplayer" type="application/x-shockwave-flash" quality="high" width="' + width + '" height="' + height + '" wmode="transparent" flashvars="file=' + link + '&autostart=false&repeat=' + loop + '&showdigits=true&showfsbutton=false"></embed>');
-}
-
-function embed_wmedia(width, height, link) {
-    document.writeln('<embed type="application/x-mplayer2" src="' + link + '" autosize="1" width="' + width + '" height="' + height + '" showcontrols="1" showstatusbar="0" showdisplay="0" autostart="0"></embed>');
-}
-
 function itemClicked(event) {
     if (!event) event = window.event;
-    target = window.event ? window.event.srcElement : event.target;
+    let target = window.event ? window.event.srcElement : event.target;
 
     if (event.altKey) {
-        Event.stop(event);
+    	event.stopPropagation();
 
         unselect(itemElement);
+
         while (target.parentNode) {
-            if (Element.hasClassName(target, "item")) {
+            if (target.classList.contains("item")) {
                 break;
             }
             target = target.parentNode;
         }
 
-        if (itemElement == target) {
+        if (itemElement === target) {
             itemElement = null;
             return false;
         }
 
-        Element.addClassName(target, 'selected');
+		target.classList.add('selected');
         itemElement = target;
 
-        i = itemElements.indexOf(target);
+        let items = document.querySelectorAll('.items');
 
-        if (i == -1) {
-            // in case page was partially loaded when itemElements was initialized
-            itemElements = $$('.item');
-            i = itemElements.indexOf(target);
-        }
-
-        n = itemElements.length;
+        let i = items.indexOf(target);
         i++;
 
-        document.title = "Feed on Feeds - item " + i + " selected, of " + n + " displayed";
+        document.title = "Feed on Feeds - item " + i + " selected, of " + items.length + " displayed";
         return false;
     }
 
@@ -207,7 +147,7 @@ function itemClicked(event) {
 
 function checkbox(event) {
     if (!event) event = window.event;
-    target = window.event ? window.event.srcElement : event.target;
+    let target = window.event ? window.event.srcElement : event.target;
 
     if (!event.shiftKey)
         return true;
@@ -218,550 +158,405 @@ function checkbox(event) {
 }
 
 function select(item) {
-    Element.addClassName(item, 'selected');
+	item.classList.add('selected');
 
-    y = getY(item);
-    bar = $('item-display-controls').getHeight();
+    const y = getY(item);
+    const bar = document.getElementById('item-display-controls').offsetHeight;
     window.scrollTo(0, y - (bar + 10));
+
     loadImages(item);
 
-    i = itemElements.indexOf(item);
+    const items = document.querySelectorAll('.item');
 
-    if (i == -1) {
-        // in case page was partially loaded when itemElements was initialized
-        itemElements = $$('.item');
-        i = itemElements.indexOf(item);
-    }
-
-    n = itemElements.length;
+    let i = Array.from(items).indexOf(item);
     i++;
 
-    document.title = "Feed on Feeds - item " + i + " selected, of " + n + " displayed";
+    document.title = "Feed on Feeds - item " + i + " selected, of " + items.length + " displayed";
 }
 
 function unselect(item) {
-    Element.removeClassName(item, 'selected');
+	item.classList.remove('selected');
     document.title = "Feed on Feeds";
-
-}
-
-function show_enclosure(e) {
-    if (!e) e = window.event;
-    target = window.event ? window.event.srcElement : e.target;
-    Element.extend(target);
-    div = target.nextSiblings().first();
-    Element.show(div);
-    Element.hide(target);
-
-    return false;
 }
 
 function keyboard(e) {
     if (!e) e = window.event;
 
-    target = window.event ? window.event.srcElement : e.target;
+    let target = window.event ? window.event.srcElement : e.target;
 
-    if (target != null && target.type != null && (target.type == "textarea" || target.type == "text" || target.type == "password")) {
+    if (target != null && target.type != null && (target.type === "textarea" || target.type === "text" || target.type === "password")) {
         return true;
     }
 
-    if (e.keyCode) keycode = e.keyCode;
-    else keycode = e.which;
-
     if (e.ctrlKey || e.altKey || e.metaKey) return true;
 
-    key = String.fromCharCode(keycode);
+    const items = document.querySelectorAll('.item');
 
-    if (!itemElements) itemElements = $$('.item');
+    if (itemElement === null)
+    	itemElement = document.querySelector('.item');
 
-    windowHeight = getWindowHeight();
+	if (itemElement) {
+		select(itemElement);
+	}
 
-    if (key == "H") // toggle all item foldings
-    {
-        itemElements.each(
-            function(i) {
-                Element.toggleClassName(i, "shown");
-                Element.toggleClassName(i, "hidden");
-            }
-        );
+    switch (e.key) {
 
-        if (itemElement)
-            select(itemElement);
+		// toggle all item foldings
+		case "H":
+			items.forEach(item => {
+				item.classList.toggle("shown");
+				item.classList.toggle("hidden");
+			});
+			return false;
 
-        return false;
-    }
+		// toggle current item folding
+		case "h":
+			if (itemElement) {
+				itemElement.classList.toggle("shown");
+				itemElement.classList.toggle("hidden");
+			}
+			return false;
 
-    if (key == "h") // toggle current item folding
-    {
-        if (itemElement) {
-            Element.toggleClassName(itemElement, "shown");
-            Element.toggleClassName(itemElement, "hidden");
-            select(itemElement);
-            return false;
-        }
-    }
+		// toggle starred status of current item
+		case "s":
+			if (itemElement) {
+				toggle_favorite(itemElement.id.substring(1));
+			}
+			return false;
 
-    if (key == "s") // toggle starred status of current item
-    {
-        if (itemElement) {
-            toggle_favorite(itemElement.id.substring(1));
-            select(itemElement);
-            return false;
-        }
-    }
+		// flag/unflag current item
+		case "f":
+			if (itemElement) {
+				document.getElementById('c' + itemElement.id.substring(1)).checked = !document.getElementById('c' + itemElement.id.substring(1)).checked;
+			}
+			return false;
 
-    if (key == "f") // flag current item
-    {
-        if (itemElement) {
-            checkbox = ($('c' + itemElement.id.substring(1)));
-            checkbox.checked = true;
-            return false;
-        }
-    }
+		// flag current and all previous items
+		case "F":
+			items.forEach((i, idx) => {
+				if (itemElement) {
+					if (idx > Array.from(items).indexOf(itemElement))
+						return;
+				}
+				document.getElementById('c' + i.id.substring(1)).checked = true;
+			});
 
-    if (key == "F") // flag current and all previous items
-    {
-        itemElements.each(
-            function(i) {
-                if (itemElement) {
-                    if (itemElements.indexOf(i) > itemElements.indexOf(itemElement))
-                        return;
-                }
-                checkbox = ($('c' + i.id.substring(1)));
-                checkbox.checked = true;
-            }
-        );
+			return false;
 
-        return false;
-    }
+		// unflag all items
+		case "U":
+			items.forEach(i => {
+				document.getElementById('c' + i.id.substring(1)).checked = false;
+			});
 
-    if (key == "U") // unflag all items
-    {
-        itemElements.each(
-            function(i) {
-                checkbox = ($('c' + i.id.substring(1)));
-                checkbox.checked = false;
-            }
-        );
+			return false;
 
-        return false;
-    }
+		// scroll current item or move to next item, flag current item
+		case "j":
+			if (itemElement) {
+				// is the next element visible yet?  scroll if not.
 
-    if (key == "j") // scroll current item or move to next item, flag current item
-    {
-        if (itemElement) {
-            // is the next element visible yet?  scroll if not.
+				const windowHeight = getWindowHeight();
 
-            if (itemElement.nextElementSibling.id && itemElement.nextElementSibling.id != "end-of-items") {
-                nextElement = itemElement.nextElementSibling;
-                scrollHeight = getScrollY();
-                y = getY(nextElement);
+				if (itemElement.nextElementSibling.id) {
+					const nextElement = itemElement.nextElementSibling;
+					const scrollHeight = getScrollY();
+					const y = getY(nextElement);
 
-                if (y > scrollHeight + windowHeight) {
-                    window.scrollTo(0, scrollHeight + (.8 * windowHeight));
-                    return false;
-                }
-            }
+					if (y > scrollHeight + windowHeight) {
+						window.scrollTo(0, scrollHeight + (.8 * windowHeight));
+						return false;
+					}
+				}
 
-            unselect(itemElement);
-            checkbox = ($('c' + itemElement.id.substring(1)));
-            checkbox.checked = true;
+				unselect(itemElement);
+				document.getElementById('c' + itemElement.id.substring(1)).checked = true;
 
-            next = itemElement.nextElementSibling;
+				const nextElement = itemElement.nextElementSibling;
 
-            if (next.id && next.id != "end-of-items") {
-                itemElement = next;
-            } else {
-                scrollHeight = getScrollY();
+				if (nextElement) {
+					itemElement = nextElement;
+				} else {
+					const scrollHeight = getScrollY();
 
-                e = $('end-of-items');
+					const lastItem = Array.from(document.querySelectorAll('.item')).pop();
 
-                if (e.offsetParent) {
-                    y = e.offsetTop
-                    while (e = e.offsetParent) {
-                        y += e.offsetTop
-                    }
-                }
+					let y = lastItem.offsetTop;
 
-                if (y - 10 > scrollHeight + windowHeight) {
-                    window.scrollTo(0, scrollHeight + (.8 * windowHeight));
-                    return false;
-                } else {
-                    if (confirm("No more items!  Mark flagged as read?")) {
-                        mark_read();
-                    } else {
-                        item = firstItem;
-                        itemElement = $(item);
-                        select(itemElement);
-                        return false;
-                    }
-                }
-            }
+					if (y - 10 > scrollHeight + windowHeight) {
+						window.scrollTo(0, scrollHeight + (.8 * windowHeight));
+						return false;
+					}
+					else {
+						if (confirm("No more items!  Mark flagged as read?")) {
+							mark_read();
+						}
+						else {
+							itemElement = document.querySelector('.item');
+							select(itemElement);
+							return false;
+						}
+					}
+				}
+			}
+			select(itemElement);
+			return false;
 
-            item = itemElement.id;
-            itemElement = $(item);
+		// flag item, move to next
+		case "J":
+			if (itemElement) {
+				unselect(itemElement);
+				document.getElementById('c' + itemElement.id.substring(1)).checked = true;
 
-            select(itemElement);
+				const nextElement = itemElement.nextElementSibling;
 
-            return false;
-        } else {
-            item = firstItem;
-            itemElement = $(item);
-            itemElements = $$('.item');
+				if (nextElement.id) {
+					itemElement = nextElement;
+				}
+				else {
+					if (confirm("No more items!  Mark flagged as read?")) {
+						mark_read();
+					}
+					else {
+						itemElement = document.querySelector('.item');
+					}
+				}
+			}
+			select(itemElement);
+			return false;
 
-            select(itemElement);
+		// skip to next item
+		case "n":
+			if (itemElement) {
+				unselect(itemElement);
 
-            return false;
-        }
-    }
+				let nextElement = itemElement.nextElementSibling;
 
-    if (key == "J") // flag item, move to next
-    {
-        if (itemElement) {
-            unselect(itemElement);
-            checkbox = ($('c' + itemElement.id.substring(1)));
-            checkbox.checked = true;
+				if (nextElement && nextElement.classList.contains('item')) {
+					itemElement = nextElement;
+				}
+				else {
+					itemElement = document.querySelector('.item');
+				}
+			}
+			select(itemElement);
+			return false;
 
-            next = itemElement.nextElementSibling;
+		// skip to previous item
+		case "p":
+			if (itemElement) {
+				unselect(itemElement);
 
-            if (next.id) {
-                itemElement = next;
-            } else {
-                if (confirm("No more items!  Mark flagged as read?")) {
-                    mark_read();
-                } else {
-                    item = firstItem;
-                    itemElement = $(item);
-                }
-            }
+				let prevElement = itemElement.previousElementSibling;
 
-            item = itemElement.id;
-            itemElement = $(item);
+				if (prevElement && prevElement.classList.contains('item')) {
+					itemElement = prevElement;
+				}
+				else {
+					itemElement = Array.from(document.querySelectorAll('.item')).pop();
+				}
+			}
+			console.log(itemElement);
+			select(itemElement);
+			return false;
 
-            select(itemElement);
+		// skip to last item
+		case "N":
+			if (itemElement) unselect(itemElement);
 
-            return false;
-        } else {
-            item = firstItem;
-            itemElement = $(item);
-            itemElements = $$('.item');
+			itemElement = Array.from(document.querySelectorAll('.item')).pop();
 
-            select(itemElement);
+			select(itemElement);
+			return false;
 
-            return false;
-        }
-    }
+		// skip to first item
+		case "P":
+			if (itemElement) unselect(itemElement);
 
-    if (key == "n") // skip to next item
-    {
-        if (itemElement) {
-            unselect(itemElement);
+			itemElement = document.querySelector('.item');
 
-            next = itemElement.nextElementSibling;
+			select(itemElement);
+			return false;
 
-            if (next.id) {
-                itemElement = next;
-            } else {
-                item = firstItem;
-                itemElement = $(item);
-            }
+		// refresh sidebar
+		case "r":
+			refreshlist();
+			return false;
 
-            item = itemElement.id;
-            itemElement = $(item);
-
-            select(itemElement);
-
-            return false;
-        } else {
-            item = firstItem;
-            itemElement = $(item);
-            itemElements = $$('.item');
-
-            select(itemElement);
-
-            return false;
-        }
-    }
-
-    if (key == "N") // skip to last item
-    {
-        if (itemElement) unselect(itemElement);
-
-        item = itemElements.last().id;
-        itemElement = $(item);
-
-        select(itemElement);
-
-        return false;
-    }
-
-    if (key == "P") // skip to first item
-    {
-        if (itemElement) unselect(itemElement);
-
-        item = firstItem;
-        itemElement = $(item);
-        itemElements = $$('.item');
-
-        select(itemElement);
-
-        return false;
-    }
-
-    if (key == "p") // skip to previous item
-    {
-        if (itemElement) {
-            unselect(itemElement);
-
-            next = itemElement.previousElementSibling;
-
-            if (next.id) {
-                itemElement = next;
-            } else {
-                item = itemElements.last().id;
-                itemElement = $(item);
-            }
-
-            item = itemElement.id;
-            itemElement = $(item);
-
-            select(itemElement);
-
-            return false;
-        } else {
-            itemElements = $$('.item');
-            item = itemElements.last().id;
-            itemElement = $(item);
-
-            select(itemElement);
-
-            return false;
-        }
-    }
-
-    if (key == "r") { // refresh sidebar
-        refreshlist();
-        return false;
-    }
-
-    if (key == "?") { // show help pane
-        $('keyboard-legend').toggle();
-        return false;
-    }
+		// show help pane
+		case "?":
+			document.getElementById('keyboard-legend').classList.toggle('hide');
+			return false;
+	}
 
     return true;
 }
 
+// Sidebar resizing
 
+let curWidth = 0;
+let curPos = 0;
+let drag = false;
 
 function startResize(e) {
     if (!e) e = window.event;
 
-    Event.stop(e);
+	e.stopPropagation();
 
     drag = true;
     curPos = e.clientX;
-    curWidth = $('sidebar').offsetWidth;
+    curWidth = document.getElementById('sidebar').offsetWidth;
 
     return false;
 }
 
-function dragResize(e) {
-    if (!e) e = window.event;
-
+document.onmousemove = function(e) {
     if (drag) {
-        Event.stop(e);
+		e.stopPropagation();
 
-        newPos = e.clientX;
-        var x = newPos - curPos;
-        var w = curWidth + x;
-        newWidth = (w < 5 ? 5 : w);
+        const newPos = e.clientX;
+        const x = newPos - curPos;
+        const w = curWidth + x;
+        const newWidth = (w < 5 ? 5 : w);
 
-        $('handle').style.left = newWidth + 'px';
+		document.getElementById('handle').style.left = newWidth + 'px';
 
         return false;
     }
-}
+};
 
-function completeDrag(e) {
-    if (!e) e = window.event;
-
+document.onmouseup = function(e) {
     if (drag) {
-        Event.stop(e);
+		e.stopPropagation();
 
         drag = false;
 
-        newPos = e.clientX;
-        var x = newPos - curPos;
-        var w = curWidth + x;
-        newWidth = (w < 5 ? 5 : w);
+        const newPos = e.clientX;
+        const x = newPos - curPos;
+        const w = curWidth + x;
+        const newWidth = (w < 5 ? 5 : w);
 
-        $('sidebar').style.width = newWidth + 'px';
-        $('handle').style.left = newWidth + 'px';
-        $('items').style.marginLeft = (newWidth + 10) + 'px';
-        $('item-display-controls').style.left = (newWidth + 10) + 'px';
-        $('welcome').style.width = (newWidth - 30) + 'px';
+		document.getElementById('sidebar').style.width = newWidth + 'px';
+		document.getElementById('handle').style.left = newWidth + 'px';
+		document.getElementById('items').style.marginLeft = (newWidth + 10) + 'px';
+		document.getElementById('item-display-controls').style.left = (newWidth + 10) + 'px';
+		document.getElementById('welcome').style.width = (newWidth - 30) + 'px';
 
-        if (isIE) {
-            tables = $$('#sidebar table');
-            for (i = 0; i < tables.length; i++) {
-                tables[i].style.width = (newWidth - 20) + 'px';
-            }
-        }
-        var today = new Date();
-        var expire = new Date();
+        const today = new Date();
+        let  expire = new Date();
+
         expire.setTime(today.getTime() + 3600000 * 24 * 100);
-        document.cookie = "fof_sidebar_width=" + newWidth + "; expires=" + expire.toGMTString() + ";";
+
+        document.cookie = 'fof_sidebar_width=' + newWidth + '; expires=' + expire.toUTCString() + ';';
 
         return false;
     }
-
-}
+};
 
 function hide_all() {
-    items = $A(document.getElementsByClassName("item", "items"));
-    items.each(function(e) {
-        hide_body(e.id.substring(1));
-    });
+	document.querySelectorAll('#items .item').forEach(item => hide_body(item.id.substring(1)));
 }
 
 function show_all() {
-    items = $A(document.getElementsByClassName("item", "items"));
-    items.each(function(e) {
-        show_body(e.id.substring(1));
-    });
+	document.querySelectorAll('#items .item').forEach(item => show_body(item.id.substring(1)));
 }
 
 function hide_body(id) {
     throb();
 
-    var url = "view-action.php";
-    var params = {
-        "fold": id
-    };
-    var complete = function() {
-        $('i' + id).className = 'item hidden';
-        unthrob();
-    };
-    var options = {
-        method: 'post',
-        parameters: params,
-        onComplete: complete
-    };
-
-    new Ajax.Request(url, options);
+	fetch('view-action.php', {
+		'method': 'post',
+		'headers': {'Content-Type': 'application/x-www-form-urlencoded'},
+		'body': 'fold='+id
+	}).then(function() {
+		document.querySelector('#i'+id).className = 'item hidden';
+		unthrob();
+	});
 }
 
 function show_body(id) {
     throb();
 
-    var url = "view-action.php";
-    var params = {
-        "unfold": id
-    };
-
-    var complete = function() {
-        $('i' + id).className = 'item shown';
-        unthrob();
-    };
-    var options = {
-        method: 'post',
-        parameters: params,
-        onComplete: complete
-    };
-
-    new Ajax.Request(url, options);
+	fetch('view-action.php', {
+		'method': 'post',
+		'headers': {'Content-Type': 'application/x-www-form-urlencoded'},
+		'body': 'unfold='+id
+	}).then(function() {
+		document.querySelector('#i'+id).className = 'item shown';
+		unthrob();
+	});
 }
 
+/**
+ * check all items up to the currently checked one
+ * e.g. on SHIFT click or double click
+ * @param id checkbox's name property
+ */
 function flag_upto(id) {
-    elements = $A(Form.getInputs('itemform', 'checkbox'));
+	const checkboxes = Array.from(document.querySelectorAll('.item h1 input'));
 
-    for (i = 0; i < elements.length; i++) {
-        elements[i].checked = true;
+    for (let i = 0; i < checkboxes.length; i++) {
+		checkboxes[i].checked = true;
 
-        if (elements[i].name == id) {
+        if (checkboxes[i].name === id) {
             break;
         }
     }
 }
 
 function toggle_highlight() {
-    if (document.body.className == '') {
-        document.body.className = 'highlight-on';
-    } else {
-        document.body.className = '';
-    }
+    document.body.classList.toggle('highlight-on');
 }
 
 function flag_all() {
-    elements = $A(Form.getInputs('itemform', 'checkbox'));
-    elements.each(function(e) {
-        e.checked = true;
-    });
+	document.querySelectorAll('.item h1 input').forEach(checkbox => checkbox.checked = true);
 }
-
-
-function toggle_all() {
-    elements = $A(Form.getInputs('itemform', 'checkbox'));
-    elements.each(function(e) {
-        e.checked = !e.checked;
-    });
-}
-
 function unflag_all() {
-    elements = $A(Form.getInputs('itemform', 'checkbox'));
-    elements.each(function(e) {
-        e.checked = false;
-    });
+	document.querySelectorAll('.item h1 input').forEach(checkbox => checkbox.checked = false);
+}
+function toggle_all() {
+	document.querySelectorAll('.item h1 input').forEach(checkbox => checkbox.checked = !checkbox.checked);
 }
 
 function mark_read() {
     document.items['action'].value = 'read';
-    document.items['return'].value = escape(location);
+    document.items['return'].value = encodeURI(location);
     document.items.submit();
 }
-
 function mark_unread() {
     document.items['action'].value = 'unread';
-    document.items['return'].value = escape(location);
+    document.items['return'].value = encodeURI(location);
     document.items.submit();
 }
 
 function ajax_mark_read(id) {
     throb();
 
-    var url = "view-action.php";
-    var params = {
-        "mark_read": id
-    };
-    var complete = function() {
-        refreshlist();
+	fetch('view-action.php', {
+		'method': 'post',
+		'headers': {'Content-Type': 'application/x-www-form-urlencoded'},
+		'body': 'mark_read='+id
+	}).then(function() {
+		refreshlist();
 
-        item = $('i' + id);
+		const item = document.getElementById('i' + id);
 
-        // scroll to start of next item if it flips out of the viewport
-        // by removing the read item
+		// scroll to start of next item if it flips out of the viewport
+		// by removing the read item
 
-        y = getY(item);
-        scrollHeight = getScrollY();
+		const y = getY(item);
+		const scrollHeight = getScrollY();
 
-        item.remove();
+		item.remove();
 
-        if (y < scrollHeight) {
-            bar = $('item-display-controls').getHeight();
+		if (y < scrollHeight) {
+			const bar = document.getElementById('item-display-controls').offsetHeight;
 
-            window.scrollTo(0, y - (bar + 10));
-        }
+			window.scrollTo(0, y - (bar + 10));
+		}
 
-        loadVisibleItems();
-    };
-    var options = {
-        method: 'post',
-        parameters: params,
-        onComplete: complete
-    };
-
-    new Ajax.Request(url, options);
+		loadVisibleItems();
+	});
 
     return false;
 }
@@ -769,50 +564,32 @@ function ajax_mark_read(id) {
 function mark_feed_read(id) {
     throb();
 
-    var url = "view-action.php";
-    var params = {
-        "feed": id
-    };
-    var complete = function() {
-        refreshlist();
-    };
-    var options = {
-        method: 'post',
-        parameters: params,
-        onComplete: complete
-    };
-
-    new Ajax.Request(url, options);
+	fetch('view-action.php', {
+		'method': 'post',
+		'headers': {'Content-Type': 'application/x-www-form-urlencoded'},
+		'body': 'feed='+id
+	}).then(function() {
+		refreshlist();
+	});
 
     return false;
 }
 
 function untag_all() {
-    items = $$('.untag');
-    items.each(function(e) {
-        e.onclick();
-    });
+	document.querySelectorAll('.untag').forEach(item => item.click());
 }
 
 function add_tag(id, tag) {
     throb();
 
-    var url = "add-tag.php";
-    var params = {
-        "tag": tag,
-        "item": id
-    };
-    var complete = function() {
-        refreshlist();
-        refreshitem(id);
-    };
-    var options = {
-        method: 'post',
-        parameters: params,
-        onComplete: complete
-    };
-
-    new Ajax.Request(url, options);
+	fetch('add-tag.php', {
+		'method': 'post',
+		'headers': {'Content-Type': 'application/x-www-form-urlencoded'},
+		'body': 'tag='+tag+'&item='+id
+	}).then(function() {
+		refreshlist();
+		refreshitem(id);
+	});
 
     return false;
 }
@@ -820,25 +597,14 @@ function add_tag(id, tag) {
 function remove_tag(id, tag) {
     throb();
 
-    var url = "add-tag.php";
-    var params = {
-        "remove": "true",
-        "tag": tag,
-        "item": id.toString()
-    };
-    var complete = function() {
-        refreshlist();
-
-        var tag_item = $('tag_' + id.toString() + '_' + tag);
-		tag_item.remove();
-    };
-    var options = {
-        method: 'post',
-        parameters: params,
-        onComplete: complete
-    };
-
-    new Ajax.Request(url, options);
+	fetch('add-tag.php', {
+		'method': 'post',
+		'headers': {'Content-Type': 'application/x-www-form-urlencoded'},
+		'body': 'remove=true&tag='+tag+'&item='+id
+	}).then(function() {
+		refreshlist();
+		document.getElementById('tag_' + id.toString() + '_' + tag).remove();
+	});
 
     return false;
 }
@@ -846,20 +612,13 @@ function remove_tag(id, tag) {
 function delete_tag(tag) {
     throb();
 
-    var url = "view-action.php";
-    var params = {
-        "deltag": tag
-    };
-    var complete = function() {
-        refreshlist();
-    };
-    var options = {
-        method: 'post',
-        parameters: params,
-        onComplete: complete
-    };
-
-    new Ajax.Request(url, options);
+	fetch('view-action.php', {
+		'method': 'post',
+		'headers': {'Content-Type': 'application/x-www-form-urlencoded'},
+		'body': 'deltag='+tag
+	}).then(function() {
+		refreshlist();
+	});
 
     return false;
 }
@@ -867,178 +626,84 @@ function delete_tag(tag) {
 function change_feed_order(order, direction) {
     throb();
 
-    var url = "set-prefs.php";
-    var params = {
-        "feed_order": order,
-        "feed_direction": direction
-    };
-    var complete = function() {
-        refreshlist();
-    };
-    var options = {
-        method: 'post',
-        parameters: params,
-        onComplete: complete
-    };
-
-    new Ajax.Request(url, options);
+	fetch('set-prefs.php', {
+		'method': 'post',
+		'headers': {'Content-Type': 'application/x-www-form-urlencoded'},
+		'body': 'feed_order='+order+'&feed_direction='+direction
+	}).then(function() {
+		refreshlist();
+	});
 
     return false;
-
 }
 
 function toggle_favorite(id) {
     throb();
 
-    var star = $('fav' + id);
+    const star = document.getElementById('fav' + id);
 
-    var url = "add-tag.php";
-    var params = {
-        "tag": "star",
-        "item": id
-    };
+    let data = 'tag=star&item='+id;
 
-    if (star.className == 'starred') {
-        params['remove'] = "true";
-        var complete = function() {
-			star.className = 'unstarred';
-            starred--;
-            if (starred) {
-                $('starredcount').update('(' + starred + ')');
-            } else {
-                $('starredcount').update('');
-            }
-            unthrob();
-        };
-    } else {
-        var complete = function() {
-			star.className = 'starred';
-            starred++;
-            if (starred) {
-                $('starredcount').update('(' + starred + ')');
-            } else {
-                $('starredcount').update('');
-            }
-            unthrob();
-        };
+    if (star.className === 'starred') {
+		data += '&remove=true';
     }
 
-	star.className = 'starred-pending';
+	fetch('add-tag.php', {
+		'method': 'post',
+		'headers': {'Content-Type': 'application/x-www-form-urlencoded'},
+		'body': data
+	}).then(function() {
+		if (star.className === 'starred') {
+			star.className = 'unstarred';
+			starred--;
+		} else {
+			star.className = 'starred';
+			starred++;
+		}
 
-    var options = {
-        method: 'post',
-        parameters: params,
-        onComplete: complete
-    };
-    new Ajax.Request(url, options);
+		if (starred > 0) {
+			document.getElementById('starredcount').innerHTML = '(' + starred + ')';
+		} else {
+			document.getElementById('starredcount').innerHTML = '';
+		}
+		unthrob();
+	});
 
     return false;
 }
 
 function refreshitem(id) {
-    throb();
-
-    var url = 'item.php';
-    var params = {
-        "id": id,
-		"no_img_filter": 1
-    };
-    new Ajax.Updater($("i" + id), url, {
-        method: 'get',
-        parameters: params,
-		onComplete: loadVisibleItems
-    });
+	fetch('item.php?no_img_filter=1&id='+id).then(function(response) {
+		response.text().then(data => document.getElementById('i' + id).innerHTML = data);
+		loadVisibleItems();
+	});
 }
-
 
 function refreshlist() {
     throb();
 
-    var params = {}; // persist view details
-    if (feed !== null) params["feed"] = feed;
-    if (what !== null) params["what"] = what;
-    if (when !== null) params["when"] = when;
-    if (search !== null) params["search"] = search;
+    let params = {};
 
-    new Ajax.Updater($("sidebar"), "sidebar.php", {
-        method: "get",
-        parameters: params,
-        evalScripts: true
-    });
+	if (feed   !== null) params.feed   = feed;
+	if (what   !== null) params.what   = what;
+	if (when   !== null) params.when   = when;
+	if (search !== null) params.search = search;
+
+	fetch('sidebar.php?'+queryStringFromJSON(params)).then(function(response) {
+		response.text().then(data => {
+			document.getElementById('sidebar').innerHTML = data;
+			evalScripts(data);
+		});
+		loadVisibleItems();
+	});
 }
 
 function throb() {
-    Element.show('throbber');
+    document.getElementById('throbber').style.display = 'inline';
 }
 
 function unthrob() {
-    Element.hide('throbber');
-}
-
-// this fancy bit of computer science from Aristotle Pagaltzis @ http://plasmasturm.org/log/311/
-function iterate(iterable) {
-    var i = -1;
-    var getter = function() {
-        return i < 0 ? null : i < iterable.length ? iterable[i] : null;
-    };
-    return function() {
-        return ++i < iterable.length ? getter : null
-    };
-}
-
-function continueupdate() {
-    if (feed = feedi()) {
-        f = feed();
-        var update_feed_id = 'feed_id_' + f['id'];
-        $(update_feed_id).scrollTo();
-        //        $('items').childElements().last().scrollTo();
-
-        new Ajax.Updater(update_feed_id, 'update-single.php', {
-            method: 'post',
-            parameters: {
-                "feed": f["id"]
-            },
-            onComplete: continueupdate
-        });
-    } else {
-        new Insertion.Bottom($('items'), '<br>Update complete!');
-        refreshlist();
-    }
-}
-
-function continueadd() {
-    if (feed = feedi()) {
-        f = feed();
-        var new_feed_id = 'feed_index_' + f['idx'];
-        //        $(new_feed_id).scrollTo();
-
-        parameters = {
-            "url": f['url'],
-            "unread": document.addform.unread.value
-        };
-
-        new Ajax.Updater(new_feed_id, 'add-single.php', {
-            method: 'post',
-            parameters: parameters,
-            onComplete: continueadd
-        });
-    } else {
-        new Insertion.Bottom($('items'), '<br>Done!');
-        refreshlist();
-    }
-}
-
-function ajaxupdate() {
-    throb();
-    feedi = iterate(feedslist);
-    for (var i = 0; i < Math.min(feedslist.length, 5); i++)
-        setTimeout(continueupdate, 50);
-}
-
-function ajaxadd() {
-    throb();
-    feedi = iterate(feedslist);
-    continueadd();
+	document.getElementById('throbber').style.display = 'none';
 }
 
 function itemTagAddShow(id, link) {
@@ -1048,8 +713,9 @@ function itemTagAddShow(id, link) {
 }
 
 function itemTagAdd(id, key) {
-    if (key == null || key == 13)
+    if (key == null || key === 13) {
         return add_tag(id, document.getElementById('tag' + id).value);
+	}
     return false;
 }
 
@@ -1057,7 +723,7 @@ function sb_read_conf(title, id) {
     if (confirm('Mark all [' + title + '] items as read -- are you SURE?')) {
         mark_feed_read(id);
     }
-    return false
+    return false;
 }
 
 function sb_del_tag_conf(tagname) {
@@ -1065,7 +731,7 @@ function sb_del_tag_conf(tagname) {
         delete_tag(tagname);
     }
     return false;
-};
+}
 
 function sb_unsub_conf(title) {
     return confirm('Unsubscribe [' + title + '] -- are you SURE?');
@@ -1075,20 +741,13 @@ function sb_mark_tag_read(tagname) {
     if (confirm('Mark all [' + tagname + '] items as read -- are you SURE?')) {
         throb();
 
-        var url = "view-action.php";
-        var params = {
-            'tag_read': tagname
-        };
-        var complete = function() {
-            refreshlist();
-        };
-        var options = {
-            method: 'post',
-            parameters: params,
-            onComplete: complete
-        };
-
-        new Ajax.Request(url, options);
+		fetch('view-action.php', {
+			'method': 'post',
+			'headers': {'Content-Type': 'application/x-www-form-urlencoded'},
+			'body': 'tag_read='+tagname
+		}).then(function() {
+			refreshlist();
+		});
     }
     return false;
 }
@@ -1096,105 +755,158 @@ function sb_mark_tag_read(tagname) {
 function sb_update_feed(id) {
     throb();
 
-    var url = "feed-action.php";
-    var params = {
-        "update_feedid": id
-    };
-    var complete = function() {
-        unthrob();
-    };
-    var options = {
-        method: "post",
-        parameters: params,
-        onComplete: complete
-    };
-    var feed_element = $$("#sidebar #feeds #f" + id)[0];
-    var feed_icon_element = $$("#sidebar #feeds #f" + id + " img.feed-icon")[0];
+	document.querySelector('#f'+id+' img.feed-icon').src = "image/spinner.gif";
 
-    /* show in-progress state */
-    feed_icon_element.replace("<img class=\"feed-icon\" src=\"image/spinner.gif\" title=\"update pending\" />");
-
-    /* success replaces the whole table row, failure just replaces the icon */
-    new Ajax.Updater({
-        success: feed_element,
-        failure: feed_icon_element
-    }, url, options);
+	fetch('feed-action.php', {
+		'method': 'post',
+		'headers': {'Content-Type': 'application/x-www-form-urlencoded'},
+		'body': 'update_feedid='+id
+	}).then(function(response) {
+		unthrob();
+		response.text().then(data => document.getElementById('f' + id).innerHTML = data);
+	});
 }
 
 function sb_update_tag_sources(tagname) {
     throb();
 
-    var url = "feed-action.php";
-    var params = {
-        "update_tag_sources": tagname
-    };
-    var options = {
-        method: "post",
-        parameters: params
-    };
-    new Ajax.Request(url, options);
+	fetch('feed-action.php', {
+		'method': 'post',
+		'headers': {'Content-Type': 'application/x-www-form-urlencoded'},
+		'body': 'update_tag_sources='+tagname
+	}).then(function(response){
+		refreshlist();
+		response.text().then(data => eval(data));
+	});
 }
 
 function sb_readall_feed(id) {
     throb();
 
-    var url = "feed-action.php";
-    var params = {
-        "read_feed": id
-    };
-    var complete = function() {
-        unthrob();
-    };
-    var options = {
-        method: "post",
-        parameters: params,
-        onComplete: complete
-    };
-    var feed_element = $$("#sidebar #feeds #f" + id)[0];
-    var feed_icon_element = $$("#sidebar #feeds #f" + id + " img.feed-icon")[0];
-    feed_icon_element.replace("<img class=\"feed-icon\" src=\"image/spinner.gif\" title=\"update pending\" />");
-    new Ajax.Updater({
-        success: feed_element,
-        failure: feed_icon_element
-    }, url, options);
+	fetch('feed-action.php', {
+		'method': 'post',
+		'headers': {'Content-Type': 'application/x-www-form-urlencoded'},
+		'body': 'read_feed='+id
+	}).then(function(response) {
+		unthrob();
+		response.text().then(data => document.getElementById('f' + id).innerHTML = data);
+	});
+}
+
+function sb_update_subscribed_sources() {
+	throb();
+
+	fetch('feed-action.php', {
+		'method': 'post',
+		'headers': {'Content-Type': 'application/x-www-form-urlencoded'},
+		'body': 'update_subscribed_sources=true'
+	}).then(function(response) {
+		unthrob();
+		response.text().then(data => eval(data));
+	});
 }
 
 function view_order_set(what, feed, order) {
     throb();
-    var url = "view-action.php";
-    var params = {
-        "view_order": order,
-        "view_feed": feed,
-        "view_what": what
-    };
-    var options = {
-        method: "post",
-        parameters: params,
-        onComplete: unthrob
-    };
-    new Ajax.Updater($("view-settings-button"), url, options);
+
+	fetch('view-action.php', {
+		'method': 'post',
+		'headers': {'Content-Type': 'application/x-www-form-urlencoded'},
+		'body': 'view_order='+order+'&view_feed='+feed+'&view_what='+what
+	}).then(function(response) {
+		unthrob();
+		response.text().then(data => document.getElementById('view-settings-button').innerHTML = data);
+	});
 }
 
 function embed_youtube ( element ) {
-	var iframe = document.createElement("iframe");
+	const iframe = document.createElement("iframe");
 
 	iframe.setAttribute("src", "https://www.youtube.com/embed/" + element.dataset.ytid + "?autoplay=1&rel=0");
 	iframe.setAttribute("frameborder", "0");
-	iframe.setAttribute("width", 560);
-	iframe.setAttribute("height", 315);
+	iframe.setAttribute("width", "560");
+	iframe.setAttribute("height", "315");
 	iframe.setAttribute("allowfullscreen", "1");
 
 	element.parentNode.replaceChild(iframe, element);
 }
 
 function embed_vimeo ( element ) {
-	var iframe = document.createElement("iframe");
+	const iframe = document.createElement("iframe");
 
 	iframe.setAttribute("src", "https://player.vimeo.com/video/" + element.dataset.vmid);
 	iframe.setAttribute("frameborder", "0");
-	iframe.setAttribute("width", 560);
-	iframe.setAttribute("height", 315);
+	iframe.setAttribute("width", "560");
+	iframe.setAttribute("height", "315");
 	iframe.setAttribute("allowfullscreen", "1");
 
 	element.parentNode.replaceChild(iframe, element);
+}
+
+
+/**
+ * HELPER FUNCTIONS
+ */
+
+/**
+ * iterate over a NodeList
+ * @param {Element} item
+ * @param {string} selector
+ * @param {function} func
+ */
+function applySelector(item, selector, func) {
+	const items = item.querySelectorAll(selector);
+	for (let i = 0; i < items.length; i++) {
+		func(items[i]);
+	}
+}
+
+/**
+ * take a JSON object and reduce it to a query string
+ * {"var1":"val1", "var2":"val2"} => "var1=val1&var2=val2"
+ * @param {JSON} obj JSON object
+ * @returns {string}
+ */
+function queryStringFromJSON(obj) {
+	return Object.keys(obj).map(key => encodeURIComponent(key) + '=' + encodeURIComponent(obj[key])).join('&');
+}
+
+/**
+ * get javascript code blocks from a string
+ * @param str response string
+ * @returns {string[]}
+ */
+function extractScripts(str) {
+	const scriptRegEx = '<script[^>]*>([\\S\\s]*?)<\/script\\s*>';
+
+	let matchAll = new RegExp(scriptRegEx, 'img'),
+		matchOne = new RegExp(scriptRegEx, 'im');
+
+	return (str.match(matchAll) || []).map(function(scriptTag) {
+		return (scriptTag.match(matchOne) || ['', ''])[1];
+	});
+}
+
+/**
+ * evaluate javascript included in a string
+ * @param str response string
+ */
+function evalScripts(str) {
+	return extractScripts(str).map(function(script) { return eval(script); });
+}
+
+/**
+ * javascript iterator
+ * taken from Aristotle Pagaltzis @ http://plasmasturm.org/log/311/
+ * @param iterable
+ * @returns {function(): *}
+ */
+function iterate(iterable) {
+	let i = -1;
+	const getter = function() {
+		return i < 0 ? null : i < iterable.length ? iterable[i] : null;
+	};
+	return function() {
+		return ++i < iterable.length ? getter : null
+	};
 }
