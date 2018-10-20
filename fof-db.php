@@ -1566,14 +1566,15 @@ function fof_db_mark_tag_read($user_id, $tagname) {
 		return false;
 	}
 
-	/* items with all these tags */
-	$matching_tag_ids = array($tag_id, $unread_id);
-
-	/* all items with both unread and tagname */
-	$items_query = "SELECT item_id FROM $FOF_ITEM_TAG_TABLE it WHERE it.user_id = $user_id AND it.tag_id IN (" . (count($matching_tag_ids) ? implode(', ', $matching_tag_ids) : "''") . ") GROUP BY it.item_id HAVING COUNT(DISTINCT it.tag_id) = " . count($matching_tag_ids);
-
-	/* get rid of the unread ones */
-	$untag_query = "DELETE FROM $FOF_ITEM_TAG_TABLE WHERE user_id = $user_id AND tag_id = $unread_id AND item_id IN ($items_query)";
+    $untag_query = "DELETE t1 FROM $FOF_ITEM_TAG_TABLE t1
+        LEFT JOIN $FOF_ITEM_TAG_TABLE t2
+          ON  t1.item_id = t2.item_id
+          AND t1.user_id = t2.user_id
+          AND t1.tag_id <> t2.tag_id
+          AND t1.tag_id  = $unread_id
+          AND t2.tag_id  = $tag_id
+        WHERE t1.user_id = $user_id
+          AND t2.user_id IS NOT NULL";
 
 	$result = $fof_connection->exec($untag_query);
 
