@@ -610,6 +610,7 @@ td.feed-prefs-header {
     z-index: 1500;
     background: rgba(255, 255, 255, .9);
     transition: left .2s;
+    width: 250px !important;
   }
 
   #sidebar.active {
