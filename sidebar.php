@@ -116,15 +116,15 @@ echo '📓 <a href="' . fof_url('.', array('what' => 'all', 'how' => 'paged')) .
 echo "</li>\n";
 
 echo '  <li' . (!empty($search) ? ' class="current-view"' : '') . '>';
-echo '🔎 <a href="#" onclick="$(\'search\').toggle();$(\'searchfield\').focus();return false;">Search</a>' . "\n";
-echo '    <form action="." id="search"' . (empty($search) ? ' style="display:none"' : '') . ">\n";
+echo '🔎 <a href="#" onclick="document.getElementById(\'search\').classList.toggle(\'hide\');document.getElementById(\'searchfield\').focus();return false;">Search</a>' . "\n";
+echo '    <form action="." id="search"' . (empty($search) ? ' class="hide"' : '') . ">\n";
 echo '      <input type="hidden" name="how" value="paged">' . "\n";
 echo '      <input type="hidden" name="what" value="' . (empty($what) || $what == 'unread' ? 'all' : htmlentities($what, ENT_QUOTES)) . "\">\n";
 if (!empty($when)) {
 	echo '      <input type="hidden" name="when" value="' . htmlentities($when, ENT_QUOTES) . "\">\n";
 }
 
-echo '      <input id="searchfield" name="search" value="' . htmlentities($search, ENT_QUOTES) . "\">\n";
+echo '      <input id="searchfield" name="search" value="' . htmlentities($search, ENT_QUOTES) . "\" placeholder=\"search term\">\n";
 echo "    </form>\n";
 echo "  </li>\n";
 ?>

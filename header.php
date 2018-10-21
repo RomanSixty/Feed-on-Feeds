@@ -61,7 +61,7 @@ if (is_readable('./fof-custom.css')) {
 </head>
 
 <body class="highlight-on"> <!--onkeypress="keyboard(event)"-->
-<a href="#sidebar" id="menu_toggle" onclick="$('sidebar').toggleClassName('active'); return false;">☰</a>
+<a href="#sidebar" id="menu_toggle" onclick="document.getElementById('sidebar').classList.toggle('active'); return false;">☰</a>
 <div id="sidebar">
 <?php
 include 'sidebar.php';
