@@ -574,6 +574,11 @@ td.feed-prefs-header {
   height: auto;
 }
 
+.video-source {
+  display: inline-block;
+  margin: 10px 0;
+}
+
 .item pre {
   white-space: pre-wrap;
 }

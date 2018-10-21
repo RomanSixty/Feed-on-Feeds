@@ -843,6 +843,27 @@ function embed_vimeo ( element ) {
 	element.parentNode.replaceChild(iframe, element);
 }
 
+window.onload = function() {
+	document.querySelectorAll('.item .body video').forEach(video => {
+		let source = '';
+
+		if (video.src) {
+			source = video.src;
+		} else {
+			source = video.querySelector('source').src;
+		}
+
+		// tumblr feature: try full video size
+		source = source.replace(/\/[0-9]+$/, '');
+
+		let html = video.outerHTML;
+
+		html += '<br/>🎞 <a href="'+source+'" class="video-source">Video source</a>';
+
+		video.outerHTML = '<div class="video-wrap">'+html+'</div>';
+	});
+};
+
 
 /**
  * HELPER FUNCTIONS
