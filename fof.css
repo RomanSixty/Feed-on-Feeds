@@ -5,6 +5,14 @@ body {
   padding: 0;
 }
 
+blockquote {
+  margin: 10px;
+}
+
+figure {
+  margin: 0;
+}
+
 .hide {
   display: none !important;
 }
@@ -558,6 +566,12 @@ h2 {
 
 td.feed-prefs-header {
   vertical-align: top;
+}
+
+.item .body img,
+.item .body video {
+  max-width: 100%;
+  height: auto;
 }
 
 .item pre {
