@@ -263,20 +263,22 @@ function fof_db_feed_update_metadata($feed_id, $title, $link, $feed_url, $descri
 
 /** Update a feed's WebSub subscription.
  */
-function fof_db_feed_update_websub($feed_id, $hub, $lease, $secret) {
+function fof_db_feed_update_websub($feed_id, $hub, $secret, $lease = null) {
 	global $FOF_FEED_TABLE;
 	global $fof_connection;
 
 	fof_trace();
 
-	$query = "UPDATE $FOF_FEED_TABLE SET feed_websub_hub = :hub, feed_websub_lease = :lease, feed_websub_secret = :secret WHERE feed_id = :feed_id";
+	$query = "UPDATE $FOF_FEED_TABLE SET feed_websub_hub = :hub";
+	if ($lease) {
+		$query .= ", feed_websub_lease = :lease";
+	}
+	$query .= ", feed_websub_secret = :secret WHERE feed_id = :feed_id";
 	$statement = $fof_connection->prepare($query);
 	$statement->bindValue(':feed_id', $feed_id);
 	$statement->bindValue(':hub', $hub);
-	if (!empty($websub_lease)) {
+	if ($lease) {
 		$statement->bindValue(':lease', $lease);
-	} else {
-		$statement->bindValue(':lease', null, PDO::PARAM_NULL);
 	}
 	$statement->bindValue(':secret', $secret);
 

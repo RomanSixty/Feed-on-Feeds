@@ -1249,9 +1249,9 @@ function fof_subscribe_websub($feed_id, $feed_url, $hub, $secret) {
 		fof_log("Reused existing secret");
 	}
 
-	fof_db_feed_update_websub($feed_id, $hub, 0, $secret);
-	$callback = urljoin(fof_base_url(), "websub.php/$feed_id/$secret");
+	fof_db_feed_update_websub($feed_id, $hub, $secret);
 
+	$callback = urljoin(fof_base_url(), "websub.php/$feed_id/$secret");
 	fof_log("Callback URL is $callback");
 
 	// send the callback subscription to the hub
