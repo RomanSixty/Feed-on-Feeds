@@ -263,21 +263,22 @@ function fof_db_feed_update_metadata($feed_id, $title, $link, $feed_url, $descri
 
 /** Update a feed's WebSub subscription.
  */
-function fof_db_feed_update_websub($feed_id, $websub_hub, $websub_lease) {
+function fof_db_feed_update_websub($feed_id, $hub, $lease, $secret) {
 	global $FOF_FEED_TABLE;
 	global $fof_connection;
 
 	fof_trace();
 
-	$query = "UPDATE $FOF_FEED_TABLE SET feed_websub_hub = :websub_hub, feed_websub_lease = :websub_lease WHERE feed_id = :feed_id";
-	$statement = $fof_connetion->prepare($query);
+	$query = "UPDATE $FOF_FEED_TABLE SET feed_websub_hub = :hub, feed_websub_lease = :lease, feed_websub_secret = :secret WHERE feed_id = :feed_id";
+	$statement = $fof_connection->prepare($query);
 	$statement->bindValue(':feed_id', $feed_id);
-	$statement->bindValue(':websub_hub', $websub_hub);
+	$statement->bindValue(':hub', $hub);
 	if (!empty($websub_lease)) {
-		$statement->bindValue(':websub_lease', $websub_lease);
+		$statement->bindValue(':lease', $lease);
 	} else {
-		$statement->bindValue(':websub_lease', null, PDO::PARAM_NULL);
+		$statement->bindValue(':lease', null, PDO::PARAM_NULL);
 	}
+	$statement->bindValue(':secret', $secret);
 
 	$result = $statement->execute();
 	$statement->closeCursor();

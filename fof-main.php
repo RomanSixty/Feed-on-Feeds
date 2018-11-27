@@ -835,7 +835,7 @@ function fof_new_parser($useragent='FoF '.SIMPLEPIE_USERAGENT) {
 
 /** Let SimplePie process a feed URL.
  */
-function fof_parse($url)
+function fof_parse($url, $body = null)
 {
 	if (empty($url)) {
 		fof_log("got empty url");
@@ -845,7 +845,11 @@ function fof_parse($url)
 	$p =& FoF_Prefs::instance();
 
 	$pie = fof_new_parser();
-	$pie->set_feed_url($url);
+	if ($body) {
+		$pie->set_feed_body($body);
+	} else {
+		$pie->set_feed_url($url);
+	}
 
 	// do we have a cookie file?
 	if ( is_readable ( $cookiestxt = (defined('FOF_DATA_PATH') ? FOF_DATA_PATH : dirname(__FILE__)) . '/cookies.txt' ) ) {
@@ -911,7 +915,7 @@ function fof_apply_tags($feed_id, $item_id) {
 }
 
 /* returns array of number of items added, and status message to display */
-function fof_update_feed($id) {
+function fof_update_feed($id, $body = null) {
 	global $fof_item_prefilters;
 	static $blacklist = null;
 	static $admin_prefs = null;
@@ -940,8 +944,9 @@ function fof_update_feed($id) {
 
 	fof_db_feed_mark_attempted_cache($id);
 
-	if (($rss = fof_parse($feed['feed_url'])) === false
-		|| $rss->error()) {
+	$rss = fof_parse($feed['feed_url'], $body);
+
+	if ($rss === false || $rss->error()) {
 		if ($rss !== false) {
 			$rss_error = $rss->error();
 		}
@@ -1075,11 +1080,12 @@ function fof_update_feed($id) {
 	}
 
 	// Update WebSub subscriptions
-	$feed_websub_hub = $rss->get_link('hub');
+	$feed_websub_hub = $rss->get_link(0, 'hub');
 	if ($feed_websub_hub && ($feed_websub_hub != $feed['websub_hub']
 		|| $feed['websub_lease'] < $now)) {
-		// Either the hub has changed, or the lease has expired. Update the subscription.
-		fof_subscribe_websub($feed_id, $feed_websub_hub);
+		// Either the hub has changed, or the lease is expiring. Update the subscription.
+		fof_log("Updating WebSub subscription for $feed_url ($feed_id)");
+		fof_subscribe_websub($feed_id, $feed_url, $feed_websub_hub, $feed['websub_secret']);
 	}
 
 	unset($rss);
@@ -1229,10 +1235,41 @@ function fof_update_feed($id) {
 	return array($n, "");
 }
 
-function fof_subscribe_websub($feed_id, $websub_hub) {
-	// TODO
+/* Update a WebSub subscription */
+function fof_subscribe_websub($feed_id, $feed_url, $hub, $secret) {
+	// If we don't have a secret, generate one
+	if (!$secret) {
+		if (function_exists('openssl_random_pseudo_bytes')) {
+			$secret = bin2hex(openssl_random_pseudo_bytes(8));
+		} else {
+			$secret = '' . mt_rand();
+		}
+		fof_log("Generated new secret");
+	} else {
+		fof_log("Reused existing secret");
+	}
 
-	// fof_db_feed_update_websub($feed_id, $websub_hub, $websub_lease);
+	fof_db_feed_update_websub($feed_id, $hub, 0, $secret);
+	$callback = urljoin(fof_base_url(), "websub.php/$feed_id/$secret");
+
+	fof_log("Callback URL is $callback");
+
+	// send the callback subscription to the hub
+	$curl = curl_init();
+	$fields = [
+		'hub.callback' => $callback,
+		'hub.mode' => 'subscribe',
+		'hub.topic' => $feed_url
+	];
+	curl_setopt_array($curl, [
+		CURLOPT_URL => $hub,
+		CURLOPT_POST => count($fields),
+		CURLOPT_POSTFIELDS => http_build_query($fields),
+		CURLOPT_RETURNTRANSFER => true]);
+	curl_exec($curl);
+	fof_log("WebSub subscription to $feed_id ($feed_url) returned HTTP code "
+		. curl_getinfo($curl, CURLINFO_HTTP_CODE));
+	curl_close($curl);
 }
 
 /*  for all users subscribed to feed_id (or the specified user_id)
@@ -1742,4 +1779,21 @@ function fof_dom_to_content($dom) {
 	return preg_replace('~<(?:!DOCTYPE|/?(?:html|body))[^>]*>\s*~i', '', $dom->saveHTML());
 }
 
+// Helper function to get the base URL of the current page
+function fof_base_url() {
+	// once again, why the heck isn't this a builtin function...
+	$pageURL = 'http';
+	if ($_SERVER['HTTPS'] == 'on') {
+		$pageURL .= 's';
+		$defaultPort = '443';
+	} else {
+		$defaultPort = '80';
+	}
+	$pageURL .= '://' . $_SERVER['SERVER_NAME'];
+	if ($_SERVER["SERVER_PORT"] != $defaultPort) {
+		$pageURL .= ':' . $_SERVER["SERVER_PORT"];
+	}
+	$pageURL .= $_SERVER['REQUEST_URI'];
+	return $pageURL;
+}
 ?>
