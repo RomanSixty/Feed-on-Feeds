@@ -195,6 +195,9 @@ function fof_install_schema() {
 	$tables[FOF_FEED_TABLE][] = "feed_cache_next_attempt " . SQL_DRIVER_INT_TYPE . " DEFAULT '0'";
 	$tables[FOF_FEED_TABLE][] = "feed_cache TEXT"; /* FIXME: unused column? */
 	$tables[FOF_FEED_TABLE][] = "feed_cache_last_attempt_status TEXT";
+	$tables[FOF_FEED_TABLE][] = "feed_websub_hub TEXT";
+	$tables[FOF_FEED_TABLE][] = "feed_websub_lease " . SQL_DRIVER_INT_TYPE . " DEFAULT '0'";
+	$tables[FOF_FEED_TABLE][] = "feed_websub_secret TEXT";
 	if (defined('USE_MYSQL')) {
 		$tables[FOF_FEED_TABLE][] = "PRIMARY KEY ( feed_id )";
 		$tables[FOF_FEED_TABLE][] = "KEY feed_cache_next_attempt ( feed_cache_next_attempt )";
@@ -702,6 +705,18 @@ END";
 
 		fof_install_migrate_column($queries, FOF_FEED_TABLE, 'feed_cache_last_attempt_status', array(
 			'add' => "ALTER TABLE " . FOF_FEED_TABLE . " ADD feed_cache_last_attempt_status TEXT" . (defined(USE_MYSQL) ? " AFTER feed_cache_next_attempt" : ""),
+		));
+
+		fof_install_migrate_column($queries, FOF_FEED_TABLE, 'feed_websub_hub', array(
+			'add' => "ALTER TABLE " . FOF_FEED_TABLE . " ADD feed_websub_hub TEXT" . (defined(USE_MYSQL) ? " AFTER feed_cache_last_attempt_status" : ""),
+		));
+
+		fof_install_migrate_column($queries, FOF_FEED_TABLE, 'feed_websub_lease', array(
+			'add' => "ALTER TABLE " . FOF_FEED_TABLE . " ADD feed_websub_lease " . SQL_DRIVER_INT_TYPE . (defined(USE_MYSQL) ? " AFTER feed_websub_hub" : ""),
+		));
+
+		fof_install_migrate_column($queries, FOF_FEED_TABLE, 'feed_websub_secret', array(
+			'add' => "ALTER TABLE " . FOF_FEED_TABLE . " ADD feed_websub_secret TEXT" . (defined(USE_MYSQL) ? " AFTER feed_websub_lease" : ""),
 		));
 
 		if (!defined('USE_SQLITE')) {

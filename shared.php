@@ -57,7 +57,7 @@ $qv = array('user' => $user,
 	'which' => isset($_GET['which']) ? $_GET['which'] : NULL,
 	'feed' => isset($_GET['feed']) ? $_GET['feed'] : NULL,
 );
-$baseurl = 'http' . (isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] != 'off' ? 's' : '') . '://' . $_SERVER['SERVER_NAME'] . $_SERVER['PHP_SELF'];
+$baseurl = fof_base_url();
 $shared_feed = fof_url($baseurl, array_merge($qv, array('format' => 'atom')));
 $shared_link = fof_url($baseurl, $qv);
 
