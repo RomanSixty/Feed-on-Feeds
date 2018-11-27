@@ -35,9 +35,10 @@ if (!$feed['feed_websub_hub'] || $secret != $feed['feed_websub_secret']) {
     // A bad actor was trying to push an update
     http_response_code(403);
     fof_log("Hub attempted bad push: id=$feed_id secret=$secret");
+    die("Bad push: id=$feed_id secret=$secret");
 }
 
-if ($_GET['hub.mode'] == 'subscribe') {
+if (array_key_exists('hub.mode', $_GET) && $_GET['hub.mode'] == 'subscribe') {
     // We are responding to a subscription verification
     $topic = $_GET['hub.topic'];
     $challenge = $_GET['hub.challenge'];
