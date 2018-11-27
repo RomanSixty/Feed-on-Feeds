@@ -46,7 +46,7 @@ if ($_GET['hub_mode'] == 'subscribe') {
     fof_log("Got subscription verification request: id=$feed_id topic=$topic lease_time=$lease_time");
 
     // Set the lease to renew when they're down to 10% of their lifetime
-    fof_db_update_websub($feed_id, $feed['feed_websub_hub'], $secret, now() + $lease_time*9/10);
+    fof_db_feed_update_websub($feed_id, $feed['feed_websub_hub'], $secret, now() + $lease_time*9/10);
 
     // Respond with the challenge and exit
     echo $challenge;
