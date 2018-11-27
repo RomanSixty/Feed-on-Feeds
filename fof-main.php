@@ -1793,7 +1793,7 @@ function fof_base_url() {
 	if ($_SERVER["SERVER_PORT"] != $defaultPort) {
 		$pageURL .= ':' . $_SERVER["SERVER_PORT"];
 	}
-	$pageURL .= $_SERVER['REQUEST_URI'];
+	$pageURL .= $_SERVER['PHP_SELF'];
 	return $pageURL;
 }
 ?>
