@@ -38,7 +38,7 @@ if (!$feed['feed_websub_hub'] || $secret != $feed['feed_websub_secret']) {
     die("Bad push: id=$feed_id secret=$secret");
 }
 
-if ($_GET['hub_mode'] == 'subscribe') {
+if (isset($_GET['hub_mode']) && $_GET['hub_mode'] == 'subscribe') {
     // We are responding to a subscription verification
     $topic = $_GET['hub_topic'];
     $challenge = $_GET['hub_challenge'];
