@@ -1081,11 +1081,11 @@ function fof_update_feed($id, $body = null) {
 
 	// Update WebSub subscriptions
 	$feed_websub_hub = $rss->get_link(0, 'hub');
-	if ($feed_websub_hub && ($feed_websub_hub != $feed['websub_hub']
-		|| $feed['websub_lease'] < $now)) {
+	if ($feed_websub_hub && ($feed_websub_hub != $feed['feed_websub_hub']
+		|| $feed['feed_websub_lease'] < $now)) {
 		// Either the hub has changed, or the lease is expiring. Update the subscription.
 		fof_log("Updating WebSub subscription for $feed_url ($feed_id)");
-		fof_subscribe_websub($feed_id, $feed_url, $feed_websub_hub, $feed['websub_secret']);
+		fof_subscribe_websub($feed_id, $feed_url, $feed_websub_hub, $feed['feed_websub_secret']);
 	}
 
 	unset($rss);
