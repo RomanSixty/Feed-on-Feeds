@@ -20,10 +20,10 @@ list($pre, $feed_id, $secret) = explode('/', $_SERVER['PATH_INFO']);
 if (!$feed_id) {
     // No feed ID was specified
     http_response_code(400);
-    die("Malformed request")
+    die("Malformed request");
 }
 
-$feed = fof_get_feed($feed_id);
+$feed = fof_db_get_feed_by_id($feed_id);
 if (!$feed || !$feed['feed_websub_hub']) {
     // The feed doesn't exist, or doesn't have a known hub
     http_response_code(404);
@@ -42,7 +42,7 @@ if ($_GET['hub.mode'] == 'subscribe') {
     $topic = $_GET['hub.topic'];
     $challenge = $_GET['hub.challenge'];
     $lease_time = $_GET['hub.lease_seconds'];
-    fof_log("Got subscription verification request: id=$feed_id topic=$topic lease_time=$lease_time")
+    fof_log("Got subscription verification request: id=$feed_id topic=$topic lease_time=$lease_time");
 
     // Set the lease to renew when they're down to 10% of their lifetime
     fof_db_update_websub($feed_id, $feed['feed_websub_hub'], now() + $lease_time*9/10, $secret);
