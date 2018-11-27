@@ -53,7 +53,7 @@ if ($_GET['hub.mode'] == 'subscribe') {
 }
 
 // We're responding to a push response.
-fof_update_feed($feed_id, http_get_request_body());
+fof_update_feed($feed_id, file_get_contents('php://input'));
 ?>
 
 Updated feed <?=$feed_id?>.
