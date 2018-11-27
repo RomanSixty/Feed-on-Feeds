@@ -36,6 +36,7 @@ if ((@include_once ('fof-config.php')) === false) {
 require_once 'fof-asset.php';
 require_once 'fof-db.php';
 require_once 'classes/fof-prefs.php';
+require_once 'library/urljoin.php';
 
 fof_db_connect(empty($fof_installer) ? false : $fof_installer);
 
@@ -916,6 +917,7 @@ function fof_update_feed($id) {
 	static $admin_prefs = null;
 
 	fof_log("fof_update_feed($id)");
+	$now = time();
 
 	if ($blacklist === null) {
 		$p = &FoF_Prefs::instance();
@@ -985,9 +987,11 @@ function fof_update_feed($id) {
 	$feed_title = $rss->get_title();
 	$feed_link = $rss->get_link();
 	$feed_description = $rss->get_description();
+	$feed_url = urljoin($feed['feed_url'], $rss->get_link(0, 'self'));
 
 	/* set the feed's current information */
 	fof_db_feed_update_metadata($id, $feed_title, $feed_link,
+		$feed_url,
 		$feed_description,
 		$feed_image, $feed_image_cache_date);
 
@@ -1070,6 +1074,14 @@ function fof_update_feed($id) {
 		}
 	}
 
+	// Update WebSub subscriptions
+	$feed_websub_hub = $rss->get_link('hub');
+	if ($feed_websub_hub && ($feed_websub_hub != $feed['websub_hub']
+		|| $feed['websub_lease'] < $now)) {
+		// Either the hub has changed, or the lease has expired. Update the subscription.
+		fof_subscribe_websub($feed_id, $feed_websub_hub);
+	}
+
 	unset($rss);
 
 	if (!empty($admin_prefs['dynupdates'])) {
@@ -1126,7 +1138,6 @@ function fof_update_feed($id) {
 			$mean = 86400;
 		}
 
-		$now = time();
 		$nextInterval = 0;
 		$lastInterval = $now - $lastTime;
 
@@ -1216,6 +1227,12 @@ function fof_update_feed($id) {
 	fof_log($log, "update");
 
 	return array($n, "");
+}
+
+function fof_subscribe_websub($feed_id, $websub_hub) {
+	// TODO
+
+	// fof_db_feed_update_websub($feed_id, $websub_hub, $websub_lease);
 }
 
 /*  for all users subscribed to feed_id (or the specified user_id)

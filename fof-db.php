@@ -236,16 +236,17 @@ function fof_db_feed_update_attempt_status($feed_id, $status) {
 
 /** Store the various data which describes a feed.
  */
-function fof_db_feed_update_metadata($feed_id, $title, $link, $description, $image, $image_cache_date) {
+function fof_db_feed_update_metadata($feed_id, $title, $link, $feed_url, $description, $image, $image_cache_date) {
 	global $FOF_FEED_TABLE;
 	global $fof_connection;
 
 	fof_trace();
 
-	$query = "UPDATE $FOF_FEED_TABLE SET feed_title = :title, feed_link = :link, feed_description = :description, feed_image = :image, feed_image_cache_date = :image_cache_date WHERE feed_id = :feed_id";
+	$query = "UPDATE $FOF_FEED_TABLE SET feed_title = :title, feed_link = :link, feed_url = :feed_url, feed_description = :description, feed_image = :image, feed_image_cache_date = :image_cache_date WHERE feed_id = :feed_id";
 	$statement = $fof_connection->prepare($query);
 	$statement->bindValue(':title', empty($title) ? "[no title]" : $title);
 	$statement->bindValue(':link', empty($link) ? "[no link]" : $link);
+	$statement->bindValue(':feed_url', $feed_url);
 	$statement->bindValue(':description', empty($description) ? "[no description]" : $description);
 	if (!empty($image)) {
 		$statement->bindValue(':image', $image);
@@ -254,6 +255,30 @@ function fof_db_feed_update_metadata($feed_id, $title, $link, $description, $ima
 	}
 	$statement->bindValue(':image_cache_date', empty($image_cache_date) ? time() : $image_cache_date);
 	$statement->bindValue(':feed_id', $feed_id);
+	$result = $statement->execute();
+	$statement->closeCursor();
+
+	return $result;
+}
+
+/** Update a feed's WebSub subscription.
+ */
+function fof_db_feed_update_websub($feed_id, $websub_hub, $websub_lease) {
+	global $FOF_FEED_TABLE;
+	global $fof_connection;
+
+	fof_trace();
+
+	$query = "UPDATE $FOF_FEED_TABLE SET feed_websub_hub = :websub_hub, feed_websub_lease = :websub_lease WHERE feed_id = :feed_id";
+	$statement = $fof_connetion->prepare($query);
+	$statement->bindValue(':feed_id', $feed_id);
+	$statement->bindValue(':websub_hub', $websub_hub);
+	if (!empty($websub_lease)) {
+		$statement->bindValue(':websub_lease', $websub_lease);
+	} else {
+		$statement->bindValue(':websub_lease', null, PDO::PARAM_NULL);
+	}
+
 	$result = $statement->execute();
 	$statement->closeCursor();
 
