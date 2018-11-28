@@ -265,7 +265,6 @@ function keyboard(e) {
 
 					if (y > scrollHeight + windowHeight) {
 						window.scrollTo(0, scrollHeight + (.8 * windowHeight));
-						return false;
 					}
 				}
 
