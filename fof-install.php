@@ -409,8 +409,9 @@ function fof_install_database($schema, $exec = 0) {
 /** Determine if a table is using the correct charset
 */
 function fof_install_table_charset_is_correct($table) {
+    global $fof_connection;
 	if (defined('USE_MYSQL')) {
-		$query = "SELECT c.character_set_name FROM INFORMATION_SCHEMA.TABLES AS t, INFORMATION_SCHEMA.COLLATION_CHARACTER_SET_APPLICABILITY AS c WHERE c.collection_name = t.table_collation AND t.table_schema = '".FOF_DB_DBNAME."' AND t.table_name = '".$table."'";
+		$query = "SELECT c.character_set_name FROM INFORMATION_SCHEMA.TABLES AS t, INFORMATION_SCHEMA.COLLATION_CHARACTER_SET_APPLICABILITY AS c WHERE c.collation_name = t.table_collation AND t.table_schema = '".FOF_DB_DBNAME."' AND t.table_name = '".$table."'";
 		$statement = $fof_connection->query($query);
 		$column = fof_db_get_row($statement, "character_set_name", TRUE);
 		return ($column == 'utf8mb4');

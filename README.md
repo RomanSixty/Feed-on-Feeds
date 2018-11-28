@@ -23,6 +23,7 @@ security, multiuser support, and overall design.
 * multi user capable
 * public compilations to share tagged content with others
 * search stored feed entries
+* Support for [WebSub](https://en.wikipedia.org/wiki/WebSub) push notifications
 
 ### YouTube integration
 
