@@ -258,22 +258,20 @@ function keyboard(e) {
 
 				const windowHeight = getWindowHeight();
 
-				if (itemElement.nextElementSibling.id) {
-					const nextElement = itemElement.nextElementSibling;
+				document.getElementById('c' + itemElement.id.substring(1)).checked = true;
+
+				let nextElement = itemElement.nextElementSibling;
+
+				if (nextElement) {
+					unselect(itemElement);
+
 					const scrollHeight = getScrollY();
 					const y = getY(nextElement);
 
 					if (y > scrollHeight + windowHeight) {
 						window.scrollTo(0, scrollHeight + (.8 * windowHeight));
 					}
-				}
 
-				unselect(itemElement);
-				document.getElementById('c' + itemElement.id.substring(1)).checked = true;
-
-				const nextElement = itemElement.nextElementSibling;
-
-				if (nextElement) {
 					itemElement = nextElement;
 				} else {
 					const scrollHeight = getScrollY();
