@@ -7,10 +7,11 @@ server-based means all of your feeds and history are kept in one
 place, and being lightweight means you can install it pretty much
 anywhere without needing a fancy dedicated server or the like.
 
-FeedOnFeeds was originally written by
-[Steve Minutillo](http://feedonfeeds.com/ "original FeedOnFeeds homepage"),
+FeedOnFeeds was originally written by Steve Minutillo,
 this fork strives to stay up-to-date with changes to PHP while improving
-security, multiuser support, and overall design.
+security, usability, multiuser support, and overall design.
+
+For a complete list of contributors see the end of this file.
 
 ## Features
 
@@ -122,4 +123,15 @@ items.
 # Legal
 
 FeedOnFeeds is distributed under the GPL.
+
+## Contributors
+
+*ordered by date of first contribution:*
+
+* [Steve Minutillo](http://feedonfeeds.com/ "original FeedOnFeeds homepage")
+* [Alexander Schulze](https://github.com/RomanSixty)
+* mdt (discontinued github account)
+* [fluffy](https://github.com/fluffy-critter)
+* [Justin Wind](https://github.com/thylacine)
+* [Ian Tearle](https://github.com/iantearle)
 
