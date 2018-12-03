@@ -762,7 +762,18 @@ function fof_subscribe($user_id, $url, $unread = 'today') {
 		}
 
 		$self = $rss->get_link(0, 'self');
-		$url = html_entity_decode(($self ? $self : $rss->subscribe_url()), ENT_QUOTES);
+		if ($self && $self != $url) {
+			// rel="self" URL differs from subscription URL, try to redirect
+			$self_rss = fof_parse($self);
+			if ($self_rss === false || $self_rss->error()) {
+				fof_log("Feed at $url declared $self as its self, which returned error " . ($self_rss ? $self_rss->error() : '(unknown'));
+				$self_rss = null;
+				$url = $rss->subscribe_url();
+			} else {
+				fof_log("Feed at $url has canonical URL at $self");
+				$url = $self;
+			}
+		}
 
 		$feed = fof_db_get_feed_by_url($url);
 		if (empty($feed)) {
@@ -992,7 +1003,19 @@ function fof_update_feed($id, $body = null) {
 	$feed_title = $rss->get_title();
 	$feed_link = $rss->get_link();
 	$feed_description = $rss->get_description();
-	$feed_url = urljoin($feed['feed_url'], $rss->get_link(0, 'self'));
+
+	// If the feed URL updates, follow it (but only if it's good)
+	$feed_url = $feed['feed_url'];
+	$self_url = urljoin($feed_url, $rss->get_link(0, 'self'));
+	if ($feed_url != $feed_url) {
+		$new_rss = fof_parse($feed_url);
+		if ($new_rss === false || $new_rss->error()) {
+			fof_log("Feed $id redirected to bad URL $feed_url; ignoring");
+		} else {
+			fof_log("Feed $id redirected to new URL $self_url");
+			$feed_url = $self_url;
+		}
+	}
 
 	/* set the feed's current information */
 	fof_db_feed_update_metadata($id, $feed_title, $feed_link,
