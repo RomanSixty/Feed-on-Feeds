@@ -85,9 +85,7 @@ function fof_render_item($item, $include_div = true) {
 	}
 	$item_content = fof_dom_to_content($dom);
 
-	// some minor cleanup tasks...
-	$item_content = html_entity_decode($item_content, ENT_NOQUOTES, 'utf-8');
-
+	// Get the local datetime
 	$prefs = fof_prefs();
 	$offset = fof_render_get_key_($prefs, 'tzoffset') * 60 * 60;
 
