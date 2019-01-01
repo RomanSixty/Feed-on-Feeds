@@ -15,7 +15,7 @@ For a complete list of contributors see the end of this file.
 
 ## Features
 
-* subscribe to RSS feeds or YouTube channels
+* subscribe to RSS feeds, reddits or YouTube channels
 * automatic updating for new entries
 * tagging of items or feeds
 * blacklist for unwanted item content
@@ -31,6 +31,13 @@ For a complete list of contributors see the end of this file.
 You can also use FeedOnFeeds for keeping track of your favourite YouTube
 channels without having to register with Google. Just activate the integrated
 **YouTube plugin** and add subscriptions to the channels you want to follow.
+
+### Reddit integration
+
+While reddit doesn't advertise its RSS feeds you can still subscribe to reddits
+or users. An integrated **Reddit plugin** also tries to optimise the tiny
+thumbnail images served by the feed by replacing them with their original
+images if possible.
 
 # Installation
 
