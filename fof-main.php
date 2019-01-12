@@ -994,11 +994,13 @@ function fof_update_feed($id, $body = null) {
 	$feed_description = $rss->get_description();
 	$feed_url = urljoin($feed['feed_url'], $rss->get_link(0, 'self'));
 
-	/* set the feed's current information */
-	fof_db_feed_update_metadata($id, $feed_title, $feed_link,
-		$feed_url,
-		$feed_description,
-		$feed_image, $feed_image_cache_date);
+	if (!$body) {
+		/* set the feed's current information */
+		fof_db_feed_update_metadata($id, $feed_title, $feed_link,
+			$feed_url,
+			$feed_description,
+			$feed_image, $feed_image_cache_date);
+	}
 
 	$feed_id = $feed['feed_id'];
 	$n = 0;
