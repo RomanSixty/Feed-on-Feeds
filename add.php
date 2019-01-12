@@ -45,16 +45,17 @@ if ($youtube) {
 		if (preg_match('~data-style-type="branded"[^>]+data-channel-external-id="([^"]+)"~m', $file, $matches)) {
 			$channel_id = $matches[1];
 		}
-
 	}
 
 	if (!empty($channel_id)) {
 		$feeds[] = 'https://www.youtube.com/feeds/videos.xml?channel_id=' . $channel_id;
 	}
-
 }
 
 if ($url) {
+    // maybe we have a reddit url? try to guess the corresponding rss feed
+	$url = preg_replace('~^(https://www\.reddit\.com/(?:u|r)/[^/]+).*$~i', '$1.rss', $url);
+
 	$feeds[] = $url;
 }
 
@@ -87,6 +88,7 @@ $add_feed_url .= "://" . $_SERVER["HTTP_HOST"] . $_SERVER["SCRIPT_NAME"];
 </span>
 </div>
 
+<div style="padding: 1.5em;">
 <form method="post" action="opml.php">
 
 <input type="submit" value="Export subscriptions as OPML">
@@ -111,7 +113,7 @@ When adding feeds, mark <select name="unread">
 ?>>no</option>
 </select> items as unread<br><br>
 
-RSS or weblog URL: <input type="text" name="rss_url" size="40" value="<?php echo htmlentities($url) ?>"><input type="Submit" value="Add a feed"><br><br>
+RSS or reddit or weblog URL: <input type="text" name="rss_url" size="40" value="<?php echo htmlentities($url) ?>"><input type="Submit" value="Add a feed"><br><br>
 
 YouTube channel page: <input type="text" name="youtube_channel" size="40" value="<?php echo htmlentities($youtube) ?>"><input type="Submit" value="Subscribe to channel"><br><br>
 
@@ -172,7 +174,7 @@ if (count($feeds)) {
 
 <?php
 }
-echo '<br>';
+echo '</div><br>';
 
 include 'footer.php';
 ?>

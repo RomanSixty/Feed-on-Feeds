@@ -454,6 +454,10 @@ function fof_get_feeds($user_id, $order = 'feed_title', $direction = 'asc') {
 		$row['lateststr'] = '';
 		$row['lateststrabbr'] = '';
 
+		/* alternative titles replace original ones */
+		if (!empty ($row['alt_title']))
+		    $row['feed_title'] = $row['alt_title'];
+
 		/* we can set these now, though */
 		$row['feed_age'] = $row['feed_cache_date'];
 		list($row['agestr'], $row['agestrabbr']) = fof_nice_time_stamp($row['feed_cache_date']);
@@ -888,8 +892,6 @@ function fof_parse($url, $body = null)
 		}
 
 		$data = preg_replace ( '~.*<\?xml~sim', '<?xml', $data );
-
-		#file_put_contents ('/tmp/text.xml',$data);
 
 		unset($pie);
 
@@ -1481,17 +1483,17 @@ function fof_get_plugin_prefs() {
 }
 
 function fof_multi_sort($tab, $key, $rev) {
-	$compare = create_function('$a,$b',
-		'$la = strtolower($a[\'' . $key . '\']);' .
-		'$lb = strtolower($b[\'' . $key . '\']);' .
-		'if ($la == $lb) {' .
-		'return 0;' .
-		'} else if ($la ' . (($rev) ? '>' : '<') . ' $lb) {' .
-		'return -1;' .
-		'} else {' .
-		'return 1;' .
-		'}');
-	usort($tab, $compare);
+	usort($tab, function($a, $b) use($key, $rev) {
+		$la = strtolower($a[$key]);
+		$lb = strtolower($b[$key]);
+		if ($la == $lb)
+			return 0;
+		elseif ($rev)
+			return $la > $lb ? -1 : 1;
+		else
+			return $la < $lb ? -1 : 1;
+	});
+
 	return $tab;
 }
 
