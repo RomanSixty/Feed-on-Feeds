@@ -13,21 +13,21 @@ let itemElement = null;
  * @fixme doesn't exactly work... it updates, but the spinners aren't shown
  */
 function pendingUpdates(feeds) {
-	throb();
+    throb();
 
-	feeds.forEach(feed_id => {
-		document.querySelector('#f'+feed_id+' img.feed-icon').src = "image/spinner.gif";
+    feeds.forEach(feed_id => {
+        document.querySelector('#f'+feed_id+' img.feed-icon').src = "image/spinner.gif";
 
-		fetch('feed-action.php', {
-			'method': 'post',
-			'headers': {'Content-Type': 'application/x-www-form-urlencoded'},
-			'body': 'update_feedid='+feed_id
-		}).then(function(response) {
-			response.text().then(data => document.getElementById('f'+feed_id).innerHTML = data);
-		});
-	});
+        fetch('feed-action.php', {
+            'method': 'post',
+            'headers': {'Content-Type': 'application/x-www-form-urlencoded'},
+            'body': 'update_feedid='+feed_id
+        }).then(function(response) {
+            response.text().then(data => document.getElementById('f'+feed_id).innerHTML = data);
+        });
+    });
 
-	unthrob();
+    unthrob();
 }
 
 // magic from http://peter.michaux.ca/article/3556
@@ -114,7 +114,7 @@ function itemClicked(event) {
     let target = window.event ? window.event.srcElement : event.target;
 
     if (event.altKey) {
-    	event.stopPropagation();
+        event.stopPropagation();
 
         unselect(itemElement);
 
@@ -130,7 +130,7 @@ function itemClicked(event) {
             return false;
         }
 
-		target.classList.add('selected');
+        target.classList.add('selected');
         itemElement = target;
 
         let items = document.querySelectorAll('.items');
@@ -158,7 +158,7 @@ function checkbox(event) {
 }
 
 function select(item) {
-	item.classList.add('selected');
+    item.classList.add('selected');
 
     const y = getY(item);
     const bar = document.getElementById('item-display-controls').offsetHeight;
@@ -184,7 +184,7 @@ function select(item) {
 }
 
 function unselect(item) {
-	item.classList.remove('selected');
+    item.classList.remove('selected');
     document.title = "Feed on Feeds";
 }
 
@@ -202,7 +202,7 @@ function keyboard(e) {
     const items = document.querySelectorAll('.item');
 
     if (itemElement === null)
-    	itemElement = document.querySelector('.item');
+        itemElement = document.querySelector('.item');
 
     if (itemElement) {
         select(itemElement);
@@ -210,189 +210,189 @@ function keyboard(e) {
 
     switch (e.key) {
 
-		// toggle all item foldings
-		case "H":
-			items.forEach(item => {
-				item.classList.toggle("shown");
-				item.classList.toggle("hidden");
-			});
-			return false;
+        // toggle all item foldings
+        case "H":
+            items.forEach(item => {
+                item.classList.toggle("shown");
+                item.classList.toggle("hidden");
+            });
+            return false;
 
-		// toggle current item folding
-		case "h":
-			if (itemElement) {
-				itemElement.classList.toggle("shown");
-				itemElement.classList.toggle("hidden");
-			}
-			return false;
+        // toggle current item folding
+        case "h":
+            if (itemElement) {
+                itemElement.classList.toggle("shown");
+                itemElement.classList.toggle("hidden");
+            }
+            return false;
 
-		// toggle starred status of current item
-		case "s":
-			if (itemElement) {
-				toggle_favorite(itemElement.id.substring(1));
-			}
-			return false;
+        // toggle starred status of current item
+        case "s":
+            if (itemElement) {
+                toggle_favorite(itemElement.id.substring(1));
+            }
+            return false;
 
-		// flag/unflag current item
-		case "f":
-			if (itemElement) {
-				document.getElementById('c' + itemElement.id.substring(1)).checked = !document.getElementById('c' + itemElement.id.substring(1)).checked;
-			}
-			return false;
+        // flag/unflag current item
+        case "f":
+            if (itemElement) {
+                document.getElementById('c' + itemElement.id.substring(1)).checked = !document.getElementById('c' + itemElement.id.substring(1)).checked;
+            }
+            return false;
 
-		// flag current and all previous items
-		case "F":
-			items.forEach((i, idx) => {
-				if (itemElement) {
-					if (idx > Array.from(items).indexOf(itemElement))
-						return;
-				}
-				document.getElementById('c' + i.id.substring(1)).checked = true;
-			});
+        // flag current and all previous items
+        case "F":
+            items.forEach((i, idx) => {
+                if (itemElement) {
+                    if (idx > Array.from(items).indexOf(itemElement))
+                        return;
+                }
+                document.getElementById('c' + i.id.substring(1)).checked = true;
+            });
 
-			return false;
+            return false;
 
-		// unflag all items
-		case "U":
-			items.forEach(i => {
-				document.getElementById('c' + i.id.substring(1)).checked = false;
-			});
+        // unflag all items
+        case "U":
+            items.forEach(i => {
+                document.getElementById('c' + i.id.substring(1)).checked = false;
+            });
 
-			return false;
+            return false;
 
-		// scroll current item or move to next item, flag current item
+        // scroll current item or move to next item, flag current item
         case " ":
-		case "j":
-			if (itemElement) {
-				// is the next element visible yet?  scroll if not.
+        case "j":
+            if (itemElement) {
+                // is the next element visible yet?  scroll if not.
 
-				const windowHeight = getWindowHeight();
+                const windowHeight = getWindowHeight();
 
-				document.getElementById('c' + itemElement.id.substring(1)).checked = true;
+                document.getElementById('c' + itemElement.id.substring(1)).checked = true;
 
-				let nextElement = itemElement.nextElementSibling;
+                let nextElement = itemElement.nextElementSibling;
 
-				if (nextElement) {
-					unselect(itemElement);
-
-					const scrollHeight = getScrollY();
-					const y = getY(nextElement);
-
-					if (y > scrollHeight + windowHeight) {
-						window.scrollTo(0, scrollHeight + (.8 * windowHeight));
-					}
-
-					itemElement = nextElement;
-				} else {
-					const scrollHeight = getScrollY();
-
-					const lastItem = Array.from(document.querySelectorAll('.item')).pop();
-
-					let y = lastItem.offsetTop;
-
-					if (y - 10 > scrollHeight + windowHeight) {
-						window.scrollTo(0, scrollHeight + (.8 * windowHeight));
-						return false;
-					}
-					else {
-						if (confirm("No more items!  Mark flagged as read?")) {
-							mark_read();
-						}
-						else {
-							itemElement = document.querySelector('.item');
-							select(itemElement);
-							return false;
-						}
-					}
-				}
-			}
-			select(itemElement);
-			return false;
-
-		// flag item, move to next
-		case "J":
-			if (itemElement) {
-				unselect(itemElement);
-				document.getElementById('c' + itemElement.id.substring(1)).checked = true;
-
-				const nextElement = itemElement.nextElementSibling;
-
-				if (nextElement.id) {
-					itemElement = nextElement;
-				}
-				else {
-					if (confirm("No more items!  Mark flagged as read?")) {
-						mark_read();
-					}
-					else {
-						itemElement = document.querySelector('.item');
-					}
-				}
-			}
-			select(itemElement);
-			return false;
-
-		// skip to next item
-		case "n":
-			if (itemElement) {
-				unselect(itemElement);
-
-				let nextElement = itemElement.nextElementSibling;
-
-				if (nextElement && nextElement.classList.contains('item')) {
-					itemElement = nextElement;
-				}
-				else {
-					itemElement = document.querySelector('.item');
-				}
-			}
-			select(itemElement);
-			return false;
-
-		// skip to previous item
-        case "k":
-		case "p":
-			if (itemElement) {
-
-				let prevElement = itemElement.previousElementSibling;
-
-				if (prevElement && prevElement.classList.contains('item')) {
+                if (nextElement) {
                     unselect(itemElement);
-					itemElement = prevElement;
-				}
-			}
-			console.log(itemElement);
-			select(itemElement);
-			return false;
 
-		// skip to last item
-		case "N":
-			if (itemElement) unselect(itemElement);
+                    const scrollHeight = getScrollY();
+                    const y = getY(nextElement);
 
-			itemElement = Array.from(document.querySelectorAll('.item')).pop();
+                    if (y > scrollHeight + windowHeight) {
+                        window.scrollTo(0, scrollHeight + (.8 * windowHeight));
+                    }
 
-			select(itemElement);
-			return false;
+                    itemElement = nextElement;
+                } else {
+                    const scrollHeight = getScrollY();
 
-		// skip to first item
-		case "P":
-			if (itemElement) unselect(itemElement);
+                    const lastItem = Array.from(document.querySelectorAll('.item')).pop();
 
-			itemElement = document.querySelector('.item');
+                    let y = lastItem.offsetTop;
 
-			select(itemElement);
-			return false;
+                    if (y - 10 > scrollHeight + windowHeight) {
+                        window.scrollTo(0, scrollHeight + (.8 * windowHeight));
+                        return false;
+                    }
+                    else {
+                        if (confirm("No more items!  Mark flagged as read?")) {
+                            mark_read();
+                        }
+                        else {
+                            itemElement = document.querySelector('.item');
+                            select(itemElement);
+                            return false;
+                        }
+                    }
+                }
+            }
+            select(itemElement);
+            return false;
 
-		// refresh sidebar
-		case "r":
-			refreshlist();
-			return false;
+        // flag item, move to next
+        case "J":
+            if (itemElement) {
+                unselect(itemElement);
+                document.getElementById('c' + itemElement.id.substring(1)).checked = true;
 
-		// show help pane
-		case "?":
-			document.getElementById('keyboard-legend').classList.toggle('hide');
-			return false;
-	}
+                const nextElement = itemElement.nextElementSibling;
+
+                if (nextElement.id) {
+                    itemElement = nextElement;
+                }
+                else {
+                    if (confirm("No more items!  Mark flagged as read?")) {
+                        mark_read();
+                    }
+                    else {
+                        itemElement = document.querySelector('.item');
+                    }
+                }
+            }
+            select(itemElement);
+            return false;
+
+        // skip to next item
+        case "n":
+            if (itemElement) {
+                unselect(itemElement);
+
+                let nextElement = itemElement.nextElementSibling;
+
+                if (nextElement && nextElement.classList.contains('item')) {
+                    itemElement = nextElement;
+                }
+                else {
+                    itemElement = document.querySelector('.item');
+                }
+            }
+            select(itemElement);
+            return false;
+
+        // skip to previous item
+        case "k":
+        case "p":
+            if (itemElement) {
+
+                let prevElement = itemElement.previousElementSibling;
+
+                if (prevElement && prevElement.classList.contains('item')) {
+                    unselect(itemElement);
+                    itemElement = prevElement;
+                }
+            }
+            console.log(itemElement);
+            select(itemElement);
+            return false;
+
+        // skip to last item
+        case "N":
+            if (itemElement) unselect(itemElement);
+
+            itemElement = Array.from(document.querySelectorAll('.item')).pop();
+
+            select(itemElement);
+            return false;
+
+        // skip to first item
+        case "P":
+            if (itemElement) unselect(itemElement);
+
+            itemElement = document.querySelector('.item');
+
+            select(itemElement);
+            return false;
+
+        // refresh sidebar
+        case "r":
+            refreshlist();
+            return false;
+
+        // show help pane
+        case "?":
+            document.getElementById('keyboard-legend').classList.toggle('hide');
+            return false;
+    }
 
     return true;
 }
@@ -406,7 +406,7 @@ let drag = false;
 function startResize(e) {
     if (!e) e = window.event;
 
-	e.stopPropagation();
+    e.stopPropagation();
 
     drag = true;
     curPos = e.clientX;
@@ -417,14 +417,14 @@ function startResize(e) {
 
 document.onmousemove = function(e) {
     if (drag) {
-		e.stopPropagation();
+        e.stopPropagation();
 
         const newPos = e.clientX;
         const x = newPos - curPos;
         const w = curWidth + x;
         const newWidth = (w < 5 ? 5 : w);
 
-		document.getElementById('handle').style.left = newWidth + 'px';
+        document.getElementById('handle').style.left = newWidth + 'px';
 
         return false;
     }
@@ -432,7 +432,7 @@ document.onmousemove = function(e) {
 
 document.onmouseup = function(e) {
     if (drag) {
-		e.stopPropagation();
+        e.stopPropagation();
 
         drag = false;
 
@@ -441,11 +441,11 @@ document.onmouseup = function(e) {
         const w = curWidth + x;
         const newWidth = (w < 5 ? 5 : w);
 
-		document.getElementById('sidebar').style.width = newWidth + 'px';
-		document.getElementById('handle').style.left = newWidth + 'px';
-		document.getElementById('items').style.marginLeft = (newWidth + 10) + 'px';
-		document.getElementById('item-display-controls').style.left = (newWidth + 10) + 'px';
-		document.getElementById('welcome').style.width = (newWidth - 30) + 'px';
+        document.getElementById('sidebar').style.width = newWidth + 'px';
+        document.getElementById('handle').style.left = newWidth + 'px';
+        document.getElementById('items').style.marginLeft = (newWidth + 10) + 'px';
+        document.getElementById('item-display-controls').style.left = (newWidth + 10) + 'px';
+        document.getElementById('welcome').style.width = (newWidth - 30) + 'px';
 
         const today = new Date();
         let  expire = new Date();
@@ -459,37 +459,37 @@ document.onmouseup = function(e) {
 };
 
 function hide_all() {
-	document.querySelectorAll('#items .item').forEach(item => hide_body(item.id.substring(1)));
+    document.querySelectorAll('#items .item').forEach(item => hide_body(item.id.substring(1)));
 }
 
 function show_all() {
-	document.querySelectorAll('#items .item').forEach(item => show_body(item.id.substring(1)));
+    document.querySelectorAll('#items .item').forEach(item => show_body(item.id.substring(1)));
 }
 
 function hide_body(id) {
     throb();
 
-	fetch('view-action.php', {
-		'method': 'post',
-		'headers': {'Content-Type': 'application/x-www-form-urlencoded'},
-		'body': 'fold='+id
-	}).then(function() {
-		document.querySelector('#i'+id).className = 'item hidden';
-		unthrob();
-	});
+    fetch('view-action.php', {
+        'method': 'post',
+        'headers': {'Content-Type': 'application/x-www-form-urlencoded'},
+        'body': 'fold='+id
+    }).then(function() {
+        document.querySelector('#i'+id).className = 'item hidden';
+        unthrob();
+    });
 }
 
 function show_body(id) {
     throb();
 
-	fetch('view-action.php', {
-		'method': 'post',
-		'headers': {'Content-Type': 'application/x-www-form-urlencoded'},
-		'body': 'unfold='+id
-	}).then(function() {
-		document.querySelector('#i'+id).className = 'item shown';
-		unthrob();
-	});
+    fetch('view-action.php', {
+        'method': 'post',
+        'headers': {'Content-Type': 'application/x-www-form-urlencoded'},
+        'body': 'unfold='+id
+    }).then(function() {
+        document.querySelector('#i'+id).className = 'item shown';
+        unthrob();
+    });
 }
 
 /**
@@ -498,10 +498,10 @@ function show_body(id) {
  * @param id checkbox's name property
  */
 function flag_upto(id) {
-	const checkboxes = Array.from(document.querySelectorAll('.item h1 input'));
+    const checkboxes = Array.from(document.querySelectorAll('.item h1 input'));
 
     for (let i = 0; i < checkboxes.length; i++) {
-		checkboxes[i].checked = true;
+        checkboxes[i].checked = true;
 
         if (checkboxes[i].name === id) {
             break;
@@ -514,13 +514,13 @@ function toggle_highlight() {
 }
 
 function flag_all() {
-	document.querySelectorAll('.item h1 input').forEach(checkbox => checkbox.checked = true);
+    document.querySelectorAll('.item h1 input').forEach(checkbox => checkbox.checked = true);
 }
 function unflag_all() {
-	document.querySelectorAll('.item h1 input').forEach(checkbox => checkbox.checked = false);
+    document.querySelectorAll('.item h1 input').forEach(checkbox => checkbox.checked = false);
 }
 function toggle_all() {
-	document.querySelectorAll('.item h1 input').forEach(checkbox => checkbox.checked = !checkbox.checked);
+    document.querySelectorAll('.item h1 input').forEach(checkbox => checkbox.checked = !checkbox.checked);
 }
 
 function mark_read() {
@@ -537,31 +537,31 @@ function mark_unread() {
 function ajax_mark_read(id) {
     throb();
 
-	fetch('view-action.php', {
-		'method': 'post',
-		'headers': {'Content-Type': 'application/x-www-form-urlencoded'},
-		'body': 'mark_read='+id
-	}).then(function() {
-		refreshlist();
+    fetch('view-action.php', {
+        'method': 'post',
+        'headers': {'Content-Type': 'application/x-www-form-urlencoded'},
+        'body': 'mark_read='+id
+    }).then(function() {
+        refreshlist();
 
-		const item = document.getElementById('i' + id);
+        const item = document.getElementById('i' + id);
 
-		// scroll to start of next item if it flips out of the viewport
-		// by removing the read item
+        // scroll to start of next item if it flips out of the viewport
+        // by removing the read item
 
-		const y = getY(item);
-		const scrollHeight = getScrollY();
+        const y = getY(item);
+        const scrollHeight = getScrollY();
 
-		item.remove();
+        item.remove();
 
-		if (y < scrollHeight) {
-			const bar = document.getElementById('item-display-controls').offsetHeight;
+        if (y < scrollHeight) {
+            const bar = document.getElementById('item-display-controls').offsetHeight;
 
-			window.scrollTo(0, y - (bar + 10));
-		}
+            window.scrollTo(0, y - (bar + 10));
+        }
 
-		loadVisibleItems();
-	});
+        loadVisibleItems();
+    });
 
     return false;
 }
@@ -569,32 +569,32 @@ function ajax_mark_read(id) {
 function mark_feed_read(id) {
     throb();
 
-	fetch('view-action.php', {
-		'method': 'post',
-		'headers': {'Content-Type': 'application/x-www-form-urlencoded'},
-		'body': 'feed='+id
-	}).then(function() {
-		refreshlist();
-	});
+    fetch('view-action.php', {
+        'method': 'post',
+        'headers': {'Content-Type': 'application/x-www-form-urlencoded'},
+        'body': 'feed='+id
+    }).then(function() {
+        refreshlist();
+    });
 
     return false;
 }
 
 function untag_all() {
-	document.querySelectorAll('.untag').forEach(item => item.click());
+    document.querySelectorAll('.untag').forEach(item => item.click());
 }
 
 function add_tag(id, tag) {
     throb();
 
-	fetch('add-tag.php', {
-		'method': 'post',
-		'headers': {'Content-Type': 'application/x-www-form-urlencoded'},
-		'body': 'tag='+tag+'&item='+id
-	}).then(function() {
-		refreshlist();
-		refreshitem(id);
-	});
+    fetch('add-tag.php', {
+        'method': 'post',
+        'headers': {'Content-Type': 'application/x-www-form-urlencoded'},
+        'body': 'tag='+tag+'&item='+id
+    }).then(function() {
+        refreshlist();
+        refreshitem(id);
+    });
 
     return false;
 }
@@ -602,14 +602,14 @@ function add_tag(id, tag) {
 function remove_tag(id, tag) {
     throb();
 
-	fetch('add-tag.php', {
-		'method': 'post',
-		'headers': {'Content-Type': 'application/x-www-form-urlencoded'},
-		'body': 'remove=true&tag='+tag+'&item='+id
-	}).then(function() {
-		refreshlist();
-		document.getElementById('tag_' + id.toString() + '_' + tag).remove();
-	});
+    fetch('add-tag.php', {
+        'method': 'post',
+        'headers': {'Content-Type': 'application/x-www-form-urlencoded'},
+        'body': 'remove=true&tag='+tag+'&item='+id
+    }).then(function() {
+        refreshlist();
+        document.getElementById('tag_' + id.toString() + '_' + tag).remove();
+    });
 
     return false;
 }
@@ -617,13 +617,13 @@ function remove_tag(id, tag) {
 function delete_tag(tag) {
     throb();
 
-	fetch('view-action.php', {
-		'method': 'post',
-		'headers': {'Content-Type': 'application/x-www-form-urlencoded'},
-		'body': 'deltag='+tag
-	}).then(function() {
-		refreshlist();
-	});
+    fetch('view-action.php', {
+        'method': 'post',
+        'headers': {'Content-Type': 'application/x-www-form-urlencoded'},
+        'body': 'deltag='+tag
+    }).then(function() {
+        refreshlist();
+    });
 
     return false;
 }
@@ -631,13 +631,13 @@ function delete_tag(tag) {
 function change_feed_order(order, direction) {
     throb();
 
-	fetch('set-prefs.php', {
-		'method': 'post',
-		'headers': {'Content-Type': 'application/x-www-form-urlencoded'},
-		'body': 'feed_order='+order+'&feed_direction='+direction
-	}).then(function() {
-		refreshlist();
-	});
+    fetch('set-prefs.php', {
+        'method': 'post',
+        'headers': {'Content-Type': 'application/x-www-form-urlencoded'},
+        'body': 'feed_order='+order+'&feed_direction='+direction
+    }).then(function() {
+        refreshlist();
+    });
 
     return false;
 }
@@ -650,38 +650,38 @@ function toggle_favorite(id) {
     let data = 'tag=star&item='+id;
 
     if (star.className === 'starred') {
-		data += '&remove=true';
+        data += '&remove=true';
     }
 
-	fetch('add-tag.php', {
-		'method': 'post',
-		'headers': {'Content-Type': 'application/x-www-form-urlencoded'},
-		'body': data
-	}).then(function() {
-		if (star.className === 'starred') {
-			star.className = 'unstarred';
-			starred--;
-		} else {
-			star.className = 'starred';
-			starred++;
-		}
+    fetch('add-tag.php', {
+        'method': 'post',
+        'headers': {'Content-Type': 'application/x-www-form-urlencoded'},
+        'body': data
+    }).then(function() {
+        if (star.className === 'starred') {
+            star.className = 'unstarred';
+            starred--;
+        } else {
+            star.className = 'starred';
+            starred++;
+        }
 
-		if (starred > 0) {
-			document.getElementById('starredcount').innerHTML = '(' + starred + ')';
-		} else {
-			document.getElementById('starredcount').innerHTML = '';
-		}
-		unthrob();
-	});
+        if (starred > 0) {
+            document.getElementById('starredcount').innerHTML = '(' + starred + ')';
+        } else {
+            document.getElementById('starredcount').innerHTML = '';
+        }
+        unthrob();
+    });
 
     return false;
 }
 
 function refreshitem(id) {
-	fetch('item.php?no_img_filter=1&id='+id).then(function(response) {
-		response.text().then(data => document.getElementById('i' + id).innerHTML = data);
-		loadVisibleItems();
-	});
+    fetch('item.php?no_img_filter=1&id='+id).then(function(response) {
+        response.text().then(data => document.getElementById('i' + id).innerHTML = data);
+        loadVisibleItems();
+    });
 }
 
 function refreshlist() {
@@ -689,18 +689,18 @@ function refreshlist() {
 
     let params = {};
 
-	if (feed   !== null) params.feed   = feed;
-	if (what   !== null) params.what   = what;
-	if (when   !== null) params.when   = when;
-	if (search !== null) params.search = search;
+    if (feed   !== null) params.feed   = feed;
+    if (what   !== null) params.what   = what;
+    if (when   !== null) params.when   = when;
+    if (search !== null) params.search = search;
 
-	fetch('sidebar.php?'+queryStringFromJSON(params)).then(function(response) {
-		response.text().then(data => {
-			document.getElementById('sidebar').innerHTML = data;
-			evalScripts(data);
-		});
-		loadVisibleItems();
-	});
+    fetch('sidebar.php?'+queryStringFromJSON(params)).then(function(response) {
+        response.text().then(data => {
+            document.getElementById('sidebar').innerHTML = data;
+            evalScripts(data);
+        });
+        loadVisibleItems();
+    });
 }
 
 function throb() {
@@ -708,7 +708,7 @@ function throb() {
 }
 
 function unthrob() {
-	document.getElementById('throbber').style.display = 'none';
+    document.getElementById('throbber').style.display = 'none';
 }
 
 function itemTagAddShow(id, link) {
@@ -720,7 +720,7 @@ function itemTagAddShow(id, link) {
 function itemTagAdd(id, key) {
     if (key == null || key === 'Enter') {
         return add_tag(id, document.getElementById('tag' + id).value);
-	}
+    }
     return false;
 }
 
@@ -746,13 +746,13 @@ function sb_mark_tag_read(tagname) {
     if (confirm('Mark all [' + tagname + '] items as read -- are you SURE?')) {
         throb();
 
-		fetch('view-action.php', {
-			'method': 'post',
-			'headers': {'Content-Type': 'application/x-www-form-urlencoded'},
-			'body': 'tag_read='+tagname
-		}).then(function() {
-			refreshlist();
-		});
+        fetch('view-action.php', {
+            'method': 'post',
+            'headers': {'Content-Type': 'application/x-www-form-urlencoded'},
+            'body': 'tag_read='+tagname
+        }).then(function() {
+            refreshlist();
+        });
     }
     return false;
 }
@@ -760,113 +760,113 @@ function sb_mark_tag_read(tagname) {
 function sb_update_feed(id) {
     throb();
 
-	document.querySelector('#f'+id+' img.feed-icon').src = "image/spinner.gif";
+    document.querySelector('#f'+id+' img.feed-icon').src = "image/spinner.gif";
 
-	fetch('feed-action.php', {
-		'method': 'post',
-		'headers': {'Content-Type': 'application/x-www-form-urlencoded'},
-		'body': 'update_feedid='+id
-	}).then(function(response) {
-		unthrob();
-		response.text().then(data => document.getElementById('f' + id).innerHTML = data);
-	});
+    fetch('feed-action.php', {
+        'method': 'post',
+        'headers': {'Content-Type': 'application/x-www-form-urlencoded'},
+        'body': 'update_feedid='+id
+    }).then(function(response) {
+        unthrob();
+        response.text().then(data => document.getElementById('f' + id).innerHTML = data);
+    });
 }
 
 function sb_update_tag_sources(tagname) {
     throb();
 
-	fetch('feed-action.php', {
-		'method': 'post',
-		'headers': {'Content-Type': 'application/x-www-form-urlencoded'},
-		'body': 'update_tag_sources='+tagname
-	}).then(function(response){
-		refreshlist();
-		response.text().then(data => eval(data));
-	});
+    fetch('feed-action.php', {
+        'method': 'post',
+        'headers': {'Content-Type': 'application/x-www-form-urlencoded'},
+        'body': 'update_tag_sources='+tagname
+    }).then(function(response){
+        refreshlist();
+        response.text().then(data => eval(data));
+    });
 }
 
 function sb_readall_feed(id) {
     throb();
 
-	fetch('feed-action.php', {
-		'method': 'post',
-		'headers': {'Content-Type': 'application/x-www-form-urlencoded'},
-		'body': 'read_feed='+id
-	}).then(function(response) {
-		unthrob();
-		response.text().then(data => document.getElementById('f' + id).innerHTML = data);
-	});
+    fetch('feed-action.php', {
+        'method': 'post',
+        'headers': {'Content-Type': 'application/x-www-form-urlencoded'},
+        'body': 'read_feed='+id
+    }).then(function(response) {
+        unthrob();
+        response.text().then(data => document.getElementById('f' + id).innerHTML = data);
+    });
 }
 
 function sb_update_subscribed_sources() {
-	throb();
+    throb();
 
-	fetch('feed-action.php', {
-		'method': 'post',
-		'headers': {'Content-Type': 'application/x-www-form-urlencoded'},
-		'body': 'update_subscribed_sources=true'
-	}).then(function(response) {
-		unthrob();
-		response.text().then(data => eval(data));
-	});
+    fetch('feed-action.php', {
+        'method': 'post',
+        'headers': {'Content-Type': 'application/x-www-form-urlencoded'},
+        'body': 'update_subscribed_sources=true'
+    }).then(function(response) {
+        unthrob();
+        response.text().then(data => eval(data));
+    });
 }
 
 function view_order_set(what, feed, order) {
     throb();
 
-	fetch('view-action.php', {
-		'method': 'post',
-		'headers': {'Content-Type': 'application/x-www-form-urlencoded'},
-		'body': 'view_order='+order+'&view_feed='+feed+'&view_what='+what
-	}).then(function(response) {
-		unthrob();
-		response.text().then(data => document.getElementById('view-settings-button').innerHTML = data);
-	});
+    fetch('view-action.php', {
+        'method': 'post',
+        'headers': {'Content-Type': 'application/x-www-form-urlencoded'},
+        'body': 'view_order='+order+'&view_feed='+feed+'&view_what='+what
+    }).then(function(response) {
+        unthrob();
+        response.text().then(data => document.getElementById('view-settings-button').innerHTML = data);
+    });
 }
 
 function embed_youtube ( element ) {
-	const iframe = document.createElement("iframe");
+    const iframe = document.createElement("iframe");
 
-	iframe.setAttribute("src", "https://www.youtube.com/embed/" + element.dataset.ytid + "?autoplay=1&rel=0");
-	iframe.setAttribute("frameborder", "0");
-	iframe.setAttribute("width", "560");
-	iframe.setAttribute("height", "315");
-	iframe.setAttribute("allowfullscreen", "1");
+    iframe.setAttribute("src", "https://www.youtube.com/embed/" + element.dataset.ytid + "?autoplay=1&rel=0");
+    iframe.setAttribute("frameborder", "0");
+    iframe.setAttribute("width", "560");
+    iframe.setAttribute("height", "315");
+    iframe.setAttribute("allowfullscreen", "1");
 
-	element.parentNode.replaceChild(iframe, element);
+    element.parentNode.replaceChild(iframe, element);
 }
 
 function embed_vimeo ( element ) {
-	const iframe = document.createElement("iframe");
+    const iframe = document.createElement("iframe");
 
-	iframe.setAttribute("src", "https://player.vimeo.com/video/" + element.dataset.vmid);
-	iframe.setAttribute("frameborder", "0");
-	iframe.setAttribute("width", "560");
-	iframe.setAttribute("height", "315");
-	iframe.setAttribute("allowfullscreen", "1");
+    iframe.setAttribute("src", "https://player.vimeo.com/video/" + element.dataset.vmid);
+    iframe.setAttribute("frameborder", "0");
+    iframe.setAttribute("width", "560");
+    iframe.setAttribute("height", "315");
+    iframe.setAttribute("allowfullscreen", "1");
 
-	element.parentNode.replaceChild(iframe, element);
+    element.parentNode.replaceChild(iframe, element);
 }
 
 window.onload = function() {
-	document.querySelectorAll('.item .body video').forEach(video => {
-		let source = '';
+    document.querySelectorAll('.item .body video').forEach(video => {
+        let source = '';
 
-		if (video.src) {
-			source = video.src;
-		} else {
-			source = video.querySelector('source').src;
-		}
+        if (video.src) {
+            source = video.src;
+        } else {
+            source = video.querySelector('source').src;
+        }
 
-		// tumblr feature: try full video size
-		source = source.replace(/\/[0-9]+$/, '');
+        // tumblr feature: try full video size
+        source = source.replace(/\/[0-9]+$/, '');
 
-		let html = video.outerHTML;
+        let html = video.outerHTML;
 
-		html += '<br/>🎞 <a href="'+source+'" class="video-source">Video source</a>';
+        html += '<br/>🎞 <a href="'+source+'" class="video-source">Video source</a>';
 
-		video.outerHTML = '<div class="video-wrap">'+html+'</div>';
-	});
+        video.outerHTML = '<div class="video-wrap">'+html+'</div>';
+    });
 };
 
 
@@ -881,10 +881,10 @@ window.onload = function() {
  * @param {function} func
  */
 function applySelector(item, selector, func) {
-	const items = item.querySelectorAll(selector);
-	for (let i = 0; i < items.length; i++) {
-		func(items[i]);
-	}
+    const items = item.querySelectorAll(selector);
+    for (let i = 0; i < items.length; i++) {
+        func(items[i]);
+    }
 }
 
 /**
@@ -894,7 +894,7 @@ function applySelector(item, selector, func) {
  * @returns {string}
  */
 function queryStringFromJSON(obj) {
-	return Object.keys(obj).map(key => encodeURIComponent(key) + '=' + encodeURIComponent(obj[key])).join('&');
+    return Object.keys(obj).map(key => encodeURIComponent(key) + '=' + encodeURIComponent(obj[key])).join('&');
 }
 
 /**
@@ -903,14 +903,14 @@ function queryStringFromJSON(obj) {
  * @returns {string[]}
  */
 function extractScripts(str) {
-	const scriptRegEx = '<script[^>]*>([\\S\\s]*?)<\/script\\s*>';
+    const scriptRegEx = '<script[^>]*>([\\S\\s]*?)<\/script\\s*>';
 
-	let matchAll = new RegExp(scriptRegEx, 'img'),
-		matchOne = new RegExp(scriptRegEx, 'im');
+    let matchAll = new RegExp(scriptRegEx, 'img'),
+        matchOne = new RegExp(scriptRegEx, 'im');
 
-	return (str.match(matchAll) || []).map(function(scriptTag) {
-		return (scriptTag.match(matchOne) || ['', ''])[1];
-	});
+    return (str.match(matchAll) || []).map(function(scriptTag) {
+        return (scriptTag.match(matchOne) || ['', ''])[1];
+    });
 }
 
 /**
@@ -918,7 +918,7 @@ function extractScripts(str) {
  * @param str response string
  */
 function evalScripts(str) {
-	return extractScripts(str).map(function(script) { return eval(script); });
+    return extractScripts(str).map(function(script) { return eval(script); });
 }
 
 /**
@@ -928,11 +928,11 @@ function evalScripts(str) {
  * @returns {function(): *}
  */
 function iterate(iterable) {
-	let i = -1;
-	const getter = function() {
-		return i < 0 ? null : i < iterable.length ? iterable[i] : null;
-	};
-	return function() {
-		return ++i < iterable.length ? getter : null
-	};
+    let i = -1;
+    const getter = function() {
+        return i < 0 ? null : i < iterable.length ? iterable[i] : null;
+    };
+    return function() {
+        return ++i < iterable.length ? getter : null
+    };
 }
