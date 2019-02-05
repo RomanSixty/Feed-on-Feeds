@@ -162,7 +162,16 @@ function select(item) {
 
     const y = getY(item);
     const bar = document.getElementById('item-display-controls').offsetHeight;
-    window.scrollTo(0, y - (bar + 10));
+
+    const scrollTop = y + bar;
+    const scrollBottom = scrollTop + item.offsetHeight - getWindowHeight();
+
+    let scrollHeight = getScrollY();
+    if (scrollHeight < scrollTop) {
+        window.scrollTo(0, scrollTop);
+    } else if (scrollHeight > scrollBottom) {
+        window.scrollTo(0, scrollBottom);
+    }
 
     loadImages(item);
 
@@ -195,9 +204,9 @@ function keyboard(e) {
     if (itemElement === null)
     	itemElement = document.querySelector('.item');
 
-	if (itemElement) {
-		select(itemElement);
-	}
+    if (itemElement) {
+        select(itemElement);
+    }
 
     switch (e.key) {
 
@@ -252,6 +261,7 @@ function keyboard(e) {
 			return false;
 
 		// scroll current item or move to next item, flag current item
+        case " ":
 		case "j":
 			if (itemElement) {
 				// is the next element visible yet?  scroll if not.
@@ -340,17 +350,15 @@ function keyboard(e) {
 			return false;
 
 		// skip to previous item
+        case "k":
 		case "p":
 			if (itemElement) {
-				unselect(itemElement);
 
 				let prevElement = itemElement.previousElementSibling;
 
 				if (prevElement && prevElement.classList.contains('item')) {
+                    unselect(itemElement);
 					itemElement = prevElement;
-				}
-				else {
-					itemElement = Array.from(document.querySelectorAll('.item')).pop();
 				}
 			}
 			console.log(itemElement);
