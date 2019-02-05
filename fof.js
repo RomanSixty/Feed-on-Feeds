@@ -163,8 +163,8 @@ function select(item) {
     const y = getY(item);
     const bar = document.getElementById('item-display-controls').offsetHeight;
 
-    const scrollTop = y + bar;
-    const scrollBottom = scrollTop + item.offsetHeight - getWindowHeight();
+    const scrollTop = y - bar;
+    const scrollBottom = y + item.offsetHeight - getWindowHeight();
 
     let scrollHeight = getScrollY();
     if (scrollHeight < scrollTop) {
