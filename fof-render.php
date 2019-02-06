@@ -112,7 +112,7 @@ function fof_render_item($item, $include_div = true) {
 
 	$folded = in_array('folded', $tags) ? true : false;
 	if ($include_div) {
-		echo '<div class="item ' . ($folded ? 'hidden' : 'shown') . '" id="i' . $item_id . '" onclick="return itemClicked(event)">' . "\n";
+		echo '<div data-href="' . $item_link . '" class="item ' . ($folded ? 'hidden' : 'shown') . '" id="i' . $item_id . '" onclick="return itemClicked(event)">' . "\n";
 	}
 	?>
 
