@@ -173,8 +173,6 @@ function select(item, jump) {
     // Relative scroll amount to make the bottom of the item move to the bottom of the screen
     const fitBottom = itemBottom - screenBottom;
 
-    console.log('itemtop', itemTop, 'itembottom', itemBottom, 'screentop', screenTop, 'screenbottom', screenBottom, 'fittop', fitTop, 'fitbottom', fitBottom);
-
     if (jump) {
         // Always scroll to the top of the item
         window.scrollBy(0, fitTop);
@@ -359,7 +357,6 @@ function keyboard(e) {
                     select(itemElement, true);
                 }
             }
-            console.log(itemElement);
             return false;
 
         // skip to last item
