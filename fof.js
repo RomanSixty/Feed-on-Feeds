@@ -157,20 +157,33 @@ function checkbox(event) {
     return true;
 }
 
-function select(item) {
+function select(item, jump) {
     item.classList.add('selected');
 
-    const y = getY(item);
-    const bar = document.getElementById('item-display-controls').offsetHeight;
+    // Currrent relative top and bottom of the item
+    const itemTop = getY(item) - getScrollY();
+    const itemBottom = itemTop + item.offsetHeight;
 
-    const scrollTop = y - bar;
-    const scrollBottom = y + item.offsetHeight - getWindowHeight();
+    // Absolute top and bottom of the screen
+    const screenTop = document.getElementById('item-display-controls').offsetHeight;
+    const screenBottom = getWindowHeight();
 
-    let scrollHeight = getScrollY();
-    if (scrollHeight < scrollTop) {
-        window.scrollTo(0, scrollTop);
-    } else if (scrollHeight > scrollBottom) {
-        window.scrollTo(0, Math.min(scrollTop, scrollBottom));
+    // Relative scroll amount to make the top of the item move to the top of the screen
+    const fitTop = itemTop - screenTop;
+    // Relative scroll amount to make the bottom of the item move to the bottom of the screen
+    const fitBottom = itemBottom - screenBottom;
+
+    console.log('itemtop', itemTop, 'itembottom', itemBottom, 'screentop', screenTop, 'screenbottom', screenBottom, 'fittop', fitTop, 'fitbottom', fitBottom);
+
+    if (jump) {
+        // Always scroll to the top of the item
+        window.scrollBy(0, fitTop);
+    } else if (itemBottom > screenBottom) {
+        // Item is off the bottom of the screen; scroll down until it's contained
+        window.scrollBy(0, Math.min(fitTop, fitBottom));
+    } else if (itemTop < screenTop) {
+        // Item is off the top of the screen; scroll up until it's contained
+        window.scrollBy(0, Math.max(fitTop, fitBottom));
     }
 
     loadImages(item);
@@ -207,7 +220,6 @@ function keyboard(e) {
 
     if (itemElement === null) {
         itemElement = document.querySelector('.item');
-        select(itemElement);
     }
 
     switch (e.key) {
@@ -218,6 +230,7 @@ function keyboard(e) {
                 item.classList.toggle("shown");
                 item.classList.toggle("hidden");
             });
+            setTimeout(function(){select(itemElement)},1);
             return false;
 
         // toggle current item folding
@@ -226,6 +239,7 @@ function keyboard(e) {
                 itemElement.classList.toggle("shown");
                 itemElement.classList.toggle("hidden");
             }
+            setTimeout(function(){select(itemElement)},1);
             return false;
 
         // toggle starred status of current item
@@ -282,8 +296,8 @@ function keyboard(e) {
                 } else if (isItem(nextElement)) {
                     // Jump to the next item
                     unselect(itemElement);
-                    select(nextElement);
                     itemElement = nextElement;
+                    select(nextElement, true);
                 } else if (confirm("No more items! Mark flagged as read?")) {
                     mark_read();
                 }
@@ -291,7 +305,7 @@ function keyboard(e) {
                 // nothing is selected, so try to do that
                 itemElement = document.querySelector('.item');
                 if (isItem(itemElement)) {
-                    select(itemElement);
+                    select(itemElement, true);
                 }
             }
 
@@ -308,7 +322,7 @@ function keyboard(e) {
 
                 if (isItem(nextElement)) {
                     itemElement = nextElement;
-                    select(itemElement);
+                    select(itemElement, true);
                 } else if (confirm("No more items!  Mark flagged as read?")) {
                     mark_read();
                 }
@@ -342,7 +356,7 @@ function keyboard(e) {
                 if (isItem(prevElement)) {
                     unselect(itemElement);
                     itemElement = prevElement;
-                    select(itemElement);
+                    select(itemElement, true);
                 }
             }
             console.log(itemElement);
