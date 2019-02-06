@@ -263,7 +263,6 @@ function keyboard(e) {
             return false;
 
         // scroll current item or move to next item, flag current item
-        case " ":
         case "j":
             if (itemElement) {
                 document.getElementById('c' + itemElement.id.substring(1)).checked = true;
