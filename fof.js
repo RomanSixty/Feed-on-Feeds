@@ -222,6 +222,13 @@ function keyboard(e) {
 
     switch (e.key) {
 
+        // Open the item in a new tab
+        case "Enter":
+            if (isItem(itemElement) && itemElement.dataset.href) {
+                window.open(itemElement.dataset.href, "_blank");
+                return false;
+            }
+
         // toggle all item foldings
         case "H":
             items.forEach(item => {
