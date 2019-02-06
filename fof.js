@@ -157,20 +157,31 @@ function checkbox(event) {
     return true;
 }
 
-function select(item) {
+function select(item, jump) {
     item.classList.add('selected');
 
-    const y = getY(item);
-    const bar = document.getElementById('item-display-controls').offsetHeight;
+    // Currrent relative top and bottom of the item
+    const itemTop = getY(item) - getScrollY();
+    const itemBottom = itemTop + item.offsetHeight;
 
-    const scrollTop = y - bar;
-    const scrollBottom = y + item.offsetHeight - getWindowHeight();
+    // Absolute top and bottom of the screen
+    const screenTop = document.getElementById('item-display-controls').offsetHeight;
+    const screenBottom = getWindowHeight();
 
-    let scrollHeight = getScrollY();
-    if (scrollHeight < scrollTop) {
-        window.scrollTo(0, scrollTop);
-    } else if (scrollHeight > scrollBottom) {
-        window.scrollTo(0, scrollBottom);
+    // Relative scroll amount to make the top of the item move to the top of the screen
+    const fitTop = itemTop - screenTop;
+    // Relative scroll amount to make the bottom of the item move to the bottom of the screen
+    const fitBottom = itemBottom - screenBottom;
+
+    if (jump) {
+        // Always scroll to the top of the item
+        window.scrollBy(0, fitTop);
+    } else if (itemBottom > screenBottom) {
+        // Item is off the bottom of the screen; scroll down until it's contained
+        window.scrollBy(0, Math.min(fitTop, fitBottom));
+    } else if (itemTop < screenTop) {
+        // Item is off the top of the screen; scroll up until it's contained
+        window.scrollBy(0, Math.max(fitTop, fitBottom));
     }
 
     loadImages(item);
@@ -188,6 +199,10 @@ function unselect(item) {
     document.title = "Feed on Feeds";
 }
 
+function isItem(item) {
+    return item && item.classList.contains('item');
+}
+
 function keyboard(e) {
     if (!e) e = window.event;
 
@@ -201,14 +216,18 @@ function keyboard(e) {
 
     const items = document.querySelectorAll('.item');
 
-    if (itemElement === null)
+    if (itemElement === null) {
         itemElement = document.querySelector('.item');
-
-    if (itemElement) {
-        select(itemElement);
     }
 
     switch (e.key) {
+
+        // Open the item in a new tab
+        case "Enter":
+            if (isItem(itemElement) && itemElement.dataset.href) {
+                window.open(itemElement.dataset.href, "_blank");
+                return false;
+            }
 
         // toggle all item foldings
         case "H":
@@ -216,6 +235,7 @@ function keyboard(e) {
                 item.classList.toggle("shown");
                 item.classList.toggle("hidden");
             });
+            setTimeout(function(){select(itemElement)},1);
             return false;
 
         // toggle current item folding
@@ -224,6 +244,7 @@ function keyboard(e) {
                 itemElement.classList.toggle("shown");
                 itemElement.classList.toggle("hidden");
             }
+            setTimeout(function(){select(itemElement)},1);
             return false;
 
         // toggle starred status of current item
@@ -261,75 +282,56 @@ function keyboard(e) {
             return false;
 
         // scroll current item or move to next item, flag current item
-        case " ":
         case "j":
             if (itemElement) {
-                // is the next element visible yet?  scroll if not.
-
-                const windowHeight = getWindowHeight();
-
                 document.getElementById('c' + itemElement.id.substring(1)).checked = true;
 
-                let nextElement = itemElement.nextElementSibling;
+                const windowHeight = getWindowHeight();
+                const itemTop = getY(itemElement);
+                const itemBottom = itemTop + itemElement.clientHeight;
 
-                if (nextElement) {
+                const bar = document.getElementById('item-display-controls').offsetHeight;
+                const scrollBottom = getScrollY() + windowHeight;
+
+                const nextElement = itemElement.nextElementSibling;
+
+                if (itemBottom > scrollBottom) {
+                    // There is more to read, so scroll down
+                    window.scrollTo(0, getScrollY() + windowHeight*0.8);
+                } else if (isItem(nextElement)) {
+                    // Jump to the next item
                     unselect(itemElement);
-
-                    const scrollHeight = getScrollY();
-                    const y = getY(nextElement);
-
-                    if (y > scrollHeight + windowHeight) {
-                        window.scrollTo(0, scrollHeight + (.8 * windowHeight));
-                    }
-
                     itemElement = nextElement;
-                } else {
-                    const scrollHeight = getScrollY();
-
-                    const lastItem = Array.from(document.querySelectorAll('.item')).pop();
-
-                    let y = lastItem.offsetTop;
-
-                    if (y - 10 > scrollHeight + windowHeight) {
-                        window.scrollTo(0, scrollHeight + (.8 * windowHeight));
-                        return false;
-                    }
-                    else {
-                        if (confirm("No more items!  Mark flagged as read?")) {
-                            mark_read();
-                        }
-                        else {
-                            itemElement = document.querySelector('.item');
-                            select(itemElement);
-                            return false;
-                        }
-                    }
+                    select(nextElement, true);
+                } else if (confirm("No more items! Mark flagged as read?")) {
+                    mark_read();
+                }
+            } else {
+                // nothing is selected, so try to do that
+                itemElement = document.querySelector('.item');
+                if (isItem(itemElement)) {
+                    select(itemElement, true);
                 }
             }
-            select(itemElement);
+
             return false;
 
         // flag item, move to next
         case "J":
             if (itemElement) {
-                unselect(itemElement);
                 document.getElementById('c' + itemElement.id.substring(1)).checked = true;
+
+                unselect(itemElement);
 
                 const nextElement = itemElement.nextElementSibling;
 
-                if (nextElement.id) {
+                if (isItem(nextElement)) {
                     itemElement = nextElement;
-                }
-                else {
-                    if (confirm("No more items!  Mark flagged as read?")) {
-                        mark_read();
-                    }
-                    else {
-                        itemElement = document.querySelector('.item');
-                    }
+                    select(itemElement, true);
+                } else if (confirm("No more items!  Mark flagged as read?")) {
+                    mark_read();
                 }
             }
-            select(itemElement);
             return false;
 
         // skip to next item
@@ -339,14 +341,14 @@ function keyboard(e) {
 
                 let nextElement = itemElement.nextElementSibling;
 
-                if (nextElement && nextElement.classList.contains('item')) {
+                if (isItem(nextElement) && nextElement.classList.contains('item')) {
                     itemElement = nextElement;
+                    select(itemElement, true);
                 }
                 else {
                     itemElement = document.querySelector('.item');
                 }
             }
-            select(itemElement);
             return false;
 
         // skip to previous item
@@ -356,13 +358,12 @@ function keyboard(e) {
 
                 let prevElement = itemElement.previousElementSibling;
 
-                if (prevElement && prevElement.classList.contains('item')) {
+                if (isItem(prevElement)) {
                     unselect(itemElement);
                     itemElement = prevElement;
+                    select(itemElement, true);
                 }
             }
-            console.log(itemElement);
-            select(itemElement);
             return false;
 
         // skip to last item
