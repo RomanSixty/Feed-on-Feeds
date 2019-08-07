@@ -37,7 +37,7 @@ function do_highlight($full_body, $q, $class) {
 			$full_body_hl .= $tag_matches[2][$i];
 
 			/* this one ALMOST works, except if the string is at the start or end of a string*/
-			$holder = preg_replace('/(.*?)(' . preg_quote($q, '/') . ')(.*?)/iu', "\$1<span class=\"$class\">\$2</span>\$3", ' ' . $tag_matches[3][$i] . ' ');
+			$holder = preg_replace('/(.*?)(' . preg_quote($q, '/') . ')(.*?)/iu', "\$1<mark class=\"$class\">\$2</mark>\$3", ' ' . $tag_matches[3][$i] . ' ');
 			$full_body_hl .= substr($holder, 1, (strlen($holder) - 2));
 		}
 	}
