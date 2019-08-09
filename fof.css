@@ -163,7 +163,7 @@ iframe {
   text-align: center;
 }
 
-.highlight-on mark.highlight {
+.highlight-on mark.fof-highlight {
   background: yellow;
   color: black;
 }

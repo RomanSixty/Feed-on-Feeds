@@ -94,8 +94,8 @@ function fof_render_item($item, $include_div = true) {
 	$item_updated = gmdate("Y-n-d g:ia", $item['item_updated'] + $offset);
 
 	if (!empty($_GET['search'])) {
-		$item_content = do_highlight("<span>$item_content</span>", $_GET['search'], "highlight");
-		$item_title = do_highlight("<span>$item_title</span>", $_GET['search'], "highlight");
+		$item_content = do_highlight($item_content, $_GET['search'], "fof-highlight");
+		$item_title = do_highlight($item_title, $_GET['search'], "fof-highlight");
 	}
 
 	// enable controls, if an item contains a video
