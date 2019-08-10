@@ -10,19 +10,23 @@ function wrap_image_in_proxy($url, $item) {
 
 function fof_images_by_proxy($dom, $item) {
 	foreach ($dom->getElementsByTagName('img') as $img) {
-		if ($img->hasAttribute('src')) {
-			$img->setAttribute('src', wrap_image_in_proxy($img->getAttribute('src'), $item));
-		}
-		if ($img->hasAttribute('srcset')) {
-			$srcset = $img->getAttribute('srcset');
-			$specs = preg_split('/,\s*/', $srcset);
-
-			$outspec = [];
-			foreach ($specs as $spec) {
-				list($url, $selector) = preg_split('/\s+/', $spec, 2);
-				$outspec[] = wrap_image_in_proxy($url, $item) . ' ' . $selector;
+		foreach (['src', 'data-fof-ondemand-src'] as $attr) {
+			if ($img->hasAttribute($attr)) {
+				$img->setAttribute($attr, wrap_image_in_proxy($img->getAttribute($attr), $item));
 			}
-			$img->setAttribute('srcset', implode(', ', $outspec));
+		}
+		foreach (['srcset', 'data-fof-ondemand-srcset'] as $attr) {
+			if ($img->hasAttribute($attr)) {
+				$srcset = $img->getAttribute($attr);
+				$specs = preg_split('/,\s*/', $srcset);
+
+				$outspec = [];
+				foreach ($specs as $spec) {
+					list($url, $selector) = preg_split('/\s+/', $spec, 2);
+					$outspec[] = wrap_image_in_proxy($url, $item) . ' ' . $selector;
+				}
+				$img->setAttribute($attr, implode(', ', $outspec));
+			}
 		}
 	}
 

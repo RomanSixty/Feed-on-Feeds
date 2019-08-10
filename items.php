@@ -172,6 +172,7 @@ if ($fof_prefs_obj->get('keyboard')) {
 		<dt>N</dt><dd>Skip to last item.</dd>
 		<dt>P</dt><dd>Skip to first item.</dd>
 		<dt>r</dt><dd>Refresh sidebar.</dd>
+		<dt>&#9166;</dt><dd>Open current item.</dd>
 	</dl>
 </div>
 
