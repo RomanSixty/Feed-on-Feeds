@@ -570,7 +570,7 @@ function fof_view_title($feed = NULL, $what = 'unread', $when = NULL, $start = N
 	}
 
 	if (isset($search)) {
-		$title .= ' <a href="#" title="Toggle highlights" onclick="toggle_highlight(); return false;">matching <span class="highlight"><em>' . $search . '</em></span></a>';
+		$title .= ' <a href="#" title="Toggle highlights" onclick="toggle_highlight(); return false;">matching <mark class="fof-highlight"><em>' . $search . '</em></mark></a>';
 	}
 
 	return $title;

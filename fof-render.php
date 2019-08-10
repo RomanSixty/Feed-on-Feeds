@@ -37,7 +37,7 @@ function do_highlight($full_body, $q, $class) {
 			$full_body_hl .= $tag_matches[2][$i];
 
 			/* this one ALMOST works, except if the string is at the start or end of a string*/
-			$holder = preg_replace('/(.*?)(' . preg_quote($q, '/') . ')(.*?)/iu', "\$1<span class=\"$class\">\$2</span>\$3", ' ' . $tag_matches[3][$i] . ' ');
+			$holder = preg_replace('/(.*?)(' . preg_quote($q, '/') . ')(.*?)/iu', "\$1<mark class=\"$class\">\$2</mark>\$3", ' ' . $tag_matches[3][$i] . ' ');
 			$full_body_hl .= substr($holder, 1, (strlen($holder) - 2));
 		}
 	}
@@ -94,8 +94,8 @@ function fof_render_item($item, $include_div = true) {
 	$item_updated = gmdate("Y-n-d g:ia", $item['item_updated'] + $offset);
 
 	if (!empty($_GET['search'])) {
-		$item_content = do_highlight("<span>$item_content</span>", $_GET['search'], "highlight");
-		$item_title = do_highlight("<span>$item_title</span>", $_GET['search'], "highlight");
+		$item_content = do_highlight($item_content, $_GET['search'], "fof-highlight");
+		$item_title = do_highlight($item_title, $_GET['search'], "fof-highlight");
 	}
 
 	// enable controls, if an item contains a video
