@@ -1062,6 +1062,13 @@ function fof_update_feed($id, $body = null) {
 				$content = '';
 			}
 
+			$enclosures = $item->get_enclosures();
+			foreach ($enclosures as $enclosure) {
+			    if ($enclosure->get_type() == 'image/jpeg')
+			        $content = '<img src="' . $enclosure->get_link() . '" alt=""/>' . $content;
+            }
+
+
 			$authors = $item->get_authors();
 			$author = '';
 			if (!empty($authors) && is_array($authors)) {
