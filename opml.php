@@ -13,6 +13,7 @@
  */
 
 header("Content-Type: text/xml; charset=utf-8");
+header('Content-Disposition: attachment; filename="opml.xml"');
 include_once "fof-main.php";
 
 echo '<?xml version="1.0"?>';
