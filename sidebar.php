@@ -40,8 +40,6 @@ if (!defined('FOF_AUTH_EXTERNAL')) {
 	$welcomecontent .= ' | <a href="logout.php">log out</a>';
 }
 
-$welcomecontent .= ' | <a href="http://feedonfeeds.com/">about</a></span>';
-
 echo '<div id="welcome" class="banner ontop">' . $welcomecontent . "</div>\n";
 echo '<div id="welcome-spacer" class="banner">' . $welcomecontent . "</div>\n";
 echo '<div id="feed-actions" class="hide-on-mobile"><a href="add.php"><b>Add Feeds</b></a> / ';

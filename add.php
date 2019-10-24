@@ -132,7 +132,7 @@ if (count($feeds)) {
 	$idx = 0;
 	$feedjson = array();
 	foreach ($feeds as $feed) {
-		$feedjson[] = json_encode(array('url' => $feed, 'idx' => $idx));
+		$feedjson[] = json_encode(array('url' => urlencode($feed), 'idx' => $idx));
 		echo '<div id="feed_index_' . $idx . '">'
 			. $feed . ' is waiting to add...'
 			. "</div>\n";
