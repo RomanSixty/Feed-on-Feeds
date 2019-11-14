@@ -1736,7 +1736,7 @@ function fof_render_feed_row($f, $error = false) {
 			$out .= '	<td class="controls hide-on-mobile">';
 			$out .= '<ul class="feedmenu">';
 			$out .= '<li>';
-			$out .= '<a href="#" title="feed controls">&Delta;</a>';
+			$out .= '<a href="#" title="feed controls">≡</a>';
 			$out .= '<ul>';
 			$out .= '<li><a href="#" title="last update ' . $f['agestr'] . '" onclick="return sb_update_feed(' . $f['feed_id'] . ');">Update Feed</a></li>';
 			$out .= '<li><a href="#" title="mark all as read" onclick="return sb_readall_feed(' . $f['feed_id'] . ')">Mark all items as read</a></li>';

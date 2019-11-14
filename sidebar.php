@@ -163,7 +163,7 @@ function fof_sidebar_tags_fancy() {
 
 		$tagline .= '<td class="controls hide-on-mobile">';
 		$tagline .= '<ul class="feedmenu"><li>';
-		$tagline .= '<a href="#" title="tag controls">&Delta;</a>';
+		$tagline .= '<a href="#" title="tag controls">≡</a>';
 		$tagline .= '<ul>';
 		$tagline .= '<li><a href="' . $tag_view_all_url . '" title="' . $tag['count'] . ' total items">View all items</a></li>';
 		$tagline .= '<li><a href="#" title="update all source feeds" onclick="return sb_update_tag_sources(' . $tag_name_json . ');">Update contributing feeds</a></li>';

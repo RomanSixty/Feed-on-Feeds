@@ -120,11 +120,11 @@ and remove the `//` at the beginning of the line.
 
 ## How do I delete a feed?
 
-In the feeds list there's a little triangle (that looks like &Delta;). Hover
+In the feeds list there's a little menu symbol (≡). Hover
 over it and enjoy the context menu. If you've set the UI theme to "simple," just
 click on the `d` in the feed list.
 
-**Note:** By unsubscribing from a feed you also delete all tagged and starred
+**Note:** By unsubscribing from a feed you also delete all its tagged and starred
 items.
 
 # Legal
