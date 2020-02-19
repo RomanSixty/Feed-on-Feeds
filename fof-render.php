@@ -23,8 +23,11 @@ function do_highlight($full_body, $q, $class) {
 	$pat = '/((<[^!][\/]*?[^<>]*?>)([^<]*))|<!---->|<!--(.*?)-->|((<!--[ \r\n\t]*?)(.*?)[ \r\n\t]*?-->([^<]*))/si';
 	preg_match_all($pat, $full_body, $tag_matches);
 
+	if (empty($tag_matches[0])) {
+		$full_body_hl = preg_replace('/(.*?)(' . preg_quote($q, '/') . ')(.*?)/iu', "\$1<mark class=\"$class\">\$2</mark>\$3", $full_body);
+	}
 	/* loop through and highlight $q value in data and recombine with tags */
-	for ($i = 0; $i < count($tag_matches[0]); $i++) {
+	else for ($i = 0; $i < count($tag_matches[0]); $i++) {
 		/* ignore all text within these tags */
 		if (
 			(preg_match('/<!/i', $tag_matches[0][$i])) or
