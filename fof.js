@@ -298,11 +298,13 @@ function keyboard(e) {
                 if (itemBottom > scrollBottom) {
                     // There is more to read, so scroll down
                     window.scrollTo(0, getScrollY() + windowHeight*0.8);
+                    document.getElementById('marker').style.top = scrollBottom + 'px';
                 } else if (isItem(nextElement)) {
                     // Jump to the next item
                     unselect(itemElement);
                     itemElement = nextElement;
                     select(nextElement, true);
+                    document.getElementById('marker').style.top = '-100px';
                 } else if (confirm("No more items! Mark flagged as read?")) {
                     mark_read();
                 }
