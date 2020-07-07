@@ -39,10 +39,10 @@ if ($youtube) {
 
 	if (preg_match('~youtube\.com/channel/([^/]+)~', $youtube, $matches)) {
 		$channel_id = $matches[1];
-	} elseif (preg_match('~youtube\.com/user/([^/]+)~', $youtube, $matches)) {
+	} elseif (preg_match('~youtube\.com/c/([^/]+)~', $youtube, $matches)) {
 		$file = file_get_contents($youtube);
 
-		if (preg_match('~data-style-type="branded"[^>]+data-channel-external-id="([^"]+)"~m', $file, $matches)) {
+		if (preg_match('~"externalId":"([^"]+)"~m', $file, $matches)) {
 			$channel_id = $matches[1];
 		}
 	}
