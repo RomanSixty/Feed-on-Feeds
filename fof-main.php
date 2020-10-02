@@ -310,7 +310,7 @@ function fof_tag_item($user_id, $item_id, $tag) {
 
 	foreach ($tags as $tag) {
 		// remove tag, if it starts with '-'
-		if ($tag{0} == '-') {
+		if ($tag[0] == '-') {
 			fof_untag_item($user_id, $item_id, substr($tag, 1));
 			continue;
 		}
@@ -1514,28 +1514,6 @@ function fof_todays_date() {
 function fof_repair_drain_bamage() {
 	if (ini_get('register_globals')) {
 		foreach ($_REQUEST as $k => $v) {unset($GLOBALS[$k]);}
-	}
-
-	// thanks to submitter of http://bugs.php.net/bug.php?id=39859
-	if (get_magic_quotes_gpc()) {
-		function undoMagicQuotes($array, $topLevel = true) {
-			$newArray = array();
-			foreach ($array as $key => $value) {
-				if (!$topLevel) {
-					$key = stripslashes($key);
-				}
-				if (is_array($value)) {
-					$newArray[$key] = undoMagicQuotes($value, false);
-				} else {
-					$newArray[$key] = stripslashes($value);
-				}
-			}
-			return $newArray;
-		}
-		$_GET = undoMagicQuotes($_GET);
-		$_POST = undoMagicQuotes($_POST);
-		$_COOKIE = undoMagicQuotes($_COOKIE);
-		$_REQUEST = undoMagicQuotes($_REQUEST);
 	}
 }
 
