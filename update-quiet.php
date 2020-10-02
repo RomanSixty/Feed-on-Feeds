@@ -31,7 +31,7 @@ $feeds = array();
 
 $now = time();
 while (($feed = fof_db_get_row($result)) !== false) {
-	if (($now - $feed['feed_cache_date']) > ($fof_admin_prefs['autotimeout'] * 60)
+	if (($now - $feed['feed_cache_attempt_date']) > ($fof_admin_prefs['autotimeout'] * 60)
 		&& ($now > $feed['feed_cache_next_attempt'])) {
 		$feeds[] = $feed;
 	} else {

@@ -40,7 +40,7 @@ if (!empty($_GET['feed'])) {
 	}
 
 	while (($feed = fof_db_get_row($result)) !== false) {
-		if ((time() - $feed['feed_cache_date']) < ($admin_prefs['manualtimeout'] * 60)) {
+		if ((time() - $feed['feed_cache_attempt_date']) < ($admin_prefs['manualtimeout'] * 60)) {
 			list($timestamp) = fof_nice_time_stamp($feed['feed_cache_date']);
 			$feed_status = " was just updated $timestamp!";
 		} else if (time() < $feed['feed_cache_next_attempt']) {
