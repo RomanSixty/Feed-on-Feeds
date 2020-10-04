@@ -1257,9 +1257,9 @@ function fof_db_get_subscription_to_tags() {
 		$user_id = $row['user_id'];
 		$prefs = unserialize($row['subscription_prefs']);
 		if (!isset($r[$feed_id])) {
-			$r[$feed_id] = array();
+			$r[(int)$feed_id] = array();
 		}
-		$r[$feed_id][$user_id] = $prefs['tags'];
+		$r[(int)$feed_id][(int)$user_id] = $prefs['tags'];
 	}
 
 	return $r;

@@ -71,3 +71,4 @@ include 'sidebar.php';
 <div id="handle" class="hide-on-mobile" onmousedown="startResize(event)"></div>
 
 <div id="items">
+<div id="marker"></div>
