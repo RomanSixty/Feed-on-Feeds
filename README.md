@@ -41,6 +41,8 @@ images if possible.
 
 # Installation
 
+## Requirements
+
 FeedOnFeeds requires:
 
 * A web server running *PHP*
@@ -67,6 +69,20 @@ app simultaneously), as SQLite has much lower administrative overhead and makes
 it easier to port your data to a new webhost. This is the case even if you
 already have a working MySQL installation, and using SQLite will not interfere
 with your existing MySQL in any way.
+
+### A note on use with nginx
+
+Many tutorials that show how to configure nginx with PHP say to use a rule like:
+
+```nginx
+        location ~ \.php$ {
+```
+
+This is actually incorrect, and should be:
+
+```nginx
+        location ~ \.php(/|$) {
+```
 
 ## Upgrading
 
@@ -107,7 +123,12 @@ of the panel, and create a new cron job with the following:
 ### couldn't open logfile /path/to/fof-data/fof-install.log
 
 You need to set the value of `FOF_DATA_PATH` in fof-config.php. Also the file
-has to be writable for the web server process. You can set it to `chmod 0777`.
+has to be writable for the web server process. You can set it to `chmod 0777`, or
+if you have administrator access you can do something like:
+
+```bash
+chown -R www-data:www-data /path/to/fof-data/
+```
 
 ### Syntax error or access violation after "Cannot upgrade table: [CREATE TRIGGER ...
 
