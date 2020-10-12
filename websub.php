@@ -38,11 +38,11 @@ if (!$feed['feed_websub_hub'] || $secret != $feed['feed_websub_secret']) {
     die("Bad push: id=$feed_id secret=$secret");
 }
 
-if (isset($_GET['hub_mode']) && $_GET['hub_mode'] == 'subscribe') {
+if (isset($_GET['hub.mode']) && $_GET['hub.mode'] == 'subscribe') {
     // We are responding to a subscription verification
-    $topic = $_GET['hub_topic'];
-    $challenge = $_GET['hub_challenge'];
-    $lease_time = $_GET['hub_lease_seconds'];
+    $topic = $_GET['hub.topic'];
+    $challenge = $_GET['hub.challenge'];
+    $lease_time = $_GET['hub.lease_seconds'];
     fof_log("Got subscription verification request: id=$feed_id topic=$topic lease_time=$lease_time");
 
     // Set the lease to renew when they're down to 10% of their lifetime
