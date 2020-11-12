@@ -1253,8 +1253,8 @@ function fof_db_get_subscription_to_tags() {
 	$query = "SELECT * FROM $FOF_SUBSCRIPTION_TABLE";
 	$statement = $fof_connection->query($query);
 	while (($row = fof_db_get_row($statement)) !== false) {
-		$feed_id = (int)$row['feed_id'];
-		$user_id = (int)$row['user_id'];
+		$feed_id = $row['feed_id'];
+		$user_id = $row['user_id'];
 		$prefs = unserialize($row['subscription_prefs']);
 		if (!isset($r[$feed_id])) {
 			$r[$feed_id] = array();
