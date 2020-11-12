@@ -229,6 +229,7 @@ function fof_install_schema() {
 	}
 	$tables[FOF_ITEM_TABLE][] = "item_content " . $content_text_type . " NOT NULL";
 	$tables[FOF_ITEM_TABLE][] = "item_author TEXT";
+	$tables[FOF_ITEM_TABLE][] = "item_complete " . SQL_DRIVER_INT_TYPE . " NOT NULL DEFAULT '0'";
 
 	/* indices */
 	if (defined('USE_MYSQL')) {
@@ -689,15 +690,15 @@ END";
 
 		/* FOF_FEED_TABLE */
 		fof_install_migrate_column($queries, FOF_FEED_TABLE, 'feed_image_cache_date', array(
-			'add' => "ALTER TABLE " . FOF_FEED_TABLE . " ADD feed_image_cache_date " . SQL_DRIVER_INT_TYPE . " DEFAULT 0" . (defined(USE_MYSQL) ? " AFTER feed_image" : ""),
+			'add' => "ALTER TABLE " . FOF_FEED_TABLE . " ADD feed_image_cache_date " . SQL_DRIVER_INT_TYPE . " DEFAULT 0" . (defined('USE_MYSQL') ? " AFTER feed_image" : ""),
 		));
 
 		fof_install_migrate_column($queries, FOF_FEED_TABLE, 'feed_cache_attempt_date', array(
-			'add' => "ALTER TABLE " . FOF_FEED_TABLE . " ADD feed_cache_attempt_date " . SQL_DRIVER_INT_TYPE . " DEFAULT '0'" . (defined(USE_MYSQL) ? " AFTER feed_cache_date" : ""),
+			'add' => "ALTER TABLE " . FOF_FEED_TABLE . " ADD feed_cache_attempt_date " . SQL_DRIVER_INT_TYPE . " DEFAULT '0'" . (defined('USE_MYSQL') ? " AFTER feed_cache_date" : ""),
 		));
 
 		fof_install_migrate_column($queries, FOF_FEED_TABLE, 'feed_cache_next_attempt', array(
-			'add' => "ALTER TABLE " . FOF_FEED_TABLE . " ADD feed_cache_next_attempt " . SQL_DRIVER_INT_TYPE . " DEFAULT '0'" . (defined(USE_MYSQL) ? " AFTER feed_cache_attempt_date" : ""),
+			'add' => "ALTER TABLE " . FOF_FEED_TABLE . " ADD feed_cache_next_attempt " . SQL_DRIVER_INT_TYPE . " DEFAULT '0'" . (defined('USE_MYSQL') ? " AFTER feed_cache_attempt_date" : ""),
 		));
 
 		fof_install_migrate_index($queries, FOF_FEED_TABLE, 'feed_cache_next_attempt', array(
@@ -705,19 +706,19 @@ END";
 		));
 
 		fof_install_migrate_column($queries, FOF_FEED_TABLE, 'feed_cache_last_attempt_status', array(
-			'add' => "ALTER TABLE " . FOF_FEED_TABLE . " ADD feed_cache_last_attempt_status TEXT" . (defined(USE_MYSQL) ? " AFTER feed_cache_next_attempt" : ""),
+			'add' => "ALTER TABLE " . FOF_FEED_TABLE . " ADD feed_cache_last_attempt_status TEXT" . (defined('USE_MYSQL') ? " AFTER feed_cache_next_attempt" : ""),
 		));
 
 		fof_install_migrate_column($queries, FOF_FEED_TABLE, 'feed_websub_hub', array(
-			'add' => "ALTER TABLE " . FOF_FEED_TABLE . " ADD feed_websub_hub TEXT" . (defined(USE_MYSQL) ? " AFTER feed_cache_last_attempt_status" : ""),
+			'add' => "ALTER TABLE " . FOF_FEED_TABLE . " ADD feed_websub_hub TEXT" . (defined('USE_MYSQL') ? " AFTER feed_cache_last_attempt_status" : ""),
 		));
 
 		fof_install_migrate_column($queries, FOF_FEED_TABLE, 'feed_websub_lease', array(
-			'add' => "ALTER TABLE " . FOF_FEED_TABLE . " ADD feed_websub_lease " . SQL_DRIVER_INT_TYPE . (defined(USE_MYSQL) ? " AFTER feed_websub_hub" : ""),
+			'add' => "ALTER TABLE " . FOF_FEED_TABLE . " ADD feed_websub_lease " . SQL_DRIVER_INT_TYPE . (defined('USE_MYSQL') ? " AFTER feed_websub_hub" : ""),
 		));
 
 		fof_install_migrate_column($queries, FOF_FEED_TABLE, 'feed_websub_secret', array(
-			'add' => "ALTER TABLE " . FOF_FEED_TABLE . " ADD feed_websub_secret TEXT" . (defined(USE_MYSQL) ? " AFTER feed_websub_lease" : ""),
+			'add' => "ALTER TABLE " . FOF_FEED_TABLE . " ADD feed_websub_secret TEXT" . (defined('USE_MYSQL') ? " AFTER feed_websub_lease" : ""),
 		));
 
 		if (!defined('USE_SQLITE')) {
@@ -746,7 +747,15 @@ END";
 		));
 
 		fof_install_migrate_column($queries, FOF_ITEM_TABLE, 'item_author', array(
-			'add' => "ALTER TABLE " . FOF_ITEM_TABLE . " ADD item_author TEXT" . (defined(USE_MYSQL) ? " AFTER item_content" : ""),
+			'add' => "ALTER TABLE " . FOF_ITEM_TABLE . " ADD item_author TEXT" . (defined('USE_MYSQL') ? " AFTER item_content" : ""),
+		));
+
+		fof_install_migrate_column($queries, FOF_ITEM_TABLE, 'item_complete', array(
+			'add' => "ALTER TABLE " . FOF_ITEM_TABLE . " ADD item_complete "
+				. SQL_DRIVER_INT_TYPE . " DEFAULT '0'"
+				. (defined('USE_MYSQL') ? " AFTER item_author" : ""),
+			# assume that any existing items should be set complete
+			'default' => "UPDATE " . FOF_ITEM_TABLE . " SET item_complete = 1",
 		));
 
 		/* FOF_ITEM_TAG_TABLE */
