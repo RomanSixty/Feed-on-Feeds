@@ -830,12 +830,7 @@ function view_order_set(what, feed, order) {
 function embed_youtube ( element ) {
     const iframe = document.createElement("iframe");
 
-    if (element.dataset.ytplaylist) {
-        iframe.setAttribute("src", "https://www.youtube.com/embed/videoseries?list=" + element.dataset.ytplaylist + "&autoplay=1&rel=0");
-    }
-    else {
-        iframe.setAttribute("src", "https://www.youtube.com/embed/" + element.dataset.ytid + "?autoplay=1&rel=0");
-    }
+    iframe.setAttribute("src", "https://www.youtube.com/embed/" + element.dataset.ytid + "?autoplay=1&rel=0");
     iframe.setAttribute("frameborder", "0");
     iframe.setAttribute("width", "560");
     iframe.setAttribute("height", "315");
