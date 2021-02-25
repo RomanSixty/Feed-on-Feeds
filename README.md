@@ -141,4 +141,4 @@ FeedOnFeeds is distributed under the GPL.
 * [fluffy](https://github.com/fluffy-critter)
 * [Justin Wind](https://github.com/thylacine)
 * [Ian Tearle](https://github.com/iantearle)
-
+* [_darch](https://github.com/sorenpeter)
