@@ -17,6 +17,7 @@ require_once 'fof-asset.php';
 // From Brian Suda @ http://suda.co.uk/projects/SEHL/
 
 function do_highlight($full_body, $q, $class) {
+	// this is really gross and should be replaced with DOM methods
 	$full_body_hl = "";
 
 	/* seperate tags and data from the HTML file INCLUDING comments, avoiding HTML in the comments */
@@ -83,9 +84,23 @@ function fof_render_item($item, $include_div = true) {
 	}
 
 	$dom = fof_content_to_dom($item_content);
+
+	// enable controls, if an item contains a video
+	foreach ($dom->getElementsByTagName('video') as $video) {
+		$video->setAttribute('controls', '');
+	}
+
+	// also make images clickable and demand-loaded
+	foreach ($dom->getElementsByTagName('img') as $img) {
+		$img->setAttribute('tabindex', '0');
+		$img->setAttribute('loading', 'lazy');
+	}
+
+	// run user-configured DOM filters
 	foreach ($fof_domitem_filters as $filter) {
 		$dom = $filter($dom, $item);
 	}
+
 	$item_content = fof_dom_to_content($dom);
 
 	// Get the local datetime
@@ -100,12 +115,6 @@ function fof_render_item($item, $include_div = true) {
 		$item_content = do_highlight($item_content, $_GET['search'], "fof-highlight");
 		$item_title = do_highlight($item_title, $_GET['search'], "fof-highlight");
 	}
-
-	// enable controls, if an item contains a video
-	$item_content = preg_replace('~<(video [^>]+)>~i', '<$1 controls>', $item_content);
-
-	// also make images clickable
-	$item_content = str_replace ( '<img ', '<img tabindex="0" ', $item_content );
 
 	$tags = fof_render_get_key_($item, 'tags', array());
 
