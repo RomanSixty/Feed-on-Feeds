@@ -24,13 +24,10 @@ if (!$item) {
 // fix relative URLs with $item['item_link']
 $url = urljoin($item['item_link'], $url);
 
-// This is a really annoying way to get the final header chunk. There's got to be a better way...
-$final = false;
 function dump_headers($ch, $header) {
-	global $final;
-	if (preg_match('@HTTP/[^ ]* [12456789]@', $header)) {
-		$final = true;
-	} else if ($final && strpos($header, ':')) {
+	$http_code = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+	$url = curl_getinfo($ch, CURLINFO_EFFECTIVE_URL);
+	if (($http_code < 300 || $http_code >= 400) && strpos($header, ':')) {
 		fof_log("image $url header: $header");
 		header(rtrim($header));
 	}
