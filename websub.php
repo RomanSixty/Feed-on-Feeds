@@ -38,6 +38,9 @@ if (!$feed['feed_websub_hub'] || $secret != $feed['feed_websub_secret']) {
     die("Bad push: id=$feed_id secret=$secret");
 }
 
+// Note: while the WebSub protocol calls these hub.mode, hub.topic, etc.
+// PHP "helpfully" rewrites those to hub_mode, hub_topic etc. due to bad
+// magic variable legacy which no longer applies.
 if (isset($_GET['hub_mode']) && $_GET['hub_mode'] == 'subscribe') {
     // We are responding to a subscription verification
     $topic = $_GET['hub_topic'];
@@ -55,7 +58,7 @@ if (isset($_GET['hub_mode']) && $_GET['hub_mode'] == 'subscribe') {
 
 // We're responding to a push response.
 fof_log("Got a WebSub push notification for feed $feed_id");
-fof_update_feed($feed_id, file_get_contents('php://input'));
+fof_update_feed($feed_id);
 ?>
 
 Updated feed <?=$feed_id?>.

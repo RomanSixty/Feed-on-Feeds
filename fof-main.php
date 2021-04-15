@@ -1101,7 +1101,8 @@ function fof_update_feed($id, $body = null) {
 			$found = fof_db_find_item($feed_id, $item_id);
 
 			$id = fof_db_add_item($found, $feed_id, $item_id, $link, $title, $content, time(), $date, $author);
-			if ($found == NULL) {
+			if ($found == NULL || !fof_db_item_get_complete($id)) {
+				// item is new, or wasn't finished being added, so let's add subscriptions
 				$n++;
 
 				fof_apply_tags($feed_id, $id);
@@ -1109,6 +1110,8 @@ function fof_update_feed($id, $body = null) {
 
 				fof_mark_item_unread($feed_id, $id);
 				fof_apply_plugin_tags($feed_id, $id, NULL);
+
+				fof_db_item_set_complete($id);
 			}
 		}
 	}

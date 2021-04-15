@@ -887,6 +887,28 @@ function fof_db_add_item($item_id, $feed_id, $guid, $link, $title, $content, $ca
 	return $item_id;
 }
 
+// returns whether the item_complete flag has been set
+function fof_db_item_get_complete($item_id) {
+	global $FOF_ITEM_TABLE;
+	global $fof_connection;
+	$query = "SELECT item_complete FROM $FOF_ITEM_TABLE WHERE item_id = :item_id";
+	$statement = $fof_connection->prepare($query);
+	$statement->bindValue(":item_id", $item_id);
+	$result = $statement->execute();
+
+	return fof_db_get_row($statement, 'item_complete', TRUE);
+}
+
+// sets the item_complete flag on an item
+function fof_db_item_set_complete($item_id) {
+	global $FOF_ITEM_TABLE;
+	global $fof_connection;
+	$query = "UPDATE $FOF_ITEM_TABLE SET item_complete = 1 WHERE item_id = :item_id";
+	$statement = $fof_connection->prepare($query);
+	$statement->bindValue(":item_id", $item_id);
+	$result = $statement->execute();
+}
+
 /* when: Y/m/d or 'today' */
 function fof_db_get_items($user_id = 1, $feed = NULL, $what = 'unread', $when = NULL, $start = NULL, $limit = NULL, $order = 'desc', $search = NULL) {
 	global $FOF_SUBSCRIPTION_TABLE, $FOF_FEED_TABLE, $FOF_ITEM_TABLE, $FOF_ITEM_TAG_TABLE, $FOF_TAG_TABLE;
@@ -1257,9 +1279,9 @@ function fof_db_get_subscription_to_tags() {
 		$user_id = $row['user_id'];
 		$prefs = unserialize($row['subscription_prefs']);
 		if (!isset($r[$feed_id])) {
-			$r[(int)$feed_id] = array();
+			$r[$feed_id] = array();
 		}
-		$r[(int)$feed_id][(int)$user_id] = $prefs['tags'];
+		$r[$feed_id][$user_id] = $prefs['tags'];
 	}
 
 	return $r;
