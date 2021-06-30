@@ -133,6 +133,23 @@ click on the `d` in the feed list.
 **Note:** By unsubscribing from a feed you also delete all its tagged and starred
 items.
 
+## WebSub isn't working
+
+Are you running it on a private network? WebSub can only work if your instance is visible to the Internet at large, and needs to be reachable using the hostname that you're connecting via.
+
+If you're using the nginx webserver, you need to make sure that URL paths are passed correctly; for example, this should be how you enable PHP script support in your nginx configuration file:
+
+```nginx
+        location ~ \.php(/|$) {
+              include snippets/fastcgi-php.conf;
+
+              # With php-fpm (or other unix sockets):
+              fastcgi_pass unix:/var/run/php/php-fpm.sock;
+       }
+```
+
+as opposed to the common, but incorrect, location of `\.php$`.
+
 # Legal
 
 FeedOnFeeds is distributed under the GPL.
