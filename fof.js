@@ -584,7 +584,30 @@ function mark_feed_read(id) {
 }
 
 function untag_all() {
-    document.querySelectorAll('.untag').forEach(item => item.click());
+    let remove_tags = {};
+
+    document.querySelectorAll('.untag').forEach(item => {
+        if (typeof remove_tags[item.getAttribute('data-tag')] === 'undefined') {
+            remove_tags[item.getAttribute('data-tag')] = [];
+        }
+
+        remove_tags[item.getAttribute('data-tag')].push(item.getAttribute('data-itemid'));
+    });
+
+    throb();
+
+    for (let tag in remove_tags) {
+        fetch('add-tag.php', {
+            'method': 'post',
+            'headers': {'Content-Type': 'application/x-www-form-urlencoded'},
+            'body': 'remove=true&tag='+encodeURI(tag)+'&item='+remove_tags[tag].join(',')
+        }).then(function() {
+            refreshlist();
+            document.querySelectorAll('.tag_' + tag).forEach(item => item.remove());
+        });
+    }
+
+    return false;
 }
 
 function add_tag(id, tag) {
@@ -593,7 +616,7 @@ function add_tag(id, tag) {
     fetch('add-tag.php', {
         'method': 'post',
         'headers': {'Content-Type': 'application/x-www-form-urlencoded'},
-        'body': 'tag='+tag+'&item='+id
+        'body': 'tag='+encodeURI(tag)+'&item='+id
     }).then(function() {
         refreshlist();
         refreshitem(id);
