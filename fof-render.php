@@ -196,7 +196,7 @@ if ($feed_image && $prefs['favicons']) {
 /* show non-system tags */
 	foreach (array_diff($tags, array('unread', 'star', 'folded')) as $tag) {
 		echo '<span id="tag_' . $item_id . '_' . htmlspecialchars($tag) . '" class="tag tag_'.htmlspecialchars($tag).'">';
-		echo '<a href="#" class="untag" title="remove ' . htmlspecialchars('"' . $tag . '"') . ' tag" data-itemid="'.$item_id.'" data-tag="'.htmlspecialchars($tag).'" onclick="return remove_tag(' . $item_id . ',' . htmlspecialchars($tag) . ');">[x]</a>';
+		echo '<a href="#" class="untag" title="remove ' . htmlspecialchars('"' . $tag . '"') . ' tag" data-itemid="'.$item_id.'" data-tag="'.htmlspecialchars($tag).'" onclick="return remove_tag(' . $item_id . ',' . htmlspecialchars('"' . $tag . '"') . ');">[x]</a>';
 		echo '<a href="' . fof_url('.', array('what' => $tag)) . '">' . htmlspecialchars($tag) . '</a>';
 		echo '</span>' . "\n";
 	}
