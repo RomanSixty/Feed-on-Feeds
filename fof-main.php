@@ -368,7 +368,7 @@ function fof_nice_time_stamp($age) {
 		);
 	}
 
-	$hours = $age / 60 / 60 % 24;
+	$hours = round($age / 60 / 60) % 24;
 	if ($hours) {
 		return array(
 			$hours . ' hour' . ($hours == 1 ? '' : 's') . ' ago',
@@ -376,7 +376,7 @@ function fof_nice_time_stamp($age) {
 		);
 	}
 
-	$minutes = $age / 60 % 60;
+	$minutes = round($age / 60) % 60;
 	if ($minutes) {
 		return array(
 			$minutes . ' minute' . ($minutes == 1 ? '' : 's') . ' ago',
