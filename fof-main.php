@@ -918,9 +918,10 @@ function fof_apply_tags($feed_id, $item_id) {
 		if (is_array($feed_subs)) {
 			foreach ($feed_subs as $user_id => $tags) {
 				if (is_array($tags)) {
-					foreach ($tags as $tag) {
-						fof_db_tag_items($user_id, $tag, $item_id);
-					}
+					// we check tag names, because '-<name>' means untag
+					$tag_names = fof_db_get_tag_id_map($tags);
+
+					fof_tag_item($user_id, $item_id, $tag_names);
 				}
 			}
 		}
@@ -1104,11 +1105,10 @@ function fof_update_feed($id, $body = null) {
 			if ($found == NULL || !fof_db_item_get_complete($id)) {
 				// item is new, or wasn't finished being added, so let's add subscriptions
 				$n++;
-
-				fof_apply_tags($feed_id, $id);
 				$count_Added++;
 
 				fof_mark_item_unread($feed_id, $id);
+				fof_apply_tags($feed_id, $id);
 				fof_apply_plugin_tags($feed_id, $id, NULL);
 
 				fof_db_item_set_complete($id);
