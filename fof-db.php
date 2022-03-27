@@ -1206,29 +1206,6 @@ function fof_db_items_updated_list($feed_id) {
 // Tag stuff
 ////////////////////////////////////////////////////////////////////////////////
 
-function fof_db_tag_delete($items) {
-	global $FOF_ITEM_TAG_TABLE;
-	global $fof_connection;
-
-	fof_trace();
-
-	if (!$items) {
-		return;
-	}
-
-	if (!is_array($items)) {
-		$items = array($items);
-	}
-
-	$items_q = array();
-	foreach ($items as $item) {
-		$items_q[] = $fof_connection->quote($item);
-	}
-
-	$query = "DELETE FROM $FOF_ITEM_TAG_TABLE WHERE item_id IN (" . (count($items_q) ? implode(', ', $items_q) : "''") . ")";
-	$result = $fof_connection->exec($query);
-}
-
 /* fetches an array of tag_ids and the list of feed_ids which tag them for $user_id */
 function fof_db_subscriptions_by_tags($user_id) {
 	global $FOF_SUBSCRIPTION_TABLE;
@@ -1491,11 +1468,10 @@ function fof_db_get_tag_name_map($tags = null, $invalidate = null) {
 		while (($row = fof_db_get_row($statement)) !== false) {
 			$tag_name_to_id[$row['tag_name']] = $row['tag_id'];
 		}
-
 	}
 
 	if ($tags === null) {
-		return $tag_names;
+		return array();
 	}
 
 	$r = array();
@@ -1532,7 +1508,6 @@ function fof_db_get_tag_id_map($tags = null, $invalidate = null) {
 		while (($row = fof_db_get_row($statement)) !== false) {
 			$tag_id_to_name[$row['tag_id']] = $row['tag_name'];
 		}
-
 	}
 
 	if ($tags === null) {
