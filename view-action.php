@@ -15,7 +15,7 @@
 include_once "fof-main.php";
 
 $items = array();
-while (list($key, $val) = each($_POST)) {
+foreach ($_POST as $key => $val) {
 	if ($val == "checked") {
 		$key = substr($key, 1);
 		$items[] = $key;
