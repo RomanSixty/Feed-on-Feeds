@@ -21,14 +21,17 @@ if (empty($_POST['tag']) or empty($_POST['item'])) {
 }
 
 $tags = $_POST['tag'];
-$item = $_POST['item'];
+$items = explode(',', $_POST['item']);
 $remove = (isset($_POST['remove']) ? $_POST['remove'] : null);
 
 foreach (explode(' ', $tags) as $tag) {
-	if ($remove == 'true') {
-		fof_untag_item(fof_current_user(), $item, $tag);
-	} else {
-		fof_tag_item(fof_current_user(), $item, $tag);
-	}
+    if ($remove == 'true') {
+        foreach ($items as $item) {
+            fof_untag_item(fof_current_user(), $item, $tag);
+        }
+    } else {
+        foreach ($items as $item) {
+            fof_tag_item ( fof_current_user (), $item, $tag );
+        }
+    }
 }
-?>
