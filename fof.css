@@ -677,10 +677,13 @@ td.feed-prefs-header {
 
 #marker {
   width: 100%;
-  height: 1em;
-  border: dotted rgba(0, 100, 100, 0.5) 1px;
-  background: rgba(255,255,0,0.25);
+  height: 5px;
+  border-color: rgba(0, 191, 255, 0.5);
+  background: rgba(255, 255, 127, 0.25);
+  border-top: dotted 1px;
+  border-bottom: dotted 1px;
   position: absolute;
   top: -10px;
   transform: translateY(-100%);
+  pointer-events: none;
 }

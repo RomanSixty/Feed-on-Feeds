@@ -17,7 +17,7 @@ class PDOLog extends PDO {
 		$this->setAttribute(PDO::ATTR_STATEMENT_CLASS, array('PDOStatementLog', array($this)));
 	}
 
-	public function query($query) {
+	public function query($query, $fetchMode = null, ...$fetchModeArgs) {
 		if (empty(self::$logfn))
 			return parent::query($query);
 
