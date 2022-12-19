@@ -39,7 +39,9 @@ if ($youtube) {
 
 	if (preg_match('~youtube\.com/channel/([^/]+)~', $youtube, $matches)) {
 		$channel_id = $matches[1];
-	} elseif (preg_match('~youtube\.com/c/([^/]+)~', $youtube, $matches) || preg_match('~youtube\.com/user/([^/]+)~', $youtube, $matches)) {
+	} elseif (preg_match('~youtube\.com/c/([^/]+)~', $youtube, $matches)
+		   || preg_match('~youtube\.com/user/([^/]+)~', $youtube, $matches)
+		   || preg_match('~youtube\.com/@([^/]+)~', $youtube, $matches)) {
 		$file = file_get_contents($youtube);
 
 		if (preg_match('~"externalId":"([^"]+)"~m', $file, $matches)) {
