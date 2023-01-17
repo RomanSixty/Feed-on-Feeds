@@ -17,7 +17,7 @@ class PDOLog extends PDO {
 		$this->setAttribute(PDO::ATTR_STATEMENT_CLASS, array('PDOStatementLog', array($this)));
 	}
 
-	public function query($query, $fetchMode = null, ...$fetchModeArgs) {
+	public function query($query, $fetchMode = null, ...$fetchModeArgs):PDOStatement|false {
 		if (empty(self::$logfn))
 			return parent::query($query);
 
@@ -28,7 +28,7 @@ class PDOLog extends PDO {
 		return $result;
 	}
 
-	public function exec($statement) {
+	public function exec($statement):int {
 		if (empty(self::$logfn))
 			return parent::exec($statement);
 
@@ -48,17 +48,17 @@ class PDOStatementLog extends PDOStatement {
 		$this->parameters = array();
 	}
 
-	public function bindParam($parameter, &$variable, $data_type=PDO::PARAM_STR, $length=null, $driver_options=null) {
+	public function bindParam($parameter, &$variable, $data_type=PDO::PARAM_STR, $length=0, $driver_options=null):bool {
 		$this->parameters[$parameter] = $variable;
 		parent::bindParam($parameter, $variable, $data_type, $length, $driver_options);
 	}
 
-	public function bindValue($parameter, $value, $data_type=PDO::PARAM_STR) {
+	public function bindValue($parameter, $value, $data_type=PDO::PARAM_STR):bool {
 		$this->parameters[$parameter] = $value;
-		parent::bindValue($parameter, $value, $data_type);
+		return parent::bindValue($parameter, $value, $data_type);
 	}
 
-	public function execute($input_parameters=null) {
+	public function execute($input_parameters=null):bool {
 		if (empty(PDOLog::$logfn))
 			return parent::execute($input_parameters);
 
@@ -70,4 +70,3 @@ class PDOStatementLog extends PDOStatement {
 		return $result;
 	}
 }
-?>
