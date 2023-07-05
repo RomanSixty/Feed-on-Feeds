@@ -18,7 +18,7 @@ function fof_images_by_proxy($dom, $item) {
 		foreach (['srcset', 'data-fof-ondemand-srcset'] as $attr) {
 			if ($img->hasAttribute($attr)) {
 				$srcset = $img->getAttribute($attr);
-				$specs = preg_split('/,\s*/', $srcset);
+				$specs = preg_split('/,\s+/', $srcset);
 
 				$outspec = [];
 				foreach ($specs as $spec) {
