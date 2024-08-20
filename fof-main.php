@@ -36,7 +36,6 @@ if ((@include_once ('fof-config.php')) === false) {
 require_once 'fof-asset.php';
 require_once 'fof-db.php';
 require_once 'classes/fof-prefs.php';
-require_once 'library/urljoin.php';
 
 fof_db_connect(empty($fof_installer) ? false : $fof_installer);
 
@@ -54,7 +53,7 @@ if (empty($fof_installer)) {
 	ob_end_clean();
 }
 
-require_once 'autoloader.php';
+require __DIR__ . '/vendor/autoload.php';
 
 function fof_set_content_type($type = 'text/html') {
 	static $set;
@@ -825,7 +824,7 @@ function fof_mark_item_unread($feed_id, $id) {
 	fof_db_mark_item_unread($users, $id);
 }
 
-function fof_new_parser($useragent='FoF '.SIMPLEPIE_USERAGENT) {
+function fof_new_parser() {
 	$p = &FoF_Prefs::instance();
 	$admin_prefs = $p->admin_prefs;
 
@@ -835,8 +834,6 @@ function fof_new_parser($useragent='FoF '.SIMPLEPIE_USERAGENT) {
 
 	if (defined('FOF_USER_AGENT'))
 		$pie->set_useragent(FOF_USER_AGENT);
-	else
-		$pie->set_useragent($useragent);
 
 	// we allow iframe (for YouTube embeds etc.), the rest is SimplePie's default
 	$striptags = $pie->strip_htmltags;
@@ -940,7 +937,7 @@ function fof_update_feed($id, $body = null) {
 	if ($blacklist === null) {
 		$p = &FoF_Prefs::instance();
 		$admin_prefs = $p->admin_prefs;
-		$blacklist = preg_split('/(\r\n|\r|\n)/', isset($admin_prefs['blacklist']) ? $admin_prefs['blacklist'] : NULL, -1, PREG_SPLIT_NO_EMPTY);
+		$blacklist = preg_split('/(\r\n|\r|\n)/', isset($admin_prefs['blacklist']) ? $admin_prefs['blacklist'] : "", -1, PREG_SPLIT_NO_EMPTY);
 	}
 
 	if (empty($id)) {
@@ -1065,7 +1062,7 @@ function fof_update_feed($id, $body = null) {
 				$content = '';
 			}
 
-			$enclosures = $item->get_enclosures();
+			$enclosures = $item->get_enclosures() ?? [];
 			foreach ($enclosures as $enclosure) {
 			    if ($enclosure->get_type() == 'image/jpeg')
 			        $content = '<img src="' . $enclosure->get_link() . '" alt=""/>' . $content;
@@ -1775,7 +1772,9 @@ function fof_content_to_dom($content) {
 		return $dom;
 	}
 
-	$dom->loadHtml(mb_convert_encoding($content, 'HTML-ENTITIES', "UTF-8"));
+	// loadHtml doesn't understand encodings and there's no clean way to inject one in,
+	// and mb_convert_encoding has been deprecated for this purpose, thanks PHP
+	$dom->loadHtml('<meta http-equiv="Content-Type" content="text/html; charset=utf-8">' . $content);
 
 	return $dom;
 }
@@ -1799,7 +1798,7 @@ function fof_dom_to_content($dom) {
 function fof_base_url() {
 	// once again, why the heck isn't this a builtin function...
 	$pageURL = 'http';
-	if ($_SERVER['HTTPS'] == 'on') {
+	if ($_SERVER['HTTPS'] ?? '' == 'on') {
 		$pageURL .= 's';
 		$defaultPort = '443';
 	} else {
