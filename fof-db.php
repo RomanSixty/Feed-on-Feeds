@@ -1254,11 +1254,15 @@ function fof_db_get_subscription_to_tags() {
 	while (($row = fof_db_get_row($statement)) !== false) {
 		$feed_id = $row['feed_id'];
 		$user_id = $row['user_id'];
-		$prefs = unserialize($row['subscription_prefs']);
+		if (isset($row['subscription_prefs'])) {
+			$prefs = unserialize($row['subscription_prefs']);
+		} else {
+			$prefs = [];
+		}
 		if (!isset($r[$feed_id])) {
 			$r[$feed_id] = array();
 		}
-		$r[$feed_id][$user_id] = $prefs['tags'];
+		$r[$feed_id][$user_id] = $prefs['tags'] ?? [];
 	}
 
 	return $r;
@@ -2152,7 +2156,7 @@ function fof_db_prefs_get($user_id) {
 	$result = $statement->execute();
 	$prefs = fof_db_get_row($statement, 'user_prefs', TRUE);
 
-	return unserialize($prefs);
+	return unserialize($prefs || "");
 }
 
 function fof_db_save_prefs($user_id, $prefs) {
