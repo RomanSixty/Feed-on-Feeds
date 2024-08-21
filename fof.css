@@ -28,7 +28,8 @@ h1 span.author {
   font-size: x-small;
 }
 
-a img {
+a img,
+a svg {
   border: 0;
 }
 
@@ -571,7 +572,8 @@ td.feed-prefs-header {
 }
 
 .item .body img,
-.item .body video {
+.item .body video,
+.item .body svg {
   max-width: 100%;
   height: auto;
 }
