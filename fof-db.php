@@ -2156,7 +2156,7 @@ function fof_db_prefs_get($user_id) {
 	$result = $statement->execute();
 	$prefs = fof_db_get_row($statement, 'user_prefs', TRUE);
 
-	return unserialize($prefs || "");
+	return unserialize($prefs ?? "");
 }
 
 function fof_db_save_prefs($user_id, $prefs) {
