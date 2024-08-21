@@ -1772,8 +1772,8 @@ function fof_content_to_dom($content) {
 		return $dom;
 	}
 
-	// cleaner alternative to mb_convert_encoding, suggested by https://stackoverflow.com/a/77798524
-	$dom->loadHtml(htmlspecialchars_decode(htmlentities($content)));
+	// Force loadHtml to process the text as UTF-8
+	$dom->loadHtml('<meta http-equiv="Content-Type" content="text/html; charset=utf-8">' . $content);
 
 	return $dom;
 }
