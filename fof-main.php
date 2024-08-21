@@ -1772,9 +1772,8 @@ function fof_content_to_dom($content) {
 		return $dom;
 	}
 
-	// loadHtml doesn't understand encodings and there's no clean way to inject one in,
-	// and mb_convert_encoding has been deprecated for this purpose, thanks PHP
-	$dom->loadHtml('<meta http-equiv="Content-Type" content="text/html; charset=utf-8">' . $content);
+	// cleaner alternative to mb_convert_encoding, suggested by https://stackoverflow.com/a/77798524
+	$dom->loadHtml(htmlspecialchars_decode(htmlentities($content)));
 
 	return $dom;
 }
