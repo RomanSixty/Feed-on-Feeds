@@ -115,16 +115,16 @@ When adding feeds, mark <select name="unread">
 ?>>no</option>
 </select> items as unread<br><br>
 
-RSS or reddit or weblog URL: <input type="text" name="rss_url" size="40" value="<?php echo htmlentities($url) ?>"><input type="Submit" value="Add a feed"><br><br>
+RSS or reddit or weblog URL: <input type="text" name="rss_url" size="40" value="<?php echo htmlentities($url??"") ?>"><input type="Submit" value="Add a feed"><br><br>
 
-YouTube channel page: <input type="text" name="youtube_channel" size="40" value="<?php echo htmlentities($youtube) ?>"><input type="Submit" value="Subscribe to channel"><br><br>
+YouTube channel page: <input type="text" name="youtube_channel" size="40" value="<?php echo htmlentities($youtube??"") ?>"><input type="Submit" value="Subscribe to channel"><br><br>
 
 OPML URL: <input type="hidden" name="MAX_FILE_SIZE" value="100000">
 
-<input type="text" name="opml_url" size="40" value="<?php echo htmlentities($opml) ?>"><input type="Submit" value="Add feeds from OPML file on the Internet"><br><br>
+<input type="text" name="opml_url" size="40" value="<?php echo htmlentities($opml??"") ?>"><input type="Submit" value="Add feeds from OPML file on the Internet"><br><br>
 
 <input type="hidden" name="MAX_FILE_SIZE" value="100000">
-OPML filename: <input type="file" name="opml_file" size="40" value="<?php echo htmlentities($file) ?>"><input type="Submit" value="Upload an OPML file">
+OPML filename: <input type="file" name="opml_file" size="40" value="<?php echo htmlentities($file??"") ?>"><input type="Submit" value="Upload an OPML file">
 
 </form>
 <hr>

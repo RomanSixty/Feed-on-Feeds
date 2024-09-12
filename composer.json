@@ -1,0 +1,11 @@
+{
+    "name": "feed-on-feeds/feed-on-feeds",
+    "description": "A lightweight server-based RSS feed aggregator and reader",
+    "type": "project",
+    "require": {
+        "simplepie/simplepie": "dev-master",
+        "busybee/urljoin": "dev-main"
+    },
+    "license": "GPL",
+    "minimum-stability": "dev"
+}
