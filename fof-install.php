@@ -177,8 +177,45 @@ function fof_install_schema() {
 	$tables = array();
 	$indices = array();
 
-	/* FOF_FEED_TABLE *
-    /* columns */
+	/* FOF_USER_TABLE */
+	/* columns */
+	if (defined('USE_MYSQL')) {
+		$tables[FOF_USER_TABLE][] = "user_id " . SQL_DRIVER_INT_TYPE . " NOT NULL";
+	} else if (defined('USE_SQLITE')) {
+		$tables[FOF_USER_TABLE][] = "user_id " . SQL_DRIVER_INT_TYPE . " PRIMARY KEY AUTOINCREMENT NOT NULL";
+	}
+	$tables[FOF_USER_TABLE][] = "user_name VARCHAR(100) NOT NULL DEFAULT ''";
+	$tables[FOF_USER_TABLE][] = "user_password_hash VARCHAR(32) NOT NULL DEFAULT ''";
+	if (defined('USE_MYSQL')) {
+		$tables[FOF_USER_TABLE][] = "user_level ENUM ( 'user', 'admin' ) NOT NULL DEFAULT 'user'";
+	} else if (defined('USE_SQLITE')) {
+		$tables[FOF_USER_TABLE][] = "user_level TEXT NOT NULL DEFAULT 'user' REFERENCES " . FOF_USER_LEVELS_TABLE . " ( level ) ON UPDATE CASCADE";
+	}
+	$tables[FOF_USER_TABLE][] = "user_prefs TEXT";
+	if (defined('USE_MYSQL')) {
+		$tables[FOF_USER_TABLE][] = "PRIMARY KEY ( user_id )";
+	}
+	
+	/* FOF_TAG_TABLE */
+	/* columns */
+	if (defined('USE_MYSQL')) {
+		$tables[FOF_TAG_TABLE][] = "tag_id " . SQL_DRIVER_INT_TYPE . " NOT NULL AUTO_INCREMENT";
+	} else if (defined('USE_SQLITE')) {
+		$tables[FOF_TAG_TABLE][] = "tag_id " . SQL_DRIVER_INT_TYPE . " PRIMARY KEY AUTOINCREMENT NOT NULL";
+	}
+	$tables[FOF_TAG_TABLE][] = "tag_name CHAR(100) NOT NULL DEFAULT ''";
+	if (defined('USE_MYSQL')) {
+		$tables[FOF_TAG_TABLE][] = "PRIMARY KEY ( tag_id )";
+		$tables[FOF_TAG_TABLE][] = "UNIQUE KEY ( tag_name )";
+	}
+
+	/* indices */
+	if (defined('USE_SQLITE')) {
+		$indices[FOF_TAG_TABLE]['tag_name'] = array('UNIQUE INDEX', 'tag_name');
+	}
+
+	/* FOF_FEED_TABLE */
+	/* columns */
 	if (defined('USE_MYSQL')) {
 		$tables[FOF_FEED_TABLE][] = "feed_id " . SQL_DRIVER_INT_TYPE . " NOT NULL AUTO_INCREMENT";
 	} else if (defined('USE_SQLITE')) {
@@ -303,7 +340,8 @@ function fof_install_schema() {
 	$tables[FOF_VIEW_STATE_TABLE][] = "feed_id " . SQL_DRIVER_INT_TYPE . " REFERENCES " . FOF_FEED_TABLE . " (feed_id) ON UPDATE CASCADE ON DELETE CASCADE";
 	$tables[FOF_VIEW_STATE_TABLE][] = "tag_id " . SQL_DRIVER_INT_TYPE . " REFERENCES " . FOF_TAG_TABLE . " (tag_id) ON UPDATE CASCADE ON DELETE CASCADE";
 	$tables[FOF_VIEW_STATE_TABLE][] = "view_id " . SQL_DRIVER_INT_TYPE . " NOT NULL REFERENCES " . FOF_VIEW_TABLE . " (view_id) ON UPDATE CASCADE ON DELETE CASCADE";
-	$tables[FOF_VIEW_STATE_TABLE][] = "CHECK ((feed_id IS NULL) != (tag_id IS NULL))";
+	// TODO: this constraint should be present but mysql 15 doesn't like it
+	//$tables[FOF_VIEW_STATE_TABLE][] = "CHECK ((feed_id IS NULL) != (tag_id IS NULL))";
 	if (defined('USE_MYSQL')) {
 		$tables[FOF_VIEW_STATE_TABLE][] = "FOREIGN KEY (user_id) REFERENCES " . FOF_USER_TABLE . " (user_id) ON UPDATE CASCADE ON DELETE CASCADE";
 		$tables[FOF_VIEW_STATE_TABLE][] = "FOREIGN KEY (feed_id) REFERENCES " . FOF_FEED_TABLE . " (feed_id) ON UPDATE CASCADE ON DELETE CASCADE";
@@ -311,23 +349,6 @@ function fof_install_schema() {
 		$tables[FOF_VIEW_STATE_TABLE][] = "FOREIGN KEY (view_id) REFERENCES " . FOF_VIEW_TABLE . " (view_id) ON UPDATE CASCADE ON DELETE CASCADE";
 	}
 
-	/* FOF_TAG_TABLE */
-	/* columns */
-	if (defined('USE_MYSQL')) {
-		$tables[FOF_TAG_TABLE][] = "tag_id " . SQL_DRIVER_INT_TYPE . " NOT NULL AUTO_INCREMENT";
-	} else if (defined('USE_SQLITE')) {
-		$tables[FOF_TAG_TABLE][] = "tag_id " . SQL_DRIVER_INT_TYPE . " PRIMARY KEY AUTOINCREMENT NOT NULL";
-	}
-	$tables[FOF_TAG_TABLE][] = "tag_name CHAR(100) NOT NULL DEFAULT ''";
-	if (defined('USE_MYSQL')) {
-		$tables[FOF_TAG_TABLE][] = "PRIMARY KEY ( tag_id )";
-		$tables[FOF_TAG_TABLE][] = "UNIQUE KEY ( tag_name )";
-	}
-
-	/* indices */
-	if (defined('USE_SQLITE')) {
-		$indices[FOF_TAG_TABLE]['tag_name'] = array('UNIQUE INDEX', 'tag_name');
-	}
 
 	/* FOF_USER_LEVELS_TABLE */
 	/* SQLite doesn't support ENUM, so it gets another table.. */
@@ -338,24 +359,6 @@ function fof_install_schema() {
 		$indices[FOF_USER_LEVELS_TABLE]['level'] = array('UNIQUE INDEX', 'level');
 	}
 
-	/* FOF_USER_TABLE */
-	/* columns */
-	if (defined('USE_MYSQL')) {
-		$tables[FOF_USER_TABLE][] = "user_id " . SQL_DRIVER_INT_TYPE . " NOT NULL";
-	} else if (defined('USE_SQLITE')) {
-		$tables[FOF_USER_TABLE][] = "user_id " . SQL_DRIVER_INT_TYPE . " PRIMARY KEY AUTOINCREMENT NOT NULL";
-	}
-	$tables[FOF_USER_TABLE][] = "user_name VARCHAR(100) NOT NULL DEFAULT ''";
-	$tables[FOF_USER_TABLE][] = "user_password_hash VARCHAR(32) NOT NULL DEFAULT ''";
-	if (defined('USE_MYSQL')) {
-		$tables[FOF_USER_TABLE][] = "user_level ENUM ( 'user', 'admin' ) NOT NULL DEFAULT 'user'";
-	} else if (defined('USE_SQLITE')) {
-		$tables[FOF_USER_TABLE][] = "user_level TEXT NOT NULL DEFAULT 'user' REFERENCES " . FOF_USER_LEVELS_TABLE . " ( level ) ON UPDATE CASCADE";
-	}
-	$tables[FOF_USER_TABLE][] = "user_prefs TEXT";
-	if (defined('USE_MYSQL')) {
-		$tables[FOF_USER_TABLE][] = "PRIMARY KEY ( user_id )";
-	}
 
 	return array($tables, $indices);
 }
