@@ -45,21 +45,24 @@ images if possible.
 
 FeedOnFeeds requires:
 
-* A web server running *PHP*
+* A web server running *PHP* 7.x or higher (8.x recommended)
 * Access to a PDO-capable database (*MySQL* and *SQLite* are currently supported,
   and more are easy to add)
 * Specific features may require specific PHP extensions; it is highly
   recommended (but not required) that you have *Xlib*, *cURL*, and *iconv*.
+* [Composer](https://getcomposer.org/)
 
-To install, simply download a snapshot or clone from your favorite git
-repository. Then copy `fof-config.php.dist` to `fof-config.php` and edit
-it as appropriate for your setup. If you're on shared hosting, be sure
-to point `FOF_DATA_PATH` to somewhere in your home directory.
+To install:
 
-After that, point a web browser to `install.php`. For example, if you've
-installed FeedOnFeeds at `http://example.com/fof`, go to
-`http://example.com/fof/install.php` and then everything should be set
-up automatically.
+1. Download a snapshot or clone from your favorite git repository
+2. Run `composer install` to install/update the library dependencies
+3. Copy `fof-config.php.dist` to `fof-config.php` and edit it as appropriate for your setup
+  * If you're on shared hosting, be sure to point `FOF_DATA_PATH` to somewhere in your home directory.
+4. Point a web browser to `install.php`
+
+  For example, if you've installed FeedOnFeeds at `http://example.com/fof`, go to
+  `http://example.com/fof/install.php` and then everything should be set
+  up automatically.
 
 ### Which database backend should I use?
 

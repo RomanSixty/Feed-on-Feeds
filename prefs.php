@@ -352,8 +352,8 @@ foreach ($feeds as $row) {
 	$anchor = 'feed_row_' . $id;
 
 	$url = $row['feed_url'];
-	$title = htmlentities($row['display_title'], ENT_QUOTES);
-	$alt_image = htmlentities($row['alt_image'], ENT_QUOTES);
+	$title = htmlentities($row['display_title'] ?? '', ENT_QUOTES);
+	$alt_image = htmlentities($row['alt_image'] ?? '', ENT_QUOTES);
 	$description = $row['feed_description'];
 	$tags = $row['tags'];
 

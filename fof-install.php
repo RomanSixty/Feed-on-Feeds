@@ -10,6 +10,16 @@ $fof_no_login = true;
 /* installer is running if true, skip auth, no user_id will be set, no prefs loaded, no plugins initialized */
 $fof_installer = true;
 
+// detect missing composer stuff
+try {
+	require __DIR__ . '/vendor/autoload.php';
+    urljoin("https://example.com/", "/lemming");
+    new SimplePie();
+} catch (\Throwable $ex) {
+    echo '<p>Missing Composer dependencies. Please ensure that you have installed <a href="https://getcomposer.org/">composer</a> and run <tt>composer install</tt>.</p>';
+    die($ex);
+}
+
 /* Pull in the fof core, config will be parsed and database will be connected. */
 require_once 'fof-main.php';
 
