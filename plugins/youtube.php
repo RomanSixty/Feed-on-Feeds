@@ -9,8 +9,8 @@ function fof_youtube($item, $link, $title, $content) {
     $matches = array();
     $embed = '';
 
-    if (strstr($link, 'youtube.com/watch') !== false) {
-        if (preg_match('~watch\?v=(.*)$~i', $link, $matches)) {
+    if (strstr($link, 'youtube.com/watch') !== false || strstr($link, 'youtube.com/shorts/') !== false) {
+        if (preg_match('~(?:watch\?v=|shorts/)(.*)$~i', $link, $matches)) {
             $embed = '<div class="youtube-video"
                 data-ytid="' . $matches[1] . '"
                 style="background-image: url(\'//i.ytimg.com/vi/' . $matches[1] . '/hqdefault.jpg\')"
