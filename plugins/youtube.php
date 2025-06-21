@@ -9,6 +9,10 @@ function fof_youtube($item, $link, $title, $content) {
     $matches = array();
     $embed = '';
 
+    if (strstr($link, 'youtube.com/shorts/') !== false && strstr($title, '#shorts') === false) {
+        $title .= ' #shorts';
+    }
+
     if (strstr($link, 'youtube.com/watch') !== false || strstr($link, 'youtube.com/shorts/') !== false) {
         if (preg_match('~(?:watch\?v=|shorts/)(.*)$~i', $link, $matches)) {
             $embed = '<div class="youtube-video"
