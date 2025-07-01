@@ -2,7 +2,6 @@
 // Image proxy for FeedOnFeeds, to assist with hotlinking and security policy issues
 
 require_once 'fof-main.php';
-require_once 'library/urljoin.php';
 
 $item_id = $_GET['item'];
 if (!$item_id) {
