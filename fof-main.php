@@ -1062,12 +1062,26 @@ function fof_update_feed($id, $body = null) {
 				$content = '';
 			}
 
+			$embeds = '';
 			$enclosures = $item->get_enclosures() ?? [];
 			foreach ($enclosures as $enclosure) {
-			    if ($enclosure->get_type() == 'image/jpeg')
-			        $content = '<img src="' . $enclosure->get_link() . '" alt=""/>' . $content;
-            }
-
+				$type = $enclosure->get_type() ?? '';
+				$link = $enclosure->get_link();
+				if ($link) {
+					if (str_starts_with($type, 'image/')) {
+						$embeds .= '<li><img src="' . $link . '"></li>';
+					} else if (str_starts_with($type, 'audio/')) {
+						$embeds .= '<li><audio src="' . $link . '" controls></li>';
+					} else if (str_starts_with($type, 'video/')) {
+						$embeds .= '<li><video src="' . $link . '" controls></li>';
+					} else {
+						$embeds .= '<li><a href="' . $link . '">' . $type . '</a></li>';
+					}
+				}
+			}
+			if ($embeds) {
+				$content .= '<details class="enclosures"><summary>Enclosures</summary>' . $embeds . '</details>';
+			}
 
 			$authors = $item->get_authors();
 			$author = '';
