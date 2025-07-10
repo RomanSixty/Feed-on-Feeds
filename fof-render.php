@@ -77,6 +77,7 @@ function fof_render_item($item, $include_div = true) {
 	$item_title = fof_render_get_key_($item, 'item_title', '[no title]');
 	$item_author = fof_render_get_key_($item, 'item_author', '');
 	$item_content = fof_render_get_key_($item, 'item_content');
+	$item_enclosures = fof_render_get_key_($item, 'item_enclosures');
 	$item_read = fof_render_get_key_($item, 'item_read');
 
 	foreach ($fof_render_filters as $filter) {
@@ -182,6 +183,10 @@ if ($feed_image && $prefs['favicons']) {
 </div>
 
 <div class="body"><?=$item_content?></div>
+
+<?php if ($item_enclosures) { ?>
+	<details class="enclosures"><summary>Enclosures</summary> <?= $item_enclosures ?> </details>
+<?php } ?>
 
 <div class="clearer"></div>
 <div class="widgets">

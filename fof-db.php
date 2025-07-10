@@ -812,7 +812,7 @@ function fof_db_find_item($feed_id, $item_guid) {
 	return fof_db_get_row($statement, 'item_id', TRUE);
 }
 
-function fof_db_add_item($item_id, $feed_id, $guid, $link, $title, $content, $cached, $itemdate, $author) {
+function fof_db_add_item($item_id, $feed_id, $guid, $link, $title, $content, $cached, $itemdate, $author, $enclosures) {
 	global $FOF_ITEM_TABLE;
 	global $fof_connection;
 
@@ -865,7 +865,8 @@ function fof_db_add_item($item_id, $feed_id, $guid, $link, $title, $content, $ca
 				item_content = :content,
 				item_cached = :cached,
 				item_updated = :itemdate,
-				item_author = :author
+				item_author = :author,
+				item_enclosures = :enclosures
 			WHERE feed_id = :feed_id and item_id = :item_id";
 		$statement = $fof_connection->prepare($query);
 		$statement->bindValue(':link', $link);
@@ -875,8 +876,10 @@ function fof_db_add_item($item_id, $feed_id, $guid, $link, $title, $content, $ca
 		$statement->bindValue(':cached', $cached);
 		$statement->bindValue(':itemdate', $itemdate);
 		$statement->bindValue(':author', $author);
+		$statement->bindValue(':enclosures', $enclosures);
 		$statement->bindValue(':feed_id', $feed_id);
 		$statement->bindValue(':item_id', $item_id);
+
 	}
 	$result = $statement->execute();
 	$statement->closeCursor();

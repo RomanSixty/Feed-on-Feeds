@@ -1102,15 +1102,12 @@ function fof_update_feed($id, $body = null) {
 					}
 				}
 			}
-			if ($embeds) {
-				$content .= '<details class="enclosures"><summary>Enclosures</summary>' . $embeds . '</details>';
-			}
 
 			/* check if item already known */
 			$item_id = $item->get_id();
 			$found = fof_db_find_item($feed_id, $item_id);
 
-			$id = fof_db_add_item($found, $feed_id, $item_id, $link, $title, $content, time(), $date, $author);
+			$id = fof_db_add_item($found, $feed_id, $item_id, $link, $title, $content, time(), $date, $author, $embeds);
 			if ($found == NULL || !fof_db_item_get_complete($id)) {
 				// item is new, or wasn't finished being added, so let's add subscriptions
 				$n++;
