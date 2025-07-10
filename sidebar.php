@@ -122,7 +122,7 @@ if (!empty($when)) {
 	echo '      <input type="hidden" name="when" value="' . htmlentities($when, ENT_QUOTES) . "\">\n";
 }
 
-echo '      <input id="searchfield" name="search" value="' . htmlentities($search, ENT_QUOTES) . "\" placeholder=\"search term\">\n";
+echo '      <input id="searchfield" name="search" value="' . htmlentities($search ?? '', ENT_QUOTES) . "\" placeholder=\"search term\">\n";
 echo "    </form>\n";
 echo "  </li>\n";
 ?>
