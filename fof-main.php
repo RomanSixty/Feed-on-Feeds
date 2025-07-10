@@ -1074,8 +1074,6 @@ function fof_update_feed($id, $body = null) {
 						$embeds .= '<li><audio src="' . $link . '" controls></li>';
 					} else if (str_starts_with($type, 'video/')) {
 						$embeds .= '<li><video src="' . $link . '" controls></li>';
-					} else {
-						$embeds .= '<li><a href="' . $link . '">' . $type . '</a></li>';
 					}
 				}
 			}
