@@ -1806,7 +1806,7 @@ function fof_dom_to_content($dom) {
 	libxml_clear_errors();
 	libxml_use_internal_errors($dom->old_xml_err);
 
-	return preg_replace('~<(?:!DOCTYPE|/?(?:html|body))[^>]*>\s*~i', '', $dom->saveHTML());
+	return preg_replace('~<(?:!DOCTYPE|/?(?:html|body|head|meta))[^>]*>\s*~i', '', $dom->saveHTML());
 }
 
 // Helper function to get the base URL of the current page

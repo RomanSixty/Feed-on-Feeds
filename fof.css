@@ -691,15 +691,15 @@ td.feed-prefs-header {
 }
 
 details.enclosures {
-  border-radius: 1ex;
-  border: dashed #ccc 1px;
+  border-top: solid #ccc 1px;
   overflow: hidden;
   background: #eee;
+  margin-top: 0.5ex;
 }
 
 details.enclosures summary {
   background: #ddd;
-  padding: 1ex;
+  padding: 0.5ex;
 }
 
 details.enclosures ul {
