@@ -925,6 +925,27 @@ function fof_apply_tags($feed_id, $item_id) {
 	}
 }
 
+/* Get the enclosure data for a feed item */
+function fof_get_enclosures($item) {
+	$embeds = '';
+	$enclosures = $item->get_enclosures() ?? [];
+	foreach ($enclosures as $enclosure) {
+		$type = $enclosure->get_type() ?? '';
+		$elink = $enclosure->get_link();
+		if ($elink) {
+			if (str_starts_with($type, 'image/')) {
+				$embeds .= '<li><img src="' . $elink . '"></li>';
+			} else if (str_starts_with($type, 'audio/')) {
+				$embeds .= '<li><audio src="' . $elink . '" controls></li>';
+			} else if (str_starts_with($type, 'video/')) {
+				$embeds .= '<li><video src="' . $elink . '" controls></li>';
+			}
+		}
+	}
+
+	return $embeds;
+}
+
 /* returns array of number of items added, and status message to display */
 function fof_update_feed($id, $body = null) {
 	global $fof_item_prefilters;
@@ -1087,27 +1108,13 @@ function fof_update_feed($id, $body = null) {
 				list($link, $title, $content) = $filter($item, $link, $title, $content);
 			}
 
-			$embeds = '';
-			$enclosures = $item->get_enclosures() ?? [];
-			foreach ($enclosures as $enclosure) {
-				$type = $enclosure->get_type() ?? '';
-				$link = $enclosure->get_link();
-				if ($link) {
-					if (str_starts_with($type, 'image/')) {
-						$embeds .= '<li><img src="' . $link . '"></li>';
-					} else if (str_starts_with($type, 'audio/')) {
-						$embeds .= '<li><audio src="' . $link . '" controls></li>';
-					} else if (str_starts_with($type, 'video/')) {
-						$embeds .= '<li><video src="' . $link . '" controls></li>';
-					}
-				}
-			}
+			$enclosures = fof_get_enclosures($item);
 
 			/* check if item already known */
 			$item_id = $item->get_id();
 			$found = fof_db_find_item($feed_id, $item_id);
 
-			$id = fof_db_add_item($found, $feed_id, $item_id, $link, $title, $content, time(), $date, $author, $embeds);
+			$id = fof_db_add_item($found, $feed_id, $item_id, $link, $title, $content, time(), $date, $author, $enclosures);
 			if ($found == NULL || !fof_db_item_get_complete($id)) {
 				// item is new, or wasn't finished being added, so let's add subscriptions
 				$n++;
