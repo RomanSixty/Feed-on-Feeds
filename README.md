@@ -45,7 +45,7 @@ images if possible.
 
 FeedOnFeeds requires:
 
-* A web server running *PHP*
+* A web server running *PHP* 7.x or higher (8.x recommended)
 * Access to a PDO-capable database (*MySQL* and *SQLite* are currently supported,
   and more are easy to add)
 * Specific features may require specific PHP extensions; it is highly
