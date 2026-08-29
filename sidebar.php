@@ -39,6 +39,7 @@ $welcomecontent .= '<span class="hide-on-mobile"> | <a href="prefs.php">prefs</a
 if (!defined('FOF_AUTH_EXTERNAL')) {
 	$welcomecontent .= ' | <a href="logout.php">log out</a>';
 }
+$welcomecontent .= '</span>';
 
 echo '<div id="welcome" class="banner ontop">' . $welcomecontent . "</div>\n";
 echo '<div id="welcome-spacer" class="banner">' . $welcomecontent . "</div>\n";

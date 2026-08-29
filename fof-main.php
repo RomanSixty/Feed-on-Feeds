@@ -925,6 +925,27 @@ function fof_apply_tags($feed_id, $item_id) {
 	}
 }
 
+/* Get the enclosure data for a feed item */
+function fof_get_enclosures($item) {
+	$embeds = '';
+	$enclosures = $item->get_enclosures() ?? [];
+	foreach ($enclosures as $enclosure) {
+		$type = $enclosure->get_type() ?? '';
+		$elink = $enclosure->get_link();
+		if ($elink) {
+			if (str_starts_with($type, 'image/')) {
+				$embeds .= '<li><img src="' . $elink . '"></li>';
+			} else if (str_starts_with($type, 'audio/')) {
+				$embeds .= '<li><audio src="' . $elink . '" controls></li>';
+			} else if (str_starts_with($type, 'video/')) {
+				$embeds .= '<li><video src="' . $elink . '" controls></li>';
+			}
+		}
+	}
+
+	return $embeds;
+}
+
 /* returns array of number of items added, and status message to display */
 function fof_update_feed($id, $body = null) {
 	global $fof_item_prefilters;
@@ -1062,13 +1083,6 @@ function fof_update_feed($id, $body = null) {
 				$content = '';
 			}
 
-			$enclosures = $item->get_enclosures() ?? [];
-			foreach ($enclosures as $enclosure) {
-			    if ($enclosure->get_type() == 'image/jpeg')
-			        $content = '<img src="' . $enclosure->get_link() . '" alt=""/>' . $content;
-            }
-
-
 			$authors = $item->get_authors();
 			$author = '';
 			if (!empty($authors) && is_array($authors)) {
@@ -1094,11 +1108,13 @@ function fof_update_feed($id, $body = null) {
 				list($link, $title, $content) = $filter($item, $link, $title, $content);
 			}
 
+			$enclosures = fof_get_enclosures($item);
+
 			/* check if item already known */
 			$item_id = $item->get_id();
 			$found = fof_db_find_item($feed_id, $item_id);
 
-			$id = fof_db_add_item($found, $feed_id, $item_id, $link, $title, $content, time(), $date, $author);
+			$id = fof_db_add_item($found, $feed_id, $item_id, $link, $title, $content, time(), $date, $author, $enclosures);
 			if ($found == NULL || !fof_db_item_get_complete($id)) {
 				// item is new, or wasn't finished being added, so let's add subscriptions
 				$n++;
@@ -1790,7 +1806,7 @@ function fof_dom_to_content($dom) {
 	libxml_clear_errors();
 	libxml_use_internal_errors($dom->old_xml_err);
 
-	return preg_replace('~<(?:!DOCTYPE|/?(?:html|body))[^>]*>\s*~i', '', $dom->saveHTML());
+	return preg_replace('~<(?:!DOCTYPE|/?(?:html|body|head|meta))[^>]*>\s*~i', '', $dom->saveHTML());
 }
 
 // Helper function to get the base URL of the current page

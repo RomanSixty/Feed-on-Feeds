@@ -9,19 +9,26 @@ function fof_youtube($item, $link, $title, $content) {
     $matches = array();
     $embed = '';
 
-    if (strstr($link, 'youtube.com/shorts/') !== false && strstr($title, '#shorts') === false) {
+    $permalink = $item->get_permalink();
+
+    if (strstr($permalink, 'youtube.com/shorts/') !== false && strstr($title, '#shorts') === false) {
         $title .= ' #shorts';
     }
 
-    if (strstr($link, 'youtube.com/watch') !== false || strstr($link, 'youtube.com/shorts/') !== false) {
-        if (preg_match('~(?:watch\?v=|shorts/)(.*)$~i', $link, $matches)) {
+    if (strstr($permalink, 'youtube.com/v') !== false ||
+        strstr($permalink, 'youtube.com/watch') !== false ||
+        strstr($permalink, 'youtube.com/shorts') !== false) {
+
+        if (preg_match('~(watch\?v=|shorts/|v/)([^?]*)~i', $permalink, $matches)) {
+            $ytid = $matches[2];
             $embed = '<div class="youtube-video"
                 data-ytid="' . $matches[1] . '"
-                style="background-image: url(\'//i.ytimg.com/vi/' . $matches[1] . '/hqdefault.jpg\')"
+                style="background-image: url(\'//i.ytimg.com/vi/'.$ytid.'/hqdefault.jpg\')"
                 onclick="embed_youtube(this);"></div>';
         }
 
-        $content .= $embed;
+        // TODO: figure out why the content is blank
+        $content = $embed . '<p>' . $item->get_content() . '</p>';
     }
 
     // replace default YouTube embeds...

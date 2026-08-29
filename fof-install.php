@@ -205,7 +205,7 @@ function fof_install_schema() {
 	if (defined('USE_MYSQL')) {
 		$tables[FOF_USER_TABLE][] = "PRIMARY KEY ( user_id )";
 	}
-	
+
 	/* FOF_TAG_TABLE */
 	/* columns */
 	if (defined('USE_MYSQL')) {
@@ -275,6 +275,7 @@ function fof_install_schema() {
 		$content_text_type = "TEXT";
 	}
 	$tables[FOF_ITEM_TABLE][] = "item_content " . $content_text_type . " NOT NULL";
+	$tables[FOF_ITEM_TABLE][] = "item_enclosures " . $content_text_type;
 	$tables[FOF_ITEM_TABLE][] = "item_author TEXT";
 	$tables[FOF_ITEM_TABLE][] = "item_complete " . SQL_DRIVER_INT_TYPE . " NOT NULL DEFAULT '0'";
 
@@ -639,6 +640,12 @@ function fof_install_database_update_old_tables() {
 		FOF_VIEW_STATE_TABLE
 	);
 
+	if (defined('USE_MYSQL')) {
+		$content_text_type = "LONGTEXT";
+	} else {
+		$content_text_type = "TEXT";
+	}
+
 	try {
 		/* charsets */
 		foreach ($all_tables as $table) {
@@ -769,6 +776,12 @@ END";
 				. (defined('USE_MYSQL') ? " AFTER item_author" : ""),
 			# assume that any existing items should be set complete
 			'default' => "UPDATE " . FOF_ITEM_TABLE . " SET item_complete = 1",
+		));
+
+		fof_install_migrate_column($queries, FOF_ITEM_TABLE, 'item_enclosures', array(
+			'add' => "ALTER TABLE " . FOF_ITEM_TABLE . " ADD item_enclosures "
+			. $content_text_type
+			. (defined('USE_MYSQL') ? " AFTER item_complete" : "")
 		));
 
 		/* FOF_ITEM_TAG_TABLE */

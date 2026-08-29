@@ -689,3 +689,19 @@ td.feed-prefs-header {
   transform: translateY(-100%);
   pointer-events: none;
 }
+
+details.enclosures {
+  border-top: solid #ccc 1px;
+  overflow: hidden;
+  background: #eee;
+  margin-top: 0.5ex;
+}
+
+details.enclosures summary {
+  background: #ddd;
+  padding: 0.5ex;
+}
+
+details.enclosures ul {
+  list-style-type: none;
+}
